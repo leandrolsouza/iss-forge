@@ -1,0 +1,65 @@
+/* ============================================================
+   TEAM NAME EDITOR
+   ============================================================ */
+
+.teamname-display {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-top: 8px;
+}
+
+.teamname-current {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-white);
+  letter-spacing: 2px;
+}
+
+.teamname-list {
+  margin-top: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+
+.teamname-editor-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.teamname-input {
+  flex: 1;
+  max-width: 300px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-white);
+  padding: 10px 14px;
+  font-size: 18px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.teamname-input:focus {
+  border-color: var(--border-focus);
+}
+
+.teamname-generate-btn {
+  padding: 10px 24px !important;
+  font-size: var(--font-size-lg) !important;
+  white-space: nowrap;
+}
+
+.teamname-hint {
+  margin-top: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}

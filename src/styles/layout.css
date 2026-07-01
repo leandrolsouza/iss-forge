@@ -1,0 +1,76 @@
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.app-titlebar {
+  height: var(--titlebar-height);
+  background: var(--bg-titlebar);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: drag;
+  border-bottom: 1px solid #1a1a1a;
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+
+.app-titlebar-actions {
+  display: flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn {
+  width: 28px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background var(--transition), color var(--transition);
+}
+
+.titlebar-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.titlebar-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.titlebar-btn:disabled:hover {
+  background: none;
+  color: var(--text-secondary);
+}
+
+.app-titlebar-title {
+  flex: 1;
+  text-align: center;
+  font-size: var(--font-size);
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.app-titlebar-spacer {
+  width: 58px;
+  /* balance with actions width */
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}

@@ -1,0 +1,91 @@
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+
+.tab-bar {
+  height: var(--tabbar-height);
+  background: var(--bg-tertiary);
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-primary);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.tab-bar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: var(--font-size);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-right: 1px solid var(--border-primary);
+  white-space: nowrap;
+  gap: 8px;
+  transition: background var(--transition), color var(--transition);
+}
+
+.tab:hover {
+  background: var(--bg-hover);
+}
+
+.tab.active {
+  background: var(--bg-primary);
+  color: var(--text-white);
+  border-bottom: 1px solid var(--bg-primary);
+  margin-bottom: -1px;
+}
+
+.tab-label {
+  pointer-events: none;
+}
+
+.tab-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
+}
+
+.tab-close:hover {
+  background: var(--bg-active);
+  color: var(--text-primary);
+}
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.editor-area {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg-primary);
+}

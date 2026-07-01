@@ -1,0 +1,15 @@
+@import './base.css';
+@import './layout.css';
+@import './sidebar.css';
+@import './tabs.css';
+@import './statusbar.css';
+@import './welcome.css';
+@import './editors.css';
+@import './extras.css';
+@import './flag-design.css';
+@import './team-name.css';
+@import './team-preview.css';
+@import './theme-light.css';
+@import './team-compare.css';
+@import './settings.css';
+@import './about.css';

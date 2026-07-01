@@ -1,0 +1,102 @@
+/* ============================================================
+   ISS Editor - VS Code Dark Theme Styling
+   ============================================================ */
+
+/* CSS Variables - VS Code Dark+ Theme Colors */
+:root {
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252526;
+  --bg-tertiary: #2d2d2d;
+  --bg-hover: #2a2d2e;
+  --bg-active: #37373d;
+  --bg-selected: #094771;
+  --bg-input: #3c3c3c;
+  --bg-dropdown: #3c3c3c;
+  --bg-button: #0e639c;
+  --bg-button-hover: #1177bb;
+  --bg-titlebar: #323233;
+  --bg-statusbar: #007acc;
+
+  --text-primary: #cccccc;
+  --text-secondary: #969696;
+  --text-muted: #6a6a6a;
+  --text-accent: #4fc1ff;
+  --text-link: #3794ff;
+  --text-white: #ffffff;
+  --text-warning: #cca700;
+  --text-error: #f48771;
+  --text-success: #89d185;
+
+  --border-primary: #3c3c3c;
+  --border-secondary: #474747;
+  --border-focus: #007fd4;
+  --border-active: #007acc;
+
+  --scrollbar-bg: #1e1e1e;
+  --scrollbar-thumb: #424242;
+  --scrollbar-thumb-hover: #4f4f4f;
+
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  --font-size: 13px;
+  --font-size-sm: 11px;
+  --font-size-lg: 14px;
+
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 48px;
+  --titlebar-height: 32px;
+  --statusbar-height: 22px;
+  --tabbar-height: 35px;
+
+  --transition: 0.15s ease;
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-bg);
+}

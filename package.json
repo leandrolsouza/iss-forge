@@ -1,0 +1,45 @@
+{
+  "name": "iss-forge",
+  "version": "1.0.0",
+  "description": "ISS Forge - ROM Editor for International Superstar Soccer (SNES 1995)",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "node scripts/dev.js",
+    "electron:start": "electron .",
+    "electron:build": "vite build && electron-builder",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "Leandro Luiz De Souza",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "concurrently": "^10.0.3",
+    "electron": "^43.0.0",
+    "electron-builder": "^26.15.3",
+    "vite": "^8.1.2",
+    "vitest": "^4.1.9",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.iss-forge.app",
+    "productName": "ISS Forge",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

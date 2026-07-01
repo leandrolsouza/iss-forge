@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+release/
+
+# ROM files
+rom/
+*.smc
+*.sfc
+*.bin
+
+# Project data
+team_json/
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+.kiro/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & coverage
+*.log
+coverage/
+team_json/
+rom/

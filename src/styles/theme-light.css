@@ -1,0 +1,100 @@
+/* ============================================================
+   LIGHT THEME
+   ============================================================ */
+
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f3f3;
+  --bg-tertiary: #e8e8e8;
+  --bg-hover: #e4e6e8;
+  --bg-active: #d4d4d4;
+  --bg-selected: #c8ddf0;
+  --bg-input: #ffffff;
+  --bg-dropdown: #ffffff;
+  --bg-button: #0e639c;
+  --bg-button-hover: #1177bb;
+  --bg-titlebar: #dddddd;
+  --bg-statusbar: #007acc;
+
+  --text-primary: #1e1e1e;
+  --text-secondary: #616161;
+  --text-muted: #9e9e9e;
+  --text-accent: #0066b8;
+  --text-link: #006ab1;
+  --text-white: #ffffff;
+  --text-warning: #bf8803;
+  --text-error: #c72e2e;
+  --text-success: #388e3c;
+
+  --border-primary: #d4d4d4;
+  --border-secondary: #c8c8c8;
+  --border-focus: #0066b8;
+  --border-active: #007acc;
+
+  --scrollbar-bg: #f3f3f3;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+}
+
+[data-theme="light"] .app-titlebar {
+  border-bottom-color: #c8c8c8;
+}
+
+[data-theme="light"] .status-modified {
+  color: #bf8803;
+}
+
+[data-theme="light"] .detail-player-name {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .detail-player-number {
+  color: var(--text-accent);
+}
+
+[data-theme="light"] .preview-player-name {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .teamname-current {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .teamname-input {
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+[data-theme="light"] .flag-palette-btn.active {
+  border-color: #333;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .tab.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-bottom-color: var(--bg-primary);
+}
+
+[data-theme="light"] .sidebar-item.selected {
+  background: var(--bg-selected);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .player-row.selected {
+  background: #e8f0fe;
+}
+
+[data-theme="light"] .detail-value.badge.normal {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+[data-theme="light"] .detail-value.badge.special {
+  background: #e1bee7;
+  color: #7b1fa2;
+}
+
+[data-theme="light"] .welcome-btn {
+  color: #fff;
+}

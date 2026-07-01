@@ -1,0 +1,31 @@
+/* ============================================================
+   STATUS BAR
+   ============================================================ */
+
+.status-bar {
+  height: var(--statusbar-height);
+  background: var(--bg-statusbar);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-white);
+}
+
+.status-bar-left,
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-modified {
+  color: #ffcc00;
+  font-weight: 600;
+}
+
+.status-item {
+  opacity: 0.9;
+}

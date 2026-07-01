@@ -1,0 +1,37 @@
+/* ============================================================
+   INPUT NUMBER ARROWS (Chrome/Edge)
+   ============================================================ */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 0.5;
+}
+
+input[type="number"]:hover::-webkit-inner-spin-button,
+input[type="number"]:hover::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* ============================================================
+   RESPONSIVE - Smaller screens
+   ============================================================ */
+
+@media (max-width: 1100px) {
+  .player-detail-panel {
+    width: 220px;
+  }
+
+  .uniform-colors-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .player-detail-panel {
+    display: none;
+  }
+
+  :root {
+    --sidebar-width: 200px;
+  }
+}

@@ -1,0 +1,155 @@
+/* ============================================================
+   TEAM PREVIEW
+   ============================================================ */
+
+.team-preview-panel {
+  height: 100%;
+}
+
+.team-preview-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.preview-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.preview-stat-card {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.preview-stat-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.preview-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.preview-players-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+}
+
+.preview-player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: background var(--transition);
+}
+
+.preview-player-card:hover {
+  background: var(--bg-active);
+}
+
+.preview-kit-mini {
+  flex-shrink: 0;
+}
+
+.preview-player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-player-name {
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  font-weight: 600;
+  color: var(--text-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-player-pos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.preview-pos-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #000;
+}
+
+.preview-player-hair {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview-player-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.preview-mini-bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.preview-mini-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  width: 8px;
+  font-weight: 700;
+}
+
+.preview-mini-track {
+  flex: 1;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.preview-mini-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.preview-mini-value {
+  font-size: 9px;
+  color: var(--text-secondary);
+  width: 14px;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}

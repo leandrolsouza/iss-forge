@@ -1,0 +1,65 @@
+/* ============================================================
+   SIDEBAR SETTINGS (Theme + Language)
+   ============================================================ */
+
+.sidebar-settings {
+  margin-top: auto;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sidebar-setting-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background var(--transition);
+}
+
+.sidebar-setting-btn:hover {
+  background: var(--bg-hover);
+}
+
+.sidebar-lang-flags {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.lang-flag-btn {
+  width: 28px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity var(--transition), border-color var(--transition);
+  padding: 2px;
+}
+
+.lang-flag-btn:hover {
+  opacity: 0.8;
+}
+
+.lang-flag-btn.active {
+  opacity: 1;
+  border-color: var(--border-focus);
+}
+
+.lang-flag-btn svg {
+  border-radius: 2px;
+}

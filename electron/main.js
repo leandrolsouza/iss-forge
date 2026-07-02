@@ -5,6 +5,47 @@ const fs = require('fs');
 let mainWindow;
 let currentRomPath = null;
 
+// --- Recent ROMs ---
+const MAX_RECENT_ROMS = 10;
+
+function getRecentRomsPath() {
+  return path.join(app.getPath('userData'), 'recent-roms.json');
+}
+
+function loadRecentRoms() {
+  try {
+    const filePath = getRecentRomsPath();
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      return Array.isArray(data) ? data : [];
+    }
+  } catch (err) {
+    console.error('Failed to load recent ROMs:', err.message);
+  }
+  return [];
+}
+
+function saveRecentRoms(recents) {
+  try {
+    fs.writeFileSync(getRecentRomsPath(), JSON.stringify(recents, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to save recent ROMs:', err.message);
+  }
+}
+
+function addRecentRom(filePath) {
+  const recents = loadRecentRoms();
+  const entry = {
+    path: filePath,
+    name: path.basename(filePath),
+    timestamp: Date.now(),
+  };
+  // Remove duplicate if already exists
+  const filtered = recents.filter((r) => r.path !== filePath);
+  filtered.unshift(entry);
+  saveRecentRoms(filtered.slice(0, MAX_RECENT_ROMS));
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -132,17 +173,22 @@ async function handleOpenRom() {
 
   if (!result.canceled && result.filePaths.length > 0) {
     const filePath = result.filePaths[0];
-    try {
-      const buffer = fs.readFileSync(filePath);
-      currentRomPath = filePath;
-      mainWindow.webContents.send('rom:loaded', {
-        path: filePath,
-        name: path.basename(filePath),
-        data: Array.from(buffer),
-      });
-    } catch (err) {
-      dialog.showErrorBox('Erro ao abrir ROM', err.message);
-    }
+    loadAndSendRom(filePath);
+  }
+}
+
+function loadAndSendRom(filePath) {
+  try {
+    const buffer = fs.readFileSync(filePath);
+    currentRomPath = filePath;
+    addRecentRom(filePath);
+    mainWindow.webContents.send('rom:loaded', {
+      path: filePath,
+      name: path.basename(filePath),
+      data: Array.from(buffer),
+    });
+  } catch (err) {
+    dialog.showErrorBox('Erro ao abrir ROM', err.message);
   }
 }
 
@@ -182,6 +228,32 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
 });
 
 ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+
+ipcMain.handle('recent:getAll', () => {
+  return loadRecentRoms();
+});
+
+ipcMain.handle('recent:clear', () => {
+  saveRecentRoms([]);
+  return { success: true };
+});
+
+ipcMain.handle('recent:remove', (event, filePath) => {
+  const recents = loadRecentRoms().filter((r) => r.path !== filePath);
+  saveRecentRoms(recents);
+  return { success: true };
+});
+
+ipcMain.handle('recent:open', (event, filePath) => {
+  if (fs.existsSync(filePath)) {
+    loadAndSendRom(filePath);
+    return { success: true };
+  }
+  // File no longer exists — remove from recents
+  const recents = loadRecentRoms().filter((r) => r.path !== filePath);
+  saveRecentRoms(recents);
+  return { success: false, error: 'Arquivo nao encontrado.' };
+});
 
 // App lifecycle
 app.whenReady().then(createWindow);

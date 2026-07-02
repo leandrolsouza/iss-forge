@@ -38,6 +38,13 @@ export default {
   welcomeCompatible: 'Compatible ROM:',
   welcomeCompatibleDesc: 'International Superstar Soccer (Europe) - .smc or .sfc',
 
+  // Recent ROMs
+  recentRoms: 'Recent ROMs',
+  recentRomsEmpty: 'No recently opened ROMs',
+  recentRomsClear: 'Clear',
+  recentRomsRemove: 'Remove from list',
+  recentRomsNotFound: 'File not found. Removed from list.',
+
   // Player Editor
   squad: 'Squad',
   players: 'players',

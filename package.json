@@ -11,7 +11,8 @@
     "electron:build": "vite build && electron-builder",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "author": "Leandro Luiz De Souza",
   "license": "MIT",

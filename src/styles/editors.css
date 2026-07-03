@@ -82,6 +82,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
+  overflow: visible;
 }
 
 .player-table td {
@@ -111,6 +112,11 @@
   width: 30px;
   text-align: center;
   color: var(--text-muted);
+}
+
+.col-pos {
+  width: 48px;
+  text-align: center;
 }
 
 .col-num {
@@ -571,4 +577,164 @@ select option {
   height: 12px;
   border-radius: 50%;
   border: 1px solid var(--border-secondary);
+}
+
+/* ============================================================
+   POSITION BADGES
+   ============================================================ */
+
+.player-table-divider td {
+  padding: 0;
+  border-bottom: none;
+}
+
+.divider-label {
+  padding: 8px 8px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.pos-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-align: center;
+  min-width: 32px;
+}
+
+.pos-badge.pos-gol,
+.pos-badge.pos-gk {
+  background: #1a3a4a;
+  color: #4fc3f7;
+}
+
+.pos-badge.pos-def {
+  background: #1a3a1a;
+  color: #81c784;
+}
+
+.pos-badge.pos-mei,
+.pos-badge.pos-mid {
+  background: #3a3a1a;
+  color: #ffb74d;
+}
+
+.pos-badge.pos-ata,
+.pos-badge.pos-fwd {
+  background: #3a1a1a;
+  color: #ef5350;
+}
+
+.pos-badge.pos-sub {
+  background: #2a2a2a;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   HELP TOOLTIPS
+   ============================================================ */
+
+.help-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: help;
+  margin-left: 4px;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.help-icon:hover {
+  background: var(--border-focus);
+  color: var(--text-white);
+  border-color: var(--border-focus);
+}
+
+.help-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: normal;
+  width: max-content;
+  max-width: 220px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.help-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom-color: var(--border-secondary);
+}
+
+.help-icon:hover+.help-tooltip,
+.help-tooltip-wrapper:hover .help-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Section title with help icon */
+.detail-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+/* Table header tooltip positioning */
+.player-table th .help-tooltip {
+  left: 0;
+  transform: translateX(0);
+}
+
+.player-table th .help-tooltip::after {
+  left: 10px;
+  transform: none;
 }

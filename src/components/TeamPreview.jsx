@@ -4,7 +4,7 @@ import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 
 export default function TeamPreview({ team, teamIndex }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { handleExportTeam, handleImportTeam } = useRom();
 
   if (!team || !team.players) {
@@ -112,7 +112,7 @@ export default function TeamPreview({ team, teamIndex }) {
                     {getPositionLabel(idx)}
                   </span>
                   <span className="preview-player-hair">
-                    {HAIR_STYLES[player.hairStyle]?.name || ''}
+                    {HAIR_STYLES[player.hairStyle] ? (lang === 'en' ? HAIR_STYLES[player.hairStyle].nameEn : HAIR_STYLES[player.hairStyle].name) : ''}
                   </span>
                 </div>
               </div>

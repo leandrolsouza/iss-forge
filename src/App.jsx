@@ -26,6 +26,7 @@ export default function App() {
     handleOpenRom, handleSave, handleSaveToPath,
     handlePlayerChange, handleUniformChange, handleHairSkinChange,
     handleFlagColorChange, handleFlagDesignChange, handleTeamNameGenerate,
+    handleTeamNameMenuSave, handleTeamNameInGameGenerate,
     handleDrop, handleDragOver,
   } = useRom();
 
@@ -66,7 +67,7 @@ export default function App() {
       case 'hairskin': return <HairSkinEditor {...props} onHairSkinChange={handleHairSkinChange} />;
       case 'flagcolors': return <FlagColorEditor {...props} onFlagColorChange={handleFlagColorChange} />;
       case 'flagdesign': return <FlagDesignEditor {...props} onFlagDesignChange={handleFlagDesignChange} />;
-      case 'teamname': return <TeamNameEditor {...props} onTeamNameGenerate={handleTeamNameGenerate} />;
+      case 'teamname': return <TeamNameEditor {...props} onTeamNameMenuSave={handleTeamNameMenuSave} onTeamNameInGameGenerate={handleTeamNameInGameGenerate} />;
       case 'preview': return <TeamPreview {...props} />;
       default: return <WelcomePanel onOpenRom={handleOpenRom} onDrop={handleDrop} onDragOver={handleDragOver} />;
     }

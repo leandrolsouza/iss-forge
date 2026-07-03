@@ -58,6 +58,7 @@ export default {
   type: 'Tipo',
   normal: 'Normal',
   special: 'Especial',
+  unknown: 'Desconhecido',
   playerDetails: 'Detalhes do Jogador',
   attributes: 'Atributos',
   appearance: 'Aparencia',
@@ -68,6 +69,9 @@ export default {
   defender: 'Defensor',
   midfielder: 'Meio-campista',
   forward: 'Atacante',
+  starting: 'Titulares',
+  substitutes: 'Reservas',
+  formation: 'Formacao',
 
   // Uniforms
   uniforms: 'Uniformes',
@@ -107,10 +111,18 @@ export default {
   // Team Name
   teamName: 'Nome do Time',
   currentName: 'Nome Atual no Jogo',
-  newName: 'Novo Nome',
   generate: 'Gerar',
   generated: 'Gerado!',
-  teamNameChars: 'Caracteres validos: A-Z, 0-9, ponto (.) e espaco. Max ~10 caracteres.',
+  nameInGame: 'Nome no Jogo (Placar)',
+  nameInGamePlaceholder: 'Ex: BRA',
+  nameInGameHint: 'Max 3 caracteres (A-Z, 0-9, ponto). Exibido no placar durante as partidas.',
+  nameInMenu: 'Texto no Menu (Tela de Selecao)',
+  nameInMenuPlaceholder: 'Ex: BRASIL',
+  nameInMenuHint: 'Max 10 caracteres (A-Z, 0-9, ponto, espaco). Exibido sob a bandeira na tela de selecao.',
+  teamNameHowTitle: 'Como Funciona',
+  teamNameHowTwo1: 'O time tem dois nomes: um curto no placar durante as partidas (3 chars) e um completo na tela de selecao (ate 10 chars).',
+  teamNameHowTwo2: 'Gere primeiro o nome in-game (ex: BRA), depois digite o nome completo no menu (ex: BRASIL) que salva automaticamente ao sair do campo.',
+  teamNameHowTwo3: 'Exemplos: BRA / BRASIL, GER / GERMANY, ITA / ITALY, ARG / ARGENTINA',
 
   // Preview
   overview: 'Visao Geral do Elenco',
@@ -139,6 +151,22 @@ export default {
   menuView: 'Visualizar',
   menuHelp: 'Ajuda',
   menuAbout: 'Sobre ISS Forge',
+
+  // Help Tooltips - Player Editor
+  helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',
+  helpSpeed: 'Velocidade de corrida do jogador. Varia de 1 a 16.',
+  helpStamina: 'Resistencia fisica. Jogadores com stamina alta cansam menos durante a partida. Varia de 1 a 16.',
+  helpTechnique: 'Habilidade tecnica (controle de bola, passes). Valores maiores = melhor controle. Varia de 7 a 15.',
+  helpHair: 'Estilo e cor do cabelo do jogador no jogo.',
+  helpType: 'Normal: usa as cores de cabelo/pele do time. Especial: usa cores unicas proprias.',
+  helpNum: 'Numero da camisa exibido no jogo (1-16). Nao define a posicao tatica.',
+  helpName: 'Nome do jogador (max 8 caracteres).',
+  helpAttributes: 'Atributos que definem a performance do jogador em campo.',
+  helpAppearance: 'Controla a aparencia visual do jogador durante as partidas.',
+  helpListPosition: 'Posicao tatica do jogador baseada na formacao do time. Definida pela ordem na lista.',
+  helpPos: 'Posicao tatica baseada na formacao fixa do time (ex: CB = Zagueiro, LB = Lateral Esq, CM = Meia Central, ST = Atacante, SUB = Reserva).',
+  helpIcon: '?',
+  pos: 'Pos',
 
   // Validation
   validationErrors: 'erro(s) encontrados',

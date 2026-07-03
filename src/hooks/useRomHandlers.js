@@ -131,6 +131,45 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     }
   }, [romParser, markModified, setTeams, setStatusMessage]);
 
+  const handleTeamNameMenuSave = useCallback((teamIndex, text) => {
+    if (!romParser) return;
+
+    const success = romParser.writeTeamNameMenu(teamIndex, text);
+    if (success) {
+      const newName = romParser.readTeamNameText(teamIndex);
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        team.teamNameText = newName;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+      markModified();
+      setStatusMessage(`Menu name: ${text}`);
+    } else {
+      setStatusMessage(`Error: "${text}" too long`);
+    }
+  }, [romParser, markModified, setTeams, setStatusMessage]);
+
+  const handleTeamNameInGameGenerate = useCallback((teamIndex, text) => {
+    if (!romParser) return;
+
+    const success = romParser.writeTeamNameInGame(teamIndex, text);
+    if (success) {
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        team.teamNameInGame = text;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+      markModified();
+      setStatusMessage(`In-game: ${text}`);
+    } else {
+      setStatusMessage(`Error: "${text}" failed`);
+    }
+  }, [romParser, markModified, setTeams, setStatusMessage]);
+
   const handleSave = useCallback(async () => {
     if (!romParser) return;
 
@@ -260,6 +299,8 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     handleFlagColorChange,
     handleFlagDesignChange,
     handleTeamNameGenerate,
+    handleTeamNameMenuSave,
+    handleTeamNameInGameGenerate,
     handleSave,
     handleSaveToPath,
     handleOpenRom,

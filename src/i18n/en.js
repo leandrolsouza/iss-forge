@@ -58,6 +58,7 @@ export default {
   type: 'Type',
   normal: 'Normal',
   special: 'Special',
+  unknown: 'Unknown',
   playerDetails: 'Player Details',
   attributes: 'Attributes',
   appearance: 'Appearance',
@@ -68,6 +69,9 @@ export default {
   defender: 'Defender',
   midfielder: 'Midfielder',
   forward: 'Forward',
+  starting: 'Starting',
+  substitutes: 'Substitutes',
+  formation: 'Formation',
 
   // Uniforms
   uniforms: 'Uniforms',
@@ -107,10 +111,18 @@ export default {
   // Team Name
   teamName: 'Team Name',
   currentName: 'Current Name in Game',
-  newName: 'New Name',
   generate: 'Generate',
   generated: 'Generated!',
-  teamNameChars: 'Valid characters: A-Z, 0-9, dot (.) and space. Max ~10 characters.',
+  nameInGame: 'Name in Game (Scoreboard)',
+  nameInGamePlaceholder: 'e.g. GER',
+  nameInGameHint: 'Max 3 characters (A-Z, 0-9, dot). Shown on the scoreboard during matches.',
+  nameInMenu: 'Text in Menu (Selection Screen)',
+  nameInMenuPlaceholder: 'e.g. GERMANY',
+  nameInMenuHint: 'Max 10 characters (A-Z, 0-9, dot, space). Shown under the flag on the team selection screen.',
+  teamNameHowTitle: 'How It Works',
+  teamNameHowTwo1: 'The team has two name displays: a short name on the scoreboard during matches (3 chars) and a full name on the selection screen (up to 10 chars).',
+  teamNameHowTwo2: 'Generate the in-game name first (e.g. GER), then type the full menu name (e.g. GERMANY) which saves automatically on blur.',
+  teamNameHowTwo3: 'Examples: GER / GERMANY, BRA / BRAZIL, ITA / ITALY, ARG / ARGENTINA',
 
   // Preview
   overview: 'Squad Overview',
@@ -139,6 +151,22 @@ export default {
   menuView: 'View',
   menuHelp: 'Help',
   menuAbout: 'About ISS Forge',
+
+  // Help Tooltips - Player Editor
+  helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',
+  helpSpeed: 'Player running speed. Range: 1-16.',
+  helpStamina: 'Physical endurance. Players with high stamina tire less during the match. Range: 1-16.',
+  helpTechnique: 'Technical skill (ball control, passing). Higher values = better control. Range: 7-15.',
+  helpHair: 'Player hair style and color in-game.',
+  helpType: 'Normal: uses team hair/skin colors. Special: uses unique individual colors.',
+  helpNum: 'Shirt number displayed in-game (1-16). Does not define tactical position.',
+  helpName: 'Player name (max 8 characters).',
+  helpAttributes: 'Attributes that define the player\'s performance on the field.',
+  helpAppearance: 'Controls the player\'s visual appearance during matches.',
+  helpListPosition: 'Tactical position based on the team\'s fixed formation. Defined by list order.',
+  helpPos: 'Tactical position based on the team\'s fixed formation (e.g. CB = Center Back, LB = Left Back, CM = Central Mid, ST = Striker, SUB = Substitute).',
+  helpIcon: '?',
+  pos: 'Pos',
 
   // Validation
   validationErrors: 'error(s) found',

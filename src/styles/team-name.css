@@ -63,3 +63,14 @@
   font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
+
+.teamname-input-short {
+  max-width: 120px;
+}
+
+.teamname-autosave-hint {
+  font-size: var(--font-size-sm);
+  color: var(--accent-primary);
+  align-self: center;
+  min-width: 80px;
+}

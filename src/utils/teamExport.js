@@ -18,6 +18,7 @@ export function exportTeam(team) {
     name: team.name,
     id: team.id,
     teamNameText: team.teamNameText || '',
+    teamNameInGame: team.teamNameInGame || (team.teamNameText || team.name).substring(0, 3).toUpperCase(),
     players: team.players.map((p) => ({
       name: p.name,
       number: p.number,
@@ -147,9 +148,14 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
     });
   }
 
-  // Write team name
+  // Write team name (menu / selection screen)
   if (teamData.teamNameText) {
-    romParser.writeTeamNameText(teamIndex, teamData.teamNameText);
+    romParser.writeTeamNameMenu(teamIndex, teamData.teamNameText);
+  }
+
+  // Write team name (in-game / scoreboard)
+  if (teamData.teamNameInGame) {
+    romParser.writeTeamNameInGame(teamIndex, teamData.teamNameInGame);
   }
 }
 

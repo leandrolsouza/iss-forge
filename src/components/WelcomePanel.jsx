@@ -43,8 +43,13 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
   return (
     <div className="welcome-panel" onDrop={onDrop} onDragOver={onDragOver}>
       <div className="welcome-content">
-        <h1 className="welcome-title">{t('welcomeTitle')}</h1>
+        <h1 className="welcome-title">{t('welcomeTitle')} <span className="beta-badge">BETA</span></h1>
         <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
+
+        <div className="welcome-beta-notice">
+          <span className="beta-notice-icon">⚠</span>
+          <span>Versão beta — algumas funcionalidades ainda estão em desenvolvimento.</span>
+        </div>
 
         <div className="welcome-actions">
           <button className="welcome-btn" onClick={onOpenRom}>

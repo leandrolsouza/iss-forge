@@ -84,7 +84,7 @@ export default function App() {
           </button>
         </div>
         <span className="app-titlebar-title">
-          ISS Forge {romInfo ? `- ${romInfo.fileName}${modified ? ' *' : ''}` : ''}
+          ISS Forge <span className="beta-badge">BETA</span> {romInfo ? `- ${romInfo.fileName}${modified ? ' *' : ''}` : ''}
         </span>
         <div className="app-titlebar-spacer"></div>
       </div>

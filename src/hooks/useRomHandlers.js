@@ -5,170 +5,225 @@
 import { useCallback } from 'react';
 import { openRomWeb, saveRomWeb, isElectron, getModifiedFilename } from '../utils/fileHelpers';
 import { validateRom, getValidationSummary } from '../utils/validation';
-import { exportTeam, exportAllTeams, validateImport, applyImportedTeam, downloadJson, readJsonFile } from '../utils/teamExport';
+import {
+  exportTeam,
+  exportAllTeams,
+  validateImport,
+  applyImportedTeam,
+  downloadJson,
+  readJsonFile,
+} from '../utils/teamExport';
+import * as electronBridge from '../services/electronBridge';
 
-export default function useRomHandlers({ romParser, romInfo, teams, setTeams, markModified, markSaved, setStatusMessage, loadRomData }) {
+export default function useRomHandlers({
+  romParser,
+  romInfo,
+  teams,
+  setTeams,
+  markModified,
+  markSaved,
+  setStatusMessage,
+  loadRomData,
+}) {
+  const handlePlayerChange = useCallback(
+    (teamIndex, playerIndex, field, value) => {
+      if (!romParser) return;
 
-  const handlePlayerChange = useCallback((teamIndex, playerIndex, field, value) => {
-    if (!romParser) return;
-
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      const team = { ...newTeams[teamIndex] };
-      const players = [...team.players];
-      players[playerIndex] = { ...players[playerIndex], [field]: value };
-      team.players = players;
-      newTeams[teamIndex] = team;
-      return newTeams;
-    });
-
-    if (field === 'name') {
-      romParser.writePlayerName(teamIndex, playerIndex, value);
-    } else {
-      const team = teams[teamIndex];
-      const playerData = { ...team.players[playerIndex], [field]: value };
-      romParser.writePlayerData(teamIndex, playerIndex, playerData);
-    }
-
-    markModified();
-  }, [romParser, teams, markModified, setTeams]);
-
-  const handleUniformChange = useCallback((teamIndex, kit, part, colorIndex, color) => {
-    if (!romParser) return;
-    romParser.writeUniformColor(teamIndex, kit, part, colorIndex, color);
-
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      const team = { ...newTeams[teamIndex] };
-      const uniforms = { ...team.uniforms };
-      const kitData = { ...uniforms[kit] };
-      const partColors = [...(kitData[part] || [])];
-      partColors[colorIndex] = { ...color, r5: Math.round(color.r / 8), g5: Math.round(color.g / 8), b5: Math.round(color.b / 8) };
-      kitData[part] = partColors;
-      uniforms[kit] = kitData;
-      team.uniforms = uniforms;
-      newTeams[teamIndex] = team;
-      return newTeams;
-    });
-
-    markModified();
-  }, [romParser, markModified, setTeams]);
-
-  const handleHairSkinChange = useCallback((teamIndex, kit, part, colorIndex, color) => {
-    if (!romParser) return;
-    romParser.writeHairSkinColor(teamIndex, kit, part, colorIndex, color);
-
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      const team = { ...newTeams[teamIndex] };
-      const hairSkin = { ...team.hairSkin };
-      const kitData = { ...hairSkin[kit] };
-      const partColors = [...(kitData[part] || [])];
-      partColors[colorIndex] = { ...color, r5: Math.round(color.r / 8), g5: Math.round(color.g / 8), b5: Math.round(color.b / 8) };
-      kitData[part] = partColors;
-      hairSkin[kit] = kitData;
-      team.hairSkin = hairSkin;
-      newTeams[teamIndex] = team;
-      return newTeams;
-    });
-
-    markModified();
-  }, [romParser, markModified, setTeams]);
-
-  const handleFlagColorChange = useCallback((teamIndex, colorIndex, color) => {
-    if (!romParser) return;
-    romParser.writeFlagColor(teamIndex, colorIndex, color);
-
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      const team = { ...newTeams[teamIndex] };
-      const flagColors = [...team.flagColors];
-      flagColors[colorIndex] = { ...color, r5: Math.round(color.r / 8), g5: Math.round(color.g / 8), b5: Math.round(color.b / 8) };
-      team.flagColors = flagColors;
-      newTeams[teamIndex] = team;
-      return newTeams;
-    });
-
-    markModified();
-  }, [romParser, markModified, setTeams]);
-
-  const handleFlagDesignChange = useCallback((teamIndex, row, col, colorIdx) => {
-    if (!romParser) return;
-
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      const team = { ...newTeams[teamIndex] };
-      const flagDesign = { ...team.flagDesign };
-      const grid = flagDesign.grid.map((r) => [...r]);
-      grid[row][col] = colorIdx;
-      flagDesign.grid = grid;
-      flagDesign.dirty = true;
-      team.flagDesign = flagDesign;
-      newTeams[teamIndex] = team;
-      return newTeams;
-    });
-
-    markModified();
-  }, [romParser, markModified, setTeams]);
-
-  const handleTeamNameGenerate = useCallback((teamIndex, text) => {
-    if (!romParser) return;
-
-    const success = romParser.writeTeamNameText(teamIndex, text);
-    if (success) {
-      const newName = romParser.readTeamNameText(teamIndex);
       setTeams((prev) => {
         const newTeams = [...prev];
         const team = { ...newTeams[teamIndex] };
-        team.teamNameText = newName;
+        const players = [...team.players];
+        players[playerIndex] = { ...players[playerIndex], [field]: value };
+        team.players = players;
         newTeams[teamIndex] = team;
         return newTeams;
       });
+
+      if (field === 'name') {
+        romParser.writePlayerName(teamIndex, playerIndex, value);
+      } else {
+        const team = teams[teamIndex];
+        const playerData = { ...team.players[playerIndex], [field]: value };
+        romParser.writePlayerData(teamIndex, playerIndex, playerData);
+      }
+
       markModified();
-      setStatusMessage(`Generated: ${text}`);
-    } else {
-      setStatusMessage(`Error: "${text}" too long`);
-    }
-  }, [romParser, markModified, setTeams, setStatusMessage]);
+    },
+    [romParser, teams, markModified, setTeams],
+  );
 
-  const handleTeamNameMenuSave = useCallback((teamIndex, text) => {
-    if (!romParser) return;
+  const handleUniformChange = useCallback(
+    (teamIndex, kit, part, colorIndex, color) => {
+      if (!romParser) return;
+      romParser.writeUniformColor(teamIndex, kit, part, colorIndex, color);
 
-    const success = romParser.writeTeamNameMenu(teamIndex, text);
-    if (success) {
-      const newName = romParser.readTeamNameText(teamIndex);
       setTeams((prev) => {
         const newTeams = [...prev];
         const team = { ...newTeams[teamIndex] };
-        team.teamNameText = newName;
+        const uniforms = { ...team.uniforms };
+        const kitData = { ...uniforms[kit] };
+        const partColors = [...(kitData[part] || [])];
+        partColors[colorIndex] = {
+          ...color,
+          r5: Math.round(color.r / 8),
+          g5: Math.round(color.g / 8),
+          b5: Math.round(color.b / 8),
+        };
+        kitData[part] = partColors;
+        uniforms[kit] = kitData;
+        team.uniforms = uniforms;
         newTeams[teamIndex] = team;
         return newTeams;
       });
+
       markModified();
-      setStatusMessage(`Menu name: ${text}`);
-    } else {
-      setStatusMessage(`Error: "${text}" too long`);
-    }
-  }, [romParser, markModified, setTeams, setStatusMessage]);
+    },
+    [romParser, markModified, setTeams],
+  );
 
-  const handleTeamNameInGameGenerate = useCallback((teamIndex, text) => {
-    if (!romParser) return;
+  const handleHairSkinChange = useCallback(
+    (teamIndex, kit, part, colorIndex, color) => {
+      if (!romParser) return;
+      romParser.writeHairSkinColor(teamIndex, kit, part, colorIndex, color);
 
-    const success = romParser.writeTeamNameInGame(teamIndex, text);
-    if (success) {
       setTeams((prev) => {
         const newTeams = [...prev];
         const team = { ...newTeams[teamIndex] };
-        team.teamNameInGame = text;
+        const hairSkin = { ...team.hairSkin };
+        const kitData = { ...hairSkin[kit] };
+        const partColors = [...(kitData[part] || [])];
+        partColors[colorIndex] = {
+          ...color,
+          r5: Math.round(color.r / 8),
+          g5: Math.round(color.g / 8),
+          b5: Math.round(color.b / 8),
+        };
+        kitData[part] = partColors;
+        hairSkin[kit] = kitData;
+        team.hairSkin = hairSkin;
         newTeams[teamIndex] = team;
         return newTeams;
       });
+
       markModified();
-      setStatusMessage(`In-game: ${text}`);
-    } else {
-      setStatusMessage(`Error: "${text}" failed`);
-    }
-  }, [romParser, markModified, setTeams, setStatusMessage]);
+    },
+    [romParser, markModified, setTeams],
+  );
+
+  const handleFlagColorChange = useCallback(
+    (teamIndex, colorIndex, color) => {
+      if (!romParser) return;
+      romParser.writeFlagColor(teamIndex, colorIndex, color);
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        const flagColors = [...team.flagColors];
+        flagColors[colorIndex] = {
+          ...color,
+          r5: Math.round(color.r / 8),
+          g5: Math.round(color.g / 8),
+          b5: Math.round(color.b / 8),
+        };
+        team.flagColors = flagColors;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, markModified, setTeams],
+  );
+
+  const handleFlagDesignChange = useCallback(
+    (teamIndex, row, col, colorIdx) => {
+      if (!romParser) return;
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        const flagDesign = { ...team.flagDesign };
+        const grid = flagDesign.grid.map((r) => [...r]);
+        grid[row][col] = colorIdx;
+        flagDesign.grid = grid;
+        flagDesign.dirty = true;
+        team.flagDesign = flagDesign;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, markModified, setTeams],
+  );
+
+  const handleTeamNameGenerate = useCallback(
+    (teamIndex, text) => {
+      if (!romParser) return;
+
+      const success = romParser.writeTeamNameText(teamIndex, text);
+      if (success) {
+        const newName = romParser.readTeamNameText(teamIndex);
+        setTeams((prev) => {
+          const newTeams = [...prev];
+          const team = { ...newTeams[teamIndex] };
+          team.teamNameText = newName;
+          newTeams[teamIndex] = team;
+          return newTeams;
+        });
+        markModified();
+        setStatusMessage(`Generated: ${text}`);
+      } else {
+        setStatusMessage(`Error: "${text}" too long`);
+      }
+    },
+    [romParser, markModified, setTeams, setStatusMessage],
+  );
+
+  const handleTeamNameMenuSave = useCallback(
+    (teamIndex, text) => {
+      if (!romParser) return;
+
+      const success = romParser.writeTeamNameMenu(teamIndex, text);
+      if (success) {
+        const newName = romParser.readTeamNameText(teamIndex);
+        setTeams((prev) => {
+          const newTeams = [...prev];
+          const team = { ...newTeams[teamIndex] };
+          team.teamNameText = newName;
+          newTeams[teamIndex] = team;
+          return newTeams;
+        });
+        markModified();
+        setStatusMessage(`Menu name: ${text}`);
+      } else {
+        setStatusMessage(`Error: "${text}" too long`);
+      }
+    },
+    [romParser, markModified, setTeams, setStatusMessage],
+  );
+
+  const handleTeamNameInGameGenerate = useCallback(
+    (teamIndex, text) => {
+      if (!romParser) return;
+
+      const success = romParser.writeTeamNameInGame(teamIndex, text);
+      if (success) {
+        setTeams((prev) => {
+          const newTeams = [...prev];
+          const team = { ...newTeams[teamIndex] };
+          team.teamNameInGame = text;
+          newTeams[teamIndex] = team;
+          return newTeams;
+        });
+        markModified();
+        setStatusMessage(`In-game: ${text}`);
+      } else {
+        setStatusMessage(`Error: "${text}" failed`);
+      }
+    },
+    [romParser, markModified, setTeams, setStatusMessage],
+  );
 
   const handleSave = useCallback(async () => {
     if (!romParser) return;
@@ -177,7 +232,7 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     const warnings = validateRom(teams);
     const summary = getValidationSummary(warnings);
     if (summary.errors > 0) {
-      console.warn('[Validation] Errors:', warnings.filter(w => w.type === 'error').slice(0, 5));
+      console.warn('[Validation] Errors:', warnings.filter((w) => w.type === 'error').slice(0, 5));
     }
 
     // Write dirty flag designs
@@ -190,7 +245,7 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
 
     if (isElectron()) {
       const data = Array.from(romParser.getRomData());
-      const result = await window.electronAPI.saveRom(data);
+      const result = await electronBridge.saveRom(data);
       if (result.success) {
         markSaved(result.path);
       } else {
@@ -204,20 +259,23 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     }
   }, [romParser, romInfo, teams, markSaved, setStatusMessage]);
 
-  const handleSaveToPath = useCallback(async (filePath) => {
-    if (!romParser || !window.electronAPI) return;
-    const data = Array.from(romParser.getRomData());
-    const result = await window.electronAPI.saveRom(data, filePath);
-    if (result.success) {
-      markSaved(result.path);
-    } else {
-      setStatusMessage(result.error);
-    }
-  }, [romParser, markSaved, setStatusMessage]);
+  const handleSaveToPath = useCallback(
+    async (filePath) => {
+      if (!romParser || !isElectron()) return;
+      const data = Array.from(romParser.getRomData());
+      const result = await electronBridge.saveRom(data, filePath);
+      if (result.success) {
+        markSaved(result.path);
+      } else {
+        setStatusMessage(result.error);
+      }
+    },
+    [romParser, markSaved, setStatusMessage],
+  );
 
   const handleOpenRom = useCallback(async () => {
     if (isElectron()) {
-      window.electronAPI.openRom();
+      electronBridge.openRom();
     } else {
       const result = await openRomWeb();
       if (result) {
@@ -226,18 +284,21 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     }
   }, [loadRomData]);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    const file = e.dataTransfer?.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const data = new Uint8Array(ev.target.result);
-        loadRomData(data, file.name);
-      };
-      reader.readAsArrayBuffer(file);
-    }
-  }, [loadRomData]);
+  const handleDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer?.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const data = new Uint8Array(ev.target.result);
+          loadRomData(data, file.name);
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    },
+    [loadRomData],
+  );
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -245,13 +306,16 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
 
   // === Import/Export ===
 
-  const handleExportTeam = useCallback((teamIndex) => {
-    if (!teams[teamIndex]) return;
-    const data = exportTeam(teams[teamIndex]);
-    const filename = `${teams[teamIndex].name.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
-    downloadJson(data, filename);
-    setStatusMessage(`Exported: ${filename}`);
-  }, [teams, setStatusMessage]);
+  const handleExportTeam = useCallback(
+    (teamIndex) => {
+      if (!teams[teamIndex]) return;
+      const data = exportTeam(teams[teamIndex]);
+      const filename = `${teams[teamIndex].name.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+      downloadJson(data, filename);
+      setStatusMessage(`Exported: ${filename}`);
+    },
+    [teams, setStatusMessage],
+  );
 
   const handleExportAllTeams = useCallback(() => {
     if (teams.length === 0) return;
@@ -260,37 +324,42 @@ export default function useRomHandlers({ romParser, romInfo, teams, setTeams, ma
     setStatusMessage('Exported all teams');
   }, [teams, setStatusMessage]);
 
-  const handleImportTeam = useCallback(async (teamIndex) => {
-    if (!romParser) return;
+  const handleImportTeam = useCallback(
+    async (teamIndex) => {
+      if (!romParser) return;
 
-    const data = await readJsonFile();
-    if (!data) return;
+      const data = await readJsonFile();
+      if (!data) return;
 
-    const validation = validateImport(data);
-    if (!validation.valid) {
-      setStatusMessage(`Import error: ${validation.error}`);
-      return;
-    }
+      const validation = validateImport(data);
+      if (!validation.valid) {
+        setStatusMessage(`Import error: ${validation.error}`);
+        return;
+      }
 
-    const teamData = validation.type === 'single' ? data : null;
-    if (!teamData) {
-      setStatusMessage('Import error: select a single team file');
-      return;
-    }
+      const teamData = validation.type === 'single' ? data : null;
+      if (!teamData) {
+        setStatusMessage('Import error: select a single team file');
+        return;
+      }
 
-    applyImportedTeam(romParser, teamIndex, teamData);
+      applyImportedTeam(romParser, teamIndex, teamData);
 
-    // Reload team from ROM to get fresh state
-    const updatedTeam = romParser.readTeam(teamIndex);
-    setTeams((prev) => {
-      const newTeams = [...prev];
-      newTeams[teamIndex] = updatedTeam;
-      return newTeams;
-    });
+      // Reload team from ROM to get fresh state
+      const updatedTeam = romParser.readTeam(teamIndex);
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        newTeams[teamIndex] = updatedTeam;
+        return newTeams;
+      });
 
-    markModified();
-    setStatusMessage(`Imported: ${teamData.name || teamData.teamNameText || 'team'} → slot ${teamIndex + 1}`);
-  }, [romParser, markModified, setTeams, setStatusMessage]);
+      markModified();
+      setStatusMessage(
+        `Imported: ${teamData.name || teamData.teamNameText || 'team'} → slot ${teamIndex + 1}`,
+      );
+    },
+    [romParser, markModified, setTeams, setStatusMessage],
+  );
 
   return {
     handlePlayerChange,

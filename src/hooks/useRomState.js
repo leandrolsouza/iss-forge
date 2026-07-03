@@ -50,32 +50,41 @@ export default function useRomState() {
   }, []);
 
   // Tab management
-  const selectTeam = useCallback((teamIndex) => {
-    setSelectedTeamIndex(teamIndex);
-    if (!openTabs.find((t) => t.id === 'players')) {
-      setOpenTabs((prev) => [...prev, { id: 'players', label: 'Players' }]);
-    }
-    setActiveTab('players');
-  }, [openTabs]);
-
-  const openTab = useCallback((tabId, label) => {
-    if (!openTabs.find((t) => t.id === tabId)) {
-      setOpenTabs((prev) => [...prev, { id: tabId, label }]);
-    }
-    setActiveTab(tabId);
-  }, [openTabs]);
-
-  const closeTab = useCallback((tabId) => {
-    setOpenTabs((prev) => {
-      const newTabs = prev.filter((t) => t.id !== tabId);
-      if (activeTab === tabId && newTabs.length > 0) {
-        setActiveTab(newTabs[newTabs.length - 1].id);
-      } else if (newTabs.length === 0) {
-        setActiveTab(null);
+  const selectTeam = useCallback(
+    (teamIndex) => {
+      setSelectedTeamIndex(teamIndex);
+      if (!openTabs.find((t) => t.id === 'players')) {
+        setOpenTabs((prev) => [...prev, { id: 'players', label: 'Players' }]);
       }
-      return newTabs;
-    });
-  }, [activeTab]);
+      setActiveTab('players');
+    },
+    [openTabs],
+  );
+
+  const openTab = useCallback(
+    (tabId, label) => {
+      if (!openTabs.find((t) => t.id === tabId)) {
+        setOpenTabs((prev) => [...prev, { id: tabId, label }]);
+      }
+      setActiveTab(tabId);
+    },
+    [openTabs],
+  );
+
+  const closeTab = useCallback(
+    (tabId) => {
+      setOpenTabs((prev) => {
+        const newTabs = prev.filter((t) => t.id !== tabId);
+        if (activeTab === tabId && newTabs.length > 0) {
+          setActiveTab(newTabs[newTabs.length - 1].id);
+        } else if (newTabs.length === 0) {
+          setActiveTab(null);
+        }
+        return newTabs;
+      });
+    },
+    [activeTab],
+  );
 
   return {
     // State

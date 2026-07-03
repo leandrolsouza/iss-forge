@@ -16,7 +16,7 @@ export default function TeamCompare({ teams }) {
 
   const calcAvg = (team, field) => {
     if (!team?.players) return 0;
-    return (team.players.reduce((s, p) => s + (p[field] || 0), 0) / 15);
+    return team.players.reduce((s, p) => s + (p[field] || 0), 0) / 15;
   };
 
   const stats = [
@@ -42,7 +42,9 @@ export default function TeamCompare({ teams }) {
             <label>{t('selectTeamA')}</label>
             <select value={teamAIndex} onChange={(e) => setTeamAIndex(parseInt(e.target.value))}>
               {teams.map((team, i) => (
-                <option key={i} value={i}>{String(i + 1).padStart(2, '0')}. {team.name}</option>
+                <option key={i} value={i}>
+                  {String(i + 1).padStart(2, '0')}. {team.name}
+                </option>
               ))}
             </select>
           </div>
@@ -51,7 +53,9 @@ export default function TeamCompare({ teams }) {
             <label>{t('selectTeamB')}</label>
             <select value={teamBIndex} onChange={(e) => setTeamBIndex(parseInt(e.target.value))}>
               {teams.map((team, i) => (
-                <option key={i} value={i}>{String(i + 1).padStart(2, '0')}. {team.name}</option>
+                <option key={i} value={i}>
+                  {String(i + 1).padStart(2, '0')}. {team.name}
+                </option>
               ))}
             </select>
           </div>
@@ -85,8 +89,11 @@ export default function TeamCompare({ teams }) {
                       />
                     </div>
                   </div>
-                  <div className={`compare-diff ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`}>
-                    {diff > 0 ? '+' : ''}{diff.toFixed(1)}
+                  <div
+                    className={`compare-diff ${diff > 0 ? 'positive' : diff < 0 ? 'negative' : ''}`}
+                  >
+                    {diff > 0 ? '+' : ''}
+                    {diff.toFixed(1)}
                   </div>
                 </div>
                 <div className="compare-stat-value right">{avgB.toFixed(1)}</div>

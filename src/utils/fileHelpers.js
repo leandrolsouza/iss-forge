@@ -54,10 +54,9 @@ export function saveRomWeb(data, fileName = 'ISS_Modified.smc') {
 
 /**
  * Check if running inside Electron
+ * Re-exported from services/electronBridge for convenience
  */
-export function isElectron() {
-  return !!(window.electronAPI);
-}
+export { isElectron } from '../services/electronBridge';
 
 /**
  * Generate a modified filename

@@ -35,7 +35,9 @@ export function validateRom(teams) {
       }
 
       // Duplicate numbers in same team
-      const sameNumber = team.players.filter((p, i) => i !== playerIndex && p.number === player.number);
+      const sameNumber = team.players.filter(
+        (p, i) => i !== playerIndex && p.number === player.number,
+      );
       if (sameNumber.length > 0 && playerIndex < team.players.indexOf(sameNumber[0])) {
         warnings.push({
           teamIndex,
@@ -74,7 +76,7 @@ export function validateRom(teams) {
 
     // Check for all-zero uniform colors
     if (team.uniforms?.home?.shirt) {
-      const allBlack = team.uniforms.home.shirt.every(c => c.r === 0 && c.g === 0 && c.b === 0);
+      const allBlack = team.uniforms.home.shirt.every((c) => c.r === 0 && c.g === 0 && c.b === 0);
       if (allBlack) {
         warnings.push({
           teamIndex,
@@ -95,8 +97,8 @@ export function validateRom(teams) {
  * @returns {object} { errors, warnings, isValid }
  */
 export function getValidationSummary(warnings) {
-  const errors = warnings.filter(w => w.type === 'error');
-  const warns = warnings.filter(w => w.type === 'warning');
+  const errors = warnings.filter((w) => w.type === 'error');
+  const warns = warnings.filter((w) => w.type === 'warning');
   return {
     errors: errors.length,
     warnings: warns.length,

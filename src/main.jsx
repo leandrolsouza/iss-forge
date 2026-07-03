@@ -15,5 +15,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </RomProvider>
       </I18nProvider>
     </ThemeProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

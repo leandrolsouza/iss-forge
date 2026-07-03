@@ -39,14 +39,18 @@ export default function HairSkinEditor({ team, teamIndex, onHairSkinChange }) {
 
   const renderColorRow = (label, part, colors) => (
     <div className="uniform-part-section" key={part}>
-      <div className="detail-section-title">{label} ({colors.length} {t('colors')})</div>
+      <div className="detail-section-title">
+        {label} ({colors.length} {t('colors')})
+      </div>
       <div className="uniform-colors-grid">
         {colors.map((color, idx) => {
           const hexValue = rgbToHex(color.r, color.g, color.b);
           return (
             <div key={idx} className="color-editor-card">
               <div className="color-card-header">
-                <span className="color-card-label">{label} {colors.length > 1 ? idx + 1 : ''}</span>
+                <span className="color-card-label">
+                  {label} {colors.length > 1 ? idx + 1 : ''}
+                </span>
                 <span className="color-card-5bit">
                   ({color.r5 !== undefined ? `${color.r5}, ${color.g5}, ${color.b5}` : ''})
                 </span>
@@ -77,7 +81,10 @@ export default function HairSkinEditor({ team, teamIndex, onHairSkinChange }) {
                     <div className="rgb-field">
                       <label>R:</label>
                       <input
-                        type="number" min={0} max={248} step={8}
+                        type="number"
+                        min={0}
+                        max={248}
+                        step={8}
                         value={color.r}
                         onChange={(e) => {
                           const r = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
@@ -89,7 +96,10 @@ export default function HairSkinEditor({ team, teamIndex, onHairSkinChange }) {
                     <div className="rgb-field">
                       <label>G:</label>
                       <input
-                        type="number" min={0} max={248} step={8}
+                        type="number"
+                        min={0}
+                        max={248}
+                        step={8}
                         value={color.g}
                         onChange={(e) => {
                           const g = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
@@ -101,7 +111,10 @@ export default function HairSkinEditor({ team, teamIndex, onHairSkinChange }) {
                     <div className="rgb-field">
                       <label>B:</label>
                       <input
-                        type="number" min={0} max={248} step={8}
+                        type="number"
+                        min={0}
+                        max={248}
+                        step={8}
                         value={color.b}
                         onChange={(e) => {
                           const b = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));

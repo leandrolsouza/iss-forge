@@ -12,9 +12,15 @@ export default function TeamPreview({ team, teamIndex }) {
   }
 
   const uniforms = team.uniforms?.home;
-  const shirtColor = uniforms?.shirt?.[0] ? `rgb(${uniforms.shirt[0].r},${uniforms.shirt[0].g},${uniforms.shirt[0].b})` : '#444';
-  const shirtDetail = uniforms?.shirt?.[1] ? `rgb(${uniforms.shirt[1].r},${uniforms.shirt[1].g},${uniforms.shirt[1].b})` : '#666';
-  const shortsColor = uniforms?.shorts?.[0] ? `rgb(${uniforms.shorts[0].r},${uniforms.shorts[0].g},${uniforms.shorts[0].b})` : '#333';
+  const shirtColor = uniforms?.shirt?.[0]
+    ? `rgb(${uniforms.shirt[0].r},${uniforms.shirt[0].g},${uniforms.shirt[0].b})`
+    : '#444';
+  const shirtDetail = uniforms?.shirt?.[1]
+    ? `rgb(${uniforms.shirt[1].r},${uniforms.shirt[1].g},${uniforms.shirt[1].b})`
+    : '#666';
+  const shortsColor = uniforms?.shorts?.[0]
+    ? `rgb(${uniforms.shorts[0].r},${uniforms.shorts[0].g},${uniforms.shorts[0].b})`
+    : '#333';
 
   const getPositionLabel = (idx) => {
     if (idx === 0) return 'GK';
@@ -61,23 +67,33 @@ export default function TeamPreview({ team, teamIndex }) {
         <div className="preview-summary">
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('shooting')}</div>
-            <div className="preview-stat-value" style={{ color: '#4fc3f7' }}>{avgShooting}</div>
+            <div className="preview-stat-value" style={{ color: '#4fc3f7' }}>
+              {avgShooting}
+            </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('speed')}</div>
-            <div className="preview-stat-value" style={{ color: '#81c784' }}>{avgSpeed}</div>
+            <div className="preview-stat-value" style={{ color: '#81c784' }}>
+              {avgSpeed}
+            </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('stamina')}</div>
-            <div className="preview-stat-value" style={{ color: '#ffb74d' }}>{avgStamina}</div>
+            <div className="preview-stat-value" style={{ color: '#ffb74d' }}>
+              {avgStamina}
+            </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('technique')}</div>
-            <div className="preview-stat-value" style={{ color: '#ce93d8' }}>{avgTechnique}</div>
+            <div className="preview-stat-value" style={{ color: '#ce93d8' }}>
+              {avgTechnique}
+            </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('name')}</div>
-            <div className="preview-stat-value" style={{ color: '#fff', fontSize: 14 }}>{team.teamNameText || team.name}</div>
+            <div className="preview-stat-value" style={{ color: '#fff', fontSize: 14 }}>
+              {team.teamNameText || team.name}
+            </div>
           </div>
         </div>
 
@@ -94,11 +110,15 @@ export default function TeamPreview({ team, teamIndex }) {
                     stroke={shirtDetail}
                     strokeWidth="0.8"
                   />
-                  <path
-                    d="M6,22 L6,30 L13,30 L14,23 L15,30 L22,30 L22,22 Z"
-                    fill={shortsColor}
-                  />
-                  <text x="14" y="17" textAnchor="middle" fontSize="6" fontWeight="bold" fill={shirtDetail}>
+                  <path d="M6,22 L6,30 L13,30 L14,23 L15,30 L22,30 L22,22 Z" fill={shortsColor} />
+                  <text
+                    x="14"
+                    y="17"
+                    textAnchor="middle"
+                    fontSize="6"
+                    fontWeight="bold"
+                    fill={shirtDetail}
+                  >
                     {player.number}
                   </text>
                 </svg>
@@ -108,11 +128,18 @@ export default function TeamPreview({ team, teamIndex }) {
               <div className="preview-player-info">
                 <div className="preview-player-name">{player.name || '---'}</div>
                 <div className="preview-player-pos">
-                  <span className="preview-pos-badge" style={{ backgroundColor: getPositionColor(idx) }}>
+                  <span
+                    className="preview-pos-badge"
+                    style={{ backgroundColor: getPositionColor(idx) }}
+                  >
                     {getPositionLabel(idx)}
                   </span>
                   <span className="preview-player-hair">
-                    {HAIR_STYLES[player.hairStyle] ? (lang === 'en' ? HAIR_STYLES[player.hairStyle].nameEn : HAIR_STYLES[player.hairStyle].name) : ''}
+                    {HAIR_STYLES[player.hairStyle]
+                      ? lang === 'en'
+                        ? HAIR_STYLES[player.hairStyle].nameEn
+                        : HAIR_STYLES[player.hairStyle].name
+                      : ''}
                   </span>
                 </div>
               </div>

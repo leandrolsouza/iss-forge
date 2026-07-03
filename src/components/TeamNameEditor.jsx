@@ -1,7 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useI18n } from '../i18n';
 
-export default function TeamNameEditor({ team, teamIndex, onTeamNameMenuSave, onTeamNameInGameGenerate }) {
+export default function TeamNameEditor({
+  team,
+  teamIndex,
+  onTeamNameMenuSave,
+  onTeamNameInGameGenerate,
+}) {
   const [menuText, setMenuText] = useState('');
   const [inGameText, setInGameText] = useState('');
   const [inGameGenerated, setInGameGenerated] = useState(false);
@@ -27,7 +32,10 @@ export default function TeamNameEditor({ team, teamIndex, onTeamNameMenuSave, on
   }
 
   const handleInGameGenerate = () => {
-    const sanitized = inGameText.toUpperCase().replace(/[^A-Z0-9.]/g, '').trim();
+    const sanitized = inGameText
+      .toUpperCase()
+      .replace(/[^A-Z0-9.]/g, '')
+      .trim();
     if (!sanitized) return;
 
     onTeamNameInGameGenerate(teamIndex, sanitized);
@@ -36,7 +44,10 @@ export default function TeamNameEditor({ team, teamIndex, onTeamNameMenuSave, on
   };
 
   const handleMenuSave = () => {
-    const sanitized = menuText.toUpperCase().replace(/[^A-Z0-9. ]/g, ' ').trim();
+    const sanitized = menuText
+      .toUpperCase()
+      .replace(/[^A-Z0-9. ]/g, ' ')
+      .trim();
     if (!sanitized) return;
 
     onTeamNameMenuSave(teamIndex, sanitized);
@@ -95,9 +106,7 @@ export default function TeamNameEditor({ team, teamIndex, onTeamNameMenuSave, on
               {inGameGenerated ? `✓ ${t('generated')}` : t('generate')}
             </button>
           </div>
-          <div className="teamname-hint">
-            {t('nameInGameHint')}
-          </div>
+          <div className="teamname-hint">{t('nameInGameHint')}</div>
         </div>
 
         {/* Text in Menu (full name - selection screen) */}
@@ -113,13 +122,9 @@ export default function TeamNameEditor({ team, teamIndex, onTeamNameMenuSave, on
               placeholder={t('nameInMenuPlaceholder')}
               className="teamname-input"
             />
-            <span className="teamname-autosave-hint">
-              {menuSaved ? `✓ ${t('saved')}` : ''}
-            </span>
+            <span className="teamname-autosave-hint">{menuSaved ? `✓ ${t('saved')}` : ''}</span>
           </div>
-          <div className="teamname-hint">
-            {t('nameInMenuHint')}
-          </div>
+          <div className="teamname-hint">{t('nameInMenuHint')}</div>
         </div>
 
         {/* Info */}

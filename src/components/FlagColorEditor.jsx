@@ -82,7 +82,10 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
                         <div className="rgb-field">
                           <label>R:</label>
                           <input
-                            type="number" min={0} max={248} step={8}
+                            type="number"
+                            min={0}
+                            max={248}
+                            step={8}
                             value={color.r}
                             onChange={(e) => {
                               const r = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
@@ -94,7 +97,10 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
                         <div className="rgb-field">
                           <label>G:</label>
                           <input
-                            type="number" min={0} max={248} step={8}
+                            type="number"
+                            min={0}
+                            max={248}
+                            step={8}
                             value={color.g}
                             onChange={(e) => {
                               const g = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
@@ -106,7 +112,10 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
                         <div className="rgb-field">
                           <label>B:</label>
                           <input
-                            type="number" min={0} max={248} step={8}
+                            type="number"
+                            min={0}
+                            max={248}
+                            step={8}
                             value={color.b}
                             onChange={(e) => {
                               const b = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
@@ -128,8 +137,8 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
           <div className="detail-section-title">Informacao</div>
           <div className="welcome-info" style={{ marginTop: 8 }}>
             <p>
-              Estas sao as 4 cores usadas na bandeira do time na tela de selecao.
-              O desenho da bandeira usa estas cores como paleta indexada.
+              Estas sao as 4 cores usadas na bandeira do time na tela de selecao. O desenho da
+              bandeira usa estas cores como paleta indexada.
             </p>
           </div>
         </div>
@@ -149,7 +158,15 @@ function FlagPreview({ colors }) {
     <div className="kit-figure">
       <svg width="160" height="110" viewBox="0 0 160 110">
         {/* Flag background divided into sections to show all 4 colors */}
-        <rect x="5" y="5" width="150" height="100" fill={getColor(0)} stroke="#555" strokeWidth="1" />
+        <rect
+          x="5"
+          y="5"
+          width="150"
+          height="100"
+          fill={getColor(0)}
+          stroke="#555"
+          strokeWidth="1"
+        />
         {/* Horizontal stripes to show the palette */}
         <rect x="5" y="5" width="150" height="25" fill={getColor(0)} />
         <rect x="5" y="30" width="150" height="25" fill={getColor(1)} />
@@ -162,7 +179,10 @@ function FlagPreview({ colors }) {
       <div className="kit-preview-labels">
         {colors.map((c, i) => (
           <div key={i} className="kit-label">
-            <span className="kit-color-dot" style={{ backgroundColor: `rgb(${c.r},${c.g},${c.b})` }} />
+            <span
+              className="kit-color-dot"
+              style={{ backgroundColor: `rgb(${c.r},${c.g},${c.b})` }}
+            />
             Cor {i + 1}
           </div>
         ))}

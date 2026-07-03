@@ -2,8 +2,8 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import ptBR from './pt-BR';
 import en from './en';
 
-const LANGUAGES = { 'pt-BR': ptBR, 'en': en };
-const LANGUAGE_LABELS = { 'pt-BR': 'Portugues', 'en': 'English' };
+const LANGUAGES = { 'pt-BR': ptBR, en: en };
+const LANGUAGE_LABELS = { 'pt-BR': 'Portugues', en: 'English' };
 
 const I18nContext = createContext();
 
@@ -13,9 +13,12 @@ export function I18nProvider({ children }) {
     return saved && LANGUAGES[saved] ? saved : 'pt-BR';
   });
 
-  const t = useCallback((key) => {
-    return LANGUAGES[lang]?.[key] || LANGUAGES['pt-BR']?.[key] || key;
-  }, [lang]);
+  const t = useCallback(
+    (key) => {
+      return LANGUAGES[lang]?.[key] || LANGUAGES['pt-BR']?.[key] || key;
+    },
+    [lang],
+  );
 
   const switchLang = useCallback((newLang) => {
     if (LANGUAGES[newLang]) {

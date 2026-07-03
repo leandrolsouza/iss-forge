@@ -27,14 +27,14 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
   // Get the parts to display based on kit type
   const kitParts = isKeeper
     ? [
-      { id: 'shirtAndSocks', label: t('shirtAndSocks'), colors: currentKit.shirtAndSocks || [] },
-      { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
-    ]
+        { id: 'shirtAndSocks', label: t('shirtAndSocks'), colors: currentKit.shirtAndSocks || [] },
+        { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
+      ]
     : [
-      { id: 'shirt', label: t('shirt'), colors: currentKit.shirt || [] },
-      { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
-      { id: 'socks', label: t('socks'), colors: currentKit.socks || [] },
-    ];
+        { id: 'shirt', label: t('shirt'), colors: currentKit.shirt || [] },
+        { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
+        { id: 'socks', label: t('socks'), colors: currentKit.socks || [] },
+      ];
 
   const rgbToHex = (r, g, b) => {
     return '#' + [r, g, b].map((c) => Math.min(255, c).toString(16).padStart(2, '0')).join('');
@@ -80,14 +80,18 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
         {/* Color Editors by Part */}
         {kitParts.map((part) => (
           <div key={part.id} className="uniform-part-section">
-            <div className="detail-section-title">{part.label} ({part.colors.length} {t('colors')})</div>
+            <div className="detail-section-title">
+              {part.label} ({part.colors.length} {t('colors')})
+            </div>
             <div className="uniform-colors-grid">
               {part.colors.map((color, idx) => {
                 const hexValue = rgbToHex(color.r, color.g, color.b);
                 return (
                   <div key={idx} className="color-editor-card">
                     <div className="color-card-header">
-                      <span className="color-card-label">{t('color')} {idx + 1}</span>
+                      <span className="color-card-label">
+                        {t('color')} {idx + 1}
+                      </span>
                       <span className="color-card-5bit">
                         ({color.r5 !== undefined ? `${color.r5}, ${color.g5}, ${color.b5}` : ''})
                       </span>
@@ -119,11 +123,16 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
                             <label>R:</label>
                             <input
                               type="number"
-                              min={0} max={248} step={8}
+                              min={0}
+                              max={248}
+                              step={8}
                               value={color.r}
                               onChange={(e) => {
                                 const r = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                                onUniformChange(teamIndex, activeKit, part.id, idx, { ...color, r });
+                                onUniformChange(teamIndex, activeKit, part.id, idx, {
+                                  ...color,
+                                  r,
+                                });
                               }}
                               className="input-rgb"
                             />
@@ -132,11 +141,16 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
                             <label>G:</label>
                             <input
                               type="number"
-                              min={0} max={248} step={8}
+                              min={0}
+                              max={248}
+                              step={8}
                               value={color.g}
                               onChange={(e) => {
                                 const g = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                                onUniformChange(teamIndex, activeKit, part.id, idx, { ...color, g });
+                                onUniformChange(teamIndex, activeKit, part.id, idx, {
+                                  ...color,
+                                  g,
+                                });
                               }}
                               className="input-rgb"
                             />
@@ -145,11 +159,16 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
                             <label>B:</label>
                             <input
                               type="number"
-                              min={0} max={248} step={8}
+                              min={0}
+                              max={248}
+                              step={8}
                               value={color.b}
                               onChange={(e) => {
                                 const b = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                                onUniformChange(teamIndex, activeKit, part.id, idx, { ...color, b });
+                                onUniformChange(teamIndex, activeKit, part.id, idx, {
+                                  ...color,
+                                  b,
+                                });
                               }}
                               className="input-rgb"
                             />
@@ -204,7 +223,15 @@ function KitPreview({ kit, kitType }) {
         {/* Collar */}
         <path d="M45,25 L50,30 L70,30 L75,25" fill="none" stroke={shirt3} strokeWidth="3" />
         {/* Number */}
-        <text x="60" y="72" textAnchor="middle" fontSize="20" fontWeight="bold" fill={shirt2} opacity="0.8">
+        <text
+          x="60"
+          y="72"
+          textAnchor="middle"
+          fontSize="20"
+          fontWeight="bold"
+          fill={shirt2}
+          opacity="0.8"
+        >
           10
         </text>
         {/* Shorts */}
@@ -220,10 +247,22 @@ function KitPreview({ kit, kitType }) {
       </svg>
 
       <div className="kit-preview-labels">
-        <div className="kit-label"><span className="kit-color-dot" style={{ backgroundColor: shirt1 }} />Camisa 1</div>
-        <div className="kit-label"><span className="kit-color-dot" style={{ backgroundColor: shirt2 }} />Camisa 2</div>
-        <div className="kit-label"><span className="kit-color-dot" style={{ backgroundColor: shorts1 }} />Calcao</div>
-        <div className="kit-label"><span className="kit-color-dot" style={{ backgroundColor: socks1 }} />Meiao</div>
+        <div className="kit-label">
+          <span className="kit-color-dot" style={{ backgroundColor: shirt1 }} />
+          Camisa 1
+        </div>
+        <div className="kit-label">
+          <span className="kit-color-dot" style={{ backgroundColor: shirt2 }} />
+          Camisa 2
+        </div>
+        <div className="kit-label">
+          <span className="kit-color-dot" style={{ backgroundColor: shorts1 }} />
+          Calcao
+        </div>
+        <div className="kit-label">
+          <span className="kit-color-dot" style={{ backgroundColor: socks1 }} />
+          Meiao
+        </div>
       </div>
     </div>
   );

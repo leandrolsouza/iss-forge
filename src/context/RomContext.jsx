@@ -33,11 +33,7 @@ export function RomProvider({ children }) {
     ...handlers,
   };
 
-  return (
-    <RomContext.Provider value={value}>
-      {children}
-    </RomContext.Provider>
-  );
+  return <RomContext.Provider value={value}>{children}</RomContext.Provider>;
 }
 
 /**

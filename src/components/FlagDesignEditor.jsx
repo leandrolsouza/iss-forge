@@ -13,7 +13,9 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
   const canvasRef = useRef(null);
 
   if (!team || !team.flagDesign) {
-    return <div className="editor-panel empty">Selecione um time para editar (design da bandeira)</div>;
+    return (
+      <div className="editor-panel empty">Selecione um time para editar (design da bandeira)</div>
+    );
   }
 
   const { grid, flagColors } = team.flagDesign;
@@ -65,7 +67,11 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
   };
 
   return (
-    <div className="editor-panel uniform-editor" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div
+      className="editor-panel uniform-editor"
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
       <div className="editor-header">
         <div className="editor-header-title">
           <span className="editor-icon">&#127988;</span>
@@ -131,7 +137,7 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
                   onMouseDown={() => handleMouseDown(r, c)}
                   onMouseEnter={() => handleMouseEnter(r, c)}
                 />
-              ))
+              )),
             )}
           </div>
         </div>
@@ -160,7 +166,7 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
                         height: 4,
                       }}
                     />
-                  ))
+                  )),
                 )}
               </div>
               <span style={{ fontSize: 11, color: '#999' }}>96×64 no jogo (escala ~4x)</span>
@@ -171,8 +177,13 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
         <div className="kit-preview-section">
           <div className="detail-section-title">Informacao</div>
           <div className="welcome-info" style={{ marginTop: 8 }}>
-            <p>Clique ou arraste para pintar. Cada pixel usa uma das 4 cores da paleta da bandeira ou transparente.</p>
-            <p style={{ marginTop: 4 }}>As cores da paleta podem ser editadas na aba "Cores da Bandeira".</p>
+            <p>
+              Clique ou arraste para pintar. Cada pixel usa uma das 4 cores da paleta da bandeira ou
+              transparente.
+            </p>
+            <p style={{ marginTop: 4 }}>
+              As cores da paleta podem ser editadas na aba "Cores da Bandeira".
+            </p>
           </div>
         </div>
       </div>

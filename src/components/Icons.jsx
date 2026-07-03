@@ -89,7 +89,12 @@ export const IconOverview = ({ size }) => (
 
 export const IconCompare = ({ size }) => (
   <Icon size={size}>
-    <path d="M8 1v14M8 1L5 4M8 1l3 3M8 15l-3-3M8 15l3-3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+    <path
+      d="M8 1v14M8 1L5 4M8 1l3 3M8 15l-3-3M8 15l3-3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+    />
     <rect x="1" y="5" width="5" height="6" rx="0.5" />
     <rect x="10" y="5" width="5" height="6" rx="0.5" opacity="0.6" />
   </Icon>
@@ -106,7 +111,13 @@ export const IconMenu = ({ size }) => (
 export const IconSun = ({ size }) => (
   <Icon size={size}>
     <circle cx="8" cy="8" r="3" />
-    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <path
+      d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+    />
   </Icon>
 );
 
@@ -119,7 +130,7 @@ export const IconMoon = ({ size }) => (
 export const IconChevron = ({ size, expanded }) => (
   <Icon size={size || 12}>
     <path
-      d={expanded ? "M4 6l4 4 4-4" : "M6 4l4 4-4 4"}
+      d={expanded ? 'M4 6l4 4 4-4' : 'M6 4l4 4-4 4'}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.5"

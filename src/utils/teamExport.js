@@ -18,7 +18,8 @@ export function exportTeam(team) {
     name: team.name,
     id: team.id,
     teamNameText: team.teamNameText || '',
-    teamNameInGame: team.teamNameInGame || (team.teamNameText || team.name).substring(0, 3).toUpperCase(),
+    teamNameInGame:
+      team.teamNameInGame || (team.teamNameText || team.name).substring(0, 3).toUpperCase(),
     players: team.players.map((p) => ({
       name: p.name,
       number: p.number,
@@ -186,7 +187,10 @@ export function readJsonFile() {
     input.accept = '.json';
     input.onchange = (e) => {
       const file = e.target.files[0];
-      if (!file) { resolve(null); return; }
+      if (!file) {
+        resolve(null);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {

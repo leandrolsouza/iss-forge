@@ -43,7 +43,9 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
   return (
     <div className="welcome-panel" onDrop={onDrop} onDragOver={onDragOver}>
       <div className="welcome-content">
-        <h1 className="welcome-title">{t('welcomeTitle')} <span className="beta-badge">BETA</span></h1>
+        <h1 className="welcome-title">
+          {t('welcomeTitle')} <span className="beta-badge">BETA</span>
+        </h1>
         <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
 
         <div className="welcome-beta-notice">
@@ -78,7 +80,11 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
             ) : (
               <ul className="welcome-recent-list">
                 {recentRoms.map((rom) => (
-                  <li key={rom.path} className="welcome-recent-item" onClick={() => handleOpenRecent(rom.path)}>
+                  <li
+                    key={rom.path}
+                    className="welcome-recent-item"
+                    onClick={() => handleOpenRecent(rom.path)}
+                  >
                     <div className="welcome-recent-item-info">
                       <span className="welcome-recent-item-name">{rom.name}</span>
                       <span className="welcome-recent-item-path">{rom.path}</span>
@@ -114,8 +120,8 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
 
         <div className="welcome-credits">
           <p>
-            Based on the work of Rodrigo M. Guerra (ISS Studio),
-            Esteban Fuentealba (Web ISS Studio), Equipe Puma & Equipe Falcon Brasil.
+            Based on the work of Rodrigo M. Guerra (ISS Studio), Esteban Fuentealba (Web ISS
+            Studio), Equipe Puma & Equipe Falcon Brasil.
           </p>
         </div>
       </div>

@@ -2,8 +2,18 @@ import React, { useState } from 'react';
 import { useI18n } from '../i18n';
 import { useTheme } from '../theme/ThemeProvider';
 import {
-  IconPlayers, IconUniform, IconHairSkin, IconFlag, IconFlagDesign,
-  IconTeamName, IconOverview, IconCompare, IconMenu, IconSun, IconMoon, IconChevron,
+  IconPlayers,
+  IconUniform,
+  IconHairSkin,
+  IconFlag,
+  IconFlagDesign,
+  IconTeamName,
+  IconOverview,
+  IconCompare,
+  IconMenu,
+  IconSun,
+  IconMoon,
+  IconChevron,
 } from './Icons';
 
 export default function Sidebar({
@@ -33,11 +43,7 @@ export default function Sidebar({
     return (
       <div className="sidebar sidebar-collapsed">
         <div className="sidebar-icons">
-          <button
-            className="sidebar-icon-btn"
-            onClick={onToggleCollapse}
-            title="Expandir"
-          >
+          <button className="sidebar-icon-btn" onClick={onToggleCollapse} title="Expandir">
             <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
               <path d="M2 3h12v1H2V3zm0 4h12v1H2V7zm0 4h12v1H2v-1z" />
             </svg>
@@ -76,45 +82,84 @@ export default function Sidebar({
 
       {/* Editors Section */}
       <div className="sidebar-section">
-        <div
-          className="sidebar-section-header"
-          onClick={() => toggleSection('editors')}
-        >
-          <span className={`chevron ${expandedSections.editors ? 'expanded' : ''}`}><IconChevron expanded={expandedSections.editors} /></span>
+        <div className="sidebar-section-header" onClick={() => toggleSection('editors')}>
+          <span className={`chevron ${expandedSections.editors ? 'expanded' : ''}`}>
+            <IconChevron expanded={expandedSections.editors} />
+          </span>
           <span className="section-label">{t('editors')}</span>
         </div>
         {expandedSections.editors && (
           <div className="sidebar-section-content">
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('players', t('editorPlayers'))}>
-              <span className="item-icon"><IconPlayers size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('players', t('editorPlayers'))}
+            >
+              <span className="item-icon">
+                <IconPlayers size={14} />
+              </span>
               <span>{t('editorPlayers')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('uniforms', t('editorUniforms'))}>
-              <span className="item-icon"><IconUniform size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('uniforms', t('editorUniforms'))}
+            >
+              <span className="item-icon">
+                <IconUniform size={14} />
+              </span>
               <span>{t('editorUniforms')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('hairskin', t('editorHairSkin'))}>
-              <span className="item-icon"><IconHairSkin size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('hairskin', t('editorHairSkin'))}
+            >
+              <span className="item-icon">
+                <IconHairSkin size={14} />
+              </span>
               <span>{t('editorHairSkin')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('flagcolors', t('editorFlagColors'))}>
-              <span className="item-icon"><IconFlag size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('flagcolors', t('editorFlagColors'))}
+            >
+              <span className="item-icon">
+                <IconFlag size={14} />
+              </span>
               <span>{t('editorFlagColors')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('flagdesign', t('editorFlagDesign'))}>
-              <span className="item-icon"><IconFlagDesign size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('flagdesign', t('editorFlagDesign'))}
+            >
+              <span className="item-icon">
+                <IconFlagDesign size={14} />
+              </span>
               <span>{t('editorFlagDesign')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('teamname', t('editorTeamName'))}>
-              <span className="item-icon"><IconTeamName size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('teamname', t('editorTeamName'))}
+            >
+              <span className="item-icon">
+                <IconTeamName size={14} />
+              </span>
               <span>{t('editorTeamName')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('preview', t('editorPreview'))}>
-              <span className="item-icon"><IconOverview size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('preview', t('editorPreview'))}
+            >
+              <span className="item-icon">
+                <IconOverview size={14} />
+              </span>
               <span>{t('editorPreview')}</span>
             </div>
-            <div className="sidebar-item editor-item" onClick={() => onOpenTab('compare', t('editorCompare'))}>
-              <span className="item-icon"><IconCompare size={14} /></span>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('compare', t('editorCompare'))}
+            >
+              <span className="item-icon">
+                <IconCompare size={14} />
+              </span>
               <span>{t('editorCompare')}</span>
             </div>
           </div>
@@ -123,12 +168,13 @@ export default function Sidebar({
 
       {/* Teams Section */}
       <div className="sidebar-section">
-        <div
-          className="sidebar-section-header"
-          onClick={() => toggleSection('teams')}
-        >
-          <span className={`chevron ${expandedSections.teams ? 'expanded' : ''}`}><IconChevron expanded={expandedSections.teams} /></span>
-          <span className="section-label">{t('selections')} ({teams.length})</span>
+        <div className="sidebar-section-header" onClick={() => toggleSection('teams')}>
+          <span className={`chevron ${expandedSections.teams ? 'expanded' : ''}`}>
+            <IconChevron expanded={expandedSections.teams} />
+          </span>
+          <span className="section-label">
+            {t('selections')} ({teams.length})
+          </span>
         </div>
         {expandedSections.teams && (
           <div className="sidebar-section-content team-list">
@@ -140,8 +186,9 @@ export default function Sidebar({
             {teams.map((team, index) => (
               <div
                 key={team.id}
-                className={`sidebar-item team-item ${index === selectedTeamIndex ? 'selected' : ''
-                  }`}
+                className={`sidebar-item team-item ${
+                  index === selectedTeamIndex ? 'selected' : ''
+                }`}
                 onClick={() => onSelectTeam(index)}
               >
                 <span className="team-index">{String(index + 1).padStart(2, '0')}</span>
@@ -154,10 +201,18 @@ export default function Sidebar({
 
       {/* Settings Section - Theme & Language */}
       <div className="sidebar-settings">
-        <button className="sidebar-setting-btn" onClick={toggleTheme} title={theme === 'dark' ? t('lightTheme') : t('darkTheme')}>
+        <button
+          className="sidebar-setting-btn"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
+        >
           {theme === 'dark' ? <IconSun size={14} /> : <IconMoon size={14} />}
         </button>
-        <button className="sidebar-setting-btn" onClick={() => onOpenTab('about', 'Sobre')} title="Sobre / About">
+        <button
+          className="sidebar-setting-btn"
+          onClick={() => onOpenTab('about', 'Sobre')}
+          title="Sobre / About"
+        >
           <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm-.5 3h1v1h-1V5zm0 2h1v5h-1V7z" />
           </svg>

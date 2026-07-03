@@ -11,8 +11,16 @@ export default function StatusBar({ message, modified, teamCount, selectedTeam }
         <span className="status-message">{message}</span>
       </div>
       <div className="status-bar-right">
-        {selectedTeam && <span className="status-item">{t('team')}: {selectedTeam}</span>}
-        {teamCount > 0 && <span className="status-item">{t('teams')}: {teamCount}</span>}
+        {selectedTeam && (
+          <span className="status-item">
+            {t('team')}: {selectedTeam}
+          </span>
+        )}
+        {teamCount > 0 && (
+          <span className="status-item">
+            {t('teams')}: {teamCount}
+          </span>
+        )}
         <span className="status-item">ISS Forge v1.0</span>
       </div>
     </div>

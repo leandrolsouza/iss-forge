@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import FlagTemplateSelector from './FlagTemplateSelector';
 
 const GRID_WIDTH = 24;
 const GRID_HEIGHT = 16;
@@ -7,7 +8,12 @@ const PIXEL_SIZE = 22;
 // Color 0 is transparent (background), 1-4 are the flag palette colors
 const COLOR_LABELS = ['Transparente', 'Cor 1', 'Cor 2', 'Cor 3', 'Cor 4'];
 
-export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }) {
+export default function FlagDesignEditor({
+  team,
+  teamIndex,
+  onFlagDesignChange,
+  onFlagDesignBulkChange,
+}) {
   const [selectedColor, setSelectedColor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
@@ -105,6 +111,12 @@ export default function FlagDesignEditor({ team, teamIndex, onFlagDesignChange }
             </button>
           </div>
         </div>
+
+        {/* Flag Templates */}
+        <FlagTemplateSelector
+          flagColors={flagColors}
+          onApplyTemplate={(newGrid) => onFlagDesignBulkChange(teamIndex, newGrid)}
+        />
 
         {/* Pixel Grid */}
         <div className="flag-design-grid-container">

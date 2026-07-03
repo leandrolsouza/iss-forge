@@ -50,6 +50,7 @@ export default function App() {
     handleHairSkinChange,
     handleFlagColorChange,
     handleFlagDesignChange,
+    handleFlagDesignBulkChange,
     handleTeamNameGenerate,
     handleTeamNameMenuSave,
     handleTeamNameInGameGenerate,
@@ -186,7 +187,13 @@ export default function App() {
       case 'flagcolors':
         return <FlagColorEditor {...props} onFlagColorChange={handleFlagColorChange} />;
       case 'flagdesign':
-        return <FlagDesignEditor {...props} onFlagDesignChange={handleFlagDesignChange} />;
+        return (
+          <FlagDesignEditor
+            {...props}
+            onFlagDesignChange={handleFlagDesignChange}
+            onFlagDesignBulkChange={handleFlagDesignBulkChange}
+          />
+        );
       case 'teamname':
         return (
           <TeamNameEditor

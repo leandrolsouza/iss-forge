@@ -164,6 +164,27 @@ export default function useRomHandlers({
     [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
+  const handleFlagDesignBulkChange = useCallback(
+    (teamIndex, newGrid) => {
+      if (!romParser) return;
+      pushSnapshot(teams);
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        const flagDesign = { ...team.flagDesign };
+        flagDesign.grid = newGrid.map((r) => [...r]);
+        flagDesign.dirty = true;
+        team.flagDesign = flagDesign;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
   const handleTeamNameGenerate = useCallback(
     (teamIndex, text) => {
       if (!romParser) return;
@@ -382,6 +403,7 @@ export default function useRomHandlers({
     handleHairSkinChange,
     handleFlagColorChange,
     handleFlagDesignChange,
+    handleFlagDesignBulkChange,
     handleTeamNameGenerate,
     handleTeamNameMenuSave,
     handleTeamNameInGameGenerate,

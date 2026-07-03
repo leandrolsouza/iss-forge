@@ -1,15 +1,17 @@
 /**
  * Core ROM state management hook
- * Manages: romParser, teams, selection, tabs, modified status
+ * Manages: romParser, teams, selection, tabs, modified status, undo/redo history
  */
 import { useState, useCallback } from 'react';
 import RomParser from '../rom/RomParser';
+import useHistory from './useHistory';
 
 export default function useRomState() {
   const [romParser, setRomParser] = useState(null);
   const [romInfo, setRomInfo] = useState(null);
   const [teams, setTeams] = useState([]);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
+  const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
   const [openTabs, setOpenTabs] = useState([]);
   const [modified, setModified] = useState(false);
@@ -38,6 +40,7 @@ export default function useRomState() {
 
         const allTeams = parser.readAllTeams();
         setTeams(allTeams);
+        history.clearHistory();
 
         if (allTeams.length > 0) {
           setSelectedTeamIndex(0);
@@ -48,7 +51,7 @@ export default function useRomState() {
         setLoading(false);
       }
     }, 50);
-  }, []);
+  }, [history]);
 
   const markModified = useCallback(() => {
     setModified(true);
@@ -59,6 +62,30 @@ export default function useRomState() {
     setModified(false);
     setStatusMessage(path || '');
   }, []);
+
+  // Undo/Redo operations
+  const performUndo = useCallback(() => {
+    const restored = history.undo(teams);
+    if (restored) {
+      setTeams(restored);
+      // Re-sync ROM buffer from restored state
+      if (romParser) {
+        romParser.reloadTeams(restored);
+      }
+      setModified(history.canUndo);
+    }
+  }, [history, teams, romParser]);
+
+  const performRedo = useCallback(() => {
+    const restored = history.redo(teams);
+    if (restored) {
+      setTeams(restored);
+      if (romParser) {
+        romParser.reloadTeams(restored);
+      }
+      setModified(true);
+    }
+  }, [history, teams, romParser]);
 
   // Tab management
   const selectTeam = useCallback(
@@ -120,5 +147,12 @@ export default function useRomState() {
     openTab,
     closeTab,
     setActiveTab,
+
+    // Undo/Redo
+    pushSnapshot: history.pushSnapshot,
+    performUndo,
+    performRedo,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
   };
 }

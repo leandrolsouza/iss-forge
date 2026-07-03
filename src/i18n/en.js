@@ -156,9 +156,20 @@ export default {
   menuSaveAs: 'Save ROM As...',
   menuQuit: 'Quit',
   menuEdit: 'Edit',
+  menuUndo: 'Undo',
+  menuRedo: 'Redo',
+  toolbarUndo: 'Undo (Ctrl+Z)',
+  toolbarRedo: 'Redo (Ctrl+Y)',
   menuView: 'View',
   menuHelp: 'Help',
   menuAbout: 'About ISS Forge',
+
+  // Unsaved Changes Dialog
+  unsavedTitle: 'Unsaved Changes',
+  unsavedMessage: 'The ROM has unsaved changes. Do you want to save before quitting?',
+  unsavedSave: 'Save',
+  unsavedDontSave: 'Don\'t Save',
+  unsavedCancel: 'Cancel',
 
   // Help Tooltips - Player Editor
   helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',

@@ -102,6 +102,46 @@ export const IconCompare = ({ size }) => (
 
 // --- UI Controls ---
 
+export const IconUndo = ({ size }) => (
+  <Icon size={size}>
+    <path
+      d="M5.5 3L2 6.5 5.5 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M2.5 6.5H10a3.5 3.5 0 0 1 0 7H8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+  </Icon>
+);
+
+export const IconRedo = ({ size }) => (
+  <Icon size={size}>
+    <path
+      d="M10.5 3L14 6.5 10.5 10"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M13.5 6.5H6a3.5 3.5 0 0 0 0 7h2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+  </Icon>
+);
+
 export const IconMenu = ({ size }) => (
   <Icon size={size}>
     <path d="M2 3h12v1H2V3zm0 4h12v1H2V7zm0 4h12v1H2v-1z" />

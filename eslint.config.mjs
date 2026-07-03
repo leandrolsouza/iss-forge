@@ -26,6 +26,7 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
+        __APP_VERSION__: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: { jsx: true },

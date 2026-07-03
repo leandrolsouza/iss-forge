@@ -21,6 +21,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('rom:loadCancelled', () => callback());
   },
 
+  // Edit menu actions
+  onMenuUndo: (callback) => {
+    ipcRenderer.on('menu:undo', () => callback());
+  },
+  onMenuRedo: (callback) => {
+    ipcRenderer.on('menu:redo', () => callback());
+  },
+
+  // App state
+  setModifiedState: (isModified) => ipcRenderer.send('rom:modifiedState', isModified),
+  notifySaveComplete: () => ipcRenderer.send('rom:saveComplete'),
+  setLocale: (locale) => ipcRenderer.send('app:setLocale', locale),
+  sendCloseResponse: (choice) => ipcRenderer.send('app:closeResponse', choice),
+  onConfirmClose: (callback) => {
+    ipcRenderer.on('app:confirmClose', () => callback());
+  },
+
   // Recent ROMs
   getRecentRoms: () => ipcRenderer.invoke('recent:getAll'),
   clearRecentRoms: () => ipcRenderer.invoke('recent:clear'),

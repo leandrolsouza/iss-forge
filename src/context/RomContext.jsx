@@ -22,6 +22,7 @@ export function RomProvider({ children }) {
     setStatusMessage: state.setStatusMessage,
     loadRomData: state.loadRomData,
     setLoading: state.setLoading,
+    pushSnapshot: state.pushSnapshot,
   });
 
   const value = {

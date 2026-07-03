@@ -25,10 +25,12 @@ export default function useRomHandlers({
   setStatusMessage,
   loadRomData,
   setLoading,
+  pushSnapshot,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       setTeams((prev) => {
         const newTeams = [...prev];
@@ -50,12 +52,13 @@ export default function useRomHandlers({
 
       markModified();
     },
-    [romParser, teams, markModified, setTeams],
+    [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
   const handleUniformChange = useCallback(
     (teamIndex, kit, part, colorIndex, color) => {
       if (!romParser) return;
+      pushSnapshot(teams);
       romParser.writeUniformColor(teamIndex, kit, part, colorIndex, color);
 
       setTeams((prev) => {
@@ -79,12 +82,13 @@ export default function useRomHandlers({
 
       markModified();
     },
-    [romParser, markModified, setTeams],
+    [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
   const handleHairSkinChange = useCallback(
     (teamIndex, kit, part, colorIndex, color) => {
       if (!romParser) return;
+      pushSnapshot(teams);
       romParser.writeHairSkinColor(teamIndex, kit, part, colorIndex, color);
 
       setTeams((prev) => {
@@ -108,12 +112,13 @@ export default function useRomHandlers({
 
       markModified();
     },
-    [romParser, markModified, setTeams],
+    [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
   const handleFlagColorChange = useCallback(
     (teamIndex, colorIndex, color) => {
       if (!romParser) return;
+      pushSnapshot(teams);
       romParser.writeFlagColor(teamIndex, colorIndex, color);
 
       setTeams((prev) => {
@@ -133,12 +138,13 @@ export default function useRomHandlers({
 
       markModified();
     },
-    [romParser, markModified, setTeams],
+    [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
   const handleFlagDesignChange = useCallback(
     (teamIndex, row, col, colorIdx) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       setTeams((prev) => {
         const newTeams = [...prev];
@@ -155,12 +161,13 @@ export default function useRomHandlers({
 
       markModified();
     },
-    [romParser, markModified, setTeams],
+    [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
   const handleTeamNameGenerate = useCallback(
     (teamIndex, text) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       const success = romParser.writeTeamNameText(teamIndex, text);
       if (success) {
@@ -178,12 +185,13 @@ export default function useRomHandlers({
         setStatusMessage(`Error: "${text}" too long`);
       }
     },
-    [romParser, markModified, setTeams, setStatusMessage],
+    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
   );
 
   const handleTeamNameMenuSave = useCallback(
     (teamIndex, text) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       const success = romParser.writeTeamNameMenu(teamIndex, text);
       if (success) {
@@ -201,12 +209,13 @@ export default function useRomHandlers({
         setStatusMessage(`Error: "${text}" too long`);
       }
     },
-    [romParser, markModified, setTeams, setStatusMessage],
+    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
   );
 
   const handleTeamNameInGameGenerate = useCallback(
     (teamIndex, text) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       const success = romParser.writeTeamNameInGame(teamIndex, text);
       if (success) {
@@ -223,7 +232,7 @@ export default function useRomHandlers({
         setStatusMessage(`Error: "${text}" failed`);
       }
     },
-    [romParser, markModified, setTeams, setStatusMessage],
+    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
   );
 
   const handleSave = useCallback(async () => {
@@ -249,6 +258,7 @@ export default function useRomHandlers({
       const result = await electronBridge.saveRom(data);
       if (result.success) {
         markSaved(result.path);
+        electronBridge.notifySaveComplete();
       } else {
         setStatusMessage(result.error);
       }
@@ -267,6 +277,7 @@ export default function useRomHandlers({
       const result = await electronBridge.saveRom(data, filePath);
       if (result.success) {
         markSaved(result.path);
+        electronBridge.notifySaveComplete();
       } else {
         setStatusMessage(result.error);
       }
@@ -330,6 +341,7 @@ export default function useRomHandlers({
   const handleImportTeam = useCallback(
     async (teamIndex) => {
       if (!romParser) return;
+      pushSnapshot(teams);
 
       const data = await readJsonFile();
       if (!data) return;
@@ -361,7 +373,7 @@ export default function useRomHandlers({
         `Imported: ${teamData.name || teamData.teamNameText || 'team'} → slot ${teamIndex + 1}`,
       );
     },
-    [romParser, markModified, setTeams, setStatusMessage],
+    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
   );
 
   return {

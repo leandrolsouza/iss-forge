@@ -156,9 +156,20 @@ export default {
   menuSaveAs: 'Salvar ROM Como...',
   menuQuit: 'Sair',
   menuEdit: 'Editar',
+  menuUndo: 'Desfazer',
+  menuRedo: 'Refazer',
+  toolbarUndo: 'Desfazer (Ctrl+Z)',
+  toolbarRedo: 'Refazer (Ctrl+Y)',
   menuView: 'Visualizar',
   menuHelp: 'Ajuda',
   menuAbout: 'Sobre ISS Forge',
+
+  // Unsaved Changes Dialog
+  unsavedTitle: 'Alteracoes nao salvas',
+  unsavedMessage: 'A ROM possui alteracoes nao salvas. Deseja salvar antes de sair?',
+  unsavedSave: 'Salvar',
+  unsavedDontSave: 'Nao Salvar',
+  unsavedCancel: 'Cancelar',
 
   // Help Tooltips - Player Editor
   helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',

@@ -21,7 +21,7 @@ export default function StatusBar({ message, modified, teamCount, selectedTeam }
             {t('teams')}: {teamCount}
           </span>
         )}
-        <span className="status-item">ISS Forge v1.0</span>
+        <span className="status-item">ISS Forge v{__APP_VERSION__}</span>
       </div>
     </div>
   );

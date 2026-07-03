@@ -1,0 +1,121 @@
+.unsaved-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  animation: unsaved-fade-in 0.15s ease-out;
+}
+
+@keyframes unsaved-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.unsaved-modal {
+  background: var(--bg-secondary, #252526);
+  border: 1px solid var(--border-secondary, #474747);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: unsaved-slide-in 0.15s ease-out;
+}
+
+@keyframes unsaved-slide-in {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.unsaved-icon {
+  color: var(--text-warning, #cca700);
+  flex-shrink: 0;
+}
+
+.unsaved-content {
+  text-align: center;
+}
+
+.unsaved-title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #cccccc);
+}
+
+.unsaved-message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #969696);
+  line-height: 1.5;
+}
+
+.unsaved-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.unsaved-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.1s, opacity 0.1s;
+}
+
+.unsaved-btn:focus-visible {
+  outline: 2px solid var(--text-accent, #4fc1ff);
+  outline-offset: 2px;
+}
+
+.unsaved-btn-primary {
+  background: var(--bg-button, #0e639c);
+  color: var(--text-white, #ffffff);
+}
+
+.unsaved-btn-primary:hover {
+  background: var(--bg-button-hover, #1177bb);
+}
+
+.unsaved-btn-secondary {
+  background: var(--bg-tertiary, #2d2d2d);
+  color: var(--text-primary, #cccccc);
+  border: 1px solid var(--border-primary, #3c3c3c);
+}
+
+.unsaved-btn-secondary:hover {
+  background: var(--bg-hover, #2a2d2e);
+}
+
+.unsaved-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary, #969696);
+}
+
+.unsaved-btn-ghost:hover {
+  background: var(--bg-hover, #2a2d2e);
+  color: var(--text-primary, #cccccc);
+}

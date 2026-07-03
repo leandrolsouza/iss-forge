@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import PlayerEditor from './components/PlayerEditor';
@@ -14,12 +14,15 @@ import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
 import LoadingOverlay from './components/LoadingOverlay';
+import UnsavedModal from './components/UnsavedModal';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
-import { IconOpen, IconSave } from './components/Icons';
+import { IconOpen, IconSave, IconUndo, IconRedo } from './components/Icons';
 import { useRom } from './context/RomContext';
+import { useI18n } from './i18n';
 
 export default function App() {
+  const { t, lang } = useI18n();
   const {
     romParser,
     romInfo,
@@ -51,6 +54,10 @@ export default function App() {
     handleTeamNameInGameGenerate,
     handleDrop,
     handleDragOver,
+    performUndo,
+    performRedo,
+    canUndo,
+    canRedo,
   } = useRom();
 
   // IPC listeners and keyboard shortcuts
@@ -59,6 +66,8 @@ export default function App() {
       window.electronAPI.onRomLoaded((data) => loadRomData(new Uint8Array(data.data), data.name));
       window.electronAPI.onMenuSave(() => handleSave());
       window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
+      window.electronAPI.onMenuUndo(() => performUndo());
+      window.electronAPI.onMenuRedo(() => performRedo());
 
       // Cancel loading if dialog was dismissed without selecting a file
       window.electronAPI.onRomLoadCancelled?.(() => setLoading(false));
@@ -73,13 +82,84 @@ export default function App() {
         e.preventDefault();
         handleSave();
       }
+      // Undo: Ctrl+Z (web fallback)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        performUndo();
+      }
+      // Redo: Ctrl+Shift+Z or Ctrl+Y (web fallback)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        performRedo();
+      }
     };
 
     if (!isElectron()) {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [loadRomData, handleSave, handleSaveToPath, handleOpenRom, setLoading]);
+  }, [
+    loadRomData,
+    handleSave,
+    handleSaveToPath,
+    handleOpenRom,
+    setLoading,
+    performUndo,
+    performRedo,
+  ]);
+
+  // Sync modified state to main process (for close guard)
+  useEffect(() => {
+    if (isElectron()) {
+      window.electronAPI.setModifiedState(modified);
+    }
+  }, [modified]);
+
+  // Sync locale to main process (for native dialog i18n)
+  useEffect(() => {
+    if (isElectron()) {
+      window.electronAPI.setLocale(lang);
+    }
+  }, [lang]);
+
+  // Web fallback: warn on tab/window close with unsaved changes
+  useEffect(() => {
+    if (isElectron()) return;
+
+    const handleBeforeUnload = (e) => {
+      if (modified) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [modified]);
+
+  // Unsaved changes modal state
+  const [showUnsavedModal, setShowUnsavedModal] = useState(false);
+
+  useEffect(() => {
+    if (isElectron()) {
+      window.electronAPI.onConfirmClose(() => setShowUnsavedModal(true));
+    }
+  }, []);
+
+  const handleCloseModalSave = useCallback(() => {
+    setShowUnsavedModal(false);
+    window.electronAPI.sendCloseResponse('save');
+  }, []);
+
+  const handleCloseModalDiscard = useCallback(() => {
+    setShowUnsavedModal(false);
+    window.electronAPI.sendCloseResponse('discard');
+  }, []);
+
+  const handleCloseModalCancel = useCallback(() => {
+    setShowUnsavedModal(false);
+    window.electronAPI.sendCloseResponse('cancel');
+  }, []);
 
   // Editor renderer
   const renderEditor = () => {
@@ -138,6 +218,22 @@ export default function App() {
           >
             <IconSave size={16} />
           </button>
+          <button
+            className="titlebar-btn"
+            onClick={performUndo}
+            title={t('toolbarUndo')}
+            disabled={!canUndo}
+          >
+            <IconUndo size={16} />
+          </button>
+          <button
+            className="titlebar-btn"
+            onClick={performRedo}
+            title={t('toolbarRedo')}
+            disabled={!canRedo}
+          >
+            <IconRedo size={16} />
+          </button>
         </div>
         <span className="app-titlebar-title">
           ISS Forge <span className="beta-badge">BETA</span>{' '}
@@ -179,6 +275,13 @@ export default function App() {
       <UpdateNotification />
 
       {loading && <LoadingOverlay />}
+
+      <UnsavedModal
+        visible={showUnsavedModal}
+        onSave={handleCloseModalSave}
+        onDiscard={handleCloseModalDiscard}
+        onCancel={handleCloseModalCancel}
+      />
     </div>
   );
 }

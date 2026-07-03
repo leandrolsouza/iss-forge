@@ -5,6 +5,23 @@ const fs = require('fs');
 
 let mainWindow;
 let currentRomPath = null;
+let isRomModified = false;
+let forceQuit = false;
+let currentLocale = 'pt-BR';
+
+// Translations for native dialogs (main process has no access to React i18n)
+const dialogI18n = {
+  'pt-BR': {
+    title: 'Alteracoes nao salvas',
+    message: 'A ROM possui alteracoes nao salvas. Deseja salvar antes de sair?',
+    buttons: ['Salvar', 'Nao Salvar', 'Cancelar'],
+  },
+  en: {
+    title: 'Unsaved Changes',
+    message: 'The ROM has unsaved changes. Do you want to save before quitting?',
+    buttons: ['Save', "Don't Save", 'Cancel'],
+  },
+};
 
 // --- Recent ROMs ---
 const MAX_RECENT_ROMS = 10;
@@ -89,6 +106,14 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 
+  mainWindow.on('close', (event) => {
+    if (isRomModified && !forceQuit) {
+      event.preventDefault();
+      // Ask renderer to show custom modal
+      mainWindow.webContents.send('app:confirmClose');
+    }
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
@@ -127,8 +152,16 @@ function createMenu() {
     {
       label: 'Editar',
       submenu: [
-        { label: 'Desfazer', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
-        { label: 'Refazer', accelerator: 'CmdOrCtrl+Y', role: 'redo' },
+        {
+          label: 'Desfazer',
+          accelerator: 'CmdOrCtrl+Z',
+          click: () => mainWindow.webContents.send('menu:undo'),
+        },
+        {
+          label: 'Refazer',
+          accelerator: 'CmdOrCtrl+Y',
+          click: () => mainWindow.webContents.send('menu:redo'),
+        },
         { type: 'separator' },
         { label: 'Copiar', accelerator: 'CmdOrCtrl+C', role: 'copy' },
         { label: 'Colar', accelerator: 'CmdOrCtrl+V', role: 'paste' },
@@ -231,6 +264,32 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
 });
 
 ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+
+// Track modified state from renderer (for close guard)
+ipcMain.on('rom:modifiedState', (event, isModified) => {
+  isRomModified = isModified;
+});
+
+// Track locale from renderer (for native dialog i18n)
+ipcMain.on('app:setLocale', (event, locale) => {
+  currentLocale = locale;
+});
+
+// Handle close response from renderer custom modal
+// choice: 'save' | 'discard' | 'cancel'
+ipcMain.on('app:closeResponse', (event, choice) => {
+  if (choice === 'save') {
+    mainWindow.webContents.send('menu:save');
+    ipcMain.once('rom:saveComplete', () => {
+      forceQuit = true;
+      mainWindow.close();
+    });
+  } else if (choice === 'discard') {
+    forceQuit = true;
+    mainWindow.close();
+  }
+  // 'cancel': do nothing, window stays open
+});
 
 ipcMain.handle('recent:getAll', () => {
   return loadRecentRoms();

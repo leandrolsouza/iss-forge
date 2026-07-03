@@ -66,6 +66,37 @@ export function onMenuSave(callback) {
 }
 
 /**
+ * Listen for menu undo events
+ * @param {function} callback
+ */
+export function onMenuUndo(callback) {
+  window.electronAPI.onMenuUndo(callback);
+}
+
+/**
+ * Listen for menu redo events
+ * @param {function} callback
+ */
+export function onMenuRedo(callback) {
+  window.electronAPI.onMenuRedo(callback);
+}
+
+/**
+ * Notify main process of modified state (for close guard)
+ * @param {boolean} isModified
+ */
+export function setModifiedState(isModified) {
+  window.electronAPI.setModifiedState(isModified);
+}
+
+/**
+ * Notify main process that save operation completed
+ */
+export function notifySaveComplete() {
+  window.electronAPI.notifySaveComplete();
+}
+
+/**
  * Listen for "save as" path events
  * @param {function} callback
  */

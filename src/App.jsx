@@ -11,6 +11,7 @@ import TeamPreview from './components/TeamPreview';
 import TeamCompare from './components/TeamCompare';
 import AboutPanel from './components/AboutPanel';
 import StatusBar from './components/StatusBar';
+import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
@@ -168,6 +169,8 @@ export default function App() {
         teamCount={teams.length}
         selectedTeam={selectedTeamIndex !== null ? TEAMS[selectedTeamIndex]?.name : null}
       />
+
+      <UpdateNotification />
     </div>
   );
 }

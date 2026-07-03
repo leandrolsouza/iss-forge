@@ -21,6 +21,7 @@
   "author": "Leandro Luiz De Souza",
   "license": "MIT",
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },
@@ -45,6 +46,13 @@
   "build": {
     "appId": "com.iss-forge.app",
     "productName": "ISS Forge",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "leandrolsouza",
+        "repo": "iss-forge"
+      }
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*"
@@ -54,6 +62,18 @@
     },
     "win": {
       "target": "nsis"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
     }
   }
 }

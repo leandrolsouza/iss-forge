@@ -9,28 +9,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          gh release create "v$VERSION" \
-            --title "ISS Forge v$VERSION" \
-            --generate-notes \
-            --draft=false \
-            --prerelease=false
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build-windows:
-    needs: create-release
     runs-on: windows-latest
     permissions:
       contents: write
@@ -51,22 +30,14 @@ jobs:
       - name: Run tests
         run: npm test
 
-      - name: Build Windows
+      - name: Build and Publish Windows
         run: |
           npm run build
-          npx electron-builder --win --publish never
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows artifacts
-        run: |
-          $version = (Get-Content package.json | ConvertFrom-Json).version
-          gh release upload "v$version" (Get-Item release/*.exe) (Get-Item release/*.blockmap) (Get-Item release/latest.yml) --clobber
+          npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
-    needs: create-release
     runs-on: macos-latest
     permissions:
       contents: write
@@ -84,22 +55,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build macOS
+      - name: Build and Publish macOS
         run: |
           npm run build
-          npx electron-builder --mac --publish never
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload macOS artifacts
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh release upload "v$VERSION" release/*.dmg release/*.zip release/*-mac.yml --clobber
+          npx electron-builder --mac --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
-    needs: create-release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -117,16 +80,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Linux
+      - name: Build and Publish Linux
         run: |
           npm run build
-          npx electron-builder --linux --publish never
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Linux artifacts
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh release upload "v$VERSION" release/*.AppImage release/*.deb release/*-linux.yml --clobber
+          npx electron-builder --linux --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

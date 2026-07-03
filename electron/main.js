@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
 
@@ -255,8 +256,88 @@ ipcMain.handle('recent:open', (event, filePath) => {
   return { success: false, error: 'Arquivo nao encontrado.' };
 });
 
+// --- Auto-Updater ---
+function setupAutoUpdater() {
+  // Don't check for updates in development
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    sendUpdaterStatus('checking');
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    sendUpdaterStatus('available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+      releaseNotes: info.releaseNotes,
+    });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    sendUpdaterStatus('not-available');
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    sendUpdaterStatus('downloading', {
+      percent: progress.percent,
+      bytesPerSecond: progress.bytesPerSecond,
+      transferred: progress.transferred,
+      total: progress.total,
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    sendUpdaterStatus('downloaded', { version: info.version });
+  });
+
+  autoUpdater.on('error', (err) => {
+    sendUpdaterStatus('error', { message: err.message });
+  });
+
+  // Check for updates after a short delay to not block startup
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch((err) => {
+      console.error('Auto-update check failed:', err.message);
+    });
+  }, 3000);
+}
+
+function sendUpdaterStatus(status, data = {}) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('updater:status', { status, ...data });
+  }
+}
+
+// IPC handlers for updater
+ipcMain.handle('updater:check', () => {
+  if (!app.isPackaged) {
+    return { status: 'dev-mode' };
+  }
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('Manual update check failed:', err.message);
+  });
+  return { status: 'checking' };
+});
+
+ipcMain.handle('updater:download', () => {
+  autoUpdater.downloadUpdate().catch((err) => {
+    console.error('Download update failed:', err.message);
+  });
+  return { status: 'downloading' };
+});
+
+ipcMain.handle('updater:install', () => {
+  autoUpdater.quitAndInstall(false, true);
+});
+
 // App lifecycle
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  setupAutoUpdater();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {

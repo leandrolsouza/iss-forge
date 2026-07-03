@@ -178,4 +178,13 @@ export default {
   // Validation
   validationErrors: 'error(s) found',
   validationOk: 'Validation OK',
+
+  // Auto-Updater
+  updateAvailable: 'New version {version} is available!',
+  updateDownload: 'Download',
+  updateDismiss: 'Later',
+  updateDownloading: 'Downloading update...',
+  updateReady: 'Update ready to install.',
+  updateInstallRestart: 'Restart & Install',
+  updateLater: 'Later',
 };

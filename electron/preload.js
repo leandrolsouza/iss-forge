@@ -24,6 +24,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeRecentRom: (filePath) => ipcRenderer.invoke('recent:remove', filePath),
   openRecentRom: (filePath) => ipcRenderer.invoke('recent:open', filePath),
 
+  // Auto-updater
+  updaterCheck: () => ipcRenderer.invoke('updater:check'),
+  updaterDownload: () => ipcRenderer.invoke('updater:download'),
+  updaterInstall: () => ipcRenderer.invoke('updater:install'),
+  onUpdaterStatus: (callback) => {
+    ipcRenderer.on('updater:status', (event, data) => callback(data));
+  },
+
   // Cleanup listeners
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

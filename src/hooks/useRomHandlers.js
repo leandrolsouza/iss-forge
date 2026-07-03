@@ -132,6 +132,41 @@ export default function useRomHandlers({
           b5: Math.round(color.b / 8),
         };
         team.flagColors = flagColors;
+        // Keep flagDesign.flagColors in sync
+        if (team.flagDesign) {
+          team.flagDesign = { ...team.flagDesign, flagColors };
+        }
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  const handleFlagColorBulkChange = useCallback(
+    (teamIndex, colors) => {
+      if (!romParser) return;
+      pushSnapshot(teams);
+
+      colors.forEach((color, colorIndex) => {
+        romParser.writeFlagColor(teamIndex, colorIndex, color);
+      });
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        const flagColors = colors.map((color) => ({
+          ...color,
+          r5: Math.round(color.r / 8),
+          g5: Math.round(color.g / 8),
+          b5: Math.round(color.b / 8),
+        }));
+        team.flagColors = flagColors;
+        if (team.flagDesign) {
+          team.flagDesign = { ...team.flagDesign, flagColors };
+        }
         newTeams[teamIndex] = team;
         return newTeams;
       });
@@ -402,6 +437,7 @@ export default function useRomHandlers({
     handleUniformChange,
     handleHairSkinChange,
     handleFlagColorChange,
+    handleFlagColorBulkChange,
     handleFlagDesignChange,
     handleFlagDesignBulkChange,
     handleTeamNameGenerate,

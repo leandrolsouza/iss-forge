@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import FlagTemplateSelector from './FlagTemplateSelector';
+import FlagImageImport from './FlagImageImport';
 
 const GRID_WIDTH = 24;
 const GRID_HEIGHT = 16;
@@ -13,6 +14,8 @@ export default function FlagDesignEditor({
   teamIndex,
   onFlagDesignChange,
   onFlagDesignBulkChange,
+  onFlagColorChange,
+  onFlagColorBulkChange,
 }) {
   const [selectedColor, setSelectedColor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -116,6 +119,13 @@ export default function FlagDesignEditor({
         <FlagTemplateSelector
           flagColors={flagColors}
           onApplyTemplate={(newGrid) => onFlagDesignBulkChange(teamIndex, newGrid)}
+        />
+
+        {/* Image Import */}
+        <FlagImageImport
+          flagColors={flagColors}
+          onApplyGrid={(newGrid) => onFlagDesignBulkChange(teamIndex, newGrid)}
+          onApplyPalette={(palette) => onFlagColorBulkChange(teamIndex, palette)}
         />
 
         {/* Pixel Grid */}

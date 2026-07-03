@@ -104,7 +104,13 @@ export default {
   // Flag Colors
   flagColors: 'Cores da Bandeira',
   flagPalette: 'Cores (4 cores da paleta)',
+  flagPreview: 'Pre-visualizacao da Bandeira',
+  flagColorLabel: 'Cor',
   flagInfo: 'Estas sao as 4 cores usadas na bandeira do time na tela de selecao.',
+  flagInfoDetail:
+    'Estas sao as 4 cores usadas na bandeira do time na tela de selecao. O desenho da bandeira usa estas cores como paleta indexada.',
+  selectTeamToEdit: 'Selecione um time para editar',
+  information: 'Informacao',
 
   // Flag Design
   flagDesign: 'Design da Bandeira',
@@ -120,6 +126,18 @@ export default {
   // Flag Templates
   flagTemplates: 'Templates',
   flagTemplateToggle: 'Mostrar/ocultar templates de bandeira',
+
+  // Flag Image Import
+  flagImportBtn: 'Importar Imagem',
+  flagImportModePalette: 'Usar Paleta Atual',
+  flagImportModeExtract: 'Extrair Paleta',
+  flagImportDescPalette: 'Mapeia cada pixel para a cor mais proxima das 4 cores da paleta atual.',
+  flagImportDescExtract:
+    'Extrai 4 cores dominantes da imagem e atualiza tanto a paleta quanto o design.',
+  flagImportDropText: 'Clique ou arraste uma imagem aqui',
+  flagImportDropHint: 'PNG, JPG, GIF — qualquer tamanho',
+  flagImportApply: 'Aplicar',
+  flagImportRetry: 'Tentar outra',
   'flagTemplate.horizontal3': '3 Faixas Horizontais',
   'flagTemplate.vertical3': '3 Faixas Verticais',
   'flagTemplate.horizontal2': '2 Metades Horizontais',

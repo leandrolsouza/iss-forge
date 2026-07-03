@@ -1,0 +1,156 @@
+.flag-import-section {
+  margin-top: 12px;
+}
+
+.flag-import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  padding: 6px 12px;
+  color: var(--text-color, #ccc);
+  font-size: 12px;
+  transition: background-color 0.15s;
+}
+
+.flag-import-btn:hover {
+  background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+}
+
+.flag-import-btn .import-icon {
+  font-size: 14px;
+}
+
+.flag-import-options {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  background-color: var(--panel-bg, rgba(0, 0, 0, 0.15));
+}
+
+.flag-import-mode-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.flag-import-mode-btn {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.flag-import-mode-btn:hover {
+  background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+}
+
+.flag-import-mode-btn.active {
+  border-color: var(--accent-color, #4fc3f7);
+  color: var(--accent-color, #4fc3f7);
+  background-color: rgba(79, 195, 247, 0.08);
+}
+
+.flag-import-mode-desc {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.flag-import-drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  border: 2px dashed var(--border-color, #555);
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+  min-height: 60px;
+}
+
+.flag-import-drop-zone:hover,
+.flag-import-drop-zone.drag-over {
+  border-color: var(--accent-color, #4fc3f7);
+  background-color: rgba(79, 195, 247, 0.05);
+}
+
+.flag-import-drop-zone .drop-icon {
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+.flag-import-drop-zone .drop-text {
+  font-size: 11px;
+  color: var(--text-muted, #999);
+}
+
+.flag-import-drop-zone .drop-hint {
+  font-size: 10px;
+  color: var(--text-muted, #666);
+}
+
+.flag-import-preview {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.flag-import-preview-grid {
+  border: 1px solid var(--border-color, #555);
+  image-rendering: pixelated;
+}
+
+.flag-import-preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flag-import-apply-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: var(--accent-color, #4fc3f7);
+  color: #000;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.15s;
+}
+
+.flag-import-apply-btn:hover {
+  opacity: 0.85;
+}
+
+.flag-import-cancel-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--border-color, #444);
+  border-radius: 4px;
+  background: none;
+  color: var(--text-muted, #999);
+  cursor: pointer;
+}
+
+.flag-import-cancel-btn:hover {
+  color: var(--text-color, #ccc);
+}

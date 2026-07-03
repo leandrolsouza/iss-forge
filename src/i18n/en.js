@@ -104,7 +104,13 @@ export default {
   // Flag Colors
   flagColors: 'Flag Colors',
   flagPalette: 'Colors (4 palette colors)',
+  flagPreview: 'Flag Preview',
+  flagColorLabel: 'Color',
   flagInfo: 'These are the 4 colors used in the team flag on the selection screen.',
+  flagInfoDetail:
+    'These are the 4 colors used in the team flag on the selection screen. The flag design uses these colors as an indexed palette.',
+  selectTeamToEdit: 'Select a team to edit',
+  information: 'Information',
 
   // Flag Design
   flagDesign: 'Flag Design',
@@ -120,6 +126,18 @@ export default {
   // Flag Templates
   flagTemplates: 'Templates',
   flagTemplateToggle: 'Show/hide flag templates',
+
+  // Flag Image Import
+  flagImportBtn: 'Import Image',
+  flagImportModePalette: 'Use Current Palette',
+  flagImportModeExtract: 'Extract Palette',
+  flagImportDescPalette: 'Maps each pixel to the nearest of your 4 current palette colors.',
+  flagImportDescExtract:
+    'Extracts 4 dominant colors from the image and updates both palette and design.',
+  flagImportDropText: 'Click or drag an image here',
+  flagImportDropHint: 'PNG, JPG, GIF — any size',
+  flagImportApply: 'Apply',
+  flagImportRetry: 'Try another',
   'flagTemplate.horizontal3': '3 Horizontal Stripes',
   'flagTemplate.vertical3': '3 Vertical Stripes',
   'flagTemplate.horizontal2': '2 Horizontal Halves',

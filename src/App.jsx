@@ -49,6 +49,7 @@ export default function App() {
     handleUniformChange,
     handleHairSkinChange,
     handleFlagColorChange,
+    handleFlagColorBulkChange,
     handleFlagDesignChange,
     handleFlagDesignBulkChange,
     handleTeamNameGenerate,
@@ -192,6 +193,8 @@ export default function App() {
             {...props}
             onFlagDesignChange={handleFlagDesignChange}
             onFlagDesignBulkChange={handleFlagDesignBulkChange}
+            onFlagColorChange={handleFlagColorChange}
+            onFlagColorBulkChange={handleFlagColorBulkChange}
           />
         );
       case 'teamname':

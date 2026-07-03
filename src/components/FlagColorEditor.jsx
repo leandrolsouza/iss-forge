@@ -1,8 +1,11 @@
 import React from 'react';
+import { useI18n } from '../i18n';
 
 export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) {
+  const { t } = useI18n();
+
   if (!team || !team.flagColors || team.flagColors.length === 0) {
-    return <div className="editor-panel empty">Selecione um time para editar</div>;
+    return <div className="editor-panel empty">{t('selectTeamToEdit')}</div>;
   }
 
   const colors = team.flagColors;
@@ -29,29 +32,29 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
         <div className="editor-header-title">
           <span className="editor-icon">&#127988;</span>
           <h2>{team.name}</h2>
-          <span className="editor-subtitle">- Cores da Bandeira</span>
+          <span className="editor-subtitle">- {t('flagColors')}</span>
         </div>
       </div>
 
       <div className="uniform-editor-body">
         {/* Flag Preview */}
         <div className="kit-preview-section" style={{ marginBottom: 24 }}>
-          <div className="detail-section-title">Pre-visualizacao da Bandeira</div>
+          <div className="detail-section-title">{t('flagPreview')}</div>
           <div className="kit-preview">
-            <FlagPreview colors={colors} />
+            <FlagPreview colors={colors} t={t} />
           </div>
         </div>
 
         {/* Color Editors */}
         <div className="uniform-part-section">
-          <div className="detail-section-title">Cores (4 cores da paleta)</div>
+          <div className="detail-section-title">{t('flagPalette')}</div>
           <div className="uniform-colors-grid">
             {colors.map((color, idx) => {
               const hexValue = rgbToHex(color.r, color.g, color.b);
               return (
                 <div key={idx} className="color-editor-card">
                   <div className="color-card-header">
-                    <span className="color-card-label">Cor {idx + 1}</span>
+                    <span className="color-card-label">{t('flagColorLabel')} {idx + 1}</span>
                     <span className="color-card-5bit">
                       ({color.r5 !== undefined ? `${color.r5}, ${color.g5}, ${color.b5}` : ''})
                     </span>
@@ -134,12 +137,9 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
         </div>
 
         <div className="kit-preview-section">
-          <div className="detail-section-title">Informacao</div>
+          <div className="detail-section-title">{t('information')}</div>
           <div className="welcome-info" style={{ marginTop: 8 }}>
-            <p>
-              Estas sao as 4 cores usadas na bandeira do time na tela de selecao. O desenho da
-              bandeira usa estas cores como paleta indexada.
-            </p>
+            <p>{t('flagInfoDetail')}</p>
           </div>
         </div>
       </div>
@@ -147,7 +147,7 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
   );
 }
 
-function FlagPreview({ colors }) {
+function FlagPreview({ colors, t }) {
   const getColor = (idx) => {
     if (!colors[idx]) return '#333';
     const c = colors[idx];
@@ -183,7 +183,7 @@ function FlagPreview({ colors }) {
               className="kit-color-dot"
               style={{ backgroundColor: `rgb(${c.r},${c.g},${c.b})` }}
             />
-            Cor {i + 1}
+            {t('flagColorLabel')} {i + 1}
           </div>
         ))}
       </div>

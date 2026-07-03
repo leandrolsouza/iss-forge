@@ -15,6 +15,7 @@ import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
 import LoadingOverlay from './components/LoadingOverlay';
 import UnsavedModal from './components/UnsavedModal';
+import BackupBanner from './components/BackupBanner';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
 import { IconOpen, IconSave, IconUndo, IconRedo } from './components/Icons';
@@ -241,6 +242,8 @@ export default function App() {
         </span>
         <div className="app-titlebar-spacer"></div>
       </div>
+
+      <BackupBanner />
 
       <div className="app-body">
         <Sidebar

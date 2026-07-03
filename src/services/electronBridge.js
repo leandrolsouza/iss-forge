@@ -144,3 +144,31 @@ export function removeRecentRom(filePath) {
 export function openRecentRom(filePath) {
   return window.electronAPI.openRecentRom(filePath);
 }
+
+// ─── Auto-Save / Backup ──────────────────────────────────────────────────────
+
+/**
+ * Save ROM data as a backup
+ * @param {number[]} data - ROM byte array
+ * @param {object} meta - Metadata (fileName, timestamp, modified state)
+ * @returns {Promise<{success: boolean, timestamp?: number, error?: string}>}
+ */
+export function backupSave(data, meta) {
+  return window.electronAPI.backupSave(data, meta);
+}
+
+/**
+ * Load the last auto-save backup
+ * @returns {Promise<{exists: boolean, data?: number[], meta?: object, error?: string}>}
+ */
+export function backupLoad() {
+  return window.electronAPI.backupLoad();
+}
+
+/**
+ * Clear/remove the auto-save backup files
+ * @returns {Promise<{success: boolean}>}
+ */
+export function backupClear() {
+  return window.electronAPI.backupClear();
+}

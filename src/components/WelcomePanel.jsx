@@ -1,11 +1,22 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { isElectron } from '../utils/fileHelpers';
 import { IconOpen } from './Icons';
 
+const VALID_ROM_EXTENSIONS = ['.smc', '.sfc', '.bin'];
+
+function isValidRomFile(file) {
+  if (!file) return false;
+  const name = file.name.toLowerCase();
+  return VALID_ROM_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
+
 export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
   const { t } = useI18n();
   const [recentRoms, setRecentRoms] = useState([]);
+  const [dragActive, setDragActive] = useState(false);
+  const [dragInvalid, setDragInvalid] = useState(false);
+  const dragCounter = useRef(0);
 
   const loadRecents = useCallback(async () => {
     if (isElectron() && window.electronAPI.getRecentRoms) {
@@ -40,8 +51,76 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
     setRecentRoms([]);
   };
 
+  // --- Drag & Drop visual feedback ---
+
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+
+    if (e.dataTransfer?.items?.length) {
+      const item = e.dataTransfer.items[0];
+      // Check file type from DataTransferItem when possible
+      const name = item.type || '';
+      const hasValidType =
+        name === '' || // type not available during dragenter in some browsers
+        VALID_ROM_EXTENSIONS.some((ext) => name.includes(ext.slice(1)));
+      setDragActive(true);
+      setDragInvalid(!hasValidType && name !== '');
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setDragActive(false);
+      setDragInvalid(false);
+    }
+  }, []);
+
+  const handleDropZone = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragCounter.current = 0;
+      setDragActive(false);
+      setDragInvalid(false);
+
+      const file = e.dataTransfer?.files[0];
+      if (file && isValidRomFile(file)) {
+        onDrop(e);
+      }
+    },
+    [onDrop],
+  );
+
+  const handleDragOverZone = useCallback(
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (onDragOver) onDragOver(e);
+    },
+    [onDragOver],
+  );
+
+  const dropZoneClasses = [
+    'welcome-drop-zone',
+    dragActive && !dragInvalid && 'welcome-drop-zone--active',
+    dragInvalid && 'welcome-drop-zone--invalid',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className="welcome-panel" onDrop={onDrop} onDragOver={onDragOver}>
+    <div
+      className="welcome-panel"
+      onDrop={handleDropZone}
+      onDragOver={handleDragOverZone}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+    >
       <div className="welcome-content">
         <h1 className="welcome-title">
           {t('welcomeTitle')} <span className="beta-badge">BETA</span>
@@ -50,7 +129,7 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
 
         <div className="welcome-beta-notice">
           <span className="beta-notice-icon">⚠</span>
-          <span>Versão beta — algumas funcionalidades ainda estão em desenvolvimento.</span>
+          <span>{t('welcomeBetaNotice')}</span>
         </div>
 
         <div className="welcome-actions">
@@ -60,8 +139,14 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
           </button>
         </div>
 
-        <div className="welcome-drop-zone">
-          <p>{t('welcomeDrop')}</p>
+        <div className={dropZoneClasses}>
+          <div className="welcome-drop-zone-icon">📁</div>
+          <p className="welcome-drop-zone-text">
+            {dragActive && !dragInvalid && t('welcomeDropRelease')}
+            {dragInvalid && t('welcomeDropInvalid')}
+            {!dragActive && t('welcomeDrop')}
+          </p>
+          <p className="welcome-drop-zone-hint">{t('welcomeDropHint')}</p>
         </div>
 
         {isElectron() && (

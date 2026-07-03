@@ -29,6 +29,10 @@ export default {
   welcomeSubtitle: 'Editor de ROM para International Superstar Soccer (SNES 1995)',
   welcomeOpenBtn: 'Abrir ROM (.smc / .sfc)',
   welcomeDrop: 'ou arraste o arquivo da ROM aqui',
+  welcomeDropRelease: 'Solte para abrir a ROM',
+  welcomeDropInvalid: 'Tipo de arquivo invalido — use .smc, .sfc ou .bin',
+  welcomeDropHint: 'Aceita arquivos .smc, .sfc e .bin',
+  welcomeBetaNotice: 'Versao beta — algumas funcionalidades ainda estao em desenvolvimento.',
   welcomeFeatures: 'O que voce pode editar:',
   welcomePlayerNames: 'Nomes dos jogadores',
   welcomeShirtNumbers: 'Numeros das camisas',
@@ -194,6 +198,12 @@ export default {
   // Validation
   validationErrors: 'erro(s) encontrados',
   validationOk: 'Validacao OK',
+  validationTooSmall: 'ROM muito pequena. Esperado no minimo 512 KB.',
+  validationNoTitle: 'Nao foi possivel ler o header interno SNES. O arquivo pode estar corrompido.',
+  validationChecksumMismatch: 'Checksum incorreto — a ROM pode ter sido modificada.',
+  validationUnknownTitle: 'Titulo da ROM nao reconhecido como ISS. Pode funcionar mesmo assim.',
+  validationUnexpectedSize: 'Tamanho da ROM difere do esperado de 1 MB (8 Mbit).',
+  validationNonStandardSize: 'Tamanho de ROM nao padrao detectado.',
 
   // Auto-Updater
   updateAvailable: 'Nova versao {version} disponivel!',
@@ -203,4 +213,9 @@ export default {
   updateReady: 'Atualizacao pronta para instalar.',
   updateInstallRestart: 'Reiniciar e Instalar',
   updateLater: 'Depois',
+
+  // Auto-Save / Backup
+  backupFound: 'Backup nao salvo encontrado de {date}.',
+  backupRestore: 'Restaurar',
+  backupDiscard: 'Descartar',
 };

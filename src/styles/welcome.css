@@ -55,16 +55,65 @@
 }
 
 .welcome-drop-zone {
-  padding: 20px;
+  padding: 32px 20px;
   border: 2px dashed var(--border-secondary);
   border-radius: 8px;
   margin-bottom: 32px;
   color: var(--text-muted);
-  transition: border-color var(--transition);
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease;
+  text-align: center;
 }
 
 .welcome-drop-zone:hover {
   border-color: var(--border-focus);
+}
+
+.welcome-drop-zone--active {
+  border-color: var(--text-accent);
+  background-color: rgba(77, 148, 255, 0.08);
+  border-style: solid;
+  transform: scale(1.02);
+}
+
+.welcome-drop-zone--invalid {
+  border-color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.06);
+  border-style: solid;
+}
+
+.welcome-drop-zone-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.welcome-drop-zone--active .welcome-drop-zone-icon {
+  opacity: 1;
+}
+
+.welcome-drop-zone-text {
+  font-size: var(--font-size-lg);
+  margin: 0 0 4px;
+  color: var(--text-secondary);
+}
+
+.welcome-drop-zone--active .welcome-drop-zone-text {
+  color: var(--text-accent);
+  font-weight: 500;
+}
+
+.welcome-drop-zone--invalid .welcome-drop-zone-text {
+  color: #e74c3c;
+}
+
+.welcome-drop-zone-hint {
+  font-size: var(--font-size-sm);
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .welcome-info {

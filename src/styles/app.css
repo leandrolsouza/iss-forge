@@ -2116,3 +2116,61 @@ input[type="number"]:hover::-webkit-outer-spin-button {
   background: rgba(243, 156, 18, 0.08);
   border-color: rgba(243, 156, 18, 0.3);
 }
+
+/* ============================================================
+   BACKUP BANNER
+   ============================================================ */
+
+.backup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-statusbar);
+  color: var(--text-white);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.backup-banner-message {
+  flex: 1;
+  text-align: center;
+}
+
+.backup-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.backup-banner-btn {
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-white);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.backup-banner-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.backup-banner-btn--restore {
+  background: rgba(255, 255, 255, 0.15);
+  font-weight: 500;
+}
+
+.backup-banner-btn--restore:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.backup-banner-btn--discard {
+  opacity: 0.8;
+}
+
+.backup-banner-btn--discard:hover {
+  opacity: 1;
+}

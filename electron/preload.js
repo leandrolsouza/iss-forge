@@ -52,6 +52,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('updater:status', (event, data) => callback(data));
   },
 
+  // Auto-save / Backup
+  backupSave: (data, meta) => ipcRenderer.invoke('backup:save', { data, meta }),
+  backupLoad: () => ipcRenderer.invoke('backup:load'),
+  backupClear: () => ipcRenderer.invoke('backup:clear'),
+
   // Cleanup listeners
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

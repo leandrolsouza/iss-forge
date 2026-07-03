@@ -317,6 +317,63 @@ ipcMain.handle('recent:open', (event, filePath) => {
   return { success: false, error: 'Arquivo nao encontrado.' };
 });
 
+// --- Auto-Save / Backup ---
+const BACKUP_FILENAME = 'autosave-backup.bin';
+const BACKUP_META_FILENAME = 'autosave-meta.json';
+
+function getBackupPath() {
+  return path.join(app.getPath('userData'), BACKUP_FILENAME);
+}
+
+function getBackupMetaPath() {
+  return path.join(app.getPath('userData'), BACKUP_META_FILENAME);
+}
+
+ipcMain.handle('backup:save', (event, { data, meta }) => {
+  try {
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(getBackupPath(), buffer);
+    fs.writeFileSync(getBackupMetaPath(), JSON.stringify(meta, null, 2), 'utf-8');
+    return { success: true, timestamp: Date.now() };
+  } catch (err) {
+    console.error('Auto-save backup failed:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('backup:load', () => {
+  try {
+    const backupPath = getBackupPath();
+    const metaPath = getBackupMetaPath();
+    if (!fs.existsSync(backupPath) || !fs.existsSync(metaPath)) {
+      return { exists: false };
+    }
+    const buffer = fs.readFileSync(backupPath);
+    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    return {
+      exists: true,
+      data: Array.from(buffer),
+      meta,
+    };
+  } catch (err) {
+    console.error('Failed to load backup:', err.message);
+    return { exists: false, error: err.message };
+  }
+});
+
+ipcMain.handle('backup:clear', () => {
+  try {
+    const backupPath = getBackupPath();
+    const metaPath = getBackupMetaPath();
+    if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+    if (fs.existsSync(metaPath)) fs.unlinkSync(metaPath);
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to clear backup:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
 // --- Auto-Updater ---
 function setupAutoUpdater() {
   // Don't check for updates in development

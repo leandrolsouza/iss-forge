@@ -24,6 +24,7 @@ export default function useRomHandlers({
   markSaved,
   setStatusMessage,
   loadRomData,
+  setLoading,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -275,6 +276,7 @@ export default function useRomHandlers({
 
   const handleOpenRom = useCallback(async () => {
     if (isElectron()) {
+      setLoading(true);
       electronBridge.openRom();
     } else {
       const result = await openRomWeb();
@@ -282,13 +284,14 @@ export default function useRomHandlers({
         loadRomData(result.data, result.name);
       }
     }
-  }, [loadRomData]);
+  }, [loadRomData, setLoading]);
 
   const handleDrop = useCallback(
     (e) => {
       e.preventDefault();
       const file = e.dataTransfer?.files[0];
       if (file) {
+        setLoading(true);
         const reader = new FileReader();
         reader.onload = (ev) => {
           const data = new Uint8Array(ev.target.result);
@@ -297,7 +300,7 @@ export default function useRomHandlers({
         reader.readAsArrayBuffer(file);
       }
     },
-    [loadRomData],
+    [loadRomData, setLoading],
   );
 
   const handleDragOver = useCallback((e) => {

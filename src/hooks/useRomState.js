@@ -14,29 +14,40 @@ export default function useRomState() {
   const [openTabs, setOpenTabs] = useState([]);
   const [modified, setModified] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const loadRomData = useCallback((data, fileName) => {
-    const parser = new RomParser(data);
-    const validation = parser.validate();
+    setLoading(true);
 
-    if (!validation.isValid) {
-      setStatusMessage(`Error: ${validation.message}`);
-      return;
-    }
+    // Use setTimeout to allow the loading UI to render before synchronous parsing
+    setTimeout(() => {
+      try {
+        const parser = new RomParser(data);
+        const validation = parser.validate();
 
-    setRomParser(parser);
-    setRomInfo({ fileName, ...validation });
-    setStatusMessage(validation.message + ` - ${fileName}`);
-    setModified(false);
+        if (!validation.isValid) {
+          setStatusMessage(`Error: ${validation.message}`);
+          setLoading(false);
+          return;
+        }
 
-    const allTeams = parser.readAllTeams();
-    setTeams(allTeams);
+        setRomParser(parser);
+        setRomInfo({ fileName, ...validation });
+        setStatusMessage(validation.message + ` - ${fileName}`);
+        setModified(false);
 
-    if (allTeams.length > 0) {
-      setSelectedTeamIndex(0);
-      setOpenTabs([{ id: 'players', label: 'Players' }]);
-      setActiveTab('players');
-    }
+        const allTeams = parser.readAllTeams();
+        setTeams(allTeams);
+
+        if (allTeams.length > 0) {
+          setSelectedTeamIndex(0);
+          setOpenTabs([{ id: 'players', label: 'Players' }]);
+          setActiveTab('players');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }, 50);
   }, []);
 
   const markModified = useCallback(() => {
@@ -98,6 +109,8 @@ export default function useRomState() {
     modified,
     statusMessage,
     setStatusMessage,
+    loading,
+    setLoading,
 
     // Actions
     loadRomData,

@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSaveAsPath: (callback) => {
     ipcRenderer.on('rom:save-as-path', (event, path) => callback(path));
   },
+  onRomLoadCancelled: (callback) => {
+    ipcRenderer.on('rom:loadCancelled', () => callback());
+  },
 
   // Recent ROMs
   getRecentRoms: () => ipcRenderer.invoke('recent:getAll'),

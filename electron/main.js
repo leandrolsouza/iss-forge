@@ -175,6 +175,8 @@ async function handleOpenRom() {
   if (!result.canceled && result.filePaths.length > 0) {
     const filePath = result.filePaths[0];
     loadAndSendRom(filePath);
+  } else {
+    mainWindow.webContents.send('rom:loadCancelled');
   }
 }
 

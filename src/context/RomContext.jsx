@@ -21,6 +21,7 @@ export function RomProvider({ children }) {
     markSaved: state.markSaved,
     setStatusMessage: state.setStatusMessage,
     loadRomData: state.loadRomData,
+    setLoading: state.setLoading,
   });
 
   const value = {

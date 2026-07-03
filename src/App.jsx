@@ -13,6 +13,7 @@ import AboutPanel from './components/AboutPanel';
 import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
+import LoadingOverlay from './components/LoadingOverlay';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
 import { IconOpen, IconSave } from './components/Icons';
@@ -28,6 +29,8 @@ export default function App() {
     openTabs,
     modified,
     statusMessage,
+    loading,
+    setLoading,
     sidebarCollapsed,
     setSidebarCollapsed,
     loadRomData,
@@ -56,6 +59,9 @@ export default function App() {
       window.electronAPI.onRomLoaded((data) => loadRomData(new Uint8Array(data.data), data.name));
       window.electronAPI.onMenuSave(() => handleSave());
       window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
+
+      // Cancel loading if dialog was dismissed without selecting a file
+      window.electronAPI.onRomLoadCancelled?.(() => setLoading(false));
     }
 
     const handleKeyDown = (e) => {
@@ -73,7 +79,7 @@ export default function App() {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [loadRomData, handleSave, handleSaveToPath, handleOpenRom]);
+  }, [loadRomData, handleSave, handleSaveToPath, handleOpenRom, setLoading]);
 
   // Editor renderer
   const renderEditor = () => {
@@ -171,6 +177,8 @@ export default function App() {
       />
 
       <UpdateNotification />
+
+      {loading && <LoadingOverlay />}
     </div>
   );
 }

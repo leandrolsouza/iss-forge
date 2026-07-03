@@ -115,6 +115,83 @@ export default function useRomHandlers({
     [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
+  const handleSpecialHairSkinChange = useCallback(
+    (teamIndex, field, typeId) => {
+      if (!romParser) return;
+      pushSnapshot(teams);
+
+      if (field === 'specialHair') {
+        romParser.writeSpecialHair(teamIndex, typeId);
+      } else {
+        romParser.writeSpecialSkin(teamIndex, typeId);
+      }
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        team[field] = typeId;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  const handleHairSkinTemplateApply = useCallback(
+    (teamIndex, template) => {
+      if (!romParser) return;
+      pushSnapshot(teams);
+
+      const { outfield, goalkeeper } = template;
+
+      // Write outfield hair+skin to both first and second kits
+      ['first', 'second'].forEach((kit) => {
+        outfield.hair.forEach((color, idx) => {
+          romParser.writeHairSkinColor(teamIndex, kit, 'hair', idx, color);
+        });
+        outfield.skin.forEach((color, idx) => {
+          romParser.writeHairSkinColor(teamIndex, kit, 'skin', idx, color);
+        });
+      });
+
+      // Write goalkeeper hair+skin
+      goalkeeper.hair.forEach((color, idx) => {
+        romParser.writeHairSkinColor(teamIndex, 'goalkeeper', 'hair', idx, color);
+      });
+      goalkeeper.skin.forEach((color, idx) => {
+        romParser.writeHairSkinColor(teamIndex, 'goalkeeper', 'skin', idx, color);
+      });
+
+      // Update React state for all 3 kits
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        const team = { ...newTeams[teamIndex] };
+        const hairSkin = { ...team.hairSkin };
+
+        const toState = (colors) =>
+          colors.map((c) => ({
+            ...c,
+            r5: Math.round(c.r / 8),
+            g5: Math.round(c.g / 8),
+            b5: Math.round(c.b / 8),
+          }));
+
+        hairSkin.first = { hair: toState(outfield.hair), skin: toState(outfield.skin) };
+        hairSkin.second = { hair: toState(outfield.hair), skin: toState(outfield.skin) };
+        hairSkin.goalkeeper = { hair: toState(goalkeeper.hair), skin: toState(goalkeeper.skin) };
+
+        team.hairSkin = hairSkin;
+        newTeams[teamIndex] = team;
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
   const handleFlagColorChange = useCallback(
     (teamIndex, colorIndex, color) => {
       if (!romParser) return;
@@ -436,6 +513,8 @@ export default function useRomHandlers({
     handlePlayerChange,
     handleUniformChange,
     handleHairSkinChange,
+    handleHairSkinTemplateApply,
+    handleSpecialHairSkinChange,
     handleFlagColorChange,
     handleFlagColorBulkChange,
     handleFlagDesignChange,

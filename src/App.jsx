@@ -48,6 +48,8 @@ export default function App() {
     handlePlayerChange,
     handleUniformChange,
     handleHairSkinChange,
+    handleHairSkinTemplateApply,
+    handleSpecialHairSkinChange,
     handleFlagColorChange,
     handleFlagColorBulkChange,
     handleFlagDesignChange,
@@ -184,7 +186,14 @@ export default function App() {
       case 'uniforms':
         return <UniformEditor {...props} onUniformChange={handleUniformChange} />;
       case 'hairskin':
-        return <HairSkinEditor {...props} onHairSkinChange={handleHairSkinChange} />;
+        return (
+          <HairSkinEditor
+            {...props}
+            onHairSkinChange={handleHairSkinChange}
+            onHairSkinTemplateApply={handleHairSkinTemplateApply}
+            onSpecialHairSkinChange={handleSpecialHairSkinChange}
+          />
+        );
       case 'flagcolors':
         return <FlagColorEditor {...props} onFlagColorChange={handleFlagColorChange} />;
       case 'flagdesign':

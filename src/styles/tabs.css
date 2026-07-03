@@ -10,10 +10,11 @@
   border-bottom: 1px solid var(--border-primary);
   overflow-x: auto;
   flex-shrink: 0;
+  scrollbar-width: none;
 }
 
 .tab-bar::-webkit-scrollbar {
-  height: 3px;
+  display: none;
 }
 
 .tab {

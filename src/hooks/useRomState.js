@@ -94,9 +94,11 @@ export default function useRomState() {
       if (!openTabs.find((t) => t.id === 'players')) {
         setOpenTabs((prev) => [...prev, { id: 'players', label: 'Players' }]);
       }
-      setActiveTab('players');
+      if (!activeTab || !openTabs.find((t) => t.id === activeTab)) {
+        setActiveTab('players');
+      }
     },
-    [openTabs],
+    [openTabs, activeTab],
   );
 
   const openTab = useCallback(

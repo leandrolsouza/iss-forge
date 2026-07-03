@@ -371,10 +371,11 @@ body {
   border-bottom: 1px solid var(--border-primary);
   overflow-x: auto;
   flex-shrink: 0;
+  scrollbar-width: none;
 }
 
 .tab-bar::-webkit-scrollbar {
-  height: 3px;
+  display: none;
 }
 
 .tab {
@@ -616,6 +617,9 @@ body {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .editor-header-title {

@@ -22,6 +22,9 @@
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .editor-header-title {
@@ -577,6 +580,167 @@ select option {
   height: 12px;
   border-radius: 50%;
   border: 1px solid var(--border-secondary);
+}
+
+/* Hair & Skin Sections */
+.hair-skin-special-bar {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+
+.hair-skin-special-bar .hair-skin-section-title {
+  margin-bottom: 10px;
+}
+
+.special-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hair-skin-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.hair-skin-column {
+  min-width: 0;
+}
+
+.hair-skin-column .uniform-colors-grid {
+  grid-template-columns: 1fr;
+}
+
+.hair-skin-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-primary);
+}
+
+/* Template Dropdown */
+.template-dropdown-container {
+  position: relative;
+}
+
+.template-btn {
+  padding: 6px 14px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.template-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+}
+
+.template-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  min-width: 280px;
+  overflow: hidden;
+}
+
+.template-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  cursor: pointer;
+  transition: background var(--transition);
+  text-align: left;
+}
+
+.template-option:hover {
+  background: var(--bg-hover);
+}
+
+.template-swatches {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.template-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  border: 1px solid var(--border-secondary);
+  flex-shrink: 0;
+}
+
+.template-label {
+  font-size: var(--font-size);
+  color: var(--text-primary);
+}
+
+/* Special Players Section */
+.special-dropdowns {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 0;
+}
+
+.special-dropdown-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.special-dropdown-label {
+  font-size: var(--font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.special-dropdown-select {
+  padding: 6px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  border-radius: 4px;
+  outline: none;
+  min-width: 140px;
+  cursor: pointer;
+}
+
+.special-dropdown-select:focus {
+  border-color: var(--border-focus);
+}
+
+.special-info-text {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  margin: 0;
+  font-style: italic;
 }
 
 /* ============================================================

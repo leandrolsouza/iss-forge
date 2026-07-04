@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useI18n } from '../i18n';
 import { useTheme } from '../theme/ThemeProvider';
+import { useSettings } from '../context/SettingsContext';
 import {
   IconPlayers,
   IconUniform,
@@ -14,6 +15,8 @@ import {
   IconSun,
   IconMoon,
   IconChevron,
+  IconInfo,
+  IconSparkle,
 } from './Icons';
 
 export default function Sidebar({
@@ -27,6 +30,7 @@ export default function Sidebar({
 }) {
   const { t, lang, switchLang, languages } = useI18n();
   const { theme, toggleTheme } = useTheme();
+  const { settings: appSettings } = useSettings();
   const [expandedSections, setExpandedSections] = useState({
     teams: true,
     editors: true,
@@ -43,28 +47,22 @@ export default function Sidebar({
     return (
       <div className="sidebar sidebar-collapsed">
         <div className="sidebar-icons">
-          <button className="sidebar-icon-btn" onClick={onToggleCollapse} title="Expandir">
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M2 3h12v1H2V3zm0 4h12v1H2V7zm0 4h12v1H2v-1z" />
-            </svg>
+          <button className="sidebar-icon-btn" onClick={onToggleCollapse} title={t('expand')}>
+            <IconMenu size={20} />
           </button>
           <button
             className="sidebar-icon-btn"
-            onClick={() => onOpenTab('players', 'Jogadores')}
-            title="Jogadores"
+            onClick={() => onOpenTab('players', t('editorPlayers'))}
+            title={t('editorPlayers')}
           >
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 1c-3.315 0-6 1.79-6 4v1h12v-1c0-2.21-2.685-4-6-4z" />
-            </svg>
+            <IconPlayers size={20} />
           </button>
           <button
             className="sidebar-icon-btn"
-            onClick={() => onOpenTab('uniforms', 'Uniformes')}
-            title="Uniformes"
+            onClick={() => onOpenTab('uniforms', t('editorUniforms'))}
+            title={t('editorUniforms')}
           >
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M4 1L1 4v8l3 3h8l3-3V4l-3-3H4zm0 1h8l2 2v8l-2 2H4l-2-2V4l2-2z" />
-            </svg>
+            <IconUniform size={20} />
           </button>
         </div>
       </div>
@@ -162,13 +160,17 @@ export default function Sidebar({
               </span>
               <span>{t('editorCompare')}</span>
             </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
-            >
-              <span className="item-icon">&#x2728;</span>
-              <span>{t('editorAiGenerator')}</span>
-            </div>
+            {appSettings.aiEnabled && (
+              <div
+                className="sidebar-item editor-item"
+                onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
+              >
+                <span className="item-icon">
+                  <IconSparkle size={14} />
+                </span>
+                <span>{t('editorAiGenerator')}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -216,12 +218,10 @@ export default function Sidebar({
         </button>
         <button
           className="sidebar-setting-btn"
-          onClick={() => onOpenTab('about', 'Sobre')}
-          title="Sobre / About"
+          onClick={() => onOpenTab('about', t('aboutTitle'))}
+          title={t('aboutTitle')}
         >
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm-.5 3h1v1h-1V5zm0 2h1v5h-1V7z" />
-          </svg>
+          <IconInfo size={14} />
         </button>
         <div className="sidebar-lang-flags">
           <button

@@ -13,6 +13,8 @@ export default {
   editors: 'EDITORS',
   selections: 'TEAMS',
   openRomToSee: 'Open a ROM to see teams',
+  expand: 'Expand',
+  aboutTitle: 'About',
 
   // Editor names
   editorPlayers: 'Players',
@@ -341,6 +343,10 @@ export default {
   aiClose: 'Close',
   aiRetry: 'Try Again',
   aiAttempt: 'Attempt {current} of {total}...',
+  aiStreamOutput: 'AI Output',
+  aiStreamWaiting: 'The AI response will appear here as it generates...',
+  aiStreamParsing: 'Parsing result...',
+  aiStreamTokens: '{count} chars received',
   aiErrorDetails: 'Technical details',
   aiErrorConnection:
     'Could not connect to the AI server. Make sure LM Studio is running and the endpoint is correct.',
@@ -352,17 +358,24 @@ export default {
   aiErrorGeneric: 'Something went wrong while generating the team.',
   aiTipsTitle: 'Tips for a good prompt',
   aiTipsToggle: 'Show prompt tips',
-  aiTip1: 'Mention the play style: fast, strong, technical, balanced',
-  aiTip2: 'Name real players if you want specific names (max 8 chars each)',
-  aiTip3: 'Describe uniform colors: "blue shirt with white details"',
-  aiTip4: 'Set overall level: weak team, mid-tier, strong national team',
-  aiTip5: 'Give an identity: country, city, fictional theme, era',
-  aiExample1: 'Brazil 1994 with Romario, Bebeto, Cafu, fast and technical',
-  aiExample2: 'Fictional cyberpunk team, futuristic names, black and neon uniforms',
-  aiExample3: 'Argentina 1986 with Maradona as star player (max stats)',
-  aiExample4: 'Strong African team, physically powerful, green/yellow/red uniforms',
-  aiExample5: 'European all-stars 90s: Zidane, Baggio, Bergkamp, balanced team',
-  aiExample6: 'Japan 2002 with fast midfielders, blue and white uniforms',
+  aiTip1: 'Be specific about stats: "speed 14+, shooting 15" works better than "fast and strong"',
+  aiTip2: 'Name real players with max 8 chars (e.g., "Romario", "Zidane", "Bergkamp")',
+  aiTip3: 'Describe colors precisely: "dark blue shirt, white shorts, red socks"',
+  aiTip4: 'Set stat ranges: "defenders stamina 14-16, forwards speed 14+"',
+  aiTip5:
+    'Describe the flag shape: "green background with yellow diamond" or "white with red circle"',
+  aiExample1:
+    'Brazil 1994: Taffarel in goal, Cafu, Aldair, defenders with speed 12+. Romario and Bebeto as strikers with max shooting. Yellow shirt, blue shorts, white socks. Flag: green background with yellow diamond.',
+  aiExample2:
+    'Cyberpunk team "NEON FC": codenames like Cipher, Glitch, Pixel. Black shirt with neon green accents. All players bald or dreadlocks. Speed-focused (14+), low stamina. Flag: black with green circuit pattern.',
+  aiExample3:
+    'Argentina 1986: Maradona #10 with all stats maxed (speed 16, shooting 15, technique 15). Valdano, Burruchaga as forwards. Light blue and white striped home, dark blue away. Flag: light blue, white, light blue horizontal bands.',
+  aiExample4:
+    'Cameroon 1990: strong and fast (speed 13+, stamina 14+). Milla as star striker #9. Green shirt, red shorts. Dark skin tones, mix of bald and short hair. Flag: green, red, yellow vertical stripes with star.',
+  aiExample5:
+    'European Dream Team 90s: Schmeichel GK, Maldini, Baresi defenders. Zidane, Bergkamp midfield. Baggio, Raul strikers. All technique 13+. White home, dark blue away. Flag: EU-style blue with gold stars.',
+  aiExample6:
+    'Japan 2002: fast midfielders (speed 14+), technical passing style. Nakata #7 as star with max technique. Blue shirt white shorts home, white shirt blue shorts away. Flag: white background with red circle.',
   aiTemplatesTitle: 'Prompt Templates',
   aiTemplatesToggle: 'Show prompt templates',
   aiTemplateCatNational: 'National Teams',
@@ -370,22 +383,70 @@ export default {
   aiTemplateCatFiction: 'Fictional Themes',
   aiTemplateCatStyle: 'Play Style',
   aiTemplateCatFun: 'Fun / Creative',
-  'aiTpl.brazil94': 'Brazil 1994 with Romario, Bebeto, Cafu, Taffarel, fast and technical',
-  'aiTpl.argentina86': 'Argentina 1986 with Maradona as absolute star (max stats)',
-  'aiTpl.holland74': 'Holland 1974 total football style, all players with high technique',
-  'aiTpl.italy06': 'Italy 2006 with strong defense and Pirlo, Del Piero, Totti',
-  'aiTpl.france98': 'France 1998 with Zidane, Henry, Barthez, balanced team',
-  'aiTpl.allstarsSA': 'South American all-stars 90s: Romario, Batistuta, Valderrama, Higuita',
-  'aiTpl.allstarsEU': 'Best Europeans 90s: Zidane, Baggio, Bergkamp, Schmeichel',
-  'aiTpl.allstarsAF': "African stars: Weah, Eto'o, Drogba, fast and powerful style",
-  'aiTpl.marvel': 'Marvel superheroes team: hero names, red and blue uniforms',
-  'aiTpl.cyberpunk': 'Futuristic cyberpunk team, codenames, black and neon green uniforms',
-  'aiTpl.anime': 'Japanese anime squad, fast and technical players, white and blue uniforms',
-  'aiTpl.medieval': 'Medieval knights team, strong players, silver and red uniforms',
-  'aiTpl.pirates': 'Caribbean pirates, black and gold uniforms, pirate-themed names',
-  'aiTpl.offensive': 'Ultra-offensive team: fast attackers, weak defense, orange uniforms',
-  'aiTpl.defensive': 'Defensive fortress: max stamina and defense, Italian style, dark blue',
-  'aiTpl.technical': 'Technical team Barcelona style: short passing, all high technique',
-  'aiTpl.coders': 'Programmers team: language names (Python, Java, Rust), green Matrix uniforms',
-  'aiTpl.food': 'Brazilian foods as players: Feijoada, Caipira, Acai, green and yellow uniforms',
+  'aiTpl.brazil94':
+    'Brazil 1994 World Cup squad. GK: Taffarel. Defenders: Jorginho, Aldair, Branco (speed 12+). Midfield: Mazinho, Mauro Silva, Zinho (technique 11+). Forwards: Romario #11 (shooting 15, speed 14), Bebeto (shooting 13). Home: yellow shirt, blue shorts, white socks. Away: blue shirt, white shorts. Skin: medium tan. Flag: green background with yellow diamond and blue circle inside.',
+  'aiTpl.argentina86':
+    'Argentina 1986 World Cup. Maradona #10: speed 16, shooting 15, technique 15, dreadlocks. Valdano #11, Burruchaga #7 as forwards (shooting 13). Pumpido GK. Strong midfield with Batista, Enrique (stamina 14+). Home: light blue and white shirt, black shorts. Away: dark blue shirt, black shorts. Fair skin, mostly short hair. Flag: light blue, white, light blue horizontal stripes with yellow sun.',
+  'aiTpl.holland74':
+    'Netherlands 1974 Total Football. Cruyff #14: speed 15, technique 15, long hair. Neeskens, Rep, Krol all with technique 13+. Every outfield player speed 12+. GK: Jongbloed. Home: orange shirt, white shorts, orange socks. Away: white shirt, orange shorts. Fair skin, mix of long and short hair. Flag: red, white, blue horizontal bands.',
+  'aiTpl.italy06':
+    'Italy 2006 Champions. Buffon GK (speed 10, stamina 16). Cannavaro, Nesta (stamina 15, technique 11). Pirlo #21 (technique 15, speed 10). Totti, Del Piero forwards (shooting 13+). Home: dark blue shirt, white shorts. Away: white shirt, dark blue shorts. Fair skin. Flag: green, white, red vertical stripes.',
+  'aiTpl.france98':
+    'France 1998 World Cup. Barthez GK (bald). Thuram, Desailly, Blanc (stamina 14+). Zidane #10 (technique 15, shooting 13). Henry (speed 16, shooting 11). Balanced midfield: Deschamps, Petit. Home: blue shirt, white shorts, red socks. Away: white shirt, blue shorts. Mix of dark and fair skin. Flag: blue, white, red vertical stripes.',
+  'aiTpl.allstarsSA':
+    'South American All-Stars 90s. GK: Higuita (long curly hair). Cafu (speed 15), Roberto Carlos. Midfield: Valderrama #10 (afro, technique 15), Rios. Forwards: Romario (shooting 15), Batistuta (shooting 15, speed 13), Salas. Home: gold shirt, green shorts. Away: white shirt, gold shorts. Medium-dark skin tones. Flag: green background with gold star.',
+  'aiTpl.allstarsEU':
+    'European Legends 90s. GK: Schmeichel (speed 8, stamina 16). Maldini, Baresi (stamina 15). Zidane #10 (technique 15), Bergkamp (technique 15, shooting 13). Baggio (shooting 15, ponytail), Raul (speed 14). Home: white shirt, navy shorts. Away: dark blue shirt, white shorts. Fair skin. Flag: dark blue background with gold stars in circle.',
+  'aiTpl.allstarsAF':
+    "African All-Stars. GK: Thomas N'Kono. Weah #14 (speed 16, shooting 15, dreadlocks), Eto'o (speed 15), Drogba (shooting 15, speed 14, bald). Kanu, Okocha midfield (technique 13+). All players stamina 12+. Home: green shirt, gold shorts. Away: red shirt, black shorts. Dark skin. Flag: green, gold, red horizontal bands with black star.",
+  'aiTpl.marvel':
+    'Marvel Avengers FC. Names: Rogers, Stark, Banner, Thor, Romanof, Barton, TChalla, Parker, Strange, Maximof, Vision, Rhodes, Lang, Barnes, Danvers. TChalla #7 (speed 16), Thor #3 (shooting 15, long hair), Rogers #1 GK (stamina 16, short hair). Home: red shirt, blue shorts, red socks. Away: black shirt, gold shorts. Mix of skin tones and hair. Flag: red background with blue "A" shape.',
+  'aiTpl.cyberpunk':
+    'Cyberpunk 2077 team "NETRUN". Names: Cipher, Glitch, Neon, Pixel, Proxy, Vector, Daemon, Socket, Kernel, Chrome, Binary, Codec, Ping, Flux, Zero. All speed 13+, stamina low (6-9). Zero #0 GK (bald). Mix of bald, dreadlocks, mohawk styles. Home: black shirt, neon green accents. Away: dark purple, cyan accents. Pale skin. Flag: black background with neon green angular circuit pattern.',
+  'aiTpl.anime':
+    'Captain Tsubasa style. Tsubasa #10 (technique 15, speed 14), Hyuga #9 (shooting 15, speed 13), Misaki #11 (technique 13). Wakabaya GK (stamina 16). All midfielders technique 11+, speed 12+. Home: white shirt, blue collar and cuffs, blue shorts. Away: red shirt, white shorts. Fair skin, all short/mid-length hair. Flag: white background with red rising sun.',
+  'aiTpl.medieval':
+    'Knights of the Round Table. Names: Arthur, Lancelot, Gawain, Galahad, Percival, Tristan, Bors, Kay, Bediver, Gareth, Mordred, Merlin, Uther, Lionel, Dagonet. Arthur #1 GK (stamina 16). Lancelot #7 (speed 15, shooting 13). All stamina 12+, technique 9+. Home: silver/white shirt, red shorts. Away: black shirt, gold shorts. Fair skin, long/mid hair. Flag: red background with white cross.',
+  'aiTpl.pirates':
+    'Caribbean Pirates FC. Names: Sparrow, Barbossa, Turner, Calypso, Blackbrd, Kidd, Drake, Morgan, Rackham, Bonny, Teach, Flint, Silver, Hook, Davy. Sparrow #7 (speed 15, technique 13, dreadlocks). Teach GK (bald, stamina 15). Mix of hair: dreadlocks, bald, ponytail, long. Home: black shirt, gold trim, black shorts. Away: dark red shirt, black shorts. Tanned skin. Flag: black background with white skull and crossbones.',
+  'aiTpl.offensive':
+    'Ultra-Attack FC. 4 forwards with speed 14-16 and shooting 13-15. Midfielders all speed 12+. Defenders weak (speed 8, stamina 8). GK average. Team speed average: 13+. Home: bright orange shirt, black shorts, orange socks. Away: white shirt, orange shorts. Random hair/skin. Flag: orange background with black lightning bolt.',
+  'aiTpl.defensive':
+    'Fortress FC. Italian catenaccio. GK with stamina 16. 5 defenders all stamina 14-16, technique 11+. Midfielders stamina 13+, speed 10+. Only 2 forwards (speed 12, shooting 11). Low overall speed (avg 9). Home: dark navy shirt, dark navy shorts, white socks. Away: white shirt, navy shorts. Fair skin, short hair. Flag: navy background with white shield shape.',
+  'aiTpl.technical':
+    'Tiki-Taka FC, Barcelona style. All outfield players technique 13-15. Speed moderate (10-12). Midfield-heavy: 5 midfielders with technique 15. Short passing, possession. Xavi-style: technique > speed. Home: dark red and blue vertical split shirt, dark red shorts. Away: gold shirt, black shorts. Mix of skin tones. Flag: dark red and blue vertical halves with gold star.',
+  'aiTpl.coders':
+    'Team Stack Overflow. Names: Python, Java, Rust, Golang, Kotlin, Swift, TypeSc, Lua, Ruby, Haskell, Clojure, Scala, Elixir, Zig, Carbon. Python #1 GK (stamina 14). Rust #7 (speed 16, technique 13). All technique 11+. Home: black shirt with green text, black shorts. Away: dark green shirt, black shorts. Mix of skin/hair. Flag: black background with green "< >" brackets.',
+  'aiTpl.food':
+    'Brazilian Food FC. Names: Feijoada, Caipira, Acai, Tapioca, Brigadei, Paoqueij, Coxinha, Farofa, Acaraje, Moqueca, Vatapa, Churrasco, Pudim, Guarana, Rapadura. Churrasco #9 (shooting 15, speed 14, bald). Acai #7 (speed 16). Home: green shirt, yellow shorts, green socks. Away: yellow shirt, green shorts. Medium tan skin. Flag: green background with yellow diamond.',
+
+  // Settings
+  settingsTitle: 'Settings',
+  settingsEditor: 'Editor',
+  settingsConfirmBeforeSave: 'Confirm before saving ROM',
+  settingsConfirmBeforeSaveHint: 'Show a confirmation dialog before overwriting the ROM file.',
+  settingsAutoBackup: 'Auto-backup before saving',
+  settingsAutoBackupHint: 'Automatically create a backup of the current ROM before saving changes.',
+  settingsDefaultExportPath: 'Default export path',
+  settingsDefaultExportPathHint: 'Default folder for JSON team exports. Leave empty to always ask.',
+  settingsSelectFolder: 'Select folder',
+  settingsClearPath: 'Clear',
+  settingsNoFolderSelected: 'No folder selected (will ask each time)',
+  settingsSaved: 'Settings saved!',
+  settingsAi: 'AI Assistant',
+  settingsAiEnabled: 'Enable AI assistant',
+  settingsAiEnabledHint: 'Show the AI Team Generator in the editors list.',
+  settingsAiProvider: 'Provider',
+  settingsAiProviderOpenai: 'OpenAI-compatible (LM Studio, Ollama, etc.)',
+  settingsAiEndpoint: 'API Endpoint',
+  settingsAiEndpointHint:
+    'OpenAI-compatible URL. LM Studio default: http://localhost:1234/v1/chat/completions',
+  settingsAiModel: 'Model (optional)',
+  settingsAiModelHint: 'Leave empty to use the model loaded in LM Studio.',
+  settingsAiApiKey: 'API Key',
+  settingsAiApiKeyHint: 'Required for OpenAI/cloud providers. Not needed for local servers.',
+  settingsAiApiKeyShow: 'Show',
+  settingsAiApiKeyHide: 'Hide',
+  settingsAiTemperature: 'Temperature',
+  settingsAiMaxTokens: 'Max Tokens',
 };

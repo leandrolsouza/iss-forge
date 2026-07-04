@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TEAMS, SHOOTING_VALUES } from '../rom/constants';
 import { useI18n } from '../i18n';
+import { IconCompare } from './Icons';
 
 export default function TeamCompare({ teams }) {
   const { t } = useI18n();
@@ -30,7 +31,7 @@ export default function TeamCompare({ teams }) {
     <div className="editor-panel team-compare-panel">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#9878;</span>
+          <span className="editor-icon"><IconCompare size={18} /></span>
           <h2>{t('compare')}</h2>
         </div>
       </div>

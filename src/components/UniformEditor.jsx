@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useI18n } from '../i18n';
+import { IconUniform } from './Icons';
 
 export default function UniformEditor({ team, teamIndex, onUniformChange }) {
   const [activeKit, setActiveKit] = useState('home');
@@ -27,14 +28,14 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
   // Get the parts to display based on kit type
   const kitParts = isKeeper
     ? [
-        { id: 'shirtAndSocks', label: t('shirtAndSocks'), colors: currentKit.shirtAndSocks || [] },
-        { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
-      ]
+      { id: 'shirtAndSocks', label: t('shirtAndSocks'), colors: currentKit.shirtAndSocks || [] },
+      { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
+    ]
     : [
-        { id: 'shirt', label: t('shirt'), colors: currentKit.shirt || [] },
-        { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
-        { id: 'socks', label: t('socks'), colors: currentKit.socks || [] },
-      ];
+      { id: 'shirt', label: t('shirt'), colors: currentKit.shirt || [] },
+      { id: 'shorts', label: t('shorts'), colors: currentKit.shorts || [] },
+      { id: 'socks', label: t('socks'), colors: currentKit.socks || [] },
+    ];
 
   const rgbToHex = (r, g, b) => {
     return '#' + [r, g, b].map((c) => Math.min(255, c).toString(16).padStart(2, '0')).join('');
@@ -57,7 +58,7 @@ export default function UniformEditor({ team, teamIndex, onUniformChange }) {
       {/* Header */}
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#128085;</span>
+          <span className="editor-icon"><IconUniform size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('uniforms')}</span>
         </div>

@@ -6,7 +6,7 @@ dist/
 release/
 
 # ROM files
-rom/
+/rom/
 *.smc
 *.sfc
 *.bin
@@ -32,7 +32,7 @@ desktop.ini
 *.log
 coverage/
 team_json/
-rom/
+/rom/
 issparser-main/
 konami-compressor/
 docs/

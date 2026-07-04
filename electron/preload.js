@@ -61,6 +61,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
   aiGetSettings: () => ipcRenderer.invoke('ai:getSettings'),
   aiSaveSettings: (settings) => ipcRenderer.invoke('ai:saveSettings', settings),
   aiGenerate: (payload) => ipcRenderer.invoke('ai:generate', payload),
+  aiGenerateStream: (payload) => ipcRenderer.invoke('ai:generate-stream', payload),
+  onAiStreamChunk: (callback) => {
+    ipcRenderer.on('ai:stream-chunk', (event, chunk) => callback(chunk));
+  },
+  onAiStreamDone: (callback) => {
+    ipcRenderer.on('ai:stream-done', () => callback());
+  },
+  onAiStreamError: (callback) => {
+    ipcRenderer.on('ai:stream-error', (event, error) => callback(error));
+  },
+
+  // App Settings
+  settingsGetAll: () => ipcRenderer.invoke('settings:getAll'),
+  settingsGet: (key) => ipcRenderer.invoke('settings:get', key),
+  settingsSet: (key, value) => ipcRenderer.invoke('settings:set', { key, value }),
+  settingsSetAll: (settings) => ipcRenderer.invoke('settings:setAll', settings),
+  settingsSelectExportPath: () => ipcRenderer.invoke('settings:selectExportPath'),
 
   // Cleanup listeners
   removeAllListeners: (channel) => {

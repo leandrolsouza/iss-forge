@@ -2,6 +2,7 @@ import React from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { IconOverview } from './Icons';
 
 export default function TeamPreview({ team, teamIndex }) {
   const { t, lang } = useI18n();
@@ -46,7 +47,7 @@ export default function TeamPreview({ team, teamIndex }) {
     <div className="editor-panel team-preview-panel">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#128203;</span>
+          <span className="editor-icon"><IconOverview size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('overview')}</span>
         </div>

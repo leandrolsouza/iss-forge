@@ -179,3 +179,36 @@ export const IconChevron = ({ size, expanded }) => (
     />
   </Icon>
 );
+
+export const IconSettings = ({ size }) => (
+  <Icon size={size}>
+    <path d="M9.1 2H6.9l-.3 1.2c-.3.1-.6.3-.9.5L4.6 3.2l-1.1 1.9.9.9c-.05.3-.05.7 0 1l-.9.9 1.1 1.9 1.1-.5c.3.2.6.4.9.5L6.9 11h2.2l.3-1.2c.3-.1.6-.3.9-.5l1.1.5 1.1-1.9-.9-.9c.05-.3.05-.7 0-1l.9-.9-1.1-1.9-1.1.5c-.3-.2-.6-.4-.9-.5L9.1 2zM8 5.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" />
+  </Icon>
+);
+
+export const IconInfo = ({ size }) => (
+  <Icon size={size}>
+    <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 1a6 6 0 1 1 0 12A6 6 0 0 1 8 2zm-.5 3h1v1h-1V5zm0 2h1v5h-1V7z" />
+  </Icon>
+);
+
+export const IconSparkle = ({ size }) => (
+  <Icon size={size}>
+    <path d="M8 1l1.3 3.7L13 6l-3.7 1.3L8 11l-1.3-3.7L3 6l3.7-1.3L8 1z" />
+    <path d="M12 10l.7 1.8L14.5 12.5l-1.8.7L12 15l-.7-1.8-1.8-.7 1.8-.7L12 10z" opacity="0.7" />
+  </Icon>
+);
+
+export const IconCamera = ({ size }) => (
+  <Icon size={size}>
+    <path d="M6 2l-1 2H2.5l-.5.5v8l.5.5h11l.5-.5v-8l-.5-.5H11l-1-2H6zm0 1h4l1 2h2.5v7h-11V5H5l1-2z" />
+    <circle cx="8" cy="8.5" r="2.5" />
+  </Icon>
+);
+
+export const IconImage = ({ size }) => (
+  <Icon size={size}>
+    <path d="M2.5 2h11l.5.5v11l-.5.5h-11l-.5-.5v-11l.5-.5zM3 3v8.5l3-3 2 2 3-3.5 2 2.5V3H3zm0 10h10v-1l-2-2.5-3 3.5-2-2-3 3v1z" />
+    <circle cx="5.5" cy="5.5" r="1.5" />
+  </Icon>
+);

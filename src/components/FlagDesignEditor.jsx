@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 import FlagTemplateSelector from './FlagTemplateSelector';
 import FlagImageImport from './FlagImageImport';
+import { IconFlagDesign } from './Icons';
 
 const GRID_WIDTH = 24;
 const GRID_HEIGHT = 16;
@@ -83,7 +84,7 @@ export default function FlagDesignEditor({
     >
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#127988;</span>
+          <span className="editor-icon"><IconFlagDesign size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- Design da Bandeira</span>
         </div>

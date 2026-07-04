@@ -200,3 +200,82 @@ export function aiSaveSettings(settings) {
 export function aiGenerate(payload) {
   return window.electronAPI.aiGenerate(payload);
 }
+
+/**
+ * Start a streaming LLM generation. Chunks arrive via event listeners.
+ * @param {object} payload - { prompt, systemPrompt, settings? }
+ * @returns {Promise<{success: boolean}>}
+ */
+export function aiGenerateStream(payload) {
+  return window.electronAPI.aiGenerateStream(payload);
+}
+
+/**
+ * Listen for streaming text chunks from LLM
+ * @param {function} callback - receives a string chunk
+ */
+export function onAiStreamChunk(callback) {
+  window.electronAPI.onAiStreamChunk(callback);
+}
+
+/**
+ * Listen for stream completion
+ * @param {function} callback
+ */
+export function onAiStreamDone(callback) {
+  window.electronAPI.onAiStreamDone(callback);
+}
+
+/**
+ * Listen for stream errors
+ * @param {function} callback - receives error message string
+ */
+export function onAiStreamError(callback) {
+  window.electronAPI.onAiStreamError(callback);
+}
+
+// ─── App Settings ────────────────────────────────────────────────────────────
+
+/**
+ * Get all app settings
+ * @returns {Promise<object>}
+ */
+export function settingsGetAll() {
+  return window.electronAPI.settingsGetAll();
+}
+
+/**
+ * Get a single setting by key
+ * @param {string} key
+ * @returns {Promise<*>}
+ */
+export function settingsGet(key) {
+  return window.electronAPI.settingsGet(key);
+}
+
+/**
+ * Set a single setting
+ * @param {string} key
+ * @param {*} value
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export function settingsSet(key, value) {
+  return window.electronAPI.settingsSet(key, value);
+}
+
+/**
+ * Set multiple settings at once
+ * @param {object} settings
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export function settingsSetAll(settings) {
+  return window.electronAPI.settingsSetAll(settings);
+}
+
+/**
+ * Open native directory picker for export path
+ * @returns {Promise<{success: boolean, path?: string}>}
+ */
+export function settingsSelectExportPath() {
+  return window.electronAPI.settingsSelectExportPath();
+}

@@ -635,7 +635,9 @@ body {
 }
 
 .editor-icon {
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-secondary);
 }
 
 .editor-subtitle {

@@ -54,94 +54,92 @@ const CONSTRAINTS = {
  * Build the system prompt with all ROM constraints
  */
 export function buildSystemPrompt() {
-  return `You are a team generator for International Superstar Soccer (SNES 1995). You generate team data in a specific JSON format that will be imported into the game ROM.
+  return `You are a team data generator for International Superstar Soccer (SNES, 1995). Output a single JSON object that will be imported directly into the game ROM. Follow ALL constraints below.
 
-## STRICT RULES — Follow these EXACTLY:
+# CONSTRAINTS
 
-### Player Names
-- Maximum ${CONSTRAINTS.playerNameMaxLength} characters per name
-- Allowed characters: ${CONSTRAINTS.playerNameAllowedChars}
-- Names are typically UPPERCASE or surname format (e.g., "ROBERTO", "Ronaldo", "TChalla")
+## Players (exactly ${CONSTRAINTS.playersPerTeam})
+- Player 1 = goalkeeper. Players 2-11 = starters. Players 12-15 = substitutes.
+- Name: max ${CONSTRAINTS.playerNameMaxLength} chars. Allowed: ${CONSTRAINTS.playerNameAllowedChars}
+- Shirt number: ${CONSTRAINTS.shirtNumberRange.min}-${CONSTRAINTS.shirtNumberRange.max}, unique per player
 
-### Team
-- Exactly ${CONSTRAINTS.playersPerTeam} players per team
-- Player 1 is always the goalkeeper
-- Players 2-11 are starters (defenders, midfielders, forwards)
-- Players 12-15 are substitutes
-- teamNameText: max ${CONSTRAINTS.teamNameTextMaxLength} characters (shown in menus)
-- teamNameInGame: exactly ${CONSTRAINTS.teamNameInGameMaxLength} characters (shown on scoreboard)
+## Attributes
+| Attribute | Range | Notes |
+|-----------|-------|-------|
+| shooting | ${CONSTRAINTS.shootingValues.join(', ')} | Pick from this set only |
+| shootingIndex | 0-7 | Index into shooting values (0→1, 1→3, 2→5, 3→7, 4→9, 5→11, 6→13, 7→15) |
+| speed | 1-16 | Integer. Higher = faster |
+| stamina | 1-16 | Integer. Higher = more endurance |
+| technique | ${CONSTRAINTS.techniqueValues.join(', ')} | Same set as shooting |
+| techniqueIndex | 0-7 | Same mapping as shootingIndex |
 
-### Shirt Numbers
-- Range: ${CONSTRAINTS.shirtNumberRange.min} to ${CONSTRAINTS.shirtNumberRange.max}
-- Each player must have a unique number within the team
+IMPORTANT: shootingIndex and techniqueIndex MUST match the shooting/technique values.
+Example: shooting=13 → shootingIndex=6. technique=9 → techniqueIndex=4.
 
-### Attributes
-- shooting: one of [${CONSTRAINTS.shootingValues.join(', ')}] (odd values, higher = better)
-- shootingIndex: index into the values array (0-7), where shootingIndex N gives shooting value at position N
-- speed: ${CONSTRAINTS.speedRange.min} to ${CONSTRAINTS.speedRange.max} (integer, higher = faster)
-- stamina: ${CONSTRAINTS.staminaRange.min} to ${CONSTRAINTS.staminaRange.max} (integer, higher = more endurance)
-- technique: one of [${CONSTRAINTS.techniqueValues.join(', ')}] (same scale as shooting)
-- techniqueIndex: index into the values array (0-7)
+## Stat Distribution Guidelines
+- Goalkeepers: high stamina (12-16), low speed (6-10)
+- Defenders: high stamina (12-16), moderate speed
+- Midfielders: balanced stats, high technique for playmakers
+- Forwards: high speed and shooting, lower stamina
+- Star players: 1-3 per team with stats 13-15+
+- Average players: stats around 7-9
+- Make stat variation REALISTIC: not everyone should have the same values
 
-### Hair Styles
-${CONSTRAINTS.hairStyles.map((h) => `- ${h}`).join('\n')}
+## Hair Styles
+${CONSTRAINTS.hairStyles.map((h) => `${h}`).join(' | ')}
 
-### isSpecial
-- false = player uses team's default hair/skin palette
-- true = player uses special individual palette
+## isSpecial
+- false = uses team default hair/skin palette (most players)
+- true = uses individual palette (use for 0-2 unique-looking players max)
 
-### Colors (RGB)
-- All color values must be multiples of 8, range 0-248
-- Valid examples: 0, 8, 16, 24, ..., 240, 248
+## Colors (SNES 5-bit RGB)
+All R, G, B values must be multiples of 8, range 0-248.
 
-### Uniforms Structure
-- home: shirt (3 colors, dark to light gradient), shorts (3 colors), socks (2 colors)
-- away: shirt (3 colors), shorts (3 colors), socks (2 colors)
-- goalkeeper: shirtAndSocks (5 colors), shorts (1 color)
+## Team Names
+- name: descriptive display name (max 20 chars)
+- teamNameText: max ${CONSTRAINTS.teamNameTextMaxLength} chars UPPERCASE (shown in menus)
+- teamNameInGame: exactly ${CONSTRAINTS.teamNameInGameMaxLength} chars UPPERCASE (scoreboard)
 
-### Hair & Skin Structure
-- first kit: hair (1 color), skin (5 colors, darkest to lightest)
-- second kit: hair (1 color), skin (5 colors)
-- goalkeeper: hair (1 color), skin (3 colors)
+## Uniforms
+Home kit:
+- shirt: 3 colors (dark → medium → light, for shading effect)
+- shorts: 3 colors (dark → medium → light)
+- socks: 2 colors (dark → light)
 
-### Flag Colors
-- Exactly 4 colors for the flag palette
+Away kit: same structure, contrasting colors to home
 
-### Flag Design
-- A pixel grid representing the team's flag/emblem (shown on the selection screen)
-- Grid size: 16 rows × 24 columns
-- Each pixel is a number 0-4:
-  - 0 = transparent (background)
-  - 1 = flag color 1
-  - 2 = flag color 2
-  - 3 = flag color 3
-  - 4 = flag color 4
-- IMPORTANT: The flag should visually represent the team's IDENTITY and THEME, not just boring stripes!
-- For national teams: use the real flag pattern (e.g., Brazil's diamond, Japan's circle, UK's cross)
-- For fictional/themed teams: create a symbolic design that represents the theme
-  - Superhero theme → shield shape, star, lightning bolt, diamond symbol
-  - Cyberpunk → angular geometric patterns, asymmetric shapes
-  - Historical → crosses, coats-of-arms inspired shapes
-  - Animal-themed → silhouette or abstract representation
-- Think of it as a team LOGO/EMBLEM, not just colored bands
-- Use contrast: put shapes (color 2, 3, 4) on a solid background (color 1)
-- The more recognizable and iconic the shape, the better
-- Examples of good designs:
-  - Diamond/rhombus centered on solid background (like Brazil)
-  - Circle centered on solid background (like Japan)
-  - A bold "V" or chevron shape
-  - A star or lightning bolt silhouette
-  - Cross or X pattern
-  - Shield shape with internal detail
+Goalkeeper kit:
+- shirtAndSocks: 5 colors (shading gradient)
+- shorts: 1 color
 
-## OUTPUT FORMAT
+IMPORTANT: Home and away kits must be VISUALLY DISTINCT. Goalkeeper must differ from both.
 
-Return ONLY valid JSON (no markdown, no explanation, no code fences) in this exact format:
+## Hair & Skin
+- first (home kit): hair 1 color, skin 5 colors (darkest → lightest)
+- second (away kit): hair 1 color, skin 5 colors
+- goalkeeper: hair 1 color, skin 3 colors
+- Skin gradient should look natural (e.g., shadow → base → highlight)
+
+## Flag Colors
+Exactly 4 palette colors used by the flag design grid.
+
+## Flag Design
+- 16 rows × 24 columns pixel grid
+- Each cell: 0 (transparent), 1-4 (palette color index)
+- Create a RECOGNIZABLE shape/symbol, not just horizontal stripes
+- National teams: represent the real flag (diamond, circle, cross, crescent, etc.)
+- Fictional teams: create an iconic symbol (star, shield, bolt, chevron, skull, etc.)
+- Use color 1 as background, colors 2-4 for the main design elements
+- The more iconic and simple the silhouette, the better it reads at 16×24 resolution
+
+# OUTPUT
+
+Return ONLY a valid JSON object. No markdown fences, no explanation, no comments.
 
 {
   "_format": "iss-forge-team",
   "_version": 1,
-  "name": "TeamName",
+  "name": "Team Display Name",
   "id": "TEAMID",
   "teamNameText": "TEAMNAME",
   "teamNameInGame": "TEA",
@@ -152,7 +150,7 @@ Return ONLY valid JSON (no markdown, no explanation, no code fences) in this exa
       "shooting": 7,
       "shootingIndex": 3,
       "speed": 8,
-      "stamina": 12,
+      "stamina": 14,
       "technique": 9,
       "techniqueIndex": 4,
       "hairStyle": 0,
@@ -161,42 +159,40 @@ Return ONLY valid JSON (no markdown, no explanation, no code fences) in this exa
   ],
   "uniforms": {
     "home": {
-      "shirt": [{"r": 0, "g": 0, "b": 128}, {"r": 0, "g": 0, "b": 176}, {"r": 0, "g": 0, "b": 224}],
-      "shorts": [{"r": 248, "g": 248, "b": 248}, {"r": 200, "g": 200, "b": 200}, {"r": 160, "g": 160, "b": 160}],
-      "socks": [{"r": 0, "g": 0, "b": 128}, {"r": 0, "g": 0, "b": 224}]
+      "shirt": [{"r":0,"g":0,"b":128}, {"r":0,"g":0,"b":176}, {"r":0,"g":0,"b":224}],
+      "shorts": [{"r":248,"g":248,"b":248}, {"r":200,"g":200,"b":200}, {"r":160,"g":160,"b":160}],
+      "socks": [{"r":0,"g":0,"b":128}, {"r":0,"g":0,"b":224}]
     },
     "away": {
-      "shirt": [{"r": 248, "g": 248, "b": 248}, {"r": 200, "g": 200, "b": 200}, {"r": 160, "g": 160, "b": 160}],
-      "shorts": [{"r": 0, "g": 0, "b": 128}, {"r": 0, "g": 0, "b": 176}, {"r": 0, "g": 0, "b": 224}],
-      "socks": [{"r": 248, "g": 248, "b": 248}, {"r": 160, "g": 160, "b": 160}]
+      "shirt": [{"r":248,"g":248,"b":248}, {"r":200,"g":200,"b":200}, {"r":160,"g":160,"b":160}],
+      "shorts": [{"r":0,"g":0,"b":128}, {"r":0,"g":0,"b":176}, {"r":0,"g":0,"b":224}],
+      "socks": [{"r":248,"g":248,"b":248}, {"r":160,"g":160,"b":160}]
     },
     "goalkeeper": {
-      "shirtAndSocks": [{"r": 0, "g": 128, "b": 0}, {"r": 0, "g": 176, "b": 0}, {"r": 0, "g": 224, "b": 0}, {"r": 0, "g": 128, "b": 0}, {"r": 0, "g": 224, "b": 0}],
-      "shorts": [{"r": 16, "g": 16, "b": 16}]
+      "shirtAndSocks": [{"r":0,"g":128,"b":0}, {"r":0,"g":176,"b":0}, {"r":0,"g":224,"b":0}, {"r":0,"g":128,"b":0}, {"r":0,"g":224,"b":0}],
+      "shorts": [{"r":16,"g":16,"b":16}]
     }
   },
   "hairSkin": {
     "first": {
-      "hair": [{"r": 40, "g": 24, "b": 8}],
-      "skin": [{"r": 80, "g": 56, "b": 32}, {"r": 128, "g": 96, "b": 56}, {"r": 168, "g": 128, "b": 80}, {"r": 200, "g": 168, "b": 120}, {"r": 232, "g": 200, "b": 160}]
+      "hair": [{"r":40,"g":24,"b":8}],
+      "skin": [{"r":80,"g":56,"b":32}, {"r":128,"g":96,"b":56}, {"r":168,"g":128,"b":80}, {"r":200,"g":168,"b":120}, {"r":232,"g":200,"b":160}]
     },
     "second": {
-      "hair": [{"r": 40, "g": 24, "b": 8}],
-      "skin": [{"r": 80, "g": 56, "b": 32}, {"r": 128, "g": 96, "b": 56}, {"r": 168, "g": 128, "b": 80}, {"r": 200, "g": 168, "b": 120}, {"r": 232, "g": 200, "b": 160}]
+      "hair": [{"r":40,"g":24,"b":8}],
+      "skin": [{"r":80,"g":56,"b":32}, {"r":128,"g":96,"b":56}, {"r":168,"g":128,"b":80}, {"r":200,"g":168,"b":120}, {"r":232,"g":200,"b":160}]
     },
     "goalkeeper": {
-      "hair": [{"r": 40, "g": 24, "b": 8}],
-      "skin": [{"r": 128, "g": 96, "b": 56}, {"r": 168, "g": 128, "b": 80}, {"r": 232, "g": 200, "b": 160}]
+      "hair": [{"r":40,"g":24,"b":8}],
+      "skin": [{"r":128,"g":96,"b":56}, {"r":168,"g":128,"b":80}, {"r":232,"g":200,"b":160}]
     }
   },
   "flagColors": [
-    {"r": 0, "g": 0, "b": 128},
-    {"r": 248, "g": 248, "b": 248},
-    {"r": 0, "g": 0, "b": 224},
-    {"r": 248, "g": 200, "b": 0}
+    {"r":0,"g":0,"b":128}, {"r":248,"g":248,"b":248}, {"r":0,"g":0,"b":224}, {"r":248,"g":200,"b":0}
   ],
   "flagDesign": {
     "grid": [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,2,2,3,3,2,2,1,1,1,1,1,1,1,1,1],
@@ -204,20 +200,19 @@ Return ONLY valid JSON (no markdown, no explanation, no code fences) in this exa
       [1,1,1,1,1,1,1,2,2,3,3,4,4,3,3,2,2,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,2,2,3,3,4,4,4,4,3,3,2,2,1,1,1,1,1,1],
       [1,1,1,1,1,2,2,3,3,4,4,4,4,4,4,3,3,2,2,1,1,1,1,1],
-      [1,1,1,1,2,2,3,3,4,4,4,4,4,4,4,4,3,3,2,2,1,1,1,1],
-      [1,1,1,1,2,2,3,3,4,4,4,4,4,4,4,4,3,3,2,2,1,1,1,1],
       [1,1,1,1,1,2,2,3,3,4,4,4,4,4,4,3,3,2,2,1,1,1,1,1],
       [1,1,1,1,1,1,2,2,3,3,4,4,4,4,3,3,2,2,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,2,2,3,3,4,4,3,3,2,2,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,2,2,3,3,3,3,2,2,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,2,2,3,3,2,2,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1,2,2,2,2,1,1,1,1,1,1,1,1,1,1],
-      [1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1]
+      [1,1,1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ]
   }
 }
 
-Remember: Return ONLY the JSON. No explanations, no markdown.`;
+Include ALL 15 players and ALL uniform/hairSkin/flag data. Output valid JSON only.`;
 }
 
 /**
@@ -450,3 +445,82 @@ export const DEFAULT_AI_SETTINGS = {
   temperature: 0.7,
   maxTokens: 4096,
 };
+
+/**
+ * Stream LLM response in web/dev mode (no Electron).
+ * Calls onChunk(text) for each token received, onDone() when complete, onError(msg) on failure.
+ * Returns an abort function to cancel the stream.
+ */
+export function streamLLMWeb({ systemPrompt, userPrompt, settings, onChunk, onDone, onError }) {
+  const controller = new AbortController();
+
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: settings.temperature || 0.7,
+    max_tokens: settings.maxTokens || 4096,
+    stream: true,
+    ...(settings.model ? { model: settings.model } : {}),
+  };
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (settings.apiKey) {
+    headers['Authorization'] = `Bearer ${settings.apiKey}`;
+  }
+
+  fetch(settings.endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+    signal: controller.signal,
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        onError(`API error ${response.status}: ${errorText || response.statusText}`);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed || !trimmed.startsWith('data:')) continue;
+          const data = trimmed.slice(5).trim();
+          if (data === '[DONE]') {
+            onDone();
+            return;
+          }
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              onChunk(content);
+            }
+          } catch (_e) {
+            // Ignore malformed SSE lines
+          }
+        }
+      }
+
+      onDone();
+    })
+    .catch((err) => {
+      if (err.name === 'AbortError') return;
+      onError(err.message || 'Connection failed');
+    });
+
+  return () => controller.abort();
+}

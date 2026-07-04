@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../i18n';
 import { HAIR_SKIN_TEMPLATES } from '../rom/hairSkinTemplates';
 import { SPECIAL_HAIR, SPECIAL_SKIN } from '../rom/constants';
+import { IconHairSkin } from './Icons';
 
 const TEMPLATE_I18N_KEYS = {
   european_light: 'templateEuropeanLight',
@@ -197,7 +198,7 @@ export default function HairSkinEditor({
     <div className="editor-panel uniform-editor">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#128135;</span>
+          <span className="editor-icon"><IconHairSkin size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('hairAndSkin')}</span>
         </div>

@@ -1,7 +1,25 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
+const Store = require('electron-store');
 const path = require('path');
 const fs = require('fs');
+
+// --- App Settings (electron-store) ---
+const settingsStore = new Store({
+  name: 'app-settings',
+  defaults: {
+    confirmBeforeSave: true,
+    autoBackupBeforeSave: true,
+    defaultExportPath: '',
+    aiEnabled: true,
+    aiProvider: 'openai-compatible',
+    aiEndpoint: 'http://localhost:1234/v1/chat/completions',
+    aiModel: '',
+    aiApiKey: '',
+    aiTemperature: 0.7,
+    aiMaxTokens: 4096,
+  },
+});
 
 let mainWindow;
 let currentRomPath = null;
@@ -374,6 +392,45 @@ ipcMain.handle('backup:clear', () => {
   }
 });
 
+// --- App Settings ---
+ipcMain.handle('settings:getAll', () => {
+  return settingsStore.store;
+});
+
+ipcMain.handle('settings:get', (event, key) => {
+  return settingsStore.get(key);
+});
+
+ipcMain.handle('settings:set', (event, { key, value }) => {
+  try {
+    settingsStore.set(key, value);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('settings:setAll', (event, settings) => {
+  try {
+    Object.entries(settings).forEach(([key, value]) => {
+      settingsStore.set(key, value);
+    });
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('settings:selectExportPath', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return { success: true, path: result.filePaths[0] };
+  }
+  return { success: false };
+});
+
 // --- AI Team Generator ---
 const AI_SETTINGS_FILENAME = 'ai-settings.json';
 
@@ -382,25 +439,24 @@ function getAiSettingsPath() {
 }
 
 function loadAiSettings() {
-  try {
-    const filePath = getAiSettingsPath();
-    if (fs.existsSync(filePath)) {
-      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    }
-  } catch (err) {
-    console.error('Failed to load AI settings:', err.message);
-  }
+  // Read from unified settings store
   return {
-    endpoint: 'http://localhost:1234/v1/chat/completions',
-    model: '',
-    temperature: 0.7,
-    maxTokens: 4096,
+    endpoint: settingsStore.get('aiEndpoint'),
+    model: settingsStore.get('aiModel'),
+    apiKey: settingsStore.get('aiApiKey'),
+    temperature: settingsStore.get('aiTemperature'),
+    maxTokens: settingsStore.get('aiMaxTokens'),
   };
 }
 
 function saveAiSettings(settings) {
   try {
-    fs.writeFileSync(getAiSettingsPath(), JSON.stringify(settings, null, 2), 'utf-8');
+    // Write to unified settings store
+    if (settings.endpoint !== undefined) settingsStore.set('aiEndpoint', settings.endpoint);
+    if (settings.model !== undefined) settingsStore.set('aiModel', settings.model);
+    if (settings.apiKey !== undefined) settingsStore.set('aiApiKey', settings.apiKey);
+    if (settings.temperature !== undefined) settingsStore.set('aiTemperature', settings.temperature);
+    if (settings.maxTokens !== undefined) settingsStore.set('aiMaxTokens', settings.maxTokens);
     return { success: true };
   } catch (err) {
     console.error('Failed to save AI settings:', err.message);
@@ -435,9 +491,14 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
   }
 
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (config.apiKey) {
+      headers['Authorization'] = `Bearer ${config.apiKey}`;
+    }
+
     const response = await fetch(config.endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(120000), // 2 minute timeout for LLM
     });
@@ -472,6 +533,113 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
       };
     }
     return { success: false, error: err.message };
+  }
+});
+
+// AI streaming generation — sends chunks back to renderer via events
+ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, settings }) => {
+  const config = settings || loadAiSettings();
+  const sender = event.sender;
+
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt },
+    ],
+    temperature: config.temperature || 0.7,
+    max_tokens: config.maxTokens || 4096,
+    stream: true,
+  };
+
+  if (config.model) {
+    body.model = config.model;
+  }
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (config.apiKey) {
+      headers['Authorization'] = `Bearer ${config.apiKey}`;
+    }
+
+    const response = await fetch(config.endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(180000), // 3 min timeout for streaming
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      sender.send(
+        'ai:stream-error',
+        `API error ${response.status}: ${errorText || response.statusText}`,
+      );
+      return { success: false };
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      // Keep last incomplete line in buffer
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if (data === '[DONE]') {
+          sender.send('ai:stream-done');
+          return { success: true };
+        }
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed.choices?.[0]?.delta?.content;
+          if (content) {
+            sender.send('ai:stream-chunk', content);
+          }
+        } catch (_e) {
+          // Ignore malformed SSE lines
+        }
+      }
+    }
+
+    // Process remaining buffer
+    if (buffer.trim()) {
+      const trimmed = buffer.trim();
+      if (trimmed.startsWith('data:')) {
+        const data = trimmed.slice(5).trim();
+        if (data !== '[DONE]') {
+          try {
+            const parsed = JSON.parse(data);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              sender.send('ai:stream-chunk', content);
+            }
+          } catch (_e) {
+            // Ignore
+          }
+        }
+      }
+    }
+
+    sender.send('ai:stream-done');
+    return { success: true };
+  } catch (err) {
+    let errorMsg = err.message;
+    if (err.name === 'TimeoutError') {
+      errorMsg = 'Request timed out (3 min). Is LM Studio running?';
+    } else if (err.code === 'ECONNREFUSED') {
+      errorMsg = `Connection refused at ${config.endpoint}. Is LM Studio running?`;
+    }
+    sender.send('ai:stream-error', errorMsg);
+    return { success: false };
   }
 });
 

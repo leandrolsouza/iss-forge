@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useI18n } from '../i18n';
 import { convertImageToFlag } from '../utils/imageToFlag';
+import { IconCamera, IconImage } from './Icons';
 import '../styles/FlagImageImport.css';
 
 const GRID_WIDTH = 24;
@@ -79,7 +80,9 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
   return (
     <div className="flag-import-section">
       <button className="flag-import-btn" onClick={() => setIsOpen(!isOpen)}>
-        <span className="import-icon">&#128247;</span>
+        <span className="import-icon">
+          <IconCamera size={14} />
+        </span>
         {t('flagImportBtn')}
       </button>
 
@@ -120,7 +123,9 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
             >
-              <span className="drop-icon">&#128444;</span>
+              <span className="drop-icon">
+                <IconImage size={24} />
+              </span>
               <span className="drop-text">{t('flagImportDropText')}</span>
               <span className="drop-hint">{t('flagImportDropHint')}</span>
             </div>

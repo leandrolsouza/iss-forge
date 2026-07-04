@@ -1,5 +1,6 @@
 import React from 'react';
 import { useI18n } from '../i18n';
+import { IconFlag } from './Icons';
 
 export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) {
   const { t } = useI18n();
@@ -30,7 +31,7 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
     <div className="editor-panel uniform-editor">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#127988;</span>
+          <span className="editor-icon"><IconFlag size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('flagColors')}</span>
         </div>

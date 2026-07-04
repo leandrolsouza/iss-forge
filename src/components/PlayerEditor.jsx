@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES, TEAM_FORMATIONS } from '../rom/constants';
 import { useI18n } from '../i18n';
+import { IconPlayers } from './Icons';
 
 function HelpTooltip({ text }) {
   return (
@@ -78,7 +79,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
       {/* Team Header */}
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#9917;</span>
+          <span className="editor-icon"><IconPlayers size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">
             - {t('squad')} ({team.players.length} {t('players')}) &middot;{' '}

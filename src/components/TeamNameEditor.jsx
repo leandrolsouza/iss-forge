@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useI18n } from '../i18n';
+import { IconTeamName } from './Icons';
 
 export default function TeamNameEditor({
   team,
@@ -71,7 +72,7 @@ export default function TeamNameEditor({
     <div className="editor-panel uniform-editor">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon">&#127383;</span>
+          <span className="editor-icon"><IconTeamName size={18} /></span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('teamName')}</span>
         </div>

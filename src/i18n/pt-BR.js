@@ -13,6 +13,8 @@ export default {
   editors: 'EDITORES',
   selections: 'SELECOES',
   openRomToSee: 'Abra uma ROM para ver os times',
+  expand: 'Expandir',
+  aboutTitle: 'Sobre',
 
   // Editor names
   editorPlayers: 'Jogadores',
@@ -342,6 +344,10 @@ export default {
   aiClose: 'Fechar',
   aiRetry: 'Tentar Novamente',
   aiAttempt: 'Tentativa {current} de {total}...',
+  aiStreamOutput: 'Saida da IA',
+  aiStreamWaiting: 'A resposta da IA aparecera aqui conforme for gerada...',
+  aiStreamParsing: 'Processando resultado...',
+  aiStreamTokens: '{count} caracteres recebidos',
   aiErrorDetails: 'Detalhes tecnicos',
   aiErrorConnection:
     'Nao foi possivel conectar ao servidor de IA. Verifique se o LM Studio esta rodando e se o endpoint esta correto.',
@@ -353,17 +359,25 @@ export default {
   aiErrorGeneric: 'Algo deu errado ao gerar o time.',
   aiTipsTitle: 'Dicas para um bom prompt',
   aiTipsToggle: 'Mostrar dicas de prompt',
-  aiTip1: 'Mencione o estilo de jogo: rapido, forte, tecnico, equilibrado',
-  aiTip2: 'Cite jogadores reais se quiser nomes especificos (max 8 chars cada)',
-  aiTip3: 'Descreva as cores do uniforme: "camisa azul com detalhes brancos"',
-  aiTip4: 'Defina o nivel geral: time fraco, medio, selecao forte',
-  aiTip5: 'De uma identidade: pais, cidade, tema ficticio, epoca',
-  aiExample1: 'Brasil 1994 com Romario, Bebeto, Cafu, rapido e tecnico',
-  aiExample2: 'Time ficticio cyberpunk, nomes futuristas, uniforme preto e neon',
-  aiExample3: 'Argentina 1986 com Maradona como craque (stats maximos)',
-  aiExample4: 'Time africano forte fisicamente, uniforme verde/amarelo/vermelho',
-  aiExample5: 'All-stars europeu anos 90: Zidane, Baggio, Bergkamp, equilibrado',
-  aiExample6: 'Japao 2002 com meias rapidos, uniforme azul e branco',
+  aiTip1:
+    'Seja especifico nos stats: "speed 14+, shooting 15" funciona melhor que "rapido e forte"',
+  aiTip2: 'Cite jogadores reais com max 8 chars (ex: "Romario", "Zidane", "Bergkamp")',
+  aiTip3: 'Descreva cores com precisao: "camisa azul escuro, shorts branco, meias vermelhas"',
+  aiTip4: 'Defina faixas de stats: "zagueiros stamina 14-16, atacantes speed 14+"',
+  aiTip5:
+    'Descreva o formato da bandeira: "fundo verde com losango amarelo" ou "branco com circulo vermelho"',
+  aiExample1:
+    'Brasil 1994: Taffarel no gol, Cafu, Aldair, zagueiros com speed 12+. Romario e Bebeto atacantes com shooting maximo. Camisa amarela, shorts azul, meias brancas. Bandeira: fundo verde com losango amarelo.',
+  aiExample2:
+    'Time cyberpunk "NEON FC": codinomes tipo Cipher, Glitch, Pixel. Camisa preta com detalhes neon verde. Todos carecas ou dreadlocks. Foco em speed (14+), stamina baixa. Bandeira: preta com padrao de circuito verde.',
+  aiExample3:
+    'Argentina 1986: Maradona #10 com todos stats no maximo (speed 16, shooting 15, technique 15). Valdano, Burruchaga como atacantes. Camisa azul claro e branca, shorts preto. Bandeira: azul claro, branco, azul claro com sol amarelo.',
+  aiExample4:
+    'Camaroes 1990: fortes e rapidos (speed 13+, stamina 14+). Milla craque #9. Camisa verde, shorts vermelho. Pele escura, mix de careca e cabelo curto. Bandeira: verde, vermelho, amarelo listras verticais com estrela.',
+  aiExample5:
+    'Dream Team Europeu anos 90: Schmeichel GK, Maldini, Baresi zagueiros. Zidane, Bergkamp meio. Baggio, Raul atacantes. Todos technique 13+. Camisa branca, shorts azul marinho. Bandeira: azul escuro com estrelas douradas.',
+  aiExample6:
+    'Japao 2002: meias rapidos (speed 14+), estilo tecnico. Nakata #7 como craque com technique maxima. Camisa azul shorts branco titular, camisa branca shorts azul reserva. Bandeira: fundo branco com circulo vermelho.',
   aiTemplatesTitle: 'Templates de Prompt',
   aiTemplatesToggle: 'Mostrar templates de prompt',
   aiTemplateCatNational: 'Selecoes Reais',
@@ -371,24 +385,73 @@ export default {
   aiTemplateCatFiction: 'Temas Ficticios',
   aiTemplateCatStyle: 'Estilo de Jogo',
   aiTemplateCatFun: 'Diversao / Criativo',
-  'aiTpl.brazil94': 'Selecao do Brasil 1994 com Romario, Bebeto, Cafu, Taffarel, rapido e tecnico',
-  'aiTpl.argentina86': 'Argentina 1986 com Maradona como craque absoluto (stats maximos)',
-  'aiTpl.holland74': 'Holanda 1974 estilo futebol total, todos jogadores com tecnica alta',
-  'aiTpl.italy06': 'Italia 2006 com defesa forte e Pirlo, Del Piero, Totti',
-  'aiTpl.france98': 'Franca 1998 com Zidane, Henry, Barthez, time equilibrado',
-  'aiTpl.allstarsSA': 'All-stars sul-americanos anos 90: Romario, Batistuta, Valderrama, Higuita',
-  'aiTpl.allstarsEU': 'Melhores europeus anos 90: Zidane, Baggio, Bergkamp, Schmeichel',
-  'aiTpl.allstarsAF': "Estrelas africanas: Weah, Eto'o, Drogba, estilo rapido e forte",
-  'aiTpl.marvel': 'Time de super-herois Marvel: nomes de herois, uniforme vermelho e azul',
-  'aiTpl.cyberpunk': 'Time cyberpunk futurista, codinomes, uniforme preto e neon verde',
-  'aiTpl.anime': 'Esquadrao anime japones, jogadores rapidos e tecnicos, uniforme branco e azul',
-  'aiTpl.medieval': 'Time medieval de cavaleiros, jogadores fortes, uniforme prata e vermelho',
-  'aiTpl.pirates': 'Piratas do Caribe, uniforme preto e dourado, nomes de piratas',
-  'aiTpl.offensive': 'Time ultra-ofensivo: atacantes rapidos, defesa fraca, uniforme laranja',
-  'aiTpl.defensive': 'Fortaleza defensiva: stamina e defesa maximas, estilo italiano, azul escuro',
-  'aiTpl.technical': 'Time tecnico estilo Barcelona: passe curto, todos com tecnica alta',
+  'aiTpl.brazil94':
+    'Selecao do Brasil 1994 Copa do Mundo. GK: Taffarel. Zagueiros: Jorginho, Aldair, Branco (speed 12+). Meio: Mazinho, Mauro Silva, Zinho (technique 11+). Atacantes: Romario #11 (shooting 15, speed 14), Bebeto (shooting 13). Titular: camisa amarela, shorts azul, meias brancas. Reserva: camisa azul, shorts branco. Pele: moreno medio. Bandeira: fundo verde com losango amarelo e circulo azul.',
+  'aiTpl.argentina86':
+    'Argentina Copa 1986. Maradona #10: speed 16, shooting 15, technique 15, dreadlocks. Valdano #11, Burruchaga #7 atacantes (shooting 13). Pumpido GK. Meio forte com Batista, Enrique (stamina 14+). Titular: camisa azul claro e branca, shorts preto. Reserva: camisa azul escuro, shorts preto. Pele clara, maioria cabelo curto. Bandeira: azul claro, branco, azul claro listras horizontais com sol amarelo.',
+  'aiTpl.holland74':
+    'Holanda 1974 Futebol Total. Cruyff #14: speed 15, technique 15, cabelo longo. Neeskens, Rep, Krol todos com technique 13+. Todo jogador de linha speed 12+. GK: Jongbloed. Titular: camisa laranja, shorts branco, meias laranja. Reserva: camisa branca, shorts laranja. Pele clara, mix de cabelo longo e curto. Bandeira: vermelho, branco, azul faixas horizontais.',
+  'aiTpl.italy06':
+    'Italia 2006 Campea. Buffon GK (speed 10, stamina 16). Cannavaro, Nesta (stamina 15, technique 11). Pirlo #21 (technique 15, speed 10). Totti, Del Piero atacantes (shooting 13+). Titular: camisa azul escuro, shorts branco. Reserva: camisa branca, shorts azul escuro. Pele clara. Bandeira: verde, branco, vermelho listras verticais.',
+  'aiTpl.france98':
+    'Franca Copa 1998. Barthez GK (careca). Thuram, Desailly, Blanc (stamina 14+). Zidane #10 (technique 15, shooting 13). Henry (speed 16, shooting 11). Meio equilibrado: Deschamps, Petit. Titular: camisa azul, shorts branco, meias vermelhas. Reserva: camisa branca, shorts azul. Mix de pele escura e clara. Bandeira: azul, branco, vermelho listras verticais.',
+  'aiTpl.allstarsSA':
+    'All-Stars Sul-Americanos anos 90. GK: Higuita (cabelo cacheado longo). Cafu (speed 15), Roberto Carlos. Meio: Valderrama #10 (afro, technique 15), Rios. Atacantes: Romario (shooting 15), Batistuta (shooting 15, speed 13), Salas. Titular: camisa dourada, shorts verde. Reserva: camisa branca, shorts dourado. Pele morena-escura. Bandeira: fundo verde com estrela dourada.',
+  'aiTpl.allstarsEU':
+    'Lendas Europeias anos 90. GK: Schmeichel (speed 8, stamina 16). Maldini, Baresi (stamina 15). Zidane #10 (technique 15), Bergkamp (technique 15, shooting 13). Baggio (shooting 15, rabo de cavalo), Raul (speed 14). Titular: camisa branca, shorts azul marinho. Reserva: camisa azul escuro, shorts branco. Pele clara. Bandeira: fundo azul escuro com estrelas douradas em circulo.',
+  'aiTpl.allstarsAF':
+    "All-Stars Africanos. GK: Thomas N'Kono. Weah #14 (speed 16, shooting 15, dreadlocks), Eto'o (speed 15), Drogba (shooting 15, speed 14, careca). Kanu, Okocha meio (technique 13+). Todos stamina 12+. Titular: camisa verde, shorts dourado. Reserva: camisa vermelha, shorts preto. Pele escura. Bandeira: verde, dourado, vermelho faixas horizontais com estrela preta.",
+  'aiTpl.marvel':
+    'Marvel Avengers FC. Nomes: Rogers, Stark, Banner, Thor, Romanof, Barton, TChalla, Parker, Strange, Maximof, Vision, Rhodes, Lang, Barnes, Danvers. TChalla #7 (speed 16), Thor #3 (shooting 15, cabelo longo), Rogers #1 GK (stamina 16, cabelo curto). Titular: camisa vermelha, shorts azul, meias vermelhas. Reserva: camisa preta, shorts dourado. Mix de tons de pele e cabelo. Bandeira: fundo vermelho com "A" azul.',
+  'aiTpl.cyberpunk':
+    'Time Cyberpunk 2077 "NETRUN". Nomes: Cipher, Glitch, Neon, Pixel, Proxy, Vector, Daemon, Socket, Kernel, Chrome, Binary, Codec, Ping, Flux, Zero. Todos speed 13+, stamina baixa (6-9). Zero #0 GK (careca). Mix de careca, dreadlocks, moicano. Titular: camisa preta, detalhes neon verde. Reserva: roxo escuro, detalhes ciano. Pele palida. Bandeira: fundo preto com padrao angular de circuito neon verde.',
+  'aiTpl.anime':
+    'Estilo Captain Tsubasa. Tsubasa #10 (technique 15, speed 14), Hyuga #9 (shooting 15, speed 13), Misaki #11 (technique 13). Wakabaya GK (stamina 16). Todos meias technique 11+, speed 12+. Titular: camisa branca, gola e punhos azuis, shorts azul. Reserva: camisa vermelha, shorts branco. Pele clara, todos cabelo curto/medio. Bandeira: fundo branco com sol nascente vermelho.',
+  'aiTpl.medieval':
+    'Cavaleiros da Tavola Redonda. Nomes: Arthur, Lancelot, Gawain, Galahad, Percival, Tristan, Bors, Kay, Bediver, Gareth, Mordred, Merlin, Uther, Lionel, Dagonet. Arthur #1 GK (stamina 16). Lancelot #7 (speed 15, shooting 13). Todos stamina 12+, technique 9+. Titular: camisa prata/branca, shorts vermelho. Reserva: camisa preta, shorts dourado. Pele clara, cabelo longo/medio. Bandeira: fundo vermelho com cruz branca.',
+  'aiTpl.pirates':
+    'Piratas do Caribe FC. Nomes: Sparrow, Barbossa, Turner, Calypso, Blackbrd, Kidd, Drake, Morgan, Rackham, Bonny, Teach, Flint, Silver, Hook, Davy. Sparrow #7 (speed 15, technique 13, dreadlocks). Teach GK (careca, stamina 15). Mix de cabelo: dreadlocks, careca, rabo de cavalo, longo. Titular: camisa preta, detalhe dourado, shorts preto. Reserva: camisa vermelho escuro, shorts preto. Pele bronzeada. Bandeira: fundo preto com caveira e ossos brancos.',
+  'aiTpl.offensive':
+    'Ultra-Ataque FC. 4 atacantes com speed 14-16 e shooting 13-15. Meias todos speed 12+. Zagueiros fracos (speed 8, stamina 8). GK medio. Media de speed do time: 13+. Titular: camisa laranja forte, shorts preto, meias laranja. Reserva: camisa branca, shorts laranja. Cabelo/pele aleatorios. Bandeira: fundo laranja com raio preto.',
+  'aiTpl.defensive':
+    'Fortaleza FC. Catenaccio italiano. GK com stamina 16. 5 zagueiros todos stamina 14-16, technique 11+. Meias stamina 13+, speed 10+. Apenas 2 atacantes (speed 12, shooting 11). Speed media baixa (9). Titular: camisa azul marinho, shorts azul marinho, meias brancas. Reserva: camisa branca, shorts marinho. Pele clara, cabelo curto. Bandeira: fundo marinho com escudo branco.',
+  'aiTpl.technical':
+    'Tiki-Taka FC, estilo Barcelona. Todos jogadores de linha technique 13-15. Speed moderado (10-12). Meio-campo pesado: 5 meias com technique 15. Passe curto, posse. Estilo Xavi: technique > speed. Titular: camisa vermelho escuro e azul divisao vertical, shorts vermelho escuro. Reserva: camisa dourada, shorts preto. Mix de tons de pele. Bandeira: metades verticais vermelho escuro e azul com estrela dourada.',
   'aiTpl.coders':
-    'Time de programadores: nomes de linguagens (Python, Java, Rust), uniforme verde Matrix',
+    'Time Stack Overflow. Nomes: Python, Java, Rust, Golang, Kotlin, Swift, TypeSc, Lua, Ruby, Haskell, Clojure, Scala, Elixir, Zig, Carbon. Python #1 GK (stamina 14). Rust #7 (speed 16, technique 13). Todos technique 11+. Titular: camisa preta com texto verde, shorts preto. Reserva: camisa verde escuro, shorts preto. Mix de pele/cabelo. Bandeira: fundo preto com "< >" verde.',
   'aiTpl.food':
-    'Comidas brasileiras como jogadores: Feijoada, Caipira, Acai, uniforme verde e amarelo',
+    'Comidas Brasileiras FC. Nomes: Feijoada, Caipira, Acai, Tapioca, Brigadei, Paoqueij, Coxinha, Farofa, Acaraje, Moqueca, Vatapa, Churrasco, Pudim, Guarana, Rapadura. Churrasco #9 (shooting 15, speed 14, careca). Acai #7 (speed 16). Titular: camisa verde, shorts amarelo, meias verdes. Reserva: camisa amarela, shorts verde. Pele morena media. Bandeira: fundo verde com losango amarelo.',
+
+  // Settings
+  settingsTitle: 'Configuracoes',
+  settingsEditor: 'Editor',
+  settingsConfirmBeforeSave: 'Confirmar antes de salvar ROM',
+  settingsConfirmBeforeSaveHint:
+    'Exibir um dialogo de confirmacao antes de sobrescrever o arquivo da ROM.',
+  settingsAutoBackup: 'Backup automatico antes de salvar',
+  settingsAutoBackupHint:
+    'Criar automaticamente um backup da ROM atual antes de salvar alteracoes.',
+  settingsDefaultExportPath: 'Caminho padrao para exportacao',
+  settingsDefaultExportPathHint:
+    'Pasta padrao para exportacoes JSON de times. Deixe vazio para perguntar sempre.',
+  settingsSelectFolder: 'Selecionar pasta',
+  settingsClearPath: 'Limpar',
+  settingsNoFolderSelected: 'Nenhuma pasta selecionada (vai perguntar cada vez)',
+  settingsSaved: 'Configuracoes salvas!',
+  settingsAi: 'Assistente IA',
+  settingsAiEnabled: 'Ativar assistente IA',
+  settingsAiEnabledHint: 'Mostrar o Gerador de Time com IA na lista de editores.',
+  settingsAiProvider: 'Provedor',
+  settingsAiProviderOpenai: 'Compativel com OpenAI (LM Studio, Ollama, etc.)',
+  settingsAiEndpoint: 'Endpoint da API',
+  settingsAiEndpointHint:
+    'URL compativel com OpenAI. Padrao LM Studio: http://localhost:1234/v1/chat/completions',
+  settingsAiModel: 'Modelo (opcional)',
+  settingsAiModelHint: 'Deixe vazio para usar o modelo carregado no LM Studio.',
+  settingsAiApiKey: 'Chave da API',
+  settingsAiApiKeyHint: 'Necessaria para OpenAI/provedores cloud. Nao precisa para servidores locais.',
+  settingsAiApiKeyShow: 'Mostrar',
+  settingsAiApiKeyHide: 'Ocultar',
+  settingsAiTemperature: 'Temperatura',
+  settingsAiMaxTokens: 'Max Tokens',
 };

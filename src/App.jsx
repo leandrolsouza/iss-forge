@@ -11,6 +11,7 @@ import TeamPreview from './components/TeamPreview';
 import TeamCompare from './components/TeamCompare';
 import AboutPanel from './components/AboutPanel';
 import AIGeneratorPanel from './components/AIGeneratorPanel';
+import SettingsPage from './components/SettingsPage';
 import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
@@ -19,7 +20,7 @@ import UnsavedModal from './components/UnsavedModal';
 import BackupBanner from './components/BackupBanner';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
-import { IconOpen, IconSave, IconUndo, IconRedo } from './components/Icons';
+import { IconOpen, IconSave, IconUndo, IconRedo, IconSettings } from './components/Icons';
 import { useRom } from './context/RomContext';
 import { useI18n } from './i18n';
 
@@ -170,6 +171,7 @@ export default function App() {
   // Editor renderer
   const renderEditor = () => {
     if (activeTab === 'about') return <AboutPanel />;
+    if (activeTab === 'settings') return <SettingsPage />;
     if (activeTab === 'compare' && teams.length > 0) return <TeamCompare teams={teams} />;
 
     if (!romParser || selectedTeamIndex === null) {
@@ -256,6 +258,13 @@ export default function App() {
             disabled={!canRedo}
           >
             <IconRedo size={16} />
+          </button>
+          <button
+            className="titlebar-btn"
+            onClick={() => openTab('settings', t('settingsTitle'))}
+            title={t('settingsTitle')}
+          >
+            <IconSettings size={16} />
           </button>
         </div>
         <span className="app-titlebar-title">

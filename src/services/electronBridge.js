@@ -172,3 +172,31 @@ export function backupLoad() {
 export function backupClear() {
   return window.electronAPI.backupClear();
 }
+
+// ─── AI Team Generator ───────────────────────────────────────────────────────
+
+/**
+ * Get AI settings (endpoint, model, temperature, maxTokens)
+ * @returns {Promise<object>}
+ */
+export function aiGetSettings() {
+  return window.electronAPI.aiGetSettings();
+}
+
+/**
+ * Save AI settings
+ * @param {object} settings
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export function aiSaveSettings(settings) {
+  return window.electronAPI.aiSaveSettings(settings);
+}
+
+/**
+ * Call the LLM API to generate team data
+ * @param {object} payload - { prompt, systemPrompt, settings? }
+ * @returns {Promise<{success: boolean, content?: string, error?: string, usage?: object}>}
+ */
+export function aiGenerate(payload) {
+  return window.electronAPI.aiGenerate(payload);
+}

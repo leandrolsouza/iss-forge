@@ -57,6 +57,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   backupLoad: () => ipcRenderer.invoke('backup:load'),
   backupClear: () => ipcRenderer.invoke('backup:clear'),
 
+  // AI Team Generator
+  aiGetSettings: () => ipcRenderer.invoke('ai:getSettings'),
+  aiSaveSettings: (settings) => ipcRenderer.invoke('ai:saveSettings', settings),
+  aiGenerate: (payload) => ipcRenderer.invoke('ai:generate', payload),
+
   // Cleanup listeners
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);

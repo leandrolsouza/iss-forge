@@ -162,6 +162,13 @@ export default function Sidebar({
               </span>
               <span>{t('editorCompare')}</span>
             </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
+            >
+              <span className="item-icon">&#x2728;</span>
+              <span>{t('editorAiGenerator')}</span>
+            </div>
           </div>
         )}
       </div>
@@ -186,9 +193,8 @@ export default function Sidebar({
             {teams.map((team, index) => (
               <div
                 key={team.id}
-                className={`sidebar-item team-item ${
-                  index === selectedTeamIndex ? 'selected' : ''
-                }`}
+                className={`sidebar-item team-item ${index === selectedTeamIndex ? 'selected' : ''
+                  }`}
                 onClick={() => onSelectTeam(index)}
               >
                 <span className="team-index">{String(index + 1).padStart(2, '0')}</span>

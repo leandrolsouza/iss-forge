@@ -21,6 +21,7 @@
   "author": "Leandro Luiz De Souza",
   "license": "MIT",
   "dependencies": {
+    "electron-store": "^8.2.0",
     "electron-updater": "^6.8.9",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"

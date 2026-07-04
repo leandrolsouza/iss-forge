@@ -374,6 +374,107 @@ ipcMain.handle('backup:clear', () => {
   }
 });
 
+// --- AI Team Generator ---
+const AI_SETTINGS_FILENAME = 'ai-settings.json';
+
+function getAiSettingsPath() {
+  return path.join(app.getPath('userData'), AI_SETTINGS_FILENAME);
+}
+
+function loadAiSettings() {
+  try {
+    const filePath = getAiSettingsPath();
+    if (fs.existsSync(filePath)) {
+      return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    }
+  } catch (err) {
+    console.error('Failed to load AI settings:', err.message);
+  }
+  return {
+    endpoint: 'http://localhost:1234/v1/chat/completions',
+    model: '',
+    temperature: 0.7,
+    maxTokens: 4096,
+  };
+}
+
+function saveAiSettings(settings) {
+  try {
+    fs.writeFileSync(getAiSettingsPath(), JSON.stringify(settings, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to save AI settings:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+ipcMain.handle('ai:getSettings', () => {
+  return loadAiSettings();
+});
+
+ipcMain.handle('ai:saveSettings', (event, settings) => {
+  return saveAiSettings(settings);
+});
+
+ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) => {
+  const config = settings || loadAiSettings();
+
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: prompt },
+    ],
+    temperature: config.temperature || 0.7,
+    max_tokens: config.maxTokens || 4096,
+    stream: false,
+  };
+
+  // Only include model if explicitly set (LM Studio uses loaded model by default)
+  if (config.model) {
+    body.model = config.model;
+  }
+
+  try {
+    const response = await fetch(config.endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(120000), // 2 minute timeout for LLM
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      return {
+        success: false,
+        error: `API error ${response.status}: ${errorText || response.statusText}`,
+      };
+    }
+
+    const data = await response.json();
+
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      return { success: false, error: 'Invalid response format from LLM' };
+    }
+
+    return {
+      success: true,
+      content: data.choices[0].message.content,
+      usage: data.usage || null,
+    };
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      return { success: false, error: 'Request timed out (2 min). Is LM Studio running?' };
+    }
+    if (err.code === 'ECONNREFUSED') {
+      return {
+        success: false,
+        error: `Connection refused at ${config.endpoint}. Is LM Studio running?`,
+      };
+    }
+    return { success: false, error: err.message };
+  }
+});
+
 // --- Auto-Updater ---
 function setupAutoUpdater() {
   // Don't check for updates in development

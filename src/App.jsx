@@ -10,6 +10,7 @@ import TeamNameEditor from './components/TeamNameEditor';
 import TeamPreview from './components/TeamPreview';
 import TeamCompare from './components/TeamCompare';
 import AboutPanel from './components/AboutPanel';
+import AIGeneratorPanel from './components/AIGeneratorPanel';
 import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
@@ -216,6 +217,8 @@ export default function App() {
         );
       case 'preview':
         return <TeamPreview {...props} />;
+      case 'ai':
+        return <AIGeneratorPanel teamIndex={selectedTeamIndex} />;
       default:
         return (
           <WelcomePanel onOpenRom={handleOpenRom} onDrop={handleDrop} onDragOver={handleDragOver} />

@@ -245,6 +245,11 @@ export default {
   avgTechnique: 'Avg Technique',
   difference: 'Difference',
 
+  // Team Selector
+  previousTeam: 'Previous team',
+  nextTeam: 'Next team',
+  selectTeam: 'Select team',
+
   // Theme
   darkTheme: 'Dark Theme',
   lightTheme: 'Light Theme',

@@ -18,6 +18,7 @@ import WelcomePanel from './components/WelcomePanel';
 import LoadingOverlay from './components/LoadingOverlay';
 import UnsavedModal from './components/UnsavedModal';
 import BackupBanner from './components/BackupBanner';
+import TeamSelector from './components/TeamSelector';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
 import { IconOpen, IconSave, IconUndo, IconRedo, IconSettings } from './components/Icons';
@@ -278,13 +279,9 @@ export default function App() {
 
       <div className="app-body">
         <Sidebar
-          teams={teams}
-          selectedTeamIndex={selectedTeamIndex}
-          onSelectTeam={selectTeam}
           onOpenTab={openTab}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-          romLoaded={!!romParser}
         />
         <div className="main-content">
           {openTabs.length > 0 && (
@@ -293,6 +290,13 @@ export default function App() {
               activeTab={activeTab}
               onSelectTab={setActiveTab}
               onCloseTab={closeTab}
+            />
+          )}
+          {teams.length > 0 && selectedTeamIndex !== null && (
+            <TeamSelector
+              teams={teams}
+              selectedTeamIndex={selectedTeamIndex}
+              onSelectTeam={selectTeam}
             />
           )}
           <div className="editor-area">{renderEditor()}</div>

@@ -245,6 +245,11 @@ export default {
   avgTechnique: 'Media Tecnica',
   difference: 'Diferenca',
 
+  // Team Selector
+  previousTeam: 'Time anterior',
+  nextTeam: 'Proximo time',
+  selectTeam: 'Selecionar time',
+
   // Theme
   darkTheme: 'Tema Escuro',
   lightTheme: 'Tema Claro',

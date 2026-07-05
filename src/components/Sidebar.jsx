@@ -20,19 +20,14 @@ import {
 } from './Icons';
 
 export default function Sidebar({
-  teams,
-  selectedTeamIndex,
-  onSelectTeam,
   onOpenTab,
   collapsed,
   onToggleCollapse,
-  romLoaded,
 }) {
   const { t, lang, switchLang, languages } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { settings: appSettings } = useSettings();
   const [expandedSections, setExpandedSections] = useState({
-    teams: true,
     editors: true,
   });
 
@@ -64,6 +59,57 @@ export default function Sidebar({
           >
             <IconUniform size={20} />
           </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('hairskin', t('editorHairSkin'))}
+            title={t('editorHairSkin')}
+          >
+            <IconHairSkin size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('flagcolors', t('editorFlagColors'))}
+            title={t('editorFlagColors')}
+          >
+            <IconFlag size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('flagdesign', t('editorFlagDesign'))}
+            title={t('editorFlagDesign')}
+          >
+            <IconFlagDesign size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('teamname', t('editorTeamName'))}
+            title={t('editorTeamName')}
+          >
+            <IconTeamName size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('preview', t('editorPreview'))}
+            title={t('editorPreview')}
+          >
+            <IconOverview size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('compare', t('editorCompare'))}
+            title={t('editorCompare')}
+          >
+            <IconCompare size={20} />
+          </button>
+          {appSettings.aiEnabled && (
+            <button
+              className="sidebar-icon-btn"
+              onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
+              title={t('editorAiGenerator')}
+            >
+              <IconSparkle size={20} />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -171,38 +217,6 @@ export default function Sidebar({
                 <span>{t('editorAiGenerator')}</span>
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Teams Section */}
-      <div className="sidebar-section">
-        <div className="sidebar-section-header" onClick={() => toggleSection('teams')}>
-          <span className={`chevron ${expandedSections.teams ? 'expanded' : ''}`}>
-            <IconChevron expanded={expandedSections.teams} />
-          </span>
-          <span className="section-label">
-            {t('selections')} ({teams.length})
-          </span>
-        </div>
-        {expandedSections.teams && (
-          <div className="sidebar-section-content team-list">
-            {teams.length === 0 && !romLoaded && (
-              <div className="sidebar-item disabled">
-                <span className="item-hint">{t('openRomToSee')}</span>
-              </div>
-            )}
-            {teams.map((team, index) => (
-              <div
-                key={team.id}
-                className={`sidebar-item team-item ${index === selectedTeamIndex ? 'selected' : ''
-                  }`}
-                onClick={() => onSelectTeam(index)}
-              >
-                <span className="team-index">{String(index + 1).padStart(2, '0')}</span>
-                <span className="team-name">{team.name}</span>
-              </div>
-            ))}
           </div>
         )}
       </div>

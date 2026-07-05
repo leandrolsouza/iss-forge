@@ -65,6 +65,11 @@
   margin-bottom: 12px;
 }
 
+.welcome-logo-img {
+  width: 120px;
+  height: auto;
+}
+
 .welcome-logo-icon {
   color: var(--text-accent);
   opacity: 0.85;

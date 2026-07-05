@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { isElectron } from '../utils/fileHelpers';
-import { IconOpen, IconCartridge, IconUpload, IconController } from './Icons';
+import { IconOpen, IconCartridge, IconUpload } from './Icons';
 
 const VALID_ROM_EXTENSIONS = ['.smc', '.sfc', '.bin'];
 
@@ -125,7 +125,7 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
         {/* Hero Section */}
         <div className="welcome-hero">
           <div className="welcome-logo">
-            <IconController size={48} className="welcome-logo-icon" />
+            <img src="/logo.png" alt="ISS Forge" className="welcome-logo-img" />
           </div>
           <h1 className="welcome-title">
             <span className="welcome-title-main">{t('welcomeTitle')}</span>

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useI18n } from '../i18n';
 import FlagTemplateSelector from './FlagTemplateSelector';
 import FlagImageImport from './FlagImageImport';
 import { IconFlagDesign } from './Icons';
@@ -6,9 +7,6 @@ import { IconFlagDesign } from './Icons';
 const GRID_WIDTH = 24;
 const GRID_HEIGHT = 16;
 const PIXEL_SIZE = 22;
-
-// Color 0 is transparent (background), 1-4 are the flag palette colors
-const COLOR_LABELS = ['Transparente', 'Cor 1', 'Cor 2', 'Cor 3', 'Cor 4'];
 
 export default function FlagDesignEditor({
   team,
@@ -21,11 +19,18 @@ export default function FlagDesignEditor({
   const [selectedColor, setSelectedColor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
+  const { t } = useI18n();
+
+  const COLOR_LABELS = [
+    t('transparent'),
+    t('flagColor1'),
+    t('flagColor2'),
+    t('flagColor3'),
+    t('flagColor4'),
+  ];
 
   if (!team || !team.flagDesign) {
-    return (
-      <div className="editor-panel empty">Selecione um time para editar (design da bandeira)</div>
-    );
+    return <div className="editor-panel empty">{t('flagDesignSelectTeam')}</div>;
   }
 
   const { grid, flagColors } = team.flagDesign;
@@ -84,16 +89,18 @@ export default function FlagDesignEditor({
     >
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon"><IconFlagDesign size={18} /></span>
+          <span className="editor-icon">
+            <IconFlagDesign size={18} />
+          </span>
           <h2>{team.name}</h2>
-          <span className="editor-subtitle">- Design da Bandeira</span>
+          <span className="editor-subtitle">- {t('editorFlagDesign')}</span>
         </div>
       </div>
 
       <div className="uniform-editor-body">
         {/* Palette Selector */}
         <div className="flag-design-toolbar">
-          <div className="detail-section-title">Paleta de Cores</div>
+          <div className="detail-section-title">{t('palette')}</div>
           <div className="flag-palette-selector">
             {[0, 1, 2, 3, 4].map((idx) => (
               <button
@@ -107,11 +114,11 @@ export default function FlagDesignEditor({
               </button>
             ))}
             <div className="flag-toolbar-spacer" />
-            <button className="kit-btn" onClick={handleFill} title="Preencher tudo">
-              Preencher
+            <button className="kit-btn" onClick={handleFill} title={t('fillAll')}>
+              {t('fill')}
             </button>
-            <button className="kit-btn" onClick={handleClear} title="Limpar">
-              Limpar
+            <button className="kit-btn" onClick={handleClear} title={t('clear')}>
+              {t('clear')}
             </button>
           </div>
         </div>
@@ -131,7 +138,7 @@ export default function FlagDesignEditor({
 
         {/* Pixel Grid */}
         <div className="flag-design-grid-container">
-          <div className="detail-section-title">Design (24×16 pixels)</div>
+          <div className="detail-section-title">{t('flagDesignGrid')}</div>
           <div
             className="flag-design-grid"
             ref={canvasRef}
@@ -167,7 +174,7 @@ export default function FlagDesignEditor({
 
         {/* Mini Preview */}
         <div className="kit-preview-section" style={{ marginTop: 16 }}>
-          <div className="detail-section-title">Pre-visualizacao (tamanho real)</div>
+          <div className="detail-section-title">{t('flagPreviewRealSize')}</div>
           <div className="kit-preview">
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
               <div
@@ -192,21 +199,16 @@ export default function FlagDesignEditor({
                   )),
                 )}
               </div>
-              <span style={{ fontSize: 11, color: '#999' }}>96×64 no jogo (escala ~4x)</span>
+              <span style={{ fontSize: 11, color: '#999' }}>{t('flagPreviewScale')}</span>
             </div>
           </div>
         </div>
 
         <div className="kit-preview-section">
-          <div className="detail-section-title">Informacao</div>
+          <div className="detail-section-title">{t('information')}</div>
           <div className="welcome-info" style={{ marginTop: 8 }}>
-            <p>
-              Clique ou arraste para pintar. Cada pixel usa uma das 4 cores da paleta da bandeira ou
-              transparente.
-            </p>
-            <p style={{ marginTop: 4 }}>
-              As cores da paleta podem ser editadas na aba "Cores da Bandeira".
-            </p>
+            <p>{t('flagDesignInfo')}</p>
+            <p style={{ marginTop: 4 }}>{t('flagDesignColorHint')}</p>
           </div>
         </div>
       </div>

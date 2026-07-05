@@ -142,12 +142,22 @@ export default {
   flagDesign: 'Flag Design',
   palette: 'Color Palette',
   transparent: 'Transparent',
+  flagColor1: 'Color 1',
+  flagColor2: 'Color 2',
+  flagColor3: 'Color 3',
+  flagColor4: 'Color 4',
   fill: 'Fill',
+  fillAll: 'Fill all',
   clear: 'Clear',
   design: 'Design',
   pixels: 'pixels',
+  flagDesignGrid: 'Design (24×16 pixels)',
+  flagPreviewRealSize: 'Preview (actual size)',
+  flagPreviewScale: '96×64 in-game (approx. 4× scale)',
   flagDesignInfo:
     'Click or drag to paint. Each pixel uses one of the 4 flag palette colors or transparent.',
+  flagDesignColorHint: 'Palette colors can be edited in the "Flag Colors" tab.',
+  flagDesignSelectTeam: 'Select a team to edit (flag design)',
 
   // Flag Templates
   flagTemplates: 'Templates',

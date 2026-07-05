@@ -142,12 +142,22 @@ export default {
   flagDesign: 'Design da Bandeira',
   palette: 'Paleta de Cores',
   transparent: 'Transparente',
+  flagColor1: 'Cor 1',
+  flagColor2: 'Cor 2',
+  flagColor3: 'Cor 3',
+  flagColor4: 'Cor 4',
   fill: 'Preencher',
+  fillAll: 'Preencher tudo',
   clear: 'Limpar',
   design: 'Design',
   pixels: 'pixels',
+  flagDesignGrid: 'Design (24×16 pixels)',
+  flagPreviewRealSize: 'Pre-visualizacao (tamanho real)',
+  flagPreviewScale: '96×64 no jogo (escala ~4x)',
   flagDesignInfo:
     'Clique ou arraste para pintar. Cada pixel usa uma das 4 cores da paleta da bandeira ou transparente.',
+  flagDesignColorHint: 'As cores da paleta podem ser editadas na aba "Cores da Bandeira".',
+  flagDesignSelectTeam: 'Selecione um time para editar (design da bandeira)',
 
   // Flag Templates
   flagTemplates: 'Templates',

@@ -1,16 +1,38 @@
-# ISS Forge
+<p align="center">
+  <img src="public/logo.png" alt="ISS Forge" width="180" />
+</p>
+
+<h1 align="center">ISS Forge</h1>
 
 > **BETA** — This project is in beta. Features are being added and refined continuously.
+
+<p align="center">
 
 ![Status](https://img.shields.io/badge/status-beta-orange)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+</p>
+
 **Visual ROM Editor for International Superstar Soccer (SNES, 1995)**
 
 ISS Forge is a visual ROM editor for International Superstar Soccer on the Super Nintendo. It allows you to customize teams, players, uniforms, flags and more through an intuitive interface.
 
-![ISS Forge](https://img.shields.io/badge/ISS_Forge-v0.1.0--beta-e67e22?style=for-the-badge)
+## Screenshots
+
+<p align="center">
+  <img src="screenshots/1.png" alt="Screenshot 1" width="45%" />
+  &nbsp;&nbsp;
+  <img src="screenshots/2.png" alt="Screenshot 2" width="45%" />
+</p>
+<p align="center">
+  <img src="screenshots/3.png" alt="Screenshot 3" width="45%" />
+  &nbsp;&nbsp;
+  <img src="screenshots/4.png" alt="Screenshot 4" width="45%" />
+</p>
+<p align="center">
+  <img src="screenshots/5.png" alt="Screenshot 5" width="45%" />
+</p>
 
 ---
 

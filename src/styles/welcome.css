@@ -1,70 +1,156 @@
 /* ============================================================
-   WELCOME PANEL
+   WELCOME PANEL — Redesigned
    ============================================================ */
+
+/* --- Fade-in Animation --- */
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.welcome-fade-in {
+  animation: welcomeFadeIn 0.5s ease-out both;
+}
+
+/* --- Background Pattern (subtle grid) --- */
 
 .welcome-panel {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 40px;
+  padding: 40px 24px;
+  position: relative;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(79, 193, 255, 0.03) 0%, transparent 60%),
+    var(--bg-primary);
 }
 
+.welcome-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--border-primary) 1px, transparent 1px);
+  background-size: 32px 32px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* --- Content Container --- */
+
 .welcome-content {
-  max-width: 600px;
+  max-width: 780px;
+  width: 100%;
   text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Hero Section --- */
+
+.welcome-hero {
+  margin-bottom: 28px;
+}
+
+.welcome-logo {
+  margin-bottom: 12px;
+}
+
+.welcome-logo-icon {
+  color: var(--text-accent);
+  opacity: 0.85;
+  filter: drop-shadow(0 0 12px rgba(79, 193, 255, 0.2));
 }
 
 .welcome-title {
-  font-size: 32px;
-  font-weight: 300;
-  color: var(--text-primary);
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.welcome-title-main {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #ffffff 0%, var(--text-accent) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .welcome-subtitle {
   font-size: var(--font-size-lg);
   color: var(--text-secondary);
-  margin-bottom: 32px;
+  margin: 0;
 }
 
+/* --- Primary Action Button --- */
+
 .welcome-actions {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .welcome-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 24px;
+  padding: 12px 32px;
   background: var(--bg-button);
   color: var(--text-white);
   border: none;
-  border-radius: 4px;
-  font-size: var(--font-size-lg);
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background var(--transition);
+  transition:
+    background var(--transition),
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(14, 99, 156, 0.3);
 }
 
 .welcome-btn:hover {
   background: var(--bg-button-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(14, 99, 156, 0.4);
+}
+
+.welcome-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(14, 99, 156, 0.3);
 }
 
 .welcome-btn svg {
   flex-shrink: 0;
 }
 
+/* --- Drop Zone --- */
+
 .welcome-drop-zone {
-  padding: 32px 20px;
-  border: 2px dashed var(--border-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border: 1.5px dashed var(--border-secondary);
   border-radius: 8px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   color: var(--text-muted);
   transition:
     border-color 0.2s ease,
     background-color 0.2s ease,
     transform 0.2s ease;
-  text-align: center;
 }
 
 .welcome-drop-zone:hover {
@@ -73,31 +159,24 @@
 
 .welcome-drop-zone--active {
   border-color: var(--text-accent);
-  background-color: rgba(77, 148, 255, 0.08);
+  background-color: rgba(79, 193, 255, 0.06);
   border-style: solid;
-  transform: scale(1.02);
+  transform: scale(1.01);
+}
+
+.welcome-drop-zone--active .iss-icon {
+  color: var(--text-accent);
 }
 
 .welcome-drop-zone--invalid {
   border-color: #e74c3c;
-  background-color: rgba(231, 76, 60, 0.06);
+  background-color: rgba(231, 76, 60, 0.05);
   border-style: solid;
 }
 
-.welcome-drop-zone-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-  opacity: 0.7;
-  transition: opacity 0.2s ease;
-}
-
-.welcome-drop-zone--active .welcome-drop-zone-icon {
-  opacity: 1;
-}
-
 .welcome-drop-zone-text {
-  font-size: var(--font-size-lg);
-  margin: 0 0 4px;
+  font-size: var(--font-size);
+  margin: 0;
   color: var(--text-secondary);
 }
 
@@ -116,54 +195,30 @@
   color: var(--text-muted);
 }
 
-.welcome-info {
-  text-align: left;
-  background: var(--bg-secondary);
-  border-radius: 6px;
-  padding: 20px;
+/* --- Two-Column Grid --- */
+
+.welcome-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
   margin-bottom: 20px;
+  text-align: left;
 }
 
-.welcome-info h3 {
-  font-size: var(--font-size);
-  font-weight: 600;
-  color: var(--text-accent);
-  margin-bottom: 8px;
-  margin-top: 16px;
+@media (max-width: 560px) {
+  .welcome-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.welcome-info h3:first-child {
-  margin-top: 0;
-}
-
-.welcome-info ul {
-  list-style: none;
-  padding: 0;
-}
-
-.welcome-info li {
-  padding: 3px 0;
-  color: var(--text-primary);
-}
-
-.welcome-info p {
-  color: var(--text-secondary);
-  font-size: var(--font-size);
-}
-
-.welcome-credits {
-  color: var(--text-muted);
-  font-size: var(--font-size-sm);
-}
-
-/* ---- Recent ROMs ---- */
+/* --- Recent ROMs Card --- */
 
 .welcome-recent {
-  text-align: left;
   background: var(--bg-secondary);
-  border-radius: 6px;
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--border-primary);
+  min-width: 0;
 }
 
 .welcome-recent-header {
@@ -188,7 +243,9 @@
   cursor: pointer;
   padding: 2px 8px;
   border-radius: 3px;
-  transition: color var(--transition), background var(--transition);
+  transition:
+    color var(--transition),
+    background var(--transition);
 }
 
 .welcome-recent-clear:hover {
@@ -211,15 +268,26 @@
 .welcome-recent-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   padding: 8px 10px;
   border-radius: 4px;
   cursor: pointer;
   transition: background var(--transition);
+  border-left: 2px solid transparent;
 }
 
 .welcome-recent-item:hover {
   background: var(--bg-hover);
+  border-left-color: var(--text-accent);
+}
+
+.welcome-recent-item>.iss-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.welcome-recent-item:hover>.iss-icon {
+  color: var(--text-accent);
 }
 
 .welcome-recent-item-info {
@@ -227,6 +295,7 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
+  flex: 1;
 }
 
 .welcome-recent-item-name {
@@ -256,7 +325,9 @@
   padding: 2px 6px;
   border-radius: 3px;
   opacity: 0;
-  transition: opacity var(--transition), color var(--transition);
+  transition:
+    opacity var(--transition),
+    color var(--transition);
   flex-shrink: 0;
 }
 
@@ -267,4 +338,70 @@
 .welcome-recent-item-remove:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
+}
+
+/* --- Features/Info Card --- */
+
+.welcome-info {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid var(--border-primary);
+}
+
+.welcome-info h3 {
+  font-size: var(--font-size);
+  font-weight: 600;
+  color: var(--text-accent);
+  margin-bottom: 8px;
+  margin-top: 14px;
+}
+
+.welcome-info h3:first-child {
+  margin-top: 0;
+}
+
+.welcome-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.welcome-info li {
+  padding: 3px 0;
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  position: relative;
+  padding-left: 14px;
+}
+
+.welcome-info li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-accent);
+  opacity: 0.5;
+  transform: translateY(-50%);
+}
+
+.welcome-info p {
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+  margin: 0;
+}
+
+/* --- Credits --- */
+
+.welcome-credits {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.welcome-credits p {
+  margin: 0;
 }

@@ -212,3 +212,53 @@ export const IconImage = ({ size }) => (
     <circle cx="5.5" cy="5.5" r="1.5" />
   </Icon>
 );
+
+// --- Welcome Panel Icons ---
+
+export const IconCartridge = ({ size }) => (
+  <Icon size={size}>
+    <path d="M3 2.5A1.5 1.5 0 0 1 4.5 1h7A1.5 1.5 0 0 1 13 2.5V13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V2.5zM4.5 2a.5.5 0 0 0-.5.5V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V2.5a.5.5 0 0 0-.5-.5h-7z" />
+    <rect x="5" y="3" width="6" height="4" rx="0.5" opacity="0.6" />
+    <rect x="6" y="11" width="1.5" height="1" rx="0.3" opacity="0.5" />
+    <rect x="8.5" y="11" width="1.5" height="1" rx="0.3" opacity="0.5" />
+  </Icon>
+);
+
+export const IconUpload = ({ size }) => (
+  <Icon size={size}>
+    <path
+      d="M8 2L4.5 5.5M8 2l3.5 3.5M8 2v8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M3 11v1.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V11"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+    />
+  </Icon>
+);
+
+export const IconController = ({ size = 40, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 48 48"
+    fill="none"
+    className={`iss-icon ${className}`}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect x="8" y="16" width="32" height="20" rx="10" stroke="currentColor" strokeWidth="2" />
+    <circle cx="16" cy="26" r="2" fill="currentColor" opacity="0.6" />
+    <circle cx="32" cy="24" r="1.5" fill="currentColor" opacity="0.6" />
+    <circle cx="35" cy="27" r="1.5" fill="currentColor" opacity="0.6" />
+    <rect x="14" y="24" width="4" height="1" rx="0.5" fill="currentColor" opacity="0.4" />
+    <rect x="15.5" y="22.5" width="1" height="4" rx="0.5" fill="currentColor" opacity="0.4" />
+    <rect x="21" y="25" width="6" height="1.5" rx="0.75" fill="currentColor" opacity="0.3" />
+  </svg>
+);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { isElectron } from '../utils/fileHelpers';
-import { IconOpen } from './Icons';
+import { IconOpen, IconCartridge, IconUpload, IconController } from './Icons';
 
 const VALID_ROM_EXTENSIONS = ['.smc', '.sfc', '.bin'];
 
@@ -33,7 +33,6 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
     if (!isElectron()) return;
     const result = await window.electronAPI.openRecentRom(filePath);
     if (!result.success) {
-      // File not found, refresh the list
       loadRecents();
     }
   };
@@ -60,10 +59,9 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
 
     if (e.dataTransfer?.items?.length) {
       const item = e.dataTransfer.items[0];
-      // Check file type from DataTransferItem when possible
       const name = item.type || '';
       const hasValidType =
-        name === '' || // type not available during dragenter in some browsers
+        name === '' ||
         VALID_ROM_EXTENSIONS.some((ext) => name.includes(ext.slice(1)));
       setDragActive(true);
       setDragInvalid(!hasValidType && name !== '');
@@ -113,6 +111,8 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
     .filter(Boolean)
     .join(' ');
 
+  const hasRecents = recentRoms.length > 0;
+
   return (
     <div
       className="welcome-panel"
@@ -121,17 +121,20 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
     >
-      <div className="welcome-content">
-        <h1 className="welcome-title">
-          {t('welcomeTitle')} <span className="beta-badge">BETA</span>
-        </h1>
-        <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
-
-        <div className="welcome-beta-notice">
-          <span className="beta-notice-icon">⚠</span>
-          <span>{t('welcomeBetaNotice')}</span>
+      <div className="welcome-content welcome-fade-in">
+        {/* Hero Section */}
+        <div className="welcome-hero">
+          <div className="welcome-logo">
+            <IconController size={48} className="welcome-logo-icon" />
+          </div>
+          <h1 className="welcome-title">
+            <span className="welcome-title-main">{t('welcomeTitle')}</span>
+            <span className="beta-badge">BETA</span>
+          </h1>
+          <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
         </div>
 
+        {/* Primary Action */}
         <div className="welcome-actions">
           <button className="welcome-btn" onClick={onOpenRom}>
             <IconOpen size={20} />
@@ -139,8 +142,9 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
           </button>
         </div>
 
+        {/* Drop Zone */}
         <div className={dropZoneClasses}>
-          <div className="welcome-drop-zone-icon">📁</div>
+          <IconUpload size={24} />
           <p className="welcome-drop-zone-text">
             {dragActive && !dragInvalid && t('welcomeDropRelease')}
             {dragInvalid && t('welcomeDropInvalid')}
@@ -149,66 +153,66 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
           <p className="welcome-drop-zone-hint">{t('welcomeDropHint')}</p>
         </div>
 
-        {isElectron() && (
-          <div className="welcome-recent">
-            <div className="welcome-recent-header">
-              <h3>{t('recentRoms')}</h3>
-              {recentRoms.length > 0 && (
-                <button className="welcome-recent-clear" onClick={handleClearRecents}>
-                  {t('recentRomsClear')}
-                </button>
+        {/* Two-column bottom section */}
+        <div className="welcome-grid">
+          {/* Recent ROMs */}
+          {isElectron() && (
+            <div className="welcome-recent">
+              <div className="welcome-recent-header">
+                <h3>{t('recentRoms')}</h3>
+                {hasRecents && (
+                  <button className="welcome-recent-clear" onClick={handleClearRecents}>
+                    {t('recentRomsClear')}
+                  </button>
+                )}
+              </div>
+
+              {!hasRecents ? (
+                <p className="welcome-recent-empty">{t('recentRomsEmpty')}</p>
+              ) : (
+                <ul className="welcome-recent-list">
+                  {recentRoms.map((rom) => (
+                    <li
+                      key={rom.path}
+                      className="welcome-recent-item"
+                      onClick={() => handleOpenRecent(rom.path)}
+                    >
+                      <IconCartridge size={16} />
+                      <div className="welcome-recent-item-info">
+                        <span className="welcome-recent-item-name">{rom.name}</span>
+                        <span className="welcome-recent-item-path">{rom.path}</span>
+                      </div>
+                      <button
+                        className="welcome-recent-item-remove"
+                        onClick={(e) => handleRemoveRecent(e, rom.path)}
+                        title={t('recentRomsRemove')}
+                        aria-label={t('recentRomsRemove')}
+                      >
+                        &times;
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
+          )}
 
-            {recentRoms.length === 0 ? (
-              <p className="welcome-recent-empty">{t('recentRomsEmpty')}</p>
-            ) : (
-              <ul className="welcome-recent-list">
-                {recentRoms.map((rom) => (
-                  <li
-                    key={rom.path}
-                    className="welcome-recent-item"
-                    onClick={() => handleOpenRecent(rom.path)}
-                  >
-                    <div className="welcome-recent-item-info">
-                      <span className="welcome-recent-item-name">{rom.name}</span>
-                      <span className="welcome-recent-item-path">{rom.path}</span>
-                    </div>
-                    <button
-                      className="welcome-recent-item-remove"
-                      onClick={(e) => handleRemoveRecent(e, rom.path)}
-                      title={t('recentRomsRemove')}
-                      aria-label={t('recentRomsRemove')}
-                    >
-                      ×
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+          {/* Features */}
+          <div className="welcome-info">
+            <h3>{t('welcomeFeatures')}</h3>
+            <ul>
+              <li>{t('welcomePlayerNames')}</li>
+              <li>{t('welcomeShirtNumbers')}</li>
+              <li>{t('welcomeAttributes')}</li>
+              <li>{t('welcomeHairStyle')}</li>
+              <li>{t('welcomeUniformColors')}</li>
+            </ul>
+
+            <h3>{t('welcomeCompatible')}</h3>
+            <p>{t('welcomeCompatibleDesc')}</p>
           </div>
-        )}
-
-        <div className="welcome-info">
-          <h3>{t('welcomeFeatures')}</h3>
-          <ul>
-            <li>{t('welcomePlayerNames')}</li>
-            <li>{t('welcomeShirtNumbers')}</li>
-            <li>{t('welcomeAttributes')}</li>
-            <li>{t('welcomeHairStyle')}</li>
-            <li>{t('welcomeUniformColors')}</li>
-          </ul>
-
-          <h3>{t('welcomeCompatible')}</h3>
-          <p>{t('welcomeCompatibleDesc')}</p>
         </div>
 
-        <div className="welcome-credits">
-          <p>
-            Based on the work of Rodrigo M. Guerra (ISS Studio), Esteban Fuentealba (Web ISS
-            Studio), Equipe Puma & Equipe Falcon Brasil.
-          </p>
-        </div>
       </div>
     </div>
   );

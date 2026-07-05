@@ -448,8 +448,7 @@ export default {
   settingsAiProviderCompatible: 'OpenAI-Compatible (Local/Custom)',
   settingsAiProviderHint: 'Select your AI provider. Cloud providers require an API key.',
   settingsAiEndpoint: 'API Endpoint',
-  settingsAiEndpointHint:
-    'Custom endpoint URL. Only editable for OpenAI-Compatible provider.',
+  settingsAiEndpointHint: 'Custom endpoint URL. Only editable for OpenAI-Compatible provider.',
   settingsAiModel: 'Model',
   settingsAiModelHint: 'Select or type the model to use. Leave empty for local servers.',
   settingsAiModelPlaceholder: 'Type or select a model...',

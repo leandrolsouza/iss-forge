@@ -2087,24 +2087,6 @@ input[type="number"]:hover::-webkit-outer-spin-button {
   top: -1px;
 }
 
-.welcome-beta-notice {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(230, 126, 34, 0.1);
-  border: 1px solid rgba(230, 126, 34, 0.3);
-  border-radius: 6px;
-  padding: 10px 16px;
-  margin-bottom: 20px;
-  font-size: var(--font-size);
-  color: var(--text-warning);
-}
-
-.beta-notice-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
 .about-beta-notice {
   margin-top: 12px;
   font-size: var(--font-size-sm);
@@ -2116,11 +2098,6 @@ input[type="number"]:hover::-webkit-outer-spin-button {
 /* Light theme adjustments */
 [data-theme="light"] .beta-badge {
   background: linear-gradient(135deg, #f39c12, #e67e22);
-}
-
-[data-theme="light"] .welcome-beta-notice {
-  background: rgba(243, 156, 18, 0.08);
-  border-color: rgba(243, 156, 18, 0.3);
 }
 
 /* ============================================================

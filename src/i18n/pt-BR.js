@@ -453,8 +453,7 @@ export default {
   settingsAiProviderCompatible: 'Compativel com OpenAI (Local/Custom)',
   settingsAiProviderHint: 'Selecione seu provedor de IA. Provedores cloud exigem chave de API.',
   settingsAiEndpoint: 'Endpoint da API',
-  settingsAiEndpointHint:
-    'URL customizada. Editavel apenas para provedor Compativel com OpenAI.',
+  settingsAiEndpointHint: 'URL customizada. Editavel apenas para provedor Compativel com OpenAI.',
   settingsAiModel: 'Modelo',
   settingsAiModelHint: 'Selecione ou digite o modelo. Deixe vazio para servidores locais.',
   settingsAiModelPlaceholder: 'Digite ou selecione um modelo...',

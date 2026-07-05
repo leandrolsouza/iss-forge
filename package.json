@@ -18,7 +18,10 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
-  "author": "Leandro Luiz De Souza",
+  "author": {
+    "name": "Leandro Luiz De Souza",
+    "email": "leandrolsouza@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
     "electron-store": "^8.2.0",

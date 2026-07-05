@@ -3,6 +3,14 @@ const { autoUpdater } = require('electron-updater');
 const Store = require('electron-store');
 const path = require('path');
 const fs = require('fs');
+const {
+  getProvider,
+  getEffectiveEndpoint,
+  buildHeaders,
+  buildRequestBody,
+  parseResponse,
+  parseStreamChunk,
+} = require('./aiProviders');
 
 // --- App Settings (electron-store) ---
 const settingsStore = new Store({
@@ -18,6 +26,7 @@ const settingsStore = new Store({
     aiApiKey: '',
     aiTemperature: 0.7,
     aiMaxTokens: 4096,
+    aiRegion: 'us-east-1',
   },
 });
 
@@ -441,6 +450,7 @@ function getAiSettingsPath() {
 function loadAiSettings() {
   // Read from unified settings store
   return {
+    provider: settingsStore.get('aiProvider'),
     endpoint: settingsStore.get('aiEndpoint'),
     model: settingsStore.get('aiModel'),
     apiKey: settingsStore.get('aiApiKey'),
@@ -452,6 +462,7 @@ function loadAiSettings() {
 function saveAiSettings(settings) {
   try {
     // Write to unified settings store
+    if (settings.provider !== undefined) settingsStore.set('aiProvider', settings.provider);
     if (settings.endpoint !== undefined) settingsStore.set('aiEndpoint', settings.endpoint);
     if (settings.model !== undefined) settingsStore.set('aiModel', settings.model);
     if (settings.apiKey !== undefined) settingsStore.set('aiApiKey', settings.apiKey);
@@ -472,31 +483,83 @@ ipcMain.handle('ai:saveSettings', (event, settings) => {
   return saveAiSettings(settings);
 });
 
-ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) => {
+ipcMain.handle('ai:testConnection', async (event, { settings }) => {
   const config = settings || loadAiSettings();
+  const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
+  const provider = getProvider(providerId);
+  const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model);
 
-  const body = {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt },
-    ],
-    temperature: config.temperature || 0.7,
-    max_tokens: config.maxTokens || 4096,
+  const headers = buildHeaders(provider, config.apiKey);
+  const body = buildRequestBody({
+    format: provider.format,
+    systemPrompt: 'You are a helpful assistant.',
+    userPrompt: 'Say "OK" and nothing else.',
+    model: config.model,
+    temperature: 0.1,
+    maxTokens: 32,
     stream: false,
-  };
+  });
 
-  // Only include model if explicitly set (LM Studio uses loaded model by default)
-  if (config.model) {
-    body.model = config.model;
-  }
+  console.log('[AI Test] Provider:', providerId);
+  console.log('[AI Test] Endpoint:', endpoint);
+  console.log('[AI Test] Config endpoint:', config.endpoint);
+  console.log('[AI Test] Model:', config.model);
+  console.log('[AI Test] Body:', JSON.stringify(body, null, 2));
 
   try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (config.apiKey) {
-      headers['Authorization'] = `Bearer ${config.apiKey}`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      return {
+        success: false,
+        error: `API error ${response.status}: ${errorText || response.statusText}`,
+      };
     }
 
-    const response = await fetch(config.endpoint, {
+    const data = await response.json();
+    const result = parseResponse(data, provider.format);
+
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, content: result.content };
+  } catch (err) {
+    if (err.name === 'TimeoutError') {
+      return { success: false, error: `Connection timed out (30s). Is ${endpoint} reachable?` };
+    }
+    if (err.code === 'ECONNREFUSED') {
+      return { success: false, error: `Connection refused at ${endpoint}.` };
+    }
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) => {
+  const config = settings || loadAiSettings();
+  const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
+  const provider = getProvider(providerId);
+  const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model);
+
+  const headers = buildHeaders(provider, config.apiKey);
+  const body = buildRequestBody({
+    format: provider.format,
+    systemPrompt,
+    userPrompt: prompt,
+    model: config.model,
+    temperature: config.temperature || 0.7,
+    maxTokens: config.maxTokens || 4096,
+    stream: false,
+  });
+
+  try {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -512,24 +575,25 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
     }
 
     const data = await response.json();
+    const result = parseResponse(data, provider.format);
 
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      return { success: false, error: 'Invalid response format from LLM' };
+    if (result.error) {
+      return { success: false, error: result.error };
     }
 
     return {
       success: true,
-      content: data.choices[0].message.content,
-      usage: data.usage || null,
+      content: result.content,
+      usage: result.usage,
     };
   } catch (err) {
     if (err.name === 'TimeoutError') {
-      return { success: false, error: 'Request timed out (2 min). Is LM Studio running?' };
+      return { success: false, error: `Request timed out (2 min). Is the ${provider.id} API reachable?` };
     }
     if (err.code === 'ECONNREFUSED') {
       return {
         success: false,
-        error: `Connection refused at ${config.endpoint}. Is LM Studio running?`,
+        error: `Connection refused at ${endpoint}. Check your settings.`,
       };
     }
     return { success: false, error: err.message };
@@ -540,28 +604,136 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
 ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, settings }) => {
   const config = settings || loadAiSettings();
   const sender = event.sender;
+  const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
+  const provider = getProvider(providerId);
 
-  const body = {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: prompt },
-    ],
-    temperature: config.temperature || 0.7,
-    max_tokens: config.maxTokens || 4096,
-    stream: true,
-  };
+  // Bedrock Converse API uses AWS Event Stream binary protocol for streaming
+  if (provider.format === 'bedrock') {
+    const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model, true);
+    const headers = buildHeaders(provider, config.apiKey);
+    const body = buildRequestBody({
+      format: provider.format,
+      systemPrompt,
+      userPrompt: prompt,
+      model: config.model,
+      temperature: config.temperature || 0.7,
+      maxTokens: config.maxTokens || 4096,
+      stream: false,
+    });
 
-  if (config.model) {
-    body.model = config.model;
+    try {
+      console.log('[Bedrock Stream] Requesting:', endpoint);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(180000),
+      });
+
+      console.log('[Bedrock Stream] Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        console.log('[Bedrock Stream] Error:', errorText);
+        sender.send('ai:stream-error', `API error ${response.status}: ${errorText || response.statusText}`);
+        return { success: false };
+      }
+
+      // Parse AWS Event Stream binary protocol
+      const reader = response.body.getReader();
+      let eventBuffer = Buffer.alloc(0);
+      let chunkCount = 0;
+      let parsedCount = 0;
+      let errorCount = 0;
+      let sentChunks = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log('[Bedrock Stream] Done. chunks:', chunkCount, 'parsed:', parsedCount, 'errors:', errorCount, 'sent:', sentChunks);
+          break;
+        }
+
+        chunkCount++;
+        eventBuffer = Buffer.concat([eventBuffer, Buffer.from(value)]);
+
+        // Process complete messages from the buffer
+        // AWS Event Stream: each message starts with [4B total_len][4B header_len][4B prelude_crc]
+        while (eventBuffer.length >= 12) {
+          const totalLength = eventBuffer.readUInt32BE(0);
+          if (totalLength < 16 || totalLength > 1048576) {
+            eventBuffer = eventBuffer.slice(1);
+            continue;
+          }
+          if (eventBuffer.length < totalLength) break;
+
+          const frame = eventBuffer.slice(0, totalLength);
+          eventBuffer = eventBuffer.slice(totalLength);
+
+          // Extract payload using header length from prelude
+          const headerLength = frame.readUInt32BE(4);
+          const payloadStart = 12 + headerLength;
+          const payloadEnd = totalLength - 4;
+
+          if (payloadStart >= payloadEnd) continue;
+
+          const payloadBytes = frame.slice(payloadStart, payloadEnd);
+          let jsonStr = payloadBytes.toString('utf-8');
+
+          // Trim any trailing null bytes or garbage
+          const lastBrace = jsonStr.lastIndexOf('}');
+          if (lastBrace >= 0) {
+            jsonStr = jsonStr.substring(0, lastBrace + 1);
+          }
+
+          try {
+            const evt = JSON.parse(jsonStr);
+            parsedCount++;
+            if (parsedCount <= 3) {
+              console.log('[Bedrock Stream] Event keys:', Object.keys(evt), 'sample:', JSON.stringify(evt).substring(0, 150));
+            }
+
+            // Bedrock HTTP stream: flat structure {delta:{text}, contentBlockIndex} or {stopReason}
+            if (evt.delta && evt.delta.text) {
+              sentChunks++;
+              sender.send('ai:stream-chunk', evt.delta.text);
+            } else if (evt.stopReason || evt.messageStop) {
+              console.log('[Bedrock Stream] messageStop. parsed:', parsedCount, 'sent:', sentChunks);
+              sender.send('ai:stream-done');
+              return { success: true };
+            }
+          } catch (_e) {
+            errorCount++;
+            if (errorCount <= 3) {
+              console.log('[Bedrock Stream] Parse error on frame, payload preview:', jsonStr.substring(0, 80));
+            }
+          }
+        }
+      }
+
+      sender.send('ai:stream-done');
+      return { success: true };
+    } catch (err) {
+      sender.send('ai:stream-error', err.message || 'Bedrock stream failed');
+      return { success: false };
+    }
   }
 
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    if (config.apiKey) {
-      headers['Authorization'] = `Bearer ${config.apiKey}`;
-    }
+  const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model, true);
 
-    const response = await fetch(config.endpoint, {
+  const headers = buildHeaders(provider, config.apiKey);
+  const body = buildRequestBody({
+    format: provider.format,
+    systemPrompt,
+    userPrompt: prompt,
+    model: config.model,
+    temperature: config.temperature || 0.7,
+    maxTokens: config.maxTokens || 4096,
+    stream: true,
+  });
+
+  try {
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -592,20 +764,21 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        if (!trimmed) continue;
+
+        // Handle SSE "event:" lines for Anthropic
+        if (trimmed.startsWith('event:')) continue;
+
+        if (!trimmed.startsWith('data:')) continue;
         const data = trimmed.slice(5).trim();
-        if (data === '[DONE]') {
+
+        const chunk = parseStreamChunk(data, provider.format);
+        if (chunk.done) {
           sender.send('ai:stream-done');
           return { success: true };
         }
-        try {
-          const parsed = JSON.parse(data);
-          const content = parsed.choices?.[0]?.delta?.content;
-          if (content) {
-            sender.send('ai:stream-chunk', content);
-          }
-        } catch (_e) {
-          // Ignore malformed SSE lines
+        if (chunk.content) {
+          sender.send('ai:stream-chunk', chunk.content);
         }
       }
     }
@@ -615,16 +788,9 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
       const trimmed = buffer.trim();
       if (trimmed.startsWith('data:')) {
         const data = trimmed.slice(5).trim();
-        if (data !== '[DONE]') {
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              sender.send('ai:stream-chunk', content);
-            }
-          } catch (_e) {
-            // Ignore
-          }
+        const chunk = parseStreamChunk(data, provider.format);
+        if (chunk.content) {
+          sender.send('ai:stream-chunk', chunk.content);
         }
       }
     }
@@ -634,9 +800,9 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
   } catch (err) {
     let errorMsg = err.message;
     if (err.name === 'TimeoutError') {
-      errorMsg = 'Request timed out (3 min). Is LM Studio running?';
+      errorMsg = `Request timed out (3 min). Is the ${provider.id} API reachable?`;
     } else if (err.code === 'ECONNREFUSED') {
-      errorMsg = `Connection refused at ${config.endpoint}. Is LM Studio running?`;
+      errorMsg = `Connection refused at ${endpoint}. Check your settings.`;
     }
     sender.send('ai:stream-error', errorMsg);
     return { success: false };

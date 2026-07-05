@@ -83,6 +83,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
   const { settings: appSettings } = useSettings();
 
   const settings = {
+    provider: appSettings.aiProvider,
     endpoint: appSettings.aiEndpoint,
     model: appSettings.aiModel,
     apiKey: appSettings.aiApiKey,

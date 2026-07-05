@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   aiGetSettings: () => ipcRenderer.invoke('ai:getSettings'),
   aiSaveSettings: (settings) => ipcRenderer.invoke('ai:saveSettings', settings),
   aiGenerate: (payload) => ipcRenderer.invoke('ai:generate', payload),
+  aiTestConnection: (payload) => ipcRenderer.invoke('ai:testConnection', payload),
   aiGenerateStream: (payload) => ipcRenderer.invoke('ai:generate-stream', payload),
   onAiStreamChunk: (callback) => {
     ipcRenderer.on('ai:stream-chunk', (event, chunk) => callback(chunk));

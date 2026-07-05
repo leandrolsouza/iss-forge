@@ -1,24 +1,28 @@
 /* ============================================================
-   ISS Editor - VS Code Dark Theme Styling
+   ISS Forge – VS Code Dark Modern Design System
    ============================================================ */
 
-/* CSS Variables - VS Code Dark+ Theme Colors */
+/* CSS Variables - VS Code Dark Modern Theme Colors */
 :root {
-  --bg-primary: #1e1e1e;
-  --bg-secondary: #252526;
-  --bg-tertiary: #2d2d2d;
+  /* Backgrounds */
+  --bg-primary: #1f1f1f;
+  --bg-secondary: #181818;
+  --bg-tertiary: #2b2b2b;
   --bg-hover: #2a2d2e;
   --bg-active: #37373d;
-  --bg-selected: #094771;
-  --bg-input: #3c3c3c;
-  --bg-dropdown: #3c3c3c;
+  --bg-selected: #04395e;
+  --bg-input: #313131;
+  --bg-dropdown: #313131;
   --bg-button: #0e639c;
   --bg-button-hover: #1177bb;
-  --bg-titlebar: #323233;
+  --bg-button-secondary: #313131;
+  --bg-button-secondary-hover: #3c3c3c;
+  --bg-titlebar: #1f1f1f;
   --bg-statusbar: #007acc;
 
+  /* Text */
   --text-primary: #cccccc;
-  --text-secondary: #969696;
+  --text-secondary: #9d9d9d;
   --text-muted: #6a6a6a;
   --text-accent: #4fc1ff;
   --text-link: #3794ff;
@@ -26,28 +30,44 @@
   --text-warning: #cca700;
   --text-error: #f48771;
   --text-success: #89d185;
+  --text-placeholder: #6a6a6a;
 
+  /* Borders */
   --border-primary: #3c3c3c;
   --border-secondary: #474747;
+  --border-input: #3c3c3c;
   --border-focus: #007fd4;
   --border-active: #007acc;
 
-  --scrollbar-bg: #1e1e1e;
+  /* Focus ring (outer glow for accessibility) */
+  --focus-ring: 0 0 0 1px var(--border-focus);
+
+  /* Scrollbar */
+  --scrollbar-bg: #1f1f1f;
   --scrollbar-thumb: #424242;
   --scrollbar-thumb-hover: #4f4f4f;
 
+  /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
   --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
   --font-size: 13px;
   --font-size-sm: 11px;
   --font-size-lg: 14px;
 
+  /* Layout */
   --sidebar-width: 260px;
   --sidebar-collapsed-width: 48px;
   --titlebar-height: 32px;
   --statusbar-height: 22px;
   --tabbar-height: 35px;
 
+  /* Input sizing */
+  --input-padding-x: 8px;
+  --input-padding-y: 4px;
+  --input-border-radius: 4px;
+  --input-height: 28px;
+
+  /* Misc */
   --transition: 0.15s ease;
 }
 
@@ -99,4 +119,114 @@ body {
 
 ::-webkit-scrollbar-corner {
   background: var(--scrollbar-bg);
+}
+
+/* ============================================================
+   FORM FIELDS — VS Code Dark Modern Design System
+   Unified styling for input, select, and textarea elements.
+   ============================================================ */
+
+/* Base input styles (text, number, email, etc.) */
+input[type='text'],
+input[type='number'],
+input[type='email'],
+input[type='search'],
+input[type='url'],
+input[type='password'],
+select,
+textarea {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+  padding: var(--input-padding-y) var(--input-padding-x);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  line-height: 1.4;
+  outline: none;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+input[type='text']:hover,
+input[type='number']:hover,
+input[type='email']:hover,
+input[type='search']:hover,
+input[type='url']:hover,
+input[type='password']:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--border-secondary);
+}
+
+input[type='text']:focus,
+input[type='number']:focus,
+input[type='email']:focus,
+input[type='search']:focus,
+input[type='url']:focus,
+input[type='password']:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-placeholder);
+  opacity: 1;
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Select specific */
+select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23cccccc' d='M2.5 4.5L6 8l3.5-3.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 24px;
+}
+
+select option {
+  background: var(--bg-dropdown);
+  color: var(--text-primary);
+}
+
+/* Textarea specific */
+textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Checkbox & Radio — VS Code style */
+input[type='checkbox'],
+input[type='radio'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--border-focus);
+  cursor: pointer;
+}
+
+/* Number input arrows (Chrome/Edge) */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  opacity: 0;
+}
+
+input[type='number']:hover::-webkit-inner-spin-button,
+input[type='number']:hover::-webkit-outer-spin-button {
+  opacity: 0.7;
+}
+
+input[type='number']:focus::-webkit-inner-spin-button,
+input[type='number']:focus::-webkit-outer-spin-button {
+  opacity: 1;
 }

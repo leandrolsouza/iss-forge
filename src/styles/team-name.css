@@ -35,17 +35,13 @@
 .teamname-input {
   flex: 1;
   max-width: 300px;
-  background: var(--bg-input);
-  border: 1px solid var(--border-primary);
-  color: var(--text-white);
-  padding: 10px 14px;
   font-size: 18px;
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 2px;
-  border-radius: 4px;
-  outline: none;
+  padding: 10px 14px;
   text-transform: uppercase;
+  color: var(--text-white);
 }
 
 .teamname-input:focus {

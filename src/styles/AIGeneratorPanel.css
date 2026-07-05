@@ -160,32 +160,25 @@
 .ai-prompt-input {
   width: 100%;
   padding: 10px 12px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-secondary);
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-family: inherit;
-  resize: vertical;
   flex: 1;
   min-height: 80px;
   margin-bottom: 10px;
   line-height: 1.5;
+  font-size: 12px;
 }
 
 .ai-prompt-input:focus {
-  outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 1px var(--border-focus);
+  box-shadow: var(--focus-ring);
 }
 
 .ai-prompt-input::placeholder {
-  color: var(--text-tertiary);
+  color: var(--text-placeholder);
   font-style: italic;
 }
 
 .ai-prompt-input:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 

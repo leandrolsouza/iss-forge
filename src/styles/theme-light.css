@@ -4,7 +4,7 @@
 
 [data-theme="light"] {
   --bg-primary: #ffffff;
-  --bg-secondary: #f3f3f3;
+  --bg-secondary: #f8f8f8;
   --bg-tertiary: #e8e8e8;
   --bg-hover: #e4e6e8;
   --bg-active: #d4d4d4;
@@ -13,7 +13,9 @@
   --bg-dropdown: #ffffff;
   --bg-button: #0e639c;
   --bg-button-hover: #1177bb;
-  --bg-titlebar: #dddddd;
+  --bg-button-secondary: #e8e8e8;
+  --bg-button-secondary-hover: #d4d4d4;
+  --bg-titlebar: #f8f8f8;
   --bg-statusbar: #007acc;
 
   --text-primary: #1e1e1e;
@@ -25,11 +27,15 @@
   --text-warning: #bf8803;
   --text-error: #c72e2e;
   --text-success: #388e3c;
+  --text-placeholder: #9e9e9e;
 
   --border-primary: #d4d4d4;
   --border-secondary: #c8c8c8;
+  --border-input: #cecece;
   --border-focus: #0066b8;
   --border-active: #007acc;
+
+  --focus-ring: 0 0 0 1px var(--border-focus);
 
   --scrollbar-bg: #f3f3f3;
   --scrollbar-thumb: #c1c1c1;

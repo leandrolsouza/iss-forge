@@ -147,32 +147,19 @@
 /* Inputs */
 .input-name {
   width: 100%;
-  background: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 3px 6px;
-  font-size: var(--font-size);
   font-family: var(--font-mono);
-  border-radius: 2px;
-  outline: none;
+  border-color: transparent;
 }
 
 .input-name:focus {
   border-color: var(--border-focus);
-  background: #1a1a2e;
 }
 
 .input-mini {
   width: 46px;
-  background: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 3px 4px;
-  font-size: var(--font-size);
   font-family: var(--font-mono);
-  border-radius: 2px;
-  outline: none;
   text-align: center;
+  border-color: transparent;
 }
 
 .input-mini:focus {
@@ -183,13 +170,7 @@
 .input-hair,
 .input-color-type {
   width: 100%;
-  background: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 3px 4px;
-  font-size: var(--font-size);
-  border-radius: 2px;
-  outline: none;
+  border-color: transparent;
   cursor: pointer;
 }
 
@@ -197,11 +178,6 @@
 .input-hair:focus,
 .input-color-type:focus {
   border-color: var(--border-focus);
-}
-
-select option {
-  background: var(--bg-dropdown);
-  color: var(--text-primary);
 }
 
 /* ============================================================
@@ -487,14 +463,8 @@ select option {
 
 .color-hex-input {
   width: 80px;
-  background: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 4px 8px;
-  font-size: var(--font-size);
   font-family: var(--font-mono);
-  border-radius: 2px;
-  outline: none;
+  border-color: transparent;
 }
 
 .color-hex-input:focus {
@@ -520,15 +490,9 @@ select option {
 
 .input-rgb {
   width: 48px;
-  background: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  padding: 3px 4px;
-  font-size: var(--font-size);
   font-family: var(--font-mono);
-  border-radius: 2px;
-  outline: none;
   text-align: center;
+  border-color: transparent;
 }
 
 .input-rgb:focus {

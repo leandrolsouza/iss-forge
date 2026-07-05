@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   aiApiKey: '',
   aiTemperature: 0.7,
   aiMaxTokens: 4096,
+  aiRegion: 'us-east-1',
 };
 
 export function SettingsProvider({ children }) {

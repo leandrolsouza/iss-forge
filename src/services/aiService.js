@@ -452,25 +452,53 @@ export const DEFAULT_AI_SETTINGS = {
  * Returns an abort function to cancel the stream.
  */
 export function streamLLMWeb({ systemPrompt, userPrompt, settings, onChunk, onDone, onError }) {
+  // Import provider helpers inline to avoid circular deps
   const controller = new AbortController();
 
-  const body = {
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    temperature: settings.temperature || 0.7,
-    max_tokens: settings.maxTokens || 4096,
-    stream: true,
-    ...(settings.model ? { model: settings.model } : {}),
-  };
-
+  // Determine provider format
+  const providerId = settings.provider || 'openai-compatible';
+  let format = 'openai';
+  let endpoint = settings.endpoint;
   const headers = { 'Content-Type': 'application/json' };
-  if (settings.apiKey) {
-    headers['Authorization'] = `Bearer ${settings.apiKey}`;
+
+  // Provider-specific configuration
+  if (providerId === 'claude') {
+    format = 'anthropic';
+    endpoint = endpoint || 'https://api.anthropic.com/v1/messages';
+    if (settings.apiKey) {
+      headers['x-api-key'] = settings.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+    }
+  } else {
+    if (settings.apiKey) {
+      headers['Authorization'] = `Bearer ${settings.apiKey}`;
+    }
   }
 
-  fetch(settings.endpoint, {
+  let body;
+  if (format === 'anthropic') {
+    body = {
+      model: settings.model || 'claude-sonnet-4-6',
+      max_tokens: settings.maxTokens || 4096,
+      temperature: settings.temperature || 0.7,
+      stream: true,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }],
+    };
+  } else {
+    body = {
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: settings.temperature || 0.7,
+      max_tokens: settings.maxTokens || 4096,
+      stream: true,
+      ...(settings.model ? { model: settings.model } : {}),
+    };
+  }
+
+  fetch(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
@@ -497,17 +525,35 @@ export function streamLLMWeb({ systemPrompt, userPrompt, settings, onChunk, onDo
 
         for (const line of lines) {
           const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith('data:')) continue;
+          if (!trimmed) continue;
+
+          // Skip SSE event lines (used by Anthropic)
+          if (trimmed.startsWith('event:')) continue;
+
+          if (!trimmed.startsWith('data:')) continue;
           const data = trimmed.slice(5).trim();
+
           if (data === '[DONE]') {
             onDone();
             return;
           }
+
           try {
             const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              onChunk(content);
+
+            if (format === 'anthropic') {
+              if (parsed.type === 'content_block_delta') {
+                const text = parsed.delta?.text;
+                if (text) onChunk(text);
+              } else if (parsed.type === 'message_stop') {
+                onDone();
+                return;
+              }
+            } else {
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                onChunk(content);
+              }
             }
           } catch (_e) {
             // Ignore malformed SSE lines

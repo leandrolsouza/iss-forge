@@ -202,6 +202,15 @@ export function aiGenerate(payload) {
 }
 
 /**
+ * Test the AI connection with a simple request
+ * @param {object} payload - { settings }
+ * @returns {Promise<{success: boolean, content?: string, error?: string}>}
+ */
+export function aiTestConnection(payload) {
+  return window.electronAPI.aiTestConnection(payload);
+}
+
+/**
  * Start a streaming LLM generation. Chunks arrive via event listeners.
  * @param {object} payload - { prompt, systemPrompt, settings? }
  * @returns {Promise<{success: boolean}>}

@@ -182,6 +182,82 @@
   line-height: 1.4;
 }
 
+.settings-hint-warning {
+  color: var(--color-warning, #e6a700);
+  font-weight: 500;
+}
+
+.settings-hint-success {
+  color: var(--color-success, #2ea043);
+  font-weight: 500;
+}
+
+.settings-btn-test {
+  margin-top: 8px;
+}
+
+.settings-label-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-link {
+  font-size: 0.8rem;
+  color: var(--color-accent, #58a6ff);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.settings-link:hover {
+  text-decoration: underline;
+}
+
+.settings-test-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.settings-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--bg-tertiary, #2d2d2d);
+}
+
+.settings-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary, #888);
+}
+
+.settings-status-badge.status-connected {
+  color: var(--color-success, #2ea043);
+}
+
+.settings-status-badge.status-connected .settings-status-dot {
+  background: var(--color-success, #2ea043);
+}
+
+.settings-status-badge.status-failed {
+  color: var(--color-warning, #e6a700);
+}
+
+.settings-status-badge.status-failed .settings-status-dot {
+  background: var(--color-warning, #e6a700);
+}
+
+.settings-status-badge.status-idle {
+  color: var(--text-secondary, #888);
+}
+
 .settings-path-row {
   display: flex;
   align-items: center;
@@ -195,9 +271,9 @@
   min-width: 0;
   font-size: 0.82rem;
   color: var(--text-secondary);
-  background: var(--input-bg, var(--background));
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
   padding: 6px 10px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -242,16 +318,10 @@
   font-size: 0.85rem;
   padding: 6px 10px;
   margin-top: 4px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--input-bg, var(--background));
-  color: var(--text-primary);
-  font-family: inherit;
 }
 
 .settings-input:focus {
-  outline: none;
-  border-color: var(--accent, #007acc);
+  border-color: var(--border-focus);
 }
 
 .settings-input-flex {
@@ -276,6 +346,5 @@
 }
 
 select.settings-input {
-  appearance: auto;
   cursor: pointer;
 }

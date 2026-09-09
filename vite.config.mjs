@@ -16,4 +16,8 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  test: {
+    // Cache transforms across runs for faster test execution (Vitest v5+)
+    fsModuleCache: true,
+  },
 });

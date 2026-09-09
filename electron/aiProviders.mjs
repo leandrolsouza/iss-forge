@@ -1,7 +1,7 @@
 /**
- * AI Provider Definitions (CommonJS) — used by Electron main process.
+ * AI Provider Definitions (ESM) — used by Electron main process.
  *
- * Mirror of src/services/aiProviders.js but in CommonJS format
+ * Mirror of src/services/aiProviders.js but as ESM
  * for use in the Electron main process.
  */
 
@@ -222,7 +222,7 @@ function parseStreamChunk(line, format) {
   }
 }
 
-module.exports = {
+export {
   AI_PROVIDERS,
   getProvider,
   getEffectiveEndpoint,

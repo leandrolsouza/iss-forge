@@ -1,16 +1,20 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
-const { autoUpdater } = require('electron-updater');
-const Store = require('electron-store');
-const path = require('path');
-const fs = require('fs');
-const {
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
+import { autoUpdater } from 'electron-updater';
+import Store from 'electron-store';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import {
   getProvider,
   getEffectiveEndpoint,
   buildHeaders,
   buildRequestBody,
   parseResponse,
   parseStreamChunk,
-} = require('./aiProviders');
+} from './aiProviders.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // --- App Settings (electron-store) ---
 const settingsStore = new Store({
@@ -32,6 +36,7 @@ const settingsStore = new Store({
 
 let mainWindow;
 let currentRomPath = null;
+let lastOpenDialogPath = null;
 let isRomModified = false;
 let forceQuit = false;
 let currentLocale = 'pt-BR';
@@ -225,6 +230,7 @@ function createMenu() {
 async function handleOpenRom() {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: 'Abrir ROM do ISS',
+    defaultPath: lastOpenDialogPath || app.getPath('home'),
     filters: [
       { name: 'ROM SNES', extensions: ['smc', 'sfc', 'bin'] },
       { name: 'Todos os Arquivos', extensions: ['*'] },
@@ -234,6 +240,7 @@ async function handleOpenRom() {
 
   if (!result.canceled && result.filePaths.length > 0) {
     const filePath = result.filePaths[0];
+    lastOpenDialogPath = path.dirname(filePath);
     loadAndSendRom(filePath);
   } else {
     mainWindow.webContents.send('rom:loadCancelled');
@@ -244,6 +251,7 @@ function loadAndSendRom(filePath) {
   try {
     const buffer = fs.readFileSync(filePath);
     currentRomPath = filePath;
+    lastOpenDialogPath = path.dirname(filePath);
     addRecentRom(filePath);
     mainWindow.webContents.send('rom:loaded', {
       path: filePath,

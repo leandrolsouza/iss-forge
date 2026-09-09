@@ -52,12 +52,30 @@ export default [
     },
   },
 
-  // Electron / Node files (CommonJS)
+  // Electron / Node files (CommonJS — preload and scripts)
   {
     files: ['electron/**/*.js', 'scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    plugins: { prettier },
+    rules: {
+      'prettier/prettier': 'warn',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      'no-console': 'off',
+    },
+  },
+
+  // Electron main process files (ESM — main.mjs, aiProviders.mjs)
+  {
+    files: ['electron/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         ...globals.node,
       },

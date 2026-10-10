@@ -46,50 +46,108 @@ export const TEAM_COUNT = 27;
 export const PLAYERS_PER_TEAM = 15;
 
 // ============================================================
-// TEAM FORMATIONS (fixed per team in the ROM)
-// Positions for slots 1-11 (starters) based on observed in-game formations.
-// Slots 12-15 are always substitutes (SUB).
+// TEAM FORMATIONS (default tactical setup per team, stored in the ROM)
+//
+// Reverse engineered from the ROM + 65816 code ($00:EC68 / $00:EC9A):
+//   Pointer table: 0x382E4 — 28 x 16-bit pointers into bank $07 (LoROM),
+//                  in ROM ordinal team order (same as FLAG_DESIGN_ORDINALS).
+//   Records:       0x3831C — 44 bytes per team = 11 slots x 4 bytes.
+//   Slot N describes the player in squad position N (players 1-11 start).
+//
+//   Slot byte 0: depth from own goal line (game multiplies by 32 → pixels)
+//   Slot byte 1: high nibble = lateral position (0 = left … 15 = right, 7 = centre)
+//                low nibble  = line (0 GK, 1 defence, 2 midfield, 3 attack)
+//   Slot byte 2: role (see FORMATION_ROLES — names inferred from usage)
+//   Slot byte 3: AI behaviour, two nibbles read separately by the engine
+//                (low nibble ×32, high nibble ×2 — meaning not fully mapped)
 // ============================================================
 
-// Position templates for each formation type
-const FORMATION_POSITIONS = {
-  '5-3-2': ['GK', 'CB', 'CB', 'CB', 'LWB', 'RWB', 'CM', 'CM', 'CM', 'ST', 'ST'],
-  '4-4-2': ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'RM', 'ST', 'ST'],
-  '4-3-3': ['GK', 'LB', 'CB', 'CB', 'RB', 'CM', 'CM', 'CM', 'LW', 'RW', 'CF'],
-  '3-5-2': ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'CM', 'RM', 'ST', 'ST'],
-  '3-4-3': ['GK', 'CB', 'CB', 'CB', 'LM', 'CM', 'CM', 'RM', 'LW', 'RW', 'CF'],
-  '4-5-1': ['GK', 'LB', 'CB', 'CB', 'RB', 'LM', 'CM', 'CM', 'CM', 'RM', 'CF'],
+export const FORMATION_DATA = {
+  POINTER_TABLE: 0x382e4,
+  POINTER_COUNT: 28,
+  BANK_FILE_BASE: 0x38000, // LoROM bank $07 → file offset 0x38000 + (addr - 0x8000)
+  RECORD_LENGTH: 44,
+  SLOTS: 11,
+  SLOT_LENGTH: 4,
+  MAX_DEPTH: 0x28,
+  MAX_LATERAL: 15,
 };
 
-// Formation assigned to each team (same order as TEAMS array)
-export const TEAM_FORMATIONS = [
-  { id: 'GERMANY', formation: '5-3-2', positions: FORMATION_POSITIONS['5-3-2'] },
-  { id: 'ITALY', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'HOLLAND', formation: '3-4-3', positions: FORMATION_POSITIONS['3-4-3'] },
-  { id: 'SPAIN', formation: '3-4-3', positions: FORMATION_POSITIONS['3-4-3'] },
-  { id: 'ENGLAND', formation: '4-3-3', positions: FORMATION_POSITIONS['4-3-3'] },
-  { id: 'WALES', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'FRANCE', formation: '4-3-3', positions: FORMATION_POSITIONS['4-3-3'] },
-  { id: 'DENMARK', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'SWEDEN', formation: '4-5-1', positions: FORMATION_POSITIONS['4-5-1'] },
-  { id: 'NORWAY', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'IRELAND', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'BELGIUM', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'AUSTRIA', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'SWISS', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'ROMANIA', formation: '4-5-1', positions: FORMATION_POSITIONS['4-5-1'] },
-  { id: 'BULGARIA', formation: '4-3-3', positions: FORMATION_POSITIONS['4-3-3'] },
-  { id: 'RUSSIA', formation: '5-3-2', positions: FORMATION_POSITIONS['5-3-2'] },
-  { id: 'ARGENTINA', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'BRAZIL', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'COLOMBIA', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'MEXICO', formation: '3-4-3', positions: FORMATION_POSITIONS['3-4-3'] },
-  { id: 'USA', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'NIGERIA', formation: '3-5-2', positions: FORMATION_POSITIONS['3-5-2'] },
-  { id: 'CAMEROON', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'SCOTLAND', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
-  { id: 'SKOREA', formation: '3-5-2', positions: FORMATION_POSITIONS['3-5-2'] },
-  { id: 'SUPERSTAR', formation: '4-4-2', positions: FORMATION_POSITIONS['4-4-2'] },
+/** Role ids found in the ROM. `line` is the line the game expects for that role. */
+export const FORMATION_ROLES = [
+  { id: 0, key: 'roleGK', short: 'GK', line: 0 },
+  { id: 1, key: 'roleFullBack', short: 'FB', line: 1 },
+  { id: 2, key: 'roleCentreBack', short: 'CB', line: 1 },
+  { id: 7, key: 'roleSweeper', short: 'SW', line: 1 },
+  { id: 3, key: 'roleDefMid', short: 'DM', line: 2 },
+  { id: 4, key: 'roleMid', short: 'CM', line: 2 },
+  { id: 5, key: 'roleAttMid', short: 'AM', line: 2 },
+  { id: 6, key: 'roleForward', short: 'FW', line: 3 },
+];
+
+/**
+ * Formation presets copied verbatim from original team records
+ * (11 slots x 4 bytes, hex). Using real game data guarantees the AI
+ * behaviour bytes stay coherent with the positions.
+ */
+export const FORMATION_PRESETS = [
+  {
+    id: '442-flat',
+    name: '4-4-2',
+    source: 'Wales',
+    hex: '007000370b2101320a5102420a9102420bc1013217220436165204361692043617c204362253060022930600',
+  },
+  {
+    id: '442-diamond',
+    name: '4-4-2 (losango)',
+    nameEn: '4-4-2 (diamond)',
+    source: 'Italy',
+    hex: '007000370c2101320a5102420a9102420cc10132127203741832044418b204441a7205742253060022930600',
+  },
+  {
+    id: '442-box',
+    name: '4-4-2 (quadrado)',
+    nameEn: '4-4-2 (box)',
+    source: 'Brazil',
+    hex: '007000370e2101320a5102420a9102420ec101321242034412a203441a5205541a9205542243063022a30630',
+  },
+  {
+    id: '433',
+    name: '4-3-3',
+    source: 'England',
+    hex: '007000370e2101320a5102420a9102420ec10132147203741822045418c204542223063422c3063024730630',
+  },
+  {
+    id: '451',
+    name: '4-5-1',
+    source: 'Sweden',
+    hex: '007000370c2101320a5102420a9102420cc1013212520354129203541822045418c204841e82053024630630',
+  },
+  {
+    id: '343',
+    name: '3-4-3',
+    source: 'Holland',
+    hex: '007000370a310242097102420ab10242127203751622045416c204541a7205732023060020c3060022730600',
+  },
+  {
+    id: '352',
+    name: '3-5-2',
+    source: 'Nigeria',
+    hex: '007000370c3102420a7102420cb102421222035412c20354167204741a3205441ab205442243063022a30630',
+  },
+  {
+    id: '532',
+    name: '5-3-2 (libero)',
+    nameEn: '5-3-2 (sweeper)',
+    source: 'Germany',
+    hex: '00700037101101320a410242097107320aa1024210d10132147203741832054418b205442243060022a30600',
+  },
+  {
+    id: '424',
+    name: '4-2-4',
+    source: 'Super Star',
+    hex: '007000370a2101320a5107420a9102420ac101321642057816a2047822230630225306302293063022c30630',
+  },
 ];
 
 // ============================================================

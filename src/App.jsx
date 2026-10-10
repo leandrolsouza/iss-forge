@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import PlayerEditor from './components/PlayerEditor';
+import FormationEditor from './components/FormationEditor';
 import UniformEditor from './components/UniformEditor';
 import HairSkinEditor from './components/HairSkinEditor';
 import FlagColorEditor from './components/FlagColorEditor';
@@ -68,6 +69,8 @@ export default function App() {
     handleTeamNameGenerate,
     handleTeamNameMenuSave,
     handleTeamNameInGameGenerate,
+    handleFormationChange,
+    handleSwapPlayers,
     handleDrop,
     handleDragOver,
     performUndo,
@@ -214,6 +217,14 @@ export default function App() {
     switch (activeTab) {
       case 'players':
         return <PlayerEditor {...props} onPlayerChange={handlePlayerChange} />;
+      case 'formation':
+        return (
+          <FormationEditor
+            {...props}
+            onFormationChange={handleFormationChange}
+            onSwapPlayers={handleSwapPlayers}
+          />
+        );
       case 'uniforms':
         return <UniformEditor {...props} onUniformChange={handleUniformChange} />;
       case 'hairskin':

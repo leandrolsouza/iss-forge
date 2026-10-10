@@ -36,6 +36,7 @@ export function exportTeam(team) {
     hairSkin: team.hairSkin,
     flagColors: team.flagColors,
     flagDesign: team.flagDesign ? { grid: team.flagDesign.grid } : null,
+    formation: team.formation ? { slots: team.formation.slots } : null,
   };
 }
 
@@ -157,6 +158,11 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
   // Write team name (in-game / scoreboard)
   if (teamData.teamNameInGame) {
     romParser.writeTeamNameInGame(teamIndex, teamData.teamNameInGame);
+  }
+
+  // Write default formation (optional — older exports don't have it)
+  if (Array.isArray(teamData.formation?.slots) && teamData.formation.slots.length === 11) {
+    romParser.writeFormation(teamIndex, teamData.formation.slots);
   }
 }
 

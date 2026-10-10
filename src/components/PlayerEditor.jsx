@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { HAIR_STYLES, SHOOTING_VALUES, TEAM_FORMATIONS } from '../rom/constants';
+import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
+import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/formation';
 import { useI18n } from '../i18n';
 import { IconPlayers } from './Icons';
 
@@ -52,26 +53,21 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
     onPlayerChange(teamIndex, playerIndex, 'isSpecial', value === 'true');
   };
 
+  // Positions come from the team's formation record in the ROM (slots 1-11)
+  const formationSlots = team.formation?.slots || [];
+  const formationName = team.formation?.name || '-';
+
   const getPositionLabel = (idx) => {
     if (idx >= 11) return 'SUB';
-    const teamFormation = TEAM_FORMATIONS[teamIndex];
-    if (teamFormation && teamFormation.positions[idx]) {
-      return teamFormation.positions[idx];
-    }
-    // Fallback
-    if (idx === 0) return 'GK';
-    if (idx <= 4) return 'DEF';
-    if (idx <= 9) return 'MID';
-    return 'FWD';
+    const slot = formationSlots[idx];
+    if (slot) return slotPositionLabel(slot);
+    return idx === 0 ? 'GK' : '?';
   };
 
-  const getPositionCategory = (pos) => {
-    if (pos === 'GK') return 'gk';
-    if (['CB', 'LB', 'RB', 'LWB', 'RWB'].includes(pos)) return 'def';
-    if (['CM', 'DM', 'AM', 'LM', 'RM'].includes(pos)) return 'mid';
-    if (['ST', 'CF', 'LW', 'RW'].includes(pos)) return 'fwd';
-    if (pos === 'SUB') return 'sub';
-    return 'mid';
+  const getPositionCategory = (idx) => {
+    if (idx >= 11) return 'sub';
+    const slot = formationSlots[idx];
+    return slot ? getLineCategory(slot.line) : 'mid';
   };
 
   return (
@@ -79,11 +75,12 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
       {/* Team Header */}
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon"><IconPlayers size={18} /></span>
+          <span className="editor-icon">
+            <IconPlayers size={18} />
+          </span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">
-            - {t('squad')} ({team.players.length} {t('players')}) &middot;{' '}
-            {TEAM_FORMATIONS[teamIndex]?.formation || '4-4-2'}
+            - {t('squad')} ({team.players.length} {t('players')}) &middot; {formationName}
           </span>
         </div>
       </div>
@@ -154,9 +151,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                   >
                     <td className="col-idx">{idx + 1}</td>
                     <td className="col-pos">
-                      <span
-                        className={`pos-badge pos-${getPositionCategory(getPositionLabel(idx))}`}
-                      >
+                      <span className={`pos-badge pos-${getPositionCategory(idx)}`}>
                         {getPositionLabel(idx)}
                       </span>
                     </td>
@@ -316,18 +311,14 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                 <div className="detail-row">
                   <span className="detail-label">{t('pos')}:</span>
                   <span className="detail-value">
-                    <span
-                      className={`pos-badge pos-${getPositionCategory(getPositionLabel(selectedPlayer))}`}
-                    >
+                    <span className={`pos-badge pos-${getPositionCategory(selectedPlayer)}`}>
                       {getPositionLabel(selectedPlayer)}
                     </span>
                   </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">{t('formation')}:</span>
-                  <span className="detail-value">
-                    {TEAM_FORMATIONS[teamIndex]?.formation || '4-4-2'}
-                  </span>
+                  <span className="detail-value">{formationName}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">{t('index')}:</span>

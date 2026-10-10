@@ -19,6 +19,7 @@ export default {
 
   // Editor names
   editorPlayers: 'Players',
+  editorFormation: 'Formation',
   editorUniforms: 'Uniforms',
   editorHairSkin: 'Hair & Skin',
   editorFlagColors: 'Flag Colors',
@@ -316,6 +317,43 @@ export default {
   patchResultCrc: 'Resulting CRC32:',
   patchNoChanges: 'No differences between the base ROM and the current ROM.',
 
+  // Formation Editor
+  formationPreset: 'Formation preset',
+  formationApplyPreset: 'Apply preset',
+  formationMirror: 'Mirror',
+  formationMirrorHelp: 'Swap left and right for every position',
+  formationRestore: 'Restore original',
+  formationPitchHint:
+    'Drag players to change their base position. Own goal at the bottom, attacking upwards. The goalkeeper is fixed.',
+  formationSlot: 'Position',
+  formationPlayer: 'Player in this position',
+  formationPlayerHelp:
+    'Choosing another player swaps both in the squad list (starter <-> starter or starter <-> substitute).',
+  formationRole: 'Role',
+  formationLateral: 'Lateral (0 left - 15 right)',
+  formationDepth: 'Depth (0 - 40)',
+  formationAdvanced: 'Advanced (AI)',
+  formationBehaviorHelp:
+    "Two values read by the game AI as movement distances. Their exact meaning is not confirmed yet: when the role changes, the editor uses the game's default value for that role.",
+  formationBehaviorA: 'Behaviour A',
+  formationBehaviorB: 'Behaviour B',
+  formationRaw: 'Bytes',
+  formationBenchShort: 'Sub',
+  formationSwapHelp: 'Swap with the selected position',
+  formationBenchHelp: 'Click a substitute to put him in the selected position.',
+  roleGK: 'Goalkeeper',
+  roleFullBack: 'Full-back',
+  roleCentreBack: 'Centre-back',
+  roleSweeper: 'Sweeper',
+  roleDefMid: 'Defensive mid',
+  roleMid: 'Midfielder',
+  roleAttMid: 'Attacking mid',
+  roleForward: 'Forward',
+  formationGkSlot: 'Position 1 must be the goalkeeper.',
+  formationExtraGk: 'There is more than one goalkeeper in the formation.',
+  formationFewDefenders: 'Fewer than 2 defenders: the CPU may behave oddly.',
+  formationRoleLineMismatch: 'Some roles do not match their line (inconsistent data).',
+
   // Help Tooltips - Player Editor
   helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',
   helpSpeed: 'Player running speed. Range: 1-16.',
@@ -329,9 +367,10 @@ export default {
   helpName: 'Player name (max 8 characters).',
   helpAttributes: "Attributes that define the player's performance on the field.",
   helpAppearance: "Controls the player's visual appearance during matches.",
-  helpListPosition: "Tactical position based on the team's fixed formation. Defined by list order.",
+  helpListPosition:
+    "Tactical position read from the team's default formation in the ROM. The player in list slot N plays formation slot N (edit it in the Formation tab).",
   helpPos:
-    "Tactical position based on the team's fixed formation (e.g. CB = Center Back, LB = Left Back, CM = Central Mid, ST = Striker, SUB = Substitute).",
+    "Tactical position read from the team's formation in the ROM (e.g. CB = Center Back, LB = Left Back, CM = Central Mid, ST = Striker, SUB = Substitute).",
   helpIcon: '?',
   pos: 'Pos',
 

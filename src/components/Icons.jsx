@@ -89,6 +89,17 @@ export const IconTeamName = ({ size }) => (
   </Icon>
 );
 
+export const IconFormation = ({ size }) => (
+  <Icon size={size}>
+    <path d="M2.5 1h11l.5.5v13l-.5.5h-11l-.5-.5v-13l.5-.5zM3 2v5.5h10V2H3zm10 6.5H3V14h10V8.5z" />
+    <circle cx="8" cy="12.5" r="1" />
+    <circle cx="5" cy="10.5" r="1" />
+    <circle cx="11" cy="10.5" r="1" />
+    <circle cx="6" cy="5" r="1" />
+    <circle cx="10" cy="5" r="1" />
+  </Icon>
+);
+
 export const IconOverview = ({ size }) => (
   <Icon size={size}>
     <path d="M1.5 2h13l.5.5v11l-.5.5h-13l-.5-.5v-11l.5-.5zM2 3v2h12V3H2zm0 3v7h12V6H2z" />

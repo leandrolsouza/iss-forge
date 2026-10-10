@@ -50,6 +50,32 @@ export function writePlayerData(rom, teamIndex, playerIndex, playerData) {
   rom.writeBytes(baseAddr, bytes);
 }
 
+/**
+ * Swap two players of the same team (name + full 6-byte data block).
+ * Squad order defines the lineup: slots 1-11 start, and slot N plays the
+ * position described by formation slot N.
+ */
+export function swapPlayers(rom, teamIndex, a, b) {
+  if (a === b) return;
+  if (a < 0 || b < 0 || a >= PLAYERS_PER_TEAM || b >= PLAYERS_PER_TEAM) {
+    throw new Error('Player index out of range');
+  }
+  const nameAddr = (i) =>
+    PLAYER_NAMES.OFFSET + teamIndex * PLAYER_NAMES.TEAM_LENGTH + i * PLAYER_NAMES.NAME_LENGTH;
+  const dataAddr = (i) =>
+    PLAYER_DATA.BASE_OFFSET + teamIndex * PLAYER_DATA.TEAM_LENGTH + i * PLAYER_DATA.PLAYER_LENGTH;
+
+  const nameA = rom.readBytes(nameAddr(a), PLAYER_NAMES.NAME_LENGTH);
+  const nameB = rom.readBytes(nameAddr(b), PLAYER_NAMES.NAME_LENGTH);
+  rom.writeBytes(nameAddr(a), nameB);
+  rom.writeBytes(nameAddr(b), nameA);
+
+  const dataA = rom.readBytes(dataAddr(a), PLAYER_DATA.PLAYER_LENGTH);
+  const dataB = rom.readBytes(dataAddr(b), PLAYER_DATA.PLAYER_LENGTH);
+  rom.writeBytes(dataAddr(a), dataB);
+  rom.writeBytes(dataAddr(b), dataA);
+}
+
 // --- Text encoding ---
 
 function issTextToBytes(text, maxLength) {

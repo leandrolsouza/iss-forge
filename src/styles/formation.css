@@ -1,0 +1,219 @@
+/* ============================================================
+   FORMATION EDITOR
+   ============================================================ */
+
+.formation-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.formation-toolbar .input-stat {
+  width: auto;
+  min-width: 190px;
+  max-width: 240px;
+}
+
+.formation-body {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+.formation-pitch-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formation-pitch {
+  width: 360px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border-primary);
+  user-select: none;
+  touch-action: none;
+}
+
+.formation-pitch-lines rect,
+.formation-pitch-lines line,
+.formation-pitch-lines circle {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1.5;
+}
+
+.formation-pitch-lines .formation-grass,
+.formation-pitch-lines .formation-stripe {
+  stroke: none;
+}
+
+.formation-pitch-lines .formation-grass {
+  fill: #2e6b34;
+}
+
+.formation-pitch-lines .formation-stripe {
+  fill: #2f7136;
+}
+
+.formation-pitch-lines .formation-stripe.alt {
+  fill: #2a6630;
+}
+
+.formation-marker {
+  cursor: grab;
+}
+
+.formation-marker.locked {
+  cursor: pointer;
+}
+
+.formation-marker circle {
+  stroke-width: 1.5;
+  transition: r 0.1s;
+}
+
+.formation-marker.selected circle {
+  stroke-width: 2.5;
+}
+
+.formation-marker text {
+  text-anchor: middle;
+  pointer-events: none;
+  font-family: var(--font-family);
+}
+
+.formation-marker-num {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #111;
+}
+
+.formation-marker-name {
+  font-size: 9px;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.7);
+  stroke-width: 2.5px;
+}
+
+.formation-marker-pos {
+  font-size: 8px;
+  font-weight: 700;
+  fill: #fff;
+  opacity: 0.85;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 2px;
+}
+
+.formation-side {
+  flex: 1;
+  min-width: 260px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.formation-field .input-stat,
+.formation-field .input-mini {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.formation-hint {
+  margin: 4px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.4;
+  max-width: 360px;
+}
+
+.formation-warnings {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(204, 167, 0, 0.4);
+  background: rgba(204, 167, 0, 0.1);
+  color: var(--text-warning);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.formation-advanced {
+  margin-top: 12px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.formation-advanced summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.formation-raw {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.formation-bench {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.formation-bench-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  cursor: pointer;
+  text-align: left;
+}
+
+.formation-bench-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-active);
+}
+
+.formation-bench-num {
+  color: var(--text-secondary);
+  min-width: 26px;
+}
+
+.formation-bench-name {
+  flex: 1;
+}
+
+.formation-bench-action {
+  color: var(--text-accent);
+  font-size: var(--font-size-sm);
+}

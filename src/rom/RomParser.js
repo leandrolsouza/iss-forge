@@ -2,8 +2,8 @@
  * RomParser - Thin facade for ISS ROM operations
  * Low-level byte access + delegates to specialized reader/writer modules
  */
-import { TEAMS, TEAM_COUNT } from './constants';
-import { readPlayerNames, readPlayerData } from './readers/PlayerReader';
+import { TEAMS, TEAM_COUNT, PLAYER_NAMES } from './constants';
+import { readPlayerNames, readPlayerData, bytesToIssText } from './readers/PlayerReader';
 import {
   readUniformColors,
   readHairSkinColors,
@@ -13,7 +13,7 @@ import {
 } from './readers/UniformReader';
 import { readFlagDesign } from './readers/FlagDesignReader';
 import { readTeamNameText } from './readers/TeamNameReader';
-import { writePlayerName, writePlayerData } from './writers/PlayerWriter';
+import { writePlayerName, writePlayerData, swapPlayers } from './writers/PlayerWriter';
 import {
   writeUniformColor,
   writeHairSkinColor,
@@ -31,6 +31,7 @@ import {
 
 import { quickValidate } from './romValidator';
 import { fixChecksum, inspectChecksum } from './checksum';
+import { readFormation, writeFormation, decodeFormation } from './formation';
 
 export default class RomParser {
   constructor(romData) {
@@ -117,12 +118,46 @@ export default class RomParser {
   readFlagDesign(teamIndex) {
     return readFlagDesign(this, teamIndex);
   }
+  /**
+   * Players with names + data. `nameRaw` keeps the exact 8 name bytes (the
+   * original ROM pads some names with leading spaces) so undo can restore
+   * them byte-for-byte.
+   */
+  readPlayers(teamIndex) {
+    const names = this.readPlayerNames(teamIndex);
+    const data = this.readPlayerData(teamIndex);
+    return names.map((name, i) => ({
+      name,
+      nameRaw: Array.from(
+        this.readBytes(
+          PLAYER_NAMES.OFFSET + teamIndex * PLAYER_NAMES.TEAM_LENGTH + i * PLAYER_NAMES.NAME_LENGTH,
+          PLAYER_NAMES.NAME_LENGTH,
+        ),
+      ),
+      ...data[i],
+    }));
+  }
   readTeamNameText(teamIndex) {
     return readTeamNameText(this, teamIndex);
+  }
+  readFormation(teamIndex) {
+    return readFormation(this, teamIndex);
+  }
+  /** Formation slots as they were in the ROM when it was loaded */
+  readOriginalFormation(teamIndex) {
+    const { address } = readFormation(this, teamIndex);
+    const start = this.offset(address);
+    return decodeFormation(this.originalData.subarray(start, start + 44));
   }
 
   // === Delegated Writers ===
 
+  writeFormation(teamIndex, slots) {
+    writeFormation(this, teamIndex, slots);
+  }
+  swapPlayers(teamIndex, a, b) {
+    swapPlayers(this, teamIndex, a, b);
+  }
   writePlayerName(teamIndex, playerIndex, name) {
     writePlayerName(this, teamIndex, playerIndex, name);
   }
@@ -161,8 +196,7 @@ export default class RomParser {
 
   readTeam(teamIndex) {
     const teamInfo = TEAMS[teamIndex];
-    const names = this.readPlayerNames(teamIndex);
-    const playerData = this.readPlayerData(teamIndex);
+    const players = this.readPlayers(teamIndex);
     const uniforms = this.readUniformColors(teamIndex);
     const hairSkin = this.readHairSkinColors(teamIndex);
     const flagColors = this.readFlagColors(teamIndex);
@@ -170,8 +204,7 @@ export default class RomParser {
     const specialSkin = this.readSpecialSkin(teamIndex);
     const flagDesignData = this.readFlagDesign(teamIndex);
     const teamNameText = this.readTeamNameText(teamIndex);
-
-    const players = names.map((name, i) => ({ name, ...playerData[i] }));
+    const formation = this.readFormation(teamIndex);
 
     // Use ROM team name as display name if it clearly differs from the default
     // Original ROM names may vary slightly (e.g., "SWITZ" vs "Swiss", "DNMARK" vs "Denmark")
@@ -202,6 +235,7 @@ export default class RomParser {
         bottomAddr: flagDesignData.bottomAddr,
       },
       teamNameText,
+      formation: { slots: formation.slots, name: formation.name },
     };
   }
 
@@ -226,20 +260,59 @@ export default class RomParser {
   // === Undo/Redo Support ===
 
   /**
-   * Re-write all team data into the ROM buffer from a teams state snapshot.
+   * Re-write team data into the ROM buffer from a teams state snapshot.
    * Used after undo/redo to keep the buffer in sync with React state.
+   *
+   * When `currentTeams` is given only the fields that differ are written.
+   * This matters: re-encoding untouched data is NOT lossless (names lose
+   * their original padding, flag designs are recompressed and the flag
+   * pointer table shifts), so a blind full rewrite would silently alter the
+   * whole ROM on every undo.
+   *
    * @param {Array} teams - full teams array as returned by readAllTeams
+   * @param {Array} [currentTeams] - teams state before the undo/redo (for diffing)
    */
-  reloadTeams(teams) {
+  reloadTeams(teams, currentTeams) {
+    const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
     teams.forEach((team, teamIndex) => {
+      const cur = currentTeams?.[teamIndex];
+      const changed = (key) => !cur || !same(team[key], cur[key]);
+      if (cur && same(team, cur)) return;
+
       // Players
       team.players.forEach((player, playerIndex) => {
-        writePlayerName(this, teamIndex, playerIndex, player.name);
-        writePlayerData(this, teamIndex, playerIndex, player);
+        const curPlayer = cur?.players?.[playerIndex];
+        const nameChanged =
+          !curPlayer || player.name !== curPlayer.name || !same(player.nameRaw, curPlayer.nameRaw);
+        if (nameChanged) {
+          // Prefer the exact original bytes when they still match the name
+          const raw = player.nameRaw;
+          if (raw && bytesToIssText(raw).trim() === player.name) {
+            this.writeBytes(
+              PLAYER_NAMES.OFFSET +
+                teamIndex * PLAYER_NAMES.TEAM_LENGTH +
+                playerIndex * PLAYER_NAMES.NAME_LENGTH,
+              raw,
+            );
+          } else {
+            writePlayerName(this, teamIndex, playerIndex, player.name);
+          }
+        }
+        const strip = (p) => {
+          if (!p) return null;
+          const copy = { ...p };
+          delete copy.name;
+          delete copy.nameRaw;
+          return copy;
+        };
+        if (!curPlayer || !same(strip(player), strip(curPlayer))) {
+          writePlayerData(this, teamIndex, playerIndex, player);
+        }
       });
 
       // Uniforms
-      if (team.uniforms) {
+      if (team.uniforms && changed('uniforms')) {
         Object.entries(team.uniforms).forEach(([kit, parts]) => {
           Object.entries(parts).forEach(([part, colors]) => {
             if (Array.isArray(colors)) {
@@ -252,7 +325,7 @@ export default class RomParser {
       }
 
       // Hair & Skin
-      if (team.hairSkin) {
+      if (team.hairSkin && changed('hairSkin')) {
         Object.entries(team.hairSkin).forEach(([kit, parts]) => {
           Object.entries(parts).forEach(([part, colors]) => {
             if (Array.isArray(colors)) {
@@ -265,23 +338,28 @@ export default class RomParser {
       }
 
       // Flag Colors
-      if (team.flagColors) {
+      if (team.flagColors && changed('flagColors')) {
         team.flagColors.forEach((color, colorIndex) => {
           writeFlagColor(this, teamIndex, colorIndex, color);
         });
       }
 
       // Special Hair & Skin
-      if (team.specialHair !== undefined) {
+      if (team.specialHair !== undefined && changed('specialHair')) {
         writeSpecialHair(this, teamIndex, team.specialHair);
       }
-      if (team.specialSkin !== undefined) {
+      if (team.specialSkin !== undefined && changed('specialSkin')) {
         writeSpecialSkin(this, teamIndex, team.specialSkin);
       }
 
-      // Flag Design
-      if (team.flagDesign && team.flagDesign.grid) {
+      // Flag Design (only the pixel grid matters; recompression is not lossless)
+      if (team.flagDesign?.grid && (!cur || !same(team.flagDesign.grid, cur.flagDesign?.grid))) {
         writeFlagDesign(this, teamIndex, team.flagDesign.grid);
+      }
+
+      // Formation
+      if (Array.isArray(team.formation?.slots) && changed('formation')) {
+        writeFormation(this, teamIndex, team.formation.slots);
       }
     });
   }

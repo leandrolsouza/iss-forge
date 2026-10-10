@@ -4,6 +4,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { useSettings } from '../context/SettingsContext';
 import {
   IconPlayers,
+  IconFormation,
   IconUniform,
   IconHairSkin,
   IconFlag,
@@ -51,6 +52,13 @@ export default function Sidebar({
             title={t('editorPlayers')}
           >
             <IconPlayers size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('formation', t('editorFormation'))}
+            title={t('editorFormation')}
+          >
+            <IconFormation size={20} />
           </button>
           <button
             className="sidebar-icon-btn"
@@ -142,6 +150,15 @@ export default function Sidebar({
                 <IconPlayers size={14} />
               </span>
               <span>{t('editorPlayers')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('formation', t('editorFormation'))}
+            >
+              <span className="item-icon">
+                <IconFormation size={14} />
+              </span>
+              <span>{t('editorFormation')}</span>
             </div>
             <div
               className="sidebar-item editor-item"

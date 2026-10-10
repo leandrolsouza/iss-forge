@@ -18,40 +18,43 @@ export default function useRomState() {
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const loadRomData = useCallback((data, fileName) => {
-    setLoading(true);
+  const loadRomData = useCallback(
+    (data, fileName) => {
+      setLoading(true);
 
-    // Use setTimeout to allow the loading UI to render before synchronous parsing
-    setTimeout(() => {
-      try {
-        const parser = new RomParser(data);
-        const validation = parser.validate();
+      // Use setTimeout to allow the loading UI to render before synchronous parsing
+      setTimeout(() => {
+        try {
+          const parser = new RomParser(data);
+          const validation = parser.validate();
 
-        if (!validation.isValid) {
-          setStatusMessage(`Error: ${validation.message}`);
+          if (!validation.isValid) {
+            setStatusMessage(`Error: ${validation.message}`);
+            setLoading(false);
+            return;
+          }
+
+          setRomParser(parser);
+          setRomInfo({ fileName, ...validation });
+          setStatusMessage(validation.message + ` - ${fileName}`);
+          setModified(false);
+
+          const allTeams = parser.readAllTeams();
+          setTeams(allTeams);
+          history.clearHistory();
+
+          if (allTeams.length > 0) {
+            setSelectedTeamIndex(0);
+            setOpenTabs([{ id: 'players', label: 'Players' }]);
+            setActiveTab('players');
+          }
+        } finally {
           setLoading(false);
-          return;
         }
-
-        setRomParser(parser);
-        setRomInfo({ fileName, ...validation });
-        setStatusMessage(validation.message + ` - ${fileName}`);
-        setModified(false);
-
-        const allTeams = parser.readAllTeams();
-        setTeams(allTeams);
-        history.clearHistory();
-
-        if (allTeams.length > 0) {
-          setSelectedTeamIndex(0);
-          setOpenTabs([{ id: 'players', label: 'Players' }]);
-          setActiveTab('players');
-        }
-      } finally {
-        setLoading(false);
-      }
-    }, 50);
-  }, [history]);
+      }, 50);
+    },
+    [history],
+  );
 
   const markModified = useCallback(() => {
     setModified(true);
@@ -68,9 +71,9 @@ export default function useRomState() {
     const restored = history.undo(teams);
     if (restored) {
       setTeams(restored);
-      // Re-sync ROM buffer from restored state
+      // Re-sync ROM buffer from restored state (only what changed)
       if (romParser) {
-        romParser.reloadTeams(restored);
+        romParser.reloadTeams(restored, teams);
       }
       setModified(history.canUndo);
     }
@@ -81,7 +84,7 @@ export default function useRomState() {
     if (restored) {
       setTeams(restored);
       if (romParser) {
-        romParser.reloadTeams(restored);
+        romParser.reloadTeams(restored, teams);
       }
       setModified(true);
     }

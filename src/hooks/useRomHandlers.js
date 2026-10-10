@@ -370,6 +370,52 @@ export default function useRomHandlers({
   );
 
   /**
+   * Replace the default formation of a team (11 slots).
+   */
+  const handleFormationChange = useCallback(
+    (teamIndex, slots) => {
+      if (!romParser) return;
+      pushSnapshot(teams);
+      romParser.writeFormation(teamIndex, slots);
+      const formation = romParser.readFormation(teamIndex);
+
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        newTeams[teamIndex] = {
+          ...newTeams[teamIndex],
+          formation: { slots: formation.slots, name: formation.name },
+        };
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  /**
+   * Swap two squad positions (lineup change). The player moved into slot N
+   * plays formation position N; slots 12-15 are the bench.
+   */
+  const handleSwapPlayers = useCallback(
+    (teamIndex, a, b) => {
+      if (!romParser || a === b) return;
+      pushSnapshot(teams);
+      romParser.swapPlayers(teamIndex, a, b);
+
+      const players = romParser.readPlayers(teamIndex);
+      setTeams((prev) => {
+        const newTeams = [...prev];
+        newTeams[teamIndex] = { ...newTeams[teamIndex], players };
+        return newTeams;
+      });
+
+      markModified();
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  /**
    * Flush pending (deferred) writes into the ROM buffer and repair the SNES
    * internal checksum. Must run before any save or patch export so the output
    * is complete and passes checksum checks in emulators/flashcarts.
@@ -585,6 +631,8 @@ export default function useRomHandlers({
     handleTeamNameGenerate,
     handleTeamNameMenuSave,
     handleTeamNameInGameGenerate,
+    handleFormationChange,
+    handleSwapPlayers,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

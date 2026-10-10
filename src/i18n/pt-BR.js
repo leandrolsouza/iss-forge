@@ -19,6 +19,7 @@ export default {
 
   // Editor names
   editorPlayers: 'Jogadores',
+  editorFormation: 'Formacao',
   editorUniforms: 'Uniformes',
   editorHairSkin: 'Cabelo e Pele',
   editorFlagColors: 'Cores da Bandeira',
@@ -316,6 +317,43 @@ export default {
   patchResultCrc: 'CRC32 resultante:',
   patchNoChanges: 'Nenhuma diferenca entre a ROM base e a ROM atual.',
 
+  // Formation Editor
+  formationPreset: 'Modelo de formacao',
+  formationApplyPreset: 'Aplicar modelo',
+  formationMirror: 'Espelhar',
+  formationMirrorHelp: 'Inverte esquerda e direita de todas as posicoes',
+  formationRestore: 'Restaurar original',
+  formationPitchHint:
+    'Arraste os jogadores para mudar a posicao base. Proprio gol embaixo, ataque para cima. O goleiro fica fixo.',
+  formationSlot: 'Posicao',
+  formationPlayer: 'Jogador nesta posicao',
+  formationPlayerHelp:
+    'Escolher outro jogador troca os dois de lugar na lista (titular <-> titular ou titular <-> reserva).',
+  formationRole: 'Funcao',
+  formationLateral: 'Lateral (0 esq. - 15 dir.)',
+  formationDepth: 'Profundidade (0 - 40)',
+  formationAdvanced: 'Avancado (IA)',
+  formationBehaviorHelp:
+    'Dois valores lidos pela IA do jogo como distancias de movimentacao. O significado exato ainda nao foi confirmado: ao trocar a funcao, o editor usa o valor padrao do jogo para ela.',
+  formationBehaviorA: 'Comportamento A',
+  formationBehaviorB: 'Comportamento B',
+  formationRaw: 'Bytes',
+  formationBenchShort: 'Res.',
+  formationSwapHelp: 'Trocar com a posicao selecionada',
+  formationBenchHelp: 'Clique em um reserva para coloca-lo na posicao selecionada.',
+  roleGK: 'Goleiro',
+  roleFullBack: 'Lateral',
+  roleCentreBack: 'Zagueiro',
+  roleSweeper: 'Libero',
+  roleDefMid: 'Volante',
+  roleMid: 'Meia',
+  roleAttMid: 'Meia ofensivo',
+  roleForward: 'Atacante',
+  formationGkSlot: 'A posicao 1 deve ser o goleiro.',
+  formationExtraGk: 'Ha mais de um goleiro na formacao.',
+  formationFewDefenders: 'Menos de 2 defensores: a CPU pode se comportar de forma estranha.',
+  formationRoleLineMismatch: 'Ha funcoes incompativeis com a linha (dado inconsistente).',
+
   // Help Tooltips - Player Editor
   helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',
   helpSpeed: 'Velocidade de corrida do jogador. Varia de 1 a 16.',
@@ -330,9 +368,9 @@ export default {
   helpAttributes: 'Atributos que definem a performance do jogador em campo.',
   helpAppearance: 'Controla a aparencia visual do jogador durante as partidas.',
   helpListPosition:
-    'Posicao tatica do jogador baseada na formacao do time. Definida pela ordem na lista.',
+    'Posicao tatica lida da formacao padrao do time na ROM. O jogador na posicao N da lista ocupa a posicao N da formacao (edite na aba Formacao).',
   helpPos:
-    'Posicao tatica baseada na formacao fixa do time (ex: CB = Zagueiro, LB = Lateral Esq, CM = Meia Central, ST = Atacante, SUB = Reserva).',
+    'Posicao tatica lida da formacao do time na ROM (ex: CB = Zagueiro, LB = Lateral Esq, CM = Meia Central, ST = Atacante, SUB = Reserva).',
   helpIcon: '?',
   pos: 'Pos',
 

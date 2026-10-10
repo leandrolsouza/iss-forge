@@ -4,11 +4,10 @@
 import { TEAMS, SPECIAL_HAIR, SPECIAL_SKIN, FLAG_DESIGN_ORDINALS } from '../constants';
 import { getKitOffset, getHairSkinOffset, getFlagOffset } from '../readers/UniformReader';
 
-function rgbToSnesBytes(color) {
-  const r5 = Math.round(color.r / 8) & 0x1f;
-  const g5 = Math.round(color.g / 8) & 0x1f;
-  const b5 = Math.round(color.b / 8) & 0x1f;
-  const val = r5 | (g5 << 5) | (b5 << 10);
+export function rgbToSnesBytes(color) {
+  // Clamp (not mask): 255 / 8 rounds to 32, and 32 & 0x1F would wrap white to black
+  const to5 = (v) => Math.max(0, Math.min(31, Math.round((Number(v) || 0) / 8)));
+  const val = to5(color.r) | (to5(color.g) << 5) | (to5(color.b) << 10);
   return [val & 0xff, (val >> 8) & 0xff];
 }
 

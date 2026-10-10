@@ -41,6 +41,7 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **Players** — Edit names, shirt numbers and attributes (shooting, speed, stamina, technique)
 - **Formation & Lineup** — Edit each team's default formation stored in the ROM (drag positions on a pitch, roles, 9 presets taken from original teams) and swap starters/substitutes
 - **Scenarios** — Edit the 9 Scenario mode challenges: teams, score, clocks and intro text (with an 8×23 screen preview)
+- **Pitch & Ball** — Recolour the pitch for every type (A/B/C) and weather (sunny/rain/snow), the ball and the referee/linesmen kit, with presets and hue/saturation/brightness tools
 - **Hair & Skin** — Customize hair style and skin color (normal and special players)
 - **Uniforms** — Full color editor (shirt, shorts, socks, goalkeeper) with real-time preview
 - **Flags** — Pixel-by-pixel design editor + palette colors (4 indexed colors)
@@ -199,6 +200,7 @@ Based on the work of:
 - [x] BPS/IPS patch export + automatic checksum fix
 - [x] Default formation & lineup editor
 - [x] Scenario mode editor
+- [x] Pitch, ball and referee palettes
 - [x] AI team generator
 - [x] Tile Explorer
 - [x] Undo/Redo

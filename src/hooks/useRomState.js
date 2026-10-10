@@ -17,6 +17,13 @@ export default function useRomState() {
     scenariosRef.current = value;
     setScenariosState(value);
   }, []);
+  // Global (non-team) data: pitch / ball / referee palettes
+  const [matchPalettes, setMatchPalettesState] = useState(null);
+  const matchPalettesRef = useRef(null);
+  const setMatchPalettes = useCallback((value) => {
+    matchPalettesRef.current = value;
+    setMatchPalettesState(value);
+  }, []);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -49,6 +56,7 @@ export default function useRomState() {
           const allTeams = parser.readAllTeams();
           setTeams(allTeams);
           setScenarios(parser.readScenarios());
+          setMatchPalettes(parser.readMatchPalettes());
           history.clearHistory();
 
           if (allTeams.length > 0) {
@@ -61,7 +69,7 @@ export default function useRomState() {
         }
       }, 50);
     },
-    [history, setScenarios],
+    [history, setScenarios, setMatchPalettes],
   );
 
   const markModified = useCallback(() => {
@@ -75,11 +83,15 @@ export default function useRomState() {
   }, []);
 
   // Undo/Redo operations
-  // Snapshots hold { teams, scenarios }. Callers keep passing `teams`; the
-  // current scenarios are added here so every edit is undoable as one unit.
+  // Snapshots hold { teams, scenarios, matchPalettes }. Callers keep passing
+  // `teams`; the global data is added here so every edit is undoable as one unit.
+  const currentGlobals = () => ({
+    scenarios: scenariosRef.current,
+    matchPalettes: matchPalettesRef.current,
+  });
+
   const pushSnapshot = useCallback(
-    (teamsSnapshot) =>
-      history.pushSnapshot({ teams: teamsSnapshot, scenarios: scenariosRef.current }),
+    (teamsSnapshot) => history.pushSnapshot({ teams: teamsSnapshot, ...currentGlobals() }),
     [history],
   );
 
@@ -94,13 +106,17 @@ export default function useRomState() {
           romParser.restoreScenarios(restored.scenarios);
           setScenarios(romParser.readScenarios());
         }
+        if (!Array.isArray(restored) && restored.matchPalettes) {
+          romParser.restoreMatchPalettes(restored.matchPalettes);
+          setMatchPalettes(romParser.readMatchPalettes());
+        }
       }
     },
-    [romParser, teams, setScenarios],
+    [romParser, teams, setScenarios, setMatchPalettes],
   );
 
   const performUndo = useCallback(() => {
-    const restored = history.undo({ teams, scenarios: scenariosRef.current });
+    const restored = history.undo({ teams, ...currentGlobals() });
     if (restored) {
       applySnapshot(restored);
       setModified(history.canUndo);
@@ -108,7 +124,7 @@ export default function useRomState() {
   }, [history, teams, applySnapshot]);
 
   const performRedo = useCallback(() => {
-    const restored = history.redo({ teams, scenarios: scenariosRef.current });
+    const restored = history.redo({ teams, ...currentGlobals() });
     if (restored) {
       applySnapshot(restored);
       setModified(true);
@@ -162,6 +178,8 @@ export default function useRomState() {
     setTeams,
     scenarios,
     setScenarios,
+    matchPalettes,
+    setMatchPalettes,
     selectedTeamIndex,
     activeTab,
     openTabs,

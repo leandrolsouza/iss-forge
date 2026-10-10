@@ -11,6 +11,10 @@ release/
 *.sfc
 *.bin
 
+# Research emulator output (screenshots, save states, WRAM dumps)
+research/tools/emu-out/
+*.wram
+
 # Project data
 team_json/
 

@@ -33,6 +33,7 @@ import { quickValidate } from './romValidator';
 import { fixChecksum, inspectChecksum } from './checksum';
 import { readFormation, writeFormation, decodeFormation } from './formation';
 import { readScenarios, writeScenario } from './scenario';
+import { readMatchPalettes, writeMatchPalette } from './palettes';
 
 export default class RomParser {
   constructor(romData) {
@@ -152,6 +153,23 @@ export default class RomParser {
   }
 
   // === Delegated Writers ===
+
+  /** Pitch / ball / referee palettes: { [id]: rawColor[] } */
+  readMatchPalettes() {
+    return readMatchPalettes(this);
+  }
+  writeMatchPalette(id, colors) {
+    writeMatchPalette(this, id, colors);
+  }
+  /** Restore palettes from a snapshot (undo/redo), writing only what changed */
+  restoreMatchPalettes(palettes) {
+    if (!palettes) return;
+    const current = readMatchPalettes(this);
+    Object.entries(palettes).forEach(([id, colors]) => {
+      if (JSON.stringify(colors) !== JSON.stringify(current[id]))
+        writeMatchPalette(this, id, colors);
+    });
+  }
 
   /** The 9 Scenario mode situations */
   readScenarios() {

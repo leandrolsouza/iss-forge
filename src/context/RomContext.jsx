@@ -25,6 +25,7 @@ export function RomProvider({ children }) {
     setLoading: state.setLoading,
     pushSnapshot: state.pushSnapshot,
     setScenarios: state.setScenarios,
+    setMatchPalettes: state.setMatchPalettes,
   });
 
   const autoSave = useAutoSave({

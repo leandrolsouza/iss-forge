@@ -13,6 +13,7 @@ import {
   IconOverview,
   IconCompare,
   IconScenario,
+  IconPitch,
   IconMenu,
   IconSun,
   IconMoon,
@@ -116,6 +117,13 @@ export default function Sidebar({
             title={t('editorScenarios')}
           >
             <IconScenario size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('matchPalettes', t('editorMatchPalettes'))}
+            title={t('editorMatchPalettes')}
+          >
+            <IconPitch size={20} />
           </button>
           {appSettings.aiEnabled && (
             <button
@@ -239,6 +247,15 @@ export default function Sidebar({
                 <IconScenario size={14} />
               </span>
               <span>{t('editorScenarios')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('matchPalettes', t('editorMatchPalettes'))}
+            >
+              <span className="item-icon">
+                <IconPitch size={14} />
+              </span>
+              <span>{t('editorMatchPalettes')}</span>
             </div>
             {appSettings.aiEnabled && (
               <div

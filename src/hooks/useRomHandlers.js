@@ -28,6 +28,7 @@ export default function useRomHandlers({
   setLoading,
   pushSnapshot,
   setScenarios,
+  setMatchPalettes,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -71,9 +72,9 @@ export default function useRomHandlers({
         const partColors = [...(kitData[part] || [])];
         partColors[colorIndex] = {
           ...color,
-          r5: Math.round(color.r / 8),
-          g5: Math.round(color.g / 8),
-          b5: Math.round(color.b / 8),
+          r5: Math.min(31, Math.round(color.r / 8)),
+          g5: Math.min(31, Math.round(color.g / 8)),
+          b5: Math.min(31, Math.round(color.b / 8)),
         };
         kitData[part] = partColors;
         uniforms[kit] = kitData;
@@ -101,9 +102,9 @@ export default function useRomHandlers({
         const partColors = [...(kitData[part] || [])];
         partColors[colorIndex] = {
           ...color,
-          r5: Math.round(color.r / 8),
-          g5: Math.round(color.g / 8),
-          b5: Math.round(color.b / 8),
+          r5: Math.min(31, Math.round(color.r / 8)),
+          g5: Math.min(31, Math.round(color.g / 8)),
+          b5: Math.min(31, Math.round(color.b / 8)),
         };
         kitData[part] = partColors;
         hairSkin[kit] = kitData;
@@ -175,9 +176,9 @@ export default function useRomHandlers({
         const toState = (colors) =>
           colors.map((c) => ({
             ...c,
-            r5: Math.round(c.r / 8),
-            g5: Math.round(c.g / 8),
-            b5: Math.round(c.b / 8),
+            r5: Math.min(31, Math.round(c.r / 8)),
+            g5: Math.min(31, Math.round(c.g / 8)),
+            b5: Math.min(31, Math.round(c.b / 8)),
           }));
 
         hairSkin.first = { hair: toState(outfield.hair), skin: toState(outfield.skin) };
@@ -206,9 +207,9 @@ export default function useRomHandlers({
         const flagColors = [...team.flagColors];
         flagColors[colorIndex] = {
           ...color,
-          r5: Math.round(color.r / 8),
-          g5: Math.round(color.g / 8),
-          b5: Math.round(color.b / 8),
+          r5: Math.min(31, Math.round(color.r / 8)),
+          g5: Math.min(31, Math.round(color.g / 8)),
+          b5: Math.min(31, Math.round(color.b / 8)),
         };
         team.flagColors = flagColors;
         // Keep flagDesign.flagColors in sync
@@ -238,9 +239,9 @@ export default function useRomHandlers({
         const team = { ...newTeams[teamIndex] };
         const flagColors = colors.map((color) => ({
           ...color,
-          r5: Math.round(color.r / 8),
-          g5: Math.round(color.g / 8),
-          b5: Math.round(color.b / 8),
+          r5: Math.min(31, Math.round(color.r / 8)),
+          g5: Math.min(31, Math.round(color.g / 8)),
+          b5: Math.min(31, Math.round(color.b / 8)),
         }));
         team.flagColors = flagColors;
         if (team.flagDesign) {
@@ -414,6 +415,23 @@ export default function useRomHandlers({
       markModified();
     },
     [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  /**
+   * Replace match palettes (pitch / ball / referee) as a single undo step.
+   * @param {string|Object<string, number[]>} idOrMap - MATCH_PALETTES id, or { id: colors } batch
+   * @param {number[]} [colors] - raw SNES colours (when an id is given)
+   */
+  const handleMatchPaletteChange = useCallback(
+    (idOrMap, colors) => {
+      if (!romParser) return;
+      const updates = typeof idOrMap === 'string' ? { [idOrMap]: colors } : idOrMap;
+      pushSnapshot(teams);
+      Object.entries(updates).forEach(([id, c]) => romParser.writeMatchPalette(id, c));
+      setMatchPalettes(romParser.readMatchPalettes());
+      markModified();
+    },
+    [romParser, teams, markModified, pushSnapshot, setMatchPalettes],
   );
 
   /**
@@ -653,6 +671,7 @@ export default function useRomHandlers({
     handleFormationChange,
     handleSwapPlayers,
     handleScenarioChange,
+    handleMatchPaletteChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

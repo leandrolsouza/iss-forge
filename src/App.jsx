@@ -4,6 +4,7 @@ import TabBar from './components/TabBar';
 import PlayerEditor from './components/PlayerEditor';
 import FormationEditor from './components/FormationEditor';
 import ScenarioEditor from './components/ScenarioEditor';
+import MatchPaletteEditor from './components/MatchPaletteEditor';
 import UniformEditor from './components/UniformEditor';
 import HairSkinEditor from './components/HairSkinEditor';
 import FlagColorEditor from './components/FlagColorEditor';
@@ -206,6 +207,7 @@ export default function App() {
     if (activeTab === 'settings') return <SettingsPage />;
     if (activeTab === 'compare' && teams.length > 0) return <TeamCompare teams={teams} />;
     if (activeTab === 'scenarios' && romParser) return <ScenarioEditor />;
+    if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
 
     if (!romParser || selectedTeamIndex === null) {
       return (

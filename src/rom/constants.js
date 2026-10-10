@@ -197,6 +197,60 @@ export const SCENARIO_TEXT_CHARSET =
   ' !"\',-.0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 // ============================================================
+// MATCH PALETTES (pitch, ball, referee)
+//
+// Palettes are uploaded by a palette-script system ($80:AB2B / $80:ACF0):
+// descriptors in bank $81 point to blobs in bank $85 (file 0x28000 +).
+// The pitch list is chosen at $00:CD32 from $81:94BC[$81:9530[$1FA0] + $1F92]:
+//   $1FA0 = pitch type (0 = A, 1 = B, 2 = C) → base 6 / 0 / 6 (A and C share colours)
+//   $1F92 = weather (0 = sunny, 1 = rain, 2 = snow)
+// Offsets below point to colour 1 of the CGRAM row (colour 0 is transparent
+// and skipped by the loader). Verified in-game with snes9x and test ROMs.
+// ============================================================
+
+export const MATCH_PALETTES = [
+  // Grass — BG rows 2-3 (30 colours, includes pitch lines)
+  { id: 'grassB_sunny', group: 'pitch', type: 'B', weather: 'sunny', offset: 0x2dc3f, count: 30 },
+  { id: 'grassB_rain', group: 'pitch', type: 'B', weather: 'rain', offset: 0x2e08b, count: 30 },
+  { id: 'grassB_snow', group: 'pitch', type: 'B', weather: 'snow', offset: 0x2e04d, count: 30 },
+  { id: 'grassAC_sunny', group: 'pitch', type: 'AC', weather: 'sunny', offset: 0x2dd33, count: 30 },
+  { id: 'grassAC_rain', group: 'pitch', type: 'AC', weather: 'rain', offset: 0x2fd0f, count: 30 },
+  { id: 'grassAC_snow', group: 'pitch', type: 'AC', weather: 'snow', offset: 0x2fcb1, count: 30 },
+  // Pitch detail — BG row 7 (15 colours). The sunny one is shared by type B (all weathers) and A/C sunny
+  { id: 'detail_shared', group: 'pitchDetail', offset: 0x2dcd5, count: 15 },
+  {
+    id: 'detailAC_rain',
+    group: 'pitchDetail',
+    type: 'AC',
+    weather: 'rain',
+    offset: 0x2fd4d,
+    count: 15,
+  },
+  {
+    id: 'detailAC_snow',
+    group: 'pitchDetail',
+    type: 'AC',
+    weather: 'snow',
+    offset: 0x2fcef,
+    count: 15,
+  },
+  // Ball — OBJ row 15, colours 2-10 (colour 1 and 11-15 are other HUD sprites)
+  { id: 'ball', group: 'ball', offset: 0x2dedf, count: 9 },
+  // Referee and linesmen — OBJ row 14, same layout as the team kits
+  { id: 'referee', group: 'referee', offset: 0x2e959, count: 15 },
+];
+
+/** Colour slots of the referee palette (indexes into the 15 colours) */
+export const REFEREE_PARTS = [
+  { key: 'hair', from: 0, count: 1 },
+  { key: 'skin', from: 1, count: 5 },
+  { key: 'shirt', from: 6, count: 3 },
+  { key: 'shorts', from: 9, count: 3 },
+  { key: 'socks', from: 12, count: 2 },
+  { key: 'extra', from: 14, count: 1 },
+];
+
+// ============================================================
 // ROM OFFSETS - Player Names
 // ============================================================
 

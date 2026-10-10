@@ -12,6 +12,7 @@ import {
   IconTeamName,
   IconOverview,
   IconCompare,
+  IconScenario,
   IconMenu,
   IconSun,
   IconMoon,
@@ -108,6 +109,13 @@ export default function Sidebar({
             title={t('editorCompare')}
           >
             <IconCompare size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('scenarios', t('editorScenarios'))}
+            title={t('editorScenarios')}
+          >
+            <IconScenario size={20} />
           </button>
           {appSettings.aiEnabled && (
             <button
@@ -222,6 +230,15 @@ export default function Sidebar({
                 <IconCompare size={14} />
               </span>
               <span>{t('editorCompare')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('scenarios', t('editorScenarios'))}
+            >
+              <span className="item-icon">
+                <IconScenario size={14} />
+              </span>
+              <span>{t('editorScenarios')}</span>
             </div>
             {appSettings.aiEnabled && (
               <div

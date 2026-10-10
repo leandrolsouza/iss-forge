@@ -20,6 +20,7 @@ export default {
   // Editor names
   editorPlayers: 'Players',
   editorFormation: 'Formation',
+  editorScenarios: 'Scenarios',
   editorUniforms: 'Uniforms',
   editorHairSkin: 'Hair & Skin',
   editorFlagColors: 'Flag Colors',
@@ -353,6 +354,45 @@ export default {
   formationExtraGk: 'There is more than one goalkeeper in the formation.',
   formationFewDefenders: 'Fewer than 2 defenders: the CPU may behave oddly.',
   formationRoleLineMismatch: 'Some roles do not match their line (inconsistent data).',
+
+  // Scenario Editor
+  scenarioSubtitle: 'Scenario mode situations (9 challenges)',
+  scenarioLabel: 'Scenario',
+  scenarioNoClock: 'no clock',
+  scenarioTextSpace: 'Text space',
+  scenarioTeam1: 'Team 1 (player)',
+  scenarioTeam2: 'Team 2 (CPU)',
+  scenarioGoals1: 'Team 1 goals',
+  scenarioGoals2: 'Team 2 goals',
+  scenarioTeam1Help:
+    'Judging by the original texts, team 1 is the one controlled by the player. Score 0-9.',
+  scenarioDisplayClock: 'Scoreboard clock (m:ss)',
+  scenarioMatchClock: 'Time until final whistle',
+  scenarioLinkClocks: 'Final whistle = scoreboard + 10s (as in the original)',
+  scenarioClockHelp:
+    'The scoreboard clock only runs while the ball is in play; the final whistle clock decides when the match ends. Scoreboard 0:00 = no clock on screen.',
+  scenarioText: 'Intro text',
+  scenarioPreview: 'Screen preview',
+  scenarioTextHelp:
+    'The screen shows 8 lines of 23 characters. Text is wrapped automatically; press Enter to force a new line. No accents.',
+  scenarioInvalidChars: 'Characters missing from the game font (shown as spaces)',
+  scenarioAdvanced: 'Initial situation (advanced)',
+  scenarioAdvancedHelp:
+    "Restart type and ball position at the start of the scenario. These values are not fully mapped yet: prefer copying the situation from an original scenario. Each scenario's player condition data is preserved.",
+  scenarioCopySituation: 'Copy initial situation from',
+  scenarioState: 'State',
+  scenarioFlag: 'Flag',
+  scenarioBallX: 'Ball X',
+  scenarioBallY: 'Ball Y',
+  scenarioApply: 'Apply changes',
+  scenarioDiscard: 'Discard',
+  scenarioRestore: 'Restore original',
+  scenarioApplied: 'Scenario updated.',
+  scenarioSameTeam: 'Both teams are the same.',
+  scenarioTooManyLines: 'The text is longer than 8 lines and will be cut.',
+  scenarioTextFull:
+    'Out of space: the 9 texts together do not fit in the original ROM area. Shorten a text.',
+  scenarioClockOrder: 'The final whistle happens before the scoreboard clock reaches zero.',
 
   // Help Tooltips - Player Editor
   helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',

@@ -1,0 +1,263 @@
+/* ============================================================
+   SCENARIO EDITOR
+   ============================================================ */
+
+.scenario-body {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  padding: 16px 20px;
+  overflow: auto;
+}
+
+.scenario-list {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenario-card {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: var(--font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.scenario-card:hover {
+  background: var(--bg-hover);
+}
+
+.scenario-card.active {
+  border-color: var(--border-active);
+  background: var(--bg-selected);
+}
+
+.scenario-card-num {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.scenario-card-match strong {
+  color: var(--text-accent);
+}
+
+.scenario-card-clock {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.scenario-capacity {
+  margin-top: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.scenario-capacity.over {
+  color: var(--text-error);
+}
+
+.scenario-form {
+  flex: 1;
+  min-width: 360px;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scenario-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.scenario-teams {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.scenario-team {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.scenario-team .scenario-field {
+  flex: 1;
+}
+
+.scenario-goals {
+  width: 52px;
+  height: 36px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+}
+
+.scenario-x {
+  padding-bottom: 8px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.scenario-clocks {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.scenario-clock {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.scenario-clock .input-mini {
+  width: 52px;
+  text-align: center;
+}
+
+.scenario-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.scenario-hint {
+  margin: 6px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.scenario-text-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.scenario-textarea {
+  flex: 1;
+  min-width: 220px;
+  min-height: 150px;
+  resize: vertical;
+  padding: 8px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.scenario-preview {
+  flex: 0 0 auto;
+  padding: 8px 10px;
+  background: #0b1a3a;
+  border: 2px solid #3a5ba0;
+  border-radius: 4px;
+  color: #f0f0f0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.scenario-preview-overflow {
+  margin-top: 4px;
+  color: var(--text-error);
+  white-space: normal;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+}
+
+.scenario-warning {
+  margin: 6px 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-warning);
+}
+
+.scenario-advanced summary {
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.scenario-advanced .scenario-field {
+  margin-top: 10px;
+}
+
+.scenario-grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.scenario-grid4 .input-mini {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.scenario-warnings,
+.scenario-msg-error {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(204, 167, 0, 0.4);
+  background: rgba(204, 167, 0, 0.1);
+  color: var(--text-warning);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.scenario-msg-error {
+  border-color: rgba(244, 135, 113, 0.4);
+  background: rgba(244, 135, 113, 0.1);
+  color: var(--text-error);
+}
+
+.scenario-msg-ok {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(137, 209, 133, 0.4);
+  background: rgba(137, 209, 133, 0.1);
+  color: var(--text-success);
+  font-size: var(--font-size-sm);
+}
+
+.scenario-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.scenario-actions .kit-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

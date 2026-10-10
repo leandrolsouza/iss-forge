@@ -2,7 +2,7 @@
  * Core ROM state management hook
  * Manages: romParser, teams, selection, tabs, modified status, undo/redo history
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import RomParser from '../rom/RomParser';
 import useHistory from './useHistory';
 
@@ -10,6 +10,13 @@ export default function useRomState() {
   const [romParser, setRomParser] = useState(null);
   const [romInfo, setRomInfo] = useState(null);
   const [teams, setTeams] = useState([]);
+  // Global (non-team) data: Scenario mode situations
+  const [scenarios, setScenariosState] = useState([]);
+  const scenariosRef = useRef([]);
+  const setScenarios = useCallback((value) => {
+    scenariosRef.current = value;
+    setScenariosState(value);
+  }, []);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -41,6 +48,7 @@ export default function useRomState() {
 
           const allTeams = parser.readAllTeams();
           setTeams(allTeams);
+          setScenarios(parser.readScenarios());
           history.clearHistory();
 
           if (allTeams.length > 0) {
@@ -53,7 +61,7 @@ export default function useRomState() {
         }
       }, 50);
     },
-    [history],
+    [history, setScenarios],
   );
 
   const markModified = useCallback(() => {
@@ -67,28 +75,45 @@ export default function useRomState() {
   }, []);
 
   // Undo/Redo operations
-  const performUndo = useCallback(() => {
-    const restored = history.undo(teams);
-    if (restored) {
-      setTeams(restored);
+  // Snapshots hold { teams, scenarios }. Callers keep passing `teams`; the
+  // current scenarios are added here so every edit is undoable as one unit.
+  const pushSnapshot = useCallback(
+    (teamsSnapshot) =>
+      history.pushSnapshot({ teams: teamsSnapshot, scenarios: scenariosRef.current }),
+    [history],
+  );
+
+  const applySnapshot = useCallback(
+    (restored) => {
+      const restoredTeams = Array.isArray(restored) ? restored : restored.teams;
+      setTeams(restoredTeams);
       // Re-sync ROM buffer from restored state (only what changed)
       if (romParser) {
-        romParser.reloadTeams(restored, teams);
+        romParser.reloadTeams(restoredTeams, teams);
+        if (!Array.isArray(restored) && restored.scenarios) {
+          romParser.restoreScenarios(restored.scenarios);
+          setScenarios(romParser.readScenarios());
+        }
       }
+    },
+    [romParser, teams, setScenarios],
+  );
+
+  const performUndo = useCallback(() => {
+    const restored = history.undo({ teams, scenarios: scenariosRef.current });
+    if (restored) {
+      applySnapshot(restored);
       setModified(history.canUndo);
     }
-  }, [history, teams, romParser]);
+  }, [history, teams, applySnapshot]);
 
   const performRedo = useCallback(() => {
-    const restored = history.redo(teams);
+    const restored = history.redo({ teams, scenarios: scenariosRef.current });
     if (restored) {
-      setTeams(restored);
-      if (romParser) {
-        romParser.reloadTeams(restored, teams);
-      }
+      applySnapshot(restored);
       setModified(true);
     }
-  }, [history, teams, romParser]);
+  }, [history, teams, applySnapshot]);
 
   // Tab management
   const selectTeam = useCallback(
@@ -135,6 +160,8 @@ export default function useRomState() {
     romInfo,
     teams,
     setTeams,
+    scenarios,
+    setScenarios,
     selectedTeamIndex,
     activeTab,
     openTabs,
@@ -154,7 +181,7 @@ export default function useRomState() {
     setActiveTab,
 
     // Undo/Redo
-    pushSnapshot: history.pushSnapshot,
+    pushSnapshot,
     performUndo,
     performRedo,
     canUndo: history.canUndo,

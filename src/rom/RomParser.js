@@ -32,6 +32,7 @@ import {
 import { quickValidate } from './romValidator';
 import { fixChecksum, inspectChecksum } from './checksum';
 import { readFormation, writeFormation, decodeFormation } from './formation';
+import { readScenarios, writeScenario } from './scenario';
 
 export default class RomParser {
   constructor(romData) {
@@ -151,6 +152,23 @@ export default class RomParser {
   }
 
   // === Delegated Writers ===
+
+  /** The 9 Scenario mode situations */
+  readScenarios() {
+    return readScenarios(this);
+  }
+  /** @returns {{ ok: boolean, error?: string }} */
+  writeScenario(index, scenario) {
+    return writeScenario(this, index, scenario);
+  }
+  /** Restore the scenarios from a snapshot (undo/redo), writing only what changed */
+  restoreScenarios(scenarios) {
+    if (!Array.isArray(scenarios)) return;
+    const current = readScenarios(this);
+    scenarios.forEach((sc, i) => {
+      if (JSON.stringify(sc) !== JSON.stringify(current[i])) writeScenario(this, i, sc);
+    });
+  }
 
   writeFormation(teamIndex, slots) {
     writeFormation(this, teamIndex, slots);

@@ -27,6 +27,7 @@ export default function useRomHandlers({
   loadRomData,
   setLoading,
   pushSnapshot,
+  setScenarios,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -416,6 +417,24 @@ export default function useRomHandlers({
   );
 
   /**
+   * Update one Scenario mode situation.
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  const handleScenarioChange = useCallback(
+    (index, scenario) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.writeScenario(index, scenario);
+      if (result.ok) {
+        setScenarios(romParser.readScenarios());
+        markModified();
+      }
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setScenarios],
+  );
+
+  /**
    * Flush pending (deferred) writes into the ROM buffer and repair the SNES
    * internal checksum. Must run before any save or patch export so the output
    * is complete and passes checksum checks in emulators/flashcarts.
@@ -633,6 +652,7 @@ export default function useRomHandlers({
     handleTeamNameInGameGenerate,
     handleFormationChange,
     handleSwapPlayers,
+    handleScenarioChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

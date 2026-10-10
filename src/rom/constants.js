@@ -151,6 +151,52 @@ export const FORMATION_PRESETS = [
 ];
 
 // ============================================================
+// SCENARIO MODE (9 pre-set match situations)
+//
+// Reverse engineered from $00:ED41-$00:EDE4 (setup) and $07:D4AA (menu):
+//   Team pairs:    0x9CAE ($81:9CAE) — 9 x 2 bytes, team ordinal * 2
+//                  (first = team 1 → $1720, second = team 2 → $1770)
+//   Record ptrs:   0x9CC0 ($81:9CC0) — 9 x 16-bit pointers into bank $01
+//   Records:       0x9CD2 — 12 bytes each:
+//     +0  word  match clock, BCD m:ss → $1A44 (final whistle when it hits 0)
+//     +2  word  displayed clock, BCD m:ss → $1A46 (0 = no clock shown)
+//     +4  byte  team 1 goals → $1724
+//     +5  byte  team 2 goals → $1774
+//     +6  byte  initial game state → $9E (restart type; not fully mapped)
+//     +7  byte  flag → $B0/$B2 = 0x0C00 if set, else 0x0520 (not mapped)
+//     +8  word  → $0504 (probably ball X)
+//     +10 word  → $0506 (probably ball Y)
+//   Player state:  0x9C66 — 9 x 8 bytes, per-player condition masks for both
+//                  teams ($85:A3FF). Preserved as-is (meaning not mapped).
+//   Texts:         pointers at 0x38036 ($87:8036, 9 x 16-bit, bank $02),
+//                  ASCII area 0x114AF-0x11910. Rendered by $00:E2AC as
+//                  8 lines x 23 columns. 0xFD = new line, 0xFF = end.
+// ============================================================
+
+export const SCENARIO_DATA = {
+  COUNT: 9,
+  TEAM_TABLE: 0x9cae,
+  RECORD_PTRS: 0x9cc0,
+  RECORD_BANK_FILE_BASE: 0x8000, // bank $01
+  RECORD_LENGTH: 12,
+  PLAYER_STATE_TABLE: 0x9c66,
+  TEXT_PTRS: 0x38036,
+  TEXT_BANK_FILE_BASE: 0x10000, // bank $02
+  TEXT_AREA_START: 0x114af,
+  TEXT_AREA_END: 0x11911, // exclusive
+  TEXT_COLUMNS: 23,
+  TEXT_LINES: 8,
+  TEXT_NEWLINE: 0xfd,
+  TEXT_END: 0xff,
+  MAX_GOALS: 9,
+  MAX_MINUTES: 9,
+};
+
+/** Characters with a glyph in the scenario text font ($82:8C80) */
+export const SCENARIO_TEXT_CHARSET =
+  ' !"\',-.0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+
+// ============================================================
 // ROM OFFSETS - Player Names
 // ============================================================
 

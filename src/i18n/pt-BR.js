@@ -20,6 +20,7 @@ export default {
   // Editor names
   editorPlayers: 'Jogadores',
   editorFormation: 'Formacao',
+  editorScenarios: 'Cenarios',
   editorUniforms: 'Uniformes',
   editorHairSkin: 'Cabelo e Pele',
   editorFlagColors: 'Cores da Bandeira',
@@ -353,6 +354,45 @@ export default {
   formationExtraGk: 'Ha mais de um goleiro na formacao.',
   formationFewDefenders: 'Menos de 2 defensores: a CPU pode se comportar de forma estranha.',
   formationRoleLineMismatch: 'Ha funcoes incompativeis com a linha (dado inconsistente).',
+
+  // Scenario Editor
+  scenarioSubtitle: 'Situacoes do modo Scenario (9 desafios)',
+  scenarioLabel: 'Cenario',
+  scenarioNoClock: 'sem relogio',
+  scenarioTextSpace: 'Espaco de texto',
+  scenarioTeam1: 'Time 1 (jogador)',
+  scenarioTeam2: 'Time 2 (CPU)',
+  scenarioGoals1: 'Gols do time 1',
+  scenarioGoals2: 'Gols do time 2',
+  scenarioTeam1Help:
+    'Pelos textos originais, o time 1 e o controlado pelo jogador. Placar de 0 a 9.',
+  scenarioDisplayClock: 'Tempo no placar (m:ss)',
+  scenarioMatchClock: 'Tempo ate o apito final',
+  scenarioLinkClocks: 'Apito final = placar + 10s (como no original)',
+  scenarioClockHelp:
+    'O relogio do placar so corre com a bola em jogo; o do apito final decide quando a partida acaba. Placar 0:00 = sem relogio na tela.',
+  scenarioText: 'Texto de apresentacao',
+  scenarioPreview: 'Previa da tela',
+  scenarioTextHelp:
+    'A tela mostra 8 linhas de 23 caracteres. O texto e quebrado automaticamente; use Enter para forcar uma nova linha. Sem acentos.',
+  scenarioInvalidChars: 'Caracteres sem desenho na fonte do jogo (viram espaco)',
+  scenarioAdvanced: 'Situacao inicial (avancado)',
+  scenarioAdvancedHelp:
+    'Tipo de reinicio e posicao da bola no comeco do cenario. Esses valores ainda nao estao totalmente mapeados: prefira copiar a situacao de um cenario original. A condicao dos jogadores de cada cenario e preservada.',
+  scenarioCopySituation: 'Copiar situacao inicial de',
+  scenarioState: 'Estado',
+  scenarioFlag: 'Flag',
+  scenarioBallX: 'Bola X',
+  scenarioBallY: 'Bola Y',
+  scenarioApply: 'Aplicar alteracoes',
+  scenarioDiscard: 'Descartar',
+  scenarioRestore: 'Restaurar original',
+  scenarioApplied: 'Cenario atualizado.',
+  scenarioSameTeam: 'Os dois times sao iguais.',
+  scenarioTooManyLines: 'O texto passa de 8 linhas e sera cortado.',
+  scenarioTextFull:
+    'Sem espaco: o total dos 9 textos nao cabe na area original da ROM. Encurte algum texto.',
+  scenarioClockOrder: 'O apito final acontece antes do relogio do placar zerar.',
 
   // Help Tooltips - Player Editor
   helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',

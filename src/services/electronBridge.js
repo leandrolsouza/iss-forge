@@ -47,6 +47,25 @@ export function getCurrentPath() {
   return window.electronAPI.getCurrentPath();
 }
 
+/**
+ * Show a "Save patch" dialog and write the patch file
+ * @param {number[]} data - patch bytes
+ * @param {string} defaultName - suggested file name (e.g. "ISS.bps")
+ * @param {'bps'|'ips'} format
+ * @returns {Promise<{success: boolean, canceled?: boolean, path?: string, error?: string}>}
+ */
+export function savePatch(data, defaultName, format) {
+  return window.electronAPI.savePatch(data, defaultName, format);
+}
+
+/**
+ * Listen for "Export patch" menu events
+ * @param {function} callback
+ */
+export function onMenuExportPatch(callback) {
+  window.electronAPI.onMenuExportPatch?.(callback);
+}
+
 // ─── Event Listeners ─────────────────────────────────────────────────────────
 
 /**

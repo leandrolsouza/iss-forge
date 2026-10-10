@@ -6,6 +6,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveRom: (data, filePath) => ipcRenderer.invoke('rom:save', { data, filePath }),
   saveRomAs: () => ipcRenderer.invoke('dialog:saveRomAs'),
   getCurrentPath: () => ipcRenderer.invoke('rom:getCurrentPath'),
+  savePatch: (data, defaultName, format) =>
+    ipcRenderer.invoke('patch:save', { data, defaultName, format }),
+  onMenuExportPatch: (callback) => {
+    ipcRenderer.on('menu:exportPatch', () => callback());
+  },
 
   // Listen for events from main process
   onRomLoaded: (callback) => {

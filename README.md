@@ -49,6 +49,8 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **AI Generator** — Generate complete teams (players, uniforms, flag) via prompt with local or cloud LLM
 - **Tile Explorer** — Browse and visualize SNES tile graphics stored in the ROM (raw + Konami LZ)
 - **Import/Export** — Export and import team configurations as JSON
+- **Patch Export** — Export your hack as a BPS (recommended, CRC32-validated) or IPS patch, against the opened ROM or any clean base ROM
+- **Auto Checksum** — SNES internal checksum/complement is recalculated automatically on save and patch export
 - **Auto-update** — Automatic updates via GitHub Releases
 - **Auto-backup** — Backup before saving + session recovery
 - **Undo/Redo** — Undo and redo changes
@@ -192,6 +194,7 @@ Based on the work of:
 - [x] Squad overview
 - [x] Team comparison
 - [x] Import/export teams (JSON)
+- [x] BPS/IPS patch export + automatic checksum fix
 - [x] AI team generator
 - [x] Tile Explorer
 - [x] Undo/Redo

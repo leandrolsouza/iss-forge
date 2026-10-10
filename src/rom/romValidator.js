@@ -15,6 +15,8 @@
  *   0x7FDE-0x7FDF: Checksum (16-bit sum of all bytes)
  */
 
+import { calculateSnesChecksum } from './checksum';
+
 // Expected sizes for SNES ROMs (in bytes)
 const VALID_ROM_SIZES = [
   512 * 1024, // 512 KB (4 Mbit)
@@ -108,17 +110,15 @@ function readStoredChecksum(data, headerOffset) {
 }
 
 /**
- * Calculate the actual 16-bit checksum of the ROM data (excluding copier header)
+ * Calculate the actual 16-bit checksum of the ROM data (excluding copier header).
+ * Delegates to the shared implementation, which treats the checksum fields
+ * canonically and mirrors non power-of-two ROMs like real hardware.
  * @param {Uint8Array} data
  * @param {number} headerOffset - copier header size (0 or 512)
  * @returns {number}
  */
 function calculateChecksum(data, headerOffset) {
-  let sum = 0;
-  for (let i = headerOffset; i < data.length; i++) {
-    sum = (sum + data[i]) & 0xffff;
-  }
-  return sum;
+  return calculateSnesChecksum(data.subarray(headerOffset), LOROM_HEADER_OFFSET);
 }
 
 /**

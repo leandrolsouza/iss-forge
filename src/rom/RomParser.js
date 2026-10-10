@@ -30,10 +30,13 @@ import {
 } from './writers/TeamNameWriter';
 
 import { quickValidate } from './romValidator';
+import { fixChecksum, inspectChecksum } from './checksum';
 
 export default class RomParser {
   constructor(romData) {
     this.data = new Uint8Array(romData);
+    // Pristine copy of the file as loaded — used as the default base for patch export
+    this.originalData = new Uint8Array(this.data);
     this.hasHeader = this.data.length % 1024 === 512;
     this.headerOffset = this.hasHeader ? 512 : 0;
   }
@@ -67,6 +70,25 @@ export default class RomParser {
   }
   getRawData() {
     return this.data;
+  }
+  /** Bytes of the ROM exactly as it was when loaded (never mutated) */
+  getOriginalData() {
+    return this.originalData;
+  }
+
+  // === Internal checksum ===
+
+  /** @returns {{ stored: number, storedComplement: number, calculated: number, valid: boolean }} */
+  getChecksumInfo() {
+    return inspectChecksum(this.data, this.headerOffset);
+  }
+
+  /**
+   * Recalculate the SNES internal checksum/complement in the buffer.
+   * Must be called after the last write and before saving/exporting.
+   */
+  fixChecksum() {
+    return fixChecksum(this.data, this.headerOffset);
   }
 
   // === Delegated Readers ===

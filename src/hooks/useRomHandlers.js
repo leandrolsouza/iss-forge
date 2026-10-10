@@ -14,6 +14,7 @@ import {
   readJsonFile,
 } from '../utils/teamExport';
 import * as electronBridge from '../services/electronBridge';
+import { buildPatch, getPatchFilename } from '../rom/patches';
 
 export default function useRomHandlers({
   romParser,
@@ -368,6 +369,27 @@ export default function useRomHandlers({
     [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
   );
 
+  /**
+   * Flush pending (deferred) writes into the ROM buffer and repair the SNES
+   * internal checksum. Must run before any save or patch export so the output
+   * is complete and passes checksum checks in emulators/flashcarts.
+   */
+  const prepareRomForWrite = useCallback(() => {
+    // Write dirty flag designs (they are compressed only at save time)
+    teams.forEach((team, idx) => {
+      if (team.flagDesign && team.flagDesign.dirty) {
+        romParser.writeFlagDesign(idx, team.flagDesign.grid);
+        team.flagDesign.dirty = false;
+      }
+    });
+
+    try {
+      romParser.fixChecksum();
+    } catch (err) {
+      console.warn('[Checksum] Could not fix internal checksum:', err.message);
+    }
+  }, [romParser, teams]);
+
   const handleSave = useCallback(async () => {
     if (!romParser) return;
 
@@ -378,13 +400,7 @@ export default function useRomHandlers({
       console.warn('[Validation] Errors:', warnings.filter((w) => w.type === 'error').slice(0, 5));
     }
 
-    // Write dirty flag designs
-    teams.forEach((team, idx) => {
-      if (team.flagDesign && team.flagDesign.dirty) {
-        romParser.writeFlagDesign(idx, team.flagDesign.grid);
-        team.flagDesign.dirty = false;
-      }
-    });
+    prepareRomForWrite();
 
     if (isElectron()) {
       const data = Array.from(romParser.getRomData());
@@ -401,11 +417,12 @@ export default function useRomHandlers({
       saveRomWeb(data, fileName);
       markSaved(fileName);
     }
-  }, [romParser, romInfo, teams, markSaved, setStatusMessage]);
+  }, [romParser, romInfo, teams, markSaved, setStatusMessage, prepareRomForWrite]);
 
   const handleSaveToPath = useCallback(
     async (filePath) => {
       if (!romParser || !isElectron()) return;
+      prepareRomForWrite();
       const data = Array.from(romParser.getRomData());
       const result = await electronBridge.saveRom(data, filePath);
       if (result.success) {
@@ -415,7 +432,53 @@ export default function useRomHandlers({
         setStatusMessage(result.error);
       }
     },
-    [romParser, markSaved, setStatusMessage],
+    [romParser, markSaved, setStatusMessage, prepareRomForWrite],
+  );
+
+  /**
+   * Export the current edits as an IPS/BPS patch.
+   * @param {object} options
+   * @param {'bps'|'ips'} options.format
+   * @param {Uint8Array} [options.baseData] - clean ROM to diff against (defaults to the ROM as loaded)
+   * @param {string} [options.metadata] - BPS free-text metadata
+   * @returns {Promise<{success: boolean, canceled?: boolean, path?: string, error?: string, changedBytes?: number, size?: number}>}
+   */
+  const handleExportPatch = useCallback(
+    async ({ format, baseData, metadata = '' }) => {
+      if (!romParser) return { success: false, error: 'No ROM loaded' };
+
+      try {
+        prepareRomForWrite();
+        const base = baseData || romParser.getOriginalData();
+        const result = buildPatch({ format, base, modified: romParser.getRomData(), metadata });
+
+        if (result.changedBytes === 0) {
+          return { success: false, error: 'noChanges' };
+        }
+
+        const fileName = getPatchFilename(romInfo?.fileName, format);
+        let saved;
+        if (isElectron()) {
+          saved = await electronBridge.savePatch(Array.from(result.patch), fileName, format);
+          if (!saved.success) return saved;
+        } else {
+          saveRomWeb(result.patch, fileName);
+          saved = { success: true, path: fileName };
+        }
+
+        setStatusMessage(`Patch ${format.toUpperCase()}: ${saved.path}`);
+        return {
+          ...saved,
+          changedBytes: result.changedBytes,
+          size: result.patch.length,
+          baseCrc: result.baseCrc,
+          targetCrc: result.targetCrc,
+        };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    },
+    [romParser, romInfo, setStatusMessage, prepareRomForWrite],
   );
 
   const handleOpenRom = useCallback(async () => {
@@ -524,6 +587,7 @@ export default function useRomHandlers({
     handleTeamNameInGameGenerate,
     handleSave,
     handleSaveToPath,
+    handleExportPatch,
     handleOpenRom,
     handleDrop,
     handleDragOver,

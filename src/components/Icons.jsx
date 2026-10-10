@@ -34,6 +34,20 @@ export const IconSave = ({ size }) => (
 
 // --- Editor Types ---
 
+export const IconPatch = ({ size }) => (
+  <Icon size={size}>
+    <path d="M3.5 1h6.207L13 4.293V14.5l-.5.5h-9l-.5-.5v-13l.5-.5zM4 2v12h8V5H9.5L9 4.5V2H4zm6 .707V4h1.293L10 2.707z" />
+    <path
+      d="M8 6v5M8 11l-2-2M8 11l2-2"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </Icon>
+);
+
 export const IconPlayers = ({ size }) => (
   <Icon size={size}>
     <path d="M8 1a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm0 1a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />

@@ -19,9 +19,17 @@ import LoadingOverlay from './components/LoadingOverlay';
 import UnsavedModal from './components/UnsavedModal';
 import BackupBanner from './components/BackupBanner';
 import TeamSelector from './components/TeamSelector';
+import ExportPatchModal from './components/ExportPatchModal';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
-import { IconOpen, IconSave, IconUndo, IconRedo, IconSettings } from './components/Icons';
+import {
+  IconOpen,
+  IconSave,
+  IconPatch,
+  IconUndo,
+  IconRedo,
+  IconSettings,
+} from './components/Icons';
 import { useRom } from './context/RomContext';
 import { useI18n } from './i18n';
 
@@ -68,6 +76,19 @@ export default function App() {
     canRedo,
   } = useRom();
 
+  // Export patch modal
+  const [showPatchModal, setShowPatchModal] = useState(false);
+  const openPatchModal = useCallback(() => {
+    if (romParser) setShowPatchModal(true);
+  }, [romParser]);
+  const closePatchModal = useCallback(() => setShowPatchModal(false), []);
+
+  useEffect(() => {
+    if (!isElectron()) return;
+    window.electronAPI.onMenuExportPatch?.(() => openPatchModal());
+    return () => window.electronAPI.removeAllListeners('menu:exportPatch');
+  }, [openPatchModal]);
+
   // IPC listeners and keyboard shortcuts
   useEffect(() => {
     if (isElectron()) {
@@ -89,6 +110,11 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         handleSave();
+      }
+      // Export patch: Ctrl+E (web fallback; Electron uses the menu accelerator)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        openPatchModal();
       }
       // Undo: Ctrl+Z (web fallback)
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -114,6 +140,7 @@ export default function App() {
     setLoading,
     performUndo,
     performRedo,
+    openPatchModal,
   ]);
 
   // Sync modified state to main process (for close guard)
@@ -246,6 +273,14 @@ export default function App() {
           </button>
           <button
             className="titlebar-btn"
+            onClick={openPatchModal}
+            title={t('toolbarExportPatch')}
+            disabled={!romParser}
+          >
+            <IconPatch size={16} />
+          </button>
+          <button
+            className="titlebar-btn"
             onClick={performUndo}
             title={t('toolbarUndo')}
             disabled={!canUndo}
@@ -320,6 +355,8 @@ export default function App() {
         onDiscard={handleCloseModalDiscard}
         onCancel={handleCloseModalCancel}
       />
+
+      <ExportPatchModal visible={showPatchModal} onClose={closePatchModal} />
     </div>
   );
 }

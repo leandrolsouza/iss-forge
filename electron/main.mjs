@@ -1,5 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import electronUpdater from 'electron-updater';
+const { autoUpdater } = electronUpdater;
 import Store from 'electron-store';
 import path from 'path';
 import fs from 'fs';
@@ -173,6 +174,11 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => handleSaveRomAs(),
         },
+        {
+          label: 'Exportar Patch (BPS/IPS)...',
+          accelerator: 'CmdOrCtrl+E',
+          click: () => mainWindow.webContents.send('menu:exportPatch'),
+        },
         { type: 'separator' },
         {
           label: 'Sair',
@@ -299,6 +305,28 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
 });
 
 ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+
+ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
+  try {
+    const ext = format === 'ips' ? 'ips' : 'bps';
+    const defaultDir = currentRomPath ? path.dirname(currentRomPath) : app.getPath('documents');
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: ext === 'ips' ? 'Exportar Patch IPS' : 'Exportar Patch BPS',
+      defaultPath: path.join(defaultDir, defaultName || `ISS_Forge.${ext}`),
+      filters: [
+        { name: `Patch ${ext.toUpperCase()}`, extensions: [ext] },
+        { name: 'Todos os Arquivos', extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || !result.filePath) {
+      return { success: false, canceled: true };
+    }
+    fs.writeFileSync(result.filePath, Buffer.from(data));
+    return { success: true, path: result.filePath };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
 
 // Track modified state from renderer (for close guard)
 ipcMain.on('rom:modifiedState', (event, isModified) => {

@@ -286,6 +286,36 @@ export default {
   unsavedDontSave: 'Nao Salvar',
   unsavedCancel: 'Cancelar',
 
+  // Export Patch
+  toolbarExportPatch: 'Exportar Patch BPS/IPS (Ctrl+E)',
+  patchTitle: 'Exportar Patch',
+  patchSubtitle:
+    'Gera um arquivo de patch com as suas alteracoes. E a forma correta de distribuir o hack sem compartilhar a ROM.',
+  patchFormat: 'Formato',
+  patchFormatBps: 'BPS (recomendado)',
+  patchFormatBpsDesc: 'Valida o CRC32 da ROM base: recusa ROM errada ou ja modificada.',
+  patchFormatIps: 'IPS',
+  patchFormatIpsDesc: 'Formato classico, aceito por qualquer patcher e emulador. Sem validacao.',
+  patchBase: 'ROM base (original)',
+  patchBaseLoaded: '(como foi aberta)',
+  patchBasePick: 'Escolher...',
+  patchBaseReset: 'Usar a aberta',
+  patchBaseHint:
+    'A base deve ser a ROM limpa. Se voce abriu uma ROM ja editada, escolha a original aqui. O header de copiadora (512 bytes) e ignorado.',
+  patchBaseInvalid: 'O arquivo escolhido nao e uma ROM valida do ISS.',
+  patchBaseTitleMismatch: 'Atencao: o titulo interno da ROM base e diferente da ROM aberta',
+  patchMetadata: 'Descricao (opcional, BPS)',
+  patchMetadataPlaceholder: 'Ex.: ISS Brasileirao 2026 - por Fulano',
+  patchChecksumNote:
+    'O checksum interno do SNES e recalculado automaticamente antes de exportar e salvar.',
+  patchExport: 'Exportar',
+  patchExporting: 'Exportando...',
+  patchClose: 'Fechar',
+  patchSuccess: 'Patch exportado com sucesso.',
+  patchChangedBytes: 'bytes alterados',
+  patchResultCrc: 'CRC32 resultante:',
+  patchNoChanges: 'Nenhuma diferenca entre a ROM base e a ROM atual.',
+
   // Help Tooltips - Player Editor
   helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',
   helpSpeed: 'Velocidade de corrida do jogador. Varia de 1 a 16.',

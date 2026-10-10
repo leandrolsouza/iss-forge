@@ -291,6 +291,29 @@ export default {
 
   // Export Patch
   toolbarExportPatch: 'Export BPS/IPS Patch (Ctrl+E)',
+  toolbarTestEmulator: 'Test in emulator (F5)',
+  copyTeamTarget: 'Destination team',
+  copyTeamTo: 'Copy to',
+  swapTeamWith: 'Swap with',
+  copyTeamHelp:
+    'Copies the whole team (players, attributes, kits, hair/skin, flag, names, formation, description and crowd) to the chosen slot.',
+  swapTeamHelp: 'Swaps both teams completely.',
+  copyTeamDone: 'Team copied.',
+  swapTeamDone: 'Teams swapped.',
+  copyTeamNameTruncated:
+    'Done, but the name was shortened: the ROM name area is out of room. Adjust it in "Team Name".',
+  emulatorDesktopOnly: 'Testing in an emulator only works in the desktop app.',
+  emulatorStarted: 'Emulator opened with the current ROM (temporary file).',
+  emulatorError: 'Could not open the emulator.',
+  noEmulator: 'Set up the emulator in Settings > Editor.',
+  settingsEmulator: 'Test emulator',
+  settingsEmulatorHint:
+    'Used by "Test in emulator" (F5): the editor saves the current ROM to a temporary file and opens it in this program. Your ROM is not changed.',
+  settingsNoEmulator: 'No emulator selected',
+  settingsSelectEmulator: 'Choose...',
+  settingsEmulatorArgs: 'Emulator arguments',
+  settingsEmulatorArgsHint:
+    '{rom} becomes the temporary ROM path. RetroArch example: -L "C:\\RetroArch\\cores\\snes9x_libretro.dll" {rom}. For bsnes/snes9x/Mesen just {rom}.',
   patchTitle: 'Export Patch',
   patchSubtitle:
     'Creates a patch file with your changes. This is the proper way to distribute a hack without sharing the ROM.',
@@ -355,6 +378,18 @@ export default {
   formationExtraGk: 'There is more than one goalkeeper in the formation.',
   formationFewDefenders: 'Fewer than 2 defenders: the CPU may behave oddly.',
   formationRoleLineMismatch: 'Some roles do not match their line (inconsistent data).',
+  descTitle: 'Selection screen description',
+  descHeading: 'Title (up to 15 characters)',
+  descHeadingColor: 'Title colour',
+  descTitleOffensive: 'Pink (used by "Offensive")',
+  descTitleDefensive: 'Yellow (used by "Defensive")',
+  descBody: 'Text (up to 6 lines of 15 characters)',
+  descHelp: 'Wraps automatically at 15 columns; Enter forces a new line. No accents.',
+  descFormationMismatch: "The title names a formation different from the team's formation",
+  descUseFormation: 'Use',
+  descTooLong: 'The text is longer than 6 lines and will be cut on screen.',
+  descFull: 'Out of space: the 27 descriptions together do not fit in the original ROM area.',
+  descApplied: 'Description updated.',
 
   // Scenario Editor
   scenarioSubtitle: 'Scenario mode situations (9 challenges)',
@@ -449,6 +484,31 @@ export default {
   mpRefPreset_green: 'Green',
   mpRefPreset_blue: 'Blue',
   mpRefPreset_pink: 'Pink',
+  mpStadium: 'Stadium',
+  mpStadiumHelp:
+    'Shared by every pitch type and weather. In-game, look at the wall around the pitch, the goal net and the photographers behind the goal line.',
+  mp_stadium_wall: 'Wall and net',
+  mp_stadium_people: 'Photographers',
+  mpRestore: 'Restore original',
+  mpWall_original: 'Original',
+  mpWall_blue: 'Bluish',
+  mpWall_red: 'Reddish',
+  mpWall_dark: 'Dark',
+  mpCrowd: 'Crowd',
+  mpCrowdHelp:
+    'The crowd wears team 1 colours (the first team picked on the team selection screen). There are 20 palettes for 27 teams: some teams share one, and you can change which palette each team uses.',
+  mpCrowdHomeTeam: 'Team 1',
+  mpCrowdUses: 'Crowd palette used',
+  mpCrowdUnused: 'unused',
+  mpCrowdShared: 'This palette is also used by',
+  mpCrowdRow: 'Fan group',
+  mpCrowd_outline: 'Outline',
+  mpCrowd_skin: 'Skin',
+  mpCrowd_shirtA: 'Shirt A',
+  mpCrowd_neutral: 'Neutrals',
+  mpCrowd_shirtB: 'Shirt B',
+  mpCrowd_shadow: 'Shadow',
+  mpCrowdFromUniform: "Use the team's kit colours",
 
   // Help Tooltips - Player Editor
   helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',

@@ -1,9 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import RomParser from '../rom/RomParser';
-import { REFEREE_PARTS } from '../rom/constants';
-import { rawToHex, hexToRaw, adjustPalette, shadeRamp, GRASS_PRESETS } from '../rom/palettes';
+import { REFEREE_PARTS, CROWD_PARTS, TEAMS } from '../rom/constants';
+import {
+  rawToHex,
+  hexToRaw,
+  rgbToRaw,
+  adjustPalette,
+  shadeRamp,
+  GRASS_PRESETS,
+} from '../rom/palettes';
 import { IconPitch } from './Icons';
 import '../styles/match-palettes.css';
 
@@ -31,23 +38,41 @@ const REFEREE_PRESETS = [
   { id: 'pink', kit: { shirt: '#f070c0', shorts: '#202020', socks: '#202020' } },
 ];
 
-/** Color input that commits on blur, so dragging the picker creates one undo step */
+/**
+ * Color input that commits on the native `change` event (fired when the picker
+ * is closed / confirmed) instead of on every `input`, so dragging inside the
+ * picker creates a single undo step. Blur and Enter are fallbacks.
+ */
 function ColorSwatch({ raw, onCommit, title }) {
   const [value, setValue] = useState(rawToHex(raw));
+  const ref = useRef(null);
+  const latest = useRef({ raw, onCommit });
+  latest.current = { raw, onCommit };
   useEffect(() => setValue(rawToHex(raw)), [raw]);
-  const commit = () => {
-    const v = hexToRaw(value);
-    if (v !== null && v !== raw) onCommit(v);
+
+  const commitHex = (hex) => {
+    const v = hexToRaw(hex);
+    if (v !== null && v !== latest.current.raw) latest.current.onCommit(v);
   };
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const onNativeChange = (e) => commitHex(e.target.value);
+    el.addEventListener('change', onNativeChange);
+    return () => el.removeEventListener('change', onNativeChange);
+  }, []);
+
   return (
     <input
+      ref={ref}
       type="color"
       className="mp-swatch"
       value={value}
       title={title || value}
       onChange={(e) => setValue(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => e.key === 'Enter' && commit()}
+      onBlur={() => commitHex(value)}
+      onKeyDown={(e) => e.key === 'Enter' && commitHex(value)}
     />
   );
 }
@@ -107,7 +132,7 @@ function BallPreview({ colors }) {
 
 export default function MatchPaletteEditor() {
   const { t } = useI18n();
-  const { romParser, matchPalettes, handleMatchPaletteChange } = useRom();
+  const { romParser, matchPalettes, teams, handleMatchPaletteChange } = useRom();
   const [type, setType] = useState('B');
   const [weather, setWeather] = useState('sunny');
   const [adjust, setAdjust] = useState({ hue: 0, saturation: 1, lightness: 1 });
@@ -341,7 +366,204 @@ export default function MatchPaletteEditor() {
             ))}
           </div>
         </section>
+
+        {/* ---------------- Stadium ---------------- */}
+        <section className="detail-section mp-section">
+          <div className="detail-section-title">{t('mpStadium')}</div>
+          <p className="mp-hint">{t('mpStadiumHelp')}</p>
+          {['stadium_wall', 'stadium_people'].map((id) => (
+            <div key={id} className="mp-referee-part">
+              <span className="mp-swatch-label">{t(`mp_${id}`)}</span>
+              <SwatchRow colors={matchPalettes[id]} onChange={setColor(id)} />
+              <button
+                className="kit-btn"
+                disabled={isOriginal(id)}
+                onClick={() => handleMatchPaletteChange(id, [...originals[id]])}
+              >
+                {t('mpRestore')}
+              </button>
+            </div>
+          ))}
+          <div className="mp-presets">
+            <span>{t('mp_stadium_wall')}:</span>
+            {WALL_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                className="kit-btn"
+                onClick={() =>
+                  handleMatchPaletteChange(
+                    'stadium_wall',
+                    p.adjust
+                      ? adjustPalette(originals.stadium_wall, p.adjust)
+                      : [...originals.stadium_wall],
+                  )
+                }
+              >
+                {t(`mpWall_${p.id}`)}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ---------------- Crowd ---------------- */}
+        <CrowdSection
+          t={t}
+          teams={teams}
+          palettes={matchPalettes}
+          originals={originals}
+          onChange={handleMatchPaletteChange}
+        />
       </div>
     </div>
+  );
+}
+
+const WALL_PRESETS = [
+  { id: 'original', adjust: null },
+  { id: 'blue', adjust: { hue: 200, saturation: 3, lightness: 0.9 } },
+  { id: 'red', adjust: { hue: -40, saturation: 3, lightness: 0.85 } },
+  { id: 'dark', adjust: { hue: 0, saturation: 1, lightness: 0.6 } },
+];
+
+/** Brightest colour of a uniform part ({ r, g, b } list) as a raw SNES colour */
+function brightestRaw(colors) {
+  if (!Array.isArray(colors) || !colors.length) return null;
+  const best = [...colors].sort((a, b) => b.r + b.g + b.b - (a.r + a.g + a.b))[0];
+  return rgbToRaw(best);
+}
+
+function CrowdSection({ t, teams, palettes, originals, onChange }) {
+  const [teamIndex, setTeamIndex] = useState(0);
+  const n = palettes.crowdMap[teamIndex];
+  const colors = palettes.crowds[n] || [];
+  const teamName = (i) => teams[i]?.name || TEAMS[i]?.name || '?';
+  const sharedWith = palettes.crowdMap
+    .map((m, i) => (m === n && i !== teamIndex ? teamName(i) : null))
+    .filter(Boolean);
+
+  const setColors = (next) => onChange({ [`crowd:${n}`]: next });
+  const setOne = (index, raw) => {
+    const next = [...colors];
+    next[index] = raw;
+    setColors(next);
+  };
+  const setPart = (rowOffset, key, raw) => {
+    const part = CROWD_PARTS.find((p) => p.key === key);
+    const next = [...colors];
+    shadeRamp(raw, part.count)
+      .reverse() // crowd shirts go light → dark
+      .forEach((v, i) => (next[rowOffset + part.from + i] = v));
+    setColors(next);
+  };
+
+  const fromUniform = () => {
+    const u = teams[teamIndex]?.uniforms;
+    if (!u) return;
+    const picks = [
+      [0, 'shirtA', brightestRaw(u.home?.shirt)],
+      [0, 'shirtB', brightestRaw(u.away?.shirt)],
+      [15, 'shirtA', brightestRaw(u.home?.shorts)],
+      [15, 'shirtB', brightestRaw(u.home?.socks)],
+    ];
+    const next = [...colors];
+    picks.forEach(([rowOffset, key, raw]) => {
+      if (raw === null) return;
+      const part = CROWD_PARTS.find((p) => p.key === key);
+      shadeRamp(raw, part.count)
+        .reverse() // crowd shirts go light → dark
+        .forEach((v, i) => (next[rowOffset + part.from + i] = v));
+    });
+    setColors(next);
+  };
+
+  const paletteLabel = (m) => {
+    const users = palettes.crowdMap.map((x, i) => (x === m ? teamName(i) : null)).filter(Boolean);
+    return `#${m + 1}${users.length ? ` — ${users.join(', ')}` : ` — ${t('mpCrowdUnused')}`}`;
+  };
+
+  return (
+    <section className="detail-section mp-section">
+      <div className="detail-section-title">{t('mpCrowd')}</div>
+      <p className="mp-hint">{t('mpCrowdHelp')}</p>
+      <div className="mp-crowd-header">
+        <label className="mp-field">
+          <span>{t('mpCrowdHomeTeam')}</span>
+          <select
+            className="input-stat"
+            value={teamIndex}
+            onChange={(e) => setTeamIndex(Number(e.target.value))}
+          >
+            {TEAMS.map((tm, i) => (
+              <option key={tm.id} value={i}>
+                {teamName(i)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="mp-field">
+          <span>{t('mpCrowdUses')}</span>
+          <select
+            className="input-stat"
+            value={n}
+            onChange={(e) => onChange({ [`crowdMap:${teamIndex}`]: Number(e.target.value) })}
+          >
+            {palettes.crowds.map((_, m) => (
+              <option key={m} value={m}>
+                {paletteLabel(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {sharedWith.length > 0 && (
+        <p className="mp-warning">
+          {t('mpCrowdShared')}: {sharedWith.join(', ')}
+        </p>
+      )}
+
+      {[0, 15].map((rowOffset, r) => (
+        <div key={rowOffset} className="mp-crowd-row">
+          <div className="mp-crowd-row-title">
+            {t('mpCrowdRow')} {r + 1}
+          </div>
+          {CROWD_PARTS.map(({ key, from, count }) => (
+            <div key={key} className="mp-referee-part">
+              <span className="mp-swatch-label">{t(`mpCrowd_${key}`)}</span>
+              <SwatchRow
+                colors={colors.slice(rowOffset + from, rowOffset + from + count)}
+                offset={rowOffset + from}
+                onChange={setOne}
+              />
+              {(key === 'shirtA' || key === 'shirtB') && (
+                <label className="mp-quick">
+                  <span>{t('mpQuickColor')}</span>
+                  <ColorSwatch
+                    raw={colors[rowOffset + from]}
+                    onCommit={(v) => setPart(rowOffset, key, v)}
+                  />
+                </label>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
+
+      <div className="mp-presets">
+        <button className="kit-btn active" onClick={fromUniform}>
+          {t('mpCrowdFromUniform')}
+        </button>
+        <button
+          className="kit-btn"
+          onClick={() =>
+            onChange({
+              [`crowd:${n}`]: [...originals.crowds[n]],
+              [`crowdMap:${teamIndex}`]: originals.crowdMap[teamIndex],
+            })
+          }
+        >
+          {t('mpRestore')}
+        </button>
+      </div>
+    </section>
   );
 }

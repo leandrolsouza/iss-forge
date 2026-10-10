@@ -11,6 +11,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuExportPatch: (callback) => {
     ipcRenderer.on('menu:exportPatch', () => callback());
   },
+  testInEmulator: (data, extension) => ipcRenderer.invoke('emulator:test', { data, extension }),
+  selectEmulator: () => ipcRenderer.invoke('emulator:select'),
+  onMenuTestEmulator: (callback) => {
+    ipcRenderer.on('menu:testEmulator', () => callback());
+  },
 
   // Listen for events from main process
   onRomLoaded: (callback) => {

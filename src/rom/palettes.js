@@ -5,7 +5,7 @@
  * Colours are kept as raw SNES 15-bit values (0bbbbbgggggrrrrr) so a
  * read/write round-trip is lossless.
  */
-import { MATCH_PALETTES } from './constants';
+import { MATCH_PALETTES, CROWD_DATA, FLAG_DESIGN_ORDINALS, TEAMS } from './constants';
 
 const byId = Object.fromEntries(MATCH_PALETTES.map((p) => [p.id, p]));
 
@@ -43,15 +43,15 @@ export function hexToRaw(hex) {
 
 export function readMatchPalette(rom, id) {
   const { offset, count } = getPaletteDef(id);
-  const colors = [];
-  for (let i = 0; i < count; i++) {
-    colors.push(rom.readByte(offset + i * 2) | (rom.readByte(offset + i * 2 + 1) << 8));
-  }
-  return colors;
+  return readColors(rom, offset, count);
 }
 
 export function readMatchPalettes(rom) {
-  return Object.fromEntries(MATCH_PALETTES.map((p) => [p.id, readMatchPalette(rom, p.id)]));
+  return {
+    ...Object.fromEntries(MATCH_PALETTES.map((p) => [p.id, readMatchPalette(rom, p.id)])),
+    crowds: readCrowdPalettes(rom),
+    crowdMap: readCrowdMap(rom),
+  };
 }
 
 export function writeMatchPalette(rom, id, colors) {
@@ -59,11 +59,95 @@ export function writeMatchPalette(rom, id, colors) {
   if (!Array.isArray(colors) || colors.length !== count) {
     throw new Error(`Palette ${id} needs ${count} colours`);
   }
+  writeColors(rom, offset, colors);
+}
+
+function writeColors(rom, offset, colors) {
   colors.forEach((raw, i) => {
     const v = raw & 0x7fff;
     rom.writeByte(offset + i * 2, v & 0xff);
     rom.writeByte(offset + i * 2 + 1, v >> 8);
   });
+}
+
+function readColors(rom, offset, count) {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    out.push(rom.readByte(offset + i * 2) | (rom.readByte(offset + i * 2 + 1) << 8));
+  }
+  return out;
+}
+
+// --- Crowd (per home team) ---
+
+const C = CROWD_DATA;
+const crowdDescriptor = (n) => C.DESCRIPTOR_START + n * C.DESCRIPTOR_STEP;
+
+/** File offset of the first visible colour of crowd palette n */
+export function getCrowdOffset(rom, n) {
+  const d = crowdDescriptor(n);
+  const ptr = rom.readByte(d) | (rom.readByte(d + 1) << 8);
+  return C.BLOB_BANK_FILE_BASE + (ptr - 0x8000) + 2; // skip the size word
+}
+
+export function readCrowdPalettes(rom) {
+  return Array.from({ length: C.COUNT }, (_, n) =>
+    readColors(rom, getCrowdOffset(rom, n), C.COLORS),
+  );
+}
+
+export function writeCrowdPalette(rom, n, colors) {
+  if (n < 0 || n >= C.COUNT) throw new Error('Invalid crowd palette');
+  if (!Array.isArray(colors) || colors.length !== C.COLORS) {
+    throw new Error(`Crowd palette needs ${C.COLORS} colours`);
+  }
+  writeColors(rom, getCrowdOffset(rom, n), colors);
+}
+
+/** Crowd palette index (0-19) used when each team (TEAMS order) plays at home */
+export function readCrowdMap(rom) {
+  return TEAMS.map((_, teamIndex) => {
+    const a = C.TEAM_TABLE + FLAG_DESIGN_ORDINALS[teamIndex] * 2;
+    const desc = rom.readByte(a) | (rom.readByte(a + 1) << 8);
+    const n = (desc - C.DESCRIPTOR_START) / C.DESCRIPTOR_STEP;
+    return Number.isInteger(n) && n >= 0 && n < C.COUNT ? n : -1;
+  });
+}
+
+export function writeTeamCrowd(rom, teamIndex, n) {
+  if (n < 0 || n >= C.COUNT) throw new Error('Invalid crowd palette');
+  const a = C.TEAM_TABLE + FLAG_DESIGN_ORDINALS[teamIndex] * 2;
+  const desc = crowdDescriptor(n);
+  rom.writeByte(a, desc & 0xff);
+  rom.writeByte(a + 1, desc >> 8);
+}
+
+/**
+ * Apply a batch of palette edits.
+ * Keys: MATCH_PALETTES id → colours; `crowd:N` → 30 colours; `crowdMap:TEAM_INDEX` → crowd index.
+ */
+export function applyPaletteUpdates(rom, updates) {
+  Object.entries(updates).forEach(([key, value]) => {
+    if (key.startsWith('crowd:')) writeCrowdPalette(rom, Number(key.slice(6)), value);
+    else if (key.startsWith('crowdMap:')) writeTeamCrowd(rom, Number(key.slice(9)), value);
+    else writeMatchPalette(rom, key, value);
+  });
+}
+
+/** Turn a full palette state into update entries (used by undo/redo) */
+export function paletteStateToUpdates(state, current) {
+  const updates = {};
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  MATCH_PALETTES.forEach(({ id }) => {
+    if (state[id] && !same(state[id], current?.[id])) updates[id] = state[id];
+  });
+  (state.crowds || []).forEach((colors, n) => {
+    if (!same(colors, current?.crowds?.[n])) updates[`crowd:${n}`] = colors;
+  });
+  (state.crowdMap || []).forEach((n, teamIndex) => {
+    if (n >= 0 && n !== current?.crowdMap?.[teamIndex]) updates[`crowdMap:${teamIndex}`] = n;
+  });
+  return updates;
 }
 
 // --- HSL helpers (for whole-palette recolouring) ---

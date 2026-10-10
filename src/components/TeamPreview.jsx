@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
@@ -6,7 +6,11 @@ import { IconOverview } from './Icons';
 
 export default function TeamPreview({ team, teamIndex }) {
   const { t, lang } = useI18n();
-  const { handleExportTeam, handleImportTeam } = useRom();
+  const { teams, handleExportTeam, handleImportTeam, handleCopyTeam } = useRom();
+  const [copyTarget, setCopyTarget] = useState(teamIndex === 0 ? 1 : 0);
+  useEffect(() => {
+    if (copyTarget === teamIndex) setCopyTarget(teamIndex === 0 ? 1 : 0);
+  }, [teamIndex, copyTarget]);
 
   if (!team || !team.players) {
     return <div className="editor-panel empty">{t('openRomToSee')}</div>;
@@ -47,7 +51,9 @@ export default function TeamPreview({ team, teamIndex }) {
     <div className="editor-panel team-preview-panel">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon"><IconOverview size={18} /></span>
+          <span className="editor-icon">
+            <IconOverview size={18} />
+          </span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('overview')}</span>
         </div>
@@ -61,6 +67,35 @@ export default function TeamPreview({ team, teamIndex }) {
           </button>
           <button className="kit-btn" onClick={() => handleImportTeam(teamIndex)}>
             Import JSON
+          </button>
+          <span className="preview-actions-sep" />
+          <select
+            className="input-stat"
+            value={copyTarget}
+            onChange={(e) => setCopyTarget(Number(e.target.value))}
+            aria-label={t('copyTeamTarget')}
+          >
+            {teams.map((tm, i) =>
+              i === teamIndex ? null : (
+                <option key={i} value={i}>
+                  {i + 1}. {tm.name}
+                </option>
+              ),
+            )}
+          </select>
+          <button
+            className="kit-btn"
+            title={t('copyTeamHelp')}
+            onClick={() => handleCopyTeam(teamIndex, copyTarget, false)}
+          >
+            {t('copyTeamTo')}
+          </button>
+          <button
+            className="kit-btn"
+            title={t('swapTeamHelp')}
+            onClick={() => handleCopyTeam(teamIndex, copyTarget, true)}
+          >
+            {t('swapTeamWith')}
           </button>
         </div>
 

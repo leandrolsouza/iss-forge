@@ -21,19 +21,37 @@ import {
   writeSpecialHair,
   writeSpecialSkin,
 } from './writers/UniformWriter';
-import { writeFlagDesign } from './writers/FlagDesignWriter';
+import {
+  writeFlagDesign,
+  readFlagDesignBytes,
+  writeFlagDesignBytes,
+} from './writers/FlagDesignWriter';
 import {
   writeTeamNameText,
   writeTeamNameMenu,
   writeTeamNameInGame,
   getSlotMaxChars,
+  readTeamNameBytes,
+  writeTeamNameBytes,
 } from './writers/TeamNameWriter';
 
 import { quickValidate } from './romValidator';
 import { fixChecksum, inspectChecksum } from './checksum';
 import { readFormation, writeFormation, decodeFormation } from './formation';
 import { readScenarios, writeScenario } from './scenario';
-import { readMatchPalettes, writeMatchPalette } from './palettes';
+import {
+  readTeamDescription,
+  readTeamDescriptions,
+  writeTeamDescription,
+  readTeamDescriptionBytes,
+  writeTeamDescriptionBytes,
+} from './teamDescription';
+import {
+  readMatchPalettes,
+  writeMatchPalette,
+  applyPaletteUpdates,
+  paletteStateToUpdates,
+} from './palettes';
 
 export default class RomParser {
   constructor(romData) {
@@ -154,21 +172,21 @@ export default class RomParser {
 
   // === Delegated Writers ===
 
-  /** Pitch / ball / referee palettes: { [id]: rawColor[] } */
+  /** Pitch / ball / referee / stadium palettes + crowds: { [id]: rawColor[], crowds, crowdMap } */
   readMatchPalettes() {
     return readMatchPalettes(this);
   }
   writeMatchPalette(id, colors) {
     writeMatchPalette(this, id, colors);
   }
+  /** Batch edit: { paletteId: colours, 'crowd:N': colours, 'crowdMap:TEAM': n } */
+  applyPaletteUpdates(updates) {
+    applyPaletteUpdates(this, updates);
+  }
   /** Restore palettes from a snapshot (undo/redo), writing only what changed */
   restoreMatchPalettes(palettes) {
     if (!palettes) return;
-    const current = readMatchPalettes(this);
-    Object.entries(palettes).forEach(([id, colors]) => {
-      if (JSON.stringify(colors) !== JSON.stringify(current[id]))
-        writeMatchPalette(this, id, colors);
-    });
+    applyPaletteUpdates(this, paletteStateToUpdates(palettes, readMatchPalettes(this)));
   }
 
   /** The 9 Scenario mode situations */
@@ -227,6 +245,46 @@ export default class RomParser {
   writeTeamNameInGame(teamIndex, text) {
     return writeTeamNameInGame(this, teamIndex, text);
   }
+  /** Raw snapshot of every team-name region (for undo/redo) */
+  readTeamNameBytes() {
+    return readTeamNameBytes(this);
+  }
+  /** Restore a team-name snapshot; returns true when something changed */
+  restoreTeamNameBytes(snapshot) {
+    if (!snapshot) return false;
+    if (JSON.stringify(snapshot) === JSON.stringify(readTeamNameBytes(this))) return false;
+    writeTeamNameBytes(this, snapshot);
+    return true;
+  }
+  /** Selection-screen description ({ title, titleColor, body }) */
+  readTeamDescription(teamIndex) {
+    return readTeamDescription(this, teamIndex);
+  }
+  /** @returns {{ ok: boolean, used: number, capacity: number }} */
+  writeTeamDescription(teamIndex, desc) {
+    return writeTeamDescription(this, teamIndex, desc);
+  }
+  readTeamDescriptions() {
+    return readTeamDescriptions(this);
+  }
+  readTeamDescriptionBytes() {
+    return readTeamDescriptionBytes(this);
+  }
+  readFlagDesignBytes() {
+    return readFlagDesignBytes(this);
+  }
+  restoreFlagDesignBytes(snapshot) {
+    if (!snapshot) return false;
+    if (JSON.stringify(snapshot) === JSON.stringify(readFlagDesignBytes(this))) return false;
+    writeFlagDesignBytes(this, snapshot);
+    return true;
+  }
+  restoreTeamDescriptionBytes(snapshot) {
+    if (!snapshot) return false;
+    if (JSON.stringify(snapshot) === JSON.stringify(readTeamDescriptionBytes(this))) return false;
+    writeTeamDescriptionBytes(this, snapshot);
+    return true;
+  }
 
   // === Composite Readers ===
 
@@ -241,6 +299,7 @@ export default class RomParser {
     const flagDesignData = this.readFlagDesign(teamIndex);
     const teamNameText = this.readTeamNameText(teamIndex);
     const formation = this.readFormation(teamIndex);
+    const description = this.readTeamDescription(teamIndex);
 
     // Use ROM team name as display name if it clearly differs from the default
     // Original ROM names may vary slightly (e.g., "SWITZ" vs "Swiss", "DNMARK" vs "Denmark")
@@ -272,6 +331,7 @@ export default class RomParser {
       },
       teamNameText,
       formation: { slots: formation.slots, name: formation.name },
+      description,
     };
   }
 

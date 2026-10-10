@@ -8,6 +8,7 @@ import useHistory from './useHistory';
 
 export default function useRomState() {
   const [romParser, setRomParser] = useState(null);
+  const romParserRef = useRef(null);
   const [romInfo, setRomInfo] = useState(null);
   const [teams, setTeams] = useState([]);
   // Global (non-team) data: Scenario mode situations
@@ -49,6 +50,7 @@ export default function useRomState() {
           }
 
           setRomParser(parser);
+          romParserRef.current = parser;
           setRomInfo({ fileName, ...validation });
           setStatusMessage(validation.message + ` - ${fileName}`);
           setModified(false);
@@ -88,6 +90,13 @@ export default function useRomState() {
   const currentGlobals = () => ({
     scenarios: scenariosRef.current,
     matchPalettes: matchPalettesRef.current,
+    // Raw bytes of the team-name regions: name writes shift data around and are not
+    // reversible by re-encoding, so undo restores the exact bytes
+    teamNameBytes: romParserRef.current ? romParserRef.current.readTeamNameBytes() : null,
+    // Same for the selection-screen descriptions (re-packed on every edit)
+    teamDescBytes: romParserRef.current ? romParserRef.current.readTeamDescriptionBytes() : null,
+    // ...and the flag designs (recompression is not byte-identical either)
+    flagBytes: romParserRef.current ? romParserRef.current.readFlagDesignBytes() : null,
   });
 
   const pushSnapshot = useCallback(
@@ -105,6 +114,15 @@ export default function useRomState() {
         if (!Array.isArray(restored) && restored.scenarios) {
           romParser.restoreScenarios(restored.scenarios);
           setScenarios(romParser.readScenarios());
+        }
+        if (!Array.isArray(restored) && restored.teamNameBytes) {
+          romParser.restoreTeamNameBytes(restored.teamNameBytes);
+        }
+        if (!Array.isArray(restored) && restored.flagBytes) {
+          romParser.restoreFlagDesignBytes(restored.flagBytes);
+        }
+        if (!Array.isArray(restored) && restored.teamDescBytes) {
+          romParser.restoreTeamDescriptionBytes(restored.teamDescBytes);
         }
         if (!Array.isArray(restored) && restored.matchPalettes) {
           romParser.restoreMatchPalettes(restored.matchPalettes);

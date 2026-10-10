@@ -171,3 +171,40 @@
   font-size: var(--font-size-sm);
   color: var(--text-muted);
 }
+
+.mp-crowd-header {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  min-width: 220px;
+}
+
+.mp-warning {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-warning);
+}
+
+.mp-crowd-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+}
+
+.mp-crowd-row-title {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}

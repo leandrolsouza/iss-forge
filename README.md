@@ -42,6 +42,10 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **Formation & Lineup** — Edit each team's default formation stored in the ROM (drag positions on a pitch, roles, 9 presets taken from original teams) and swap starters/substitutes
 - **Scenarios** — Edit the 9 Scenario mode challenges: teams, score, clocks and intro text (with an 8×23 screen preview)
 - **Pitch & Ball** — Recolour the pitch for every type (A/B/C) and weather (sunny/rain/snow), the ball and the referee/linesmen kit, with presets and hue/saturation/brightness tools
+- **Stadium & Crowd** — Recolour the perimeter wall/goal net and photographers, edit the 20 crowd palettes and choose which one each team's fans use
+- **Team Descriptions** — Edit the selection-screen text ("Offensive 4-4-2" + description) with a 15×8 preview, kept in sync with the formation
+- **Copy / Swap Teams** — Move a whole team (players, hidden attributes, kits, flag, names, formation, description, crowd) to another slot
+- **Test in Emulator** — One click (F5) runs the current ROM in your emulator (RetroArch, bsnes, snes9x, Mesen…) from a temporary file
 - **Hair & Skin** — Customize hair style and skin color (normal and special players)
 - **Uniforms** — Full color editor (shirt, shorts, socks, goalkeeper) with real-time preview
 - **Flags** — Pixel-by-pixel design editor + palette colors (4 indexed colors)
@@ -201,6 +205,9 @@ Based on the work of:
 - [x] Default formation & lineup editor
 - [x] Scenario mode editor
 - [x] Pitch, ball and referee palettes
+- [x] Stadium and crowd palettes
+- [x] Team descriptions, copy/swap teams, test in emulator
+- [ ] Hidden player attributes, tournaments, text translation (see `research/BACKLOG.md`)
 - [x] AI team generator
 - [x] Tile Explorer
 - [x] Undo/Redo

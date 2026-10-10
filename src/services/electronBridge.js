@@ -66,6 +66,21 @@ export function onMenuExportPatch(callback) {
   window.electronAPI.onMenuExportPatch?.(callback);
 }
 
+/**
+ * Write the ROM to a temp file and open it in the configured emulator
+ * @param {number[]} data - ROM bytes
+ * @param {string} extension - '.sfc' or '.smc'
+ * @returns {Promise<{success: boolean, path?: string, error?: string}>}
+ */
+export function testInEmulator(data, extension) {
+  return window.electronAPI.testInEmulator(data, extension);
+}
+
+/** Native file picker for the emulator executable (saved in settings) */
+export function selectEmulator() {
+  return window.electronAPI.selectEmulator();
+}
+
 // ─── Event Listeners ─────────────────────────────────────────────────────────
 
 /**

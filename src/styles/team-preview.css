@@ -147,9 +147,14 @@
   font-family: var(--font-mono);
 }
 
-
 .preview-actions {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
+}
+.preview-actions-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 6px;
+  background: var(--border-primary);
 }

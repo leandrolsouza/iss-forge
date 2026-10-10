@@ -46,8 +46,7 @@ A e C usam as **mesmas cores** e mudam só o desenho do corte da grama (tiles).
 
 As linhas do campo (brancas) fazem parte das mesmas paletas.
 
-Outras linhas de BG na partida: 1 e 4 (`0x2DC21`, `0x2DC7B`, estádio), 5 e 6 (`0x2F8B3`/`0x2F8D1`,
-provavelmente arquibancada/placas). **Não mapeadas visualmente.** São candidatas a um editor de "estádio".
+Outras linhas de BG na partida: ver "Estádio e torcida" abaixo.
 
 ## Bola
 
@@ -76,8 +75,31 @@ provavelmente arquibancada/placas). **Não mapeadas visualmente.** São candidat
 `rgbToSnesBytes` (uniformes, cabelo/pele, bandeiras) usava `Math.round(v / 8) & 0x1F`. `255 / 8` arredonda
 para 32, e `32 & 0x1F = 0`: **branco puro (#FFFFFF) virava preto**. Agora o valor é limitado a 31.
 
+## Estádio e torcida (validado em jogo)
+
+| O quê | Arquivo | Cores | Linha | Observação |
+|-------|---------|-------|-------|------------|
+| Muro em volta do campo + rede do gol | `0x2DC7B` | 15 | BG 4 | blob `$85:DC1F`; igual para todos os tipos/climas |
+| Fotógrafos atrás da linha de fundo | `0x2DC21` | 15 | BG 1 | blob `$85:DC1F` |
+| Torcida | por time (abaixo) | 30 | BG 5-6 | 2 grupos de torcedores × 15 cores |
+
+### Torcida por time
+
+- Tabela `$81:9362` (arquivo `0x9362`): 27 words, indexada pelo **ordinal ×2 do time em `$1720`** (time 1 =
+  o primeiro escolhido na seleção, **não necessariamente** o que aparece à esquerda no placar). Cada entrada
+  aponta para um dos 20 descritores `$81:88AB + n*3`, que apontam para blobs de 31 cores no banco `$85`
+  (`0x2F7B9`…`0x2FC53`).
+- Carregada em `$07:DB63` / `$00:C43B` (`LDY $9362,X` → `$80:AB2E`).
+- Visíveis: cores 1-15 da linha 5 e 1-15 da linha 6. A 31ª cor cai na cor 1 da linha 7 e é sobrescrita
+  depois pela paleta do gramado.
+- Layout de cada grupo (15 cores): contorno (1), pele (4), **camisa A (3, claro → escuro)**, neutros (3),
+  **camisa B (3, claro → escuro)**, sombra (1).
+- Times que compartilham paleta no original: ROM+COL, WAL+BEL, GER+SST, FRA+USA, SUI+BUL, DEN+NOR+KOR.
+- Trocar a entrada da tabela (2 bytes) faz um time usar outra paleta sem gastar espaço.
+
 ## Pendências / ideias
 
-- Paletas de estádio/torcida (BG linhas 1, 4, 5, 6) e o backdrop (variante "+3", `$85:F7B5`).
-- `$07:DB63` carrega uma lista por time (`$9362[time]`): talvez cores da torcida por seleção.
+- Backdrop (variante "+3", `$85:F7B5`).
 - O sistema de paletas também serve para menus. A tabela completa de descritores está em `$81:875B`-`$89E5`.
+- Separar uma paleta de torcida compartilhada exigiria um blob novo em espaço livre (31 cores + tamanho)
+  e um descritor novo.

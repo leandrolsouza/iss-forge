@@ -12,6 +12,7 @@ import {
   applyImportedTeam,
   downloadJson,
   readJsonFile,
+  copyTeam,
 } from '../utils/teamExport';
 import * as electronBridge from '../services/electronBridge';
 import { buildPatch, getPatchFilename } from '../rom/patches';
@@ -427,11 +428,57 @@ export default function useRomHandlers({
       if (!romParser) return;
       const updates = typeof idOrMap === 'string' ? { [idOrMap]: colors } : idOrMap;
       pushSnapshot(teams);
-      Object.entries(updates).forEach(([id, c]) => romParser.writeMatchPalette(id, c));
+      romParser.applyPaletteUpdates(updates);
       setMatchPalettes(romParser.readMatchPalettes());
       markModified();
     },
     [romParser, teams, markModified, pushSnapshot, setMatchPalettes],
+  );
+
+  /**
+   * Update a team's selection-screen description.
+   * @returns {{ ok: boolean, used?: number, capacity?: number }}
+   */
+  const handleTeamDescriptionChange = useCallback(
+    (teamIndex, desc) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const res = romParser.writeTeamDescription(teamIndex, desc);
+      if (res.ok) {
+        const description = romParser.readTeamDescription(teamIndex);
+        setTeams((prev) => {
+          const next = [...prev];
+          next[teamIndex] = { ...next[teamIndex], description };
+          return next;
+        });
+        markModified();
+      }
+      return res;
+    },
+    [romParser, teams, markModified, setTeams, pushSnapshot],
+  );
+
+  /**
+   * Copy (or swap) a whole team to another slot — one undo step.
+   */
+  const handleCopyTeam = useCallback(
+    (from, to, swap = false) => {
+      if (!romParser || from === to) return;
+      pushSnapshot(teams);
+      const wanted = [teams[from]?.teamNameText, swap ? teams[to]?.teamNameText : null];
+      copyTeam(romParser, from, to, { swap });
+      const fresh = romParser.readAllTeams();
+      setTeams(fresh);
+      setMatchPalettes(romParser.readMatchPalettes());
+      markModified();
+      const truncated =
+        (wanted[0] && fresh[to].teamNameText !== wanted[0]) ||
+        (swap && wanted[1] && fresh[from].teamNameText !== wanted[1]);
+      setStatusMessage(
+        truncated ? 'copyTeamNameTruncated' : swap ? 'swapTeamDone' : 'copyTeamDone',
+      );
+    },
+    [romParser, teams, markModified, setTeams, setMatchPalettes, setStatusMessage, pushSnapshot],
   );
 
   /**
@@ -517,6 +564,24 @@ export default function useRomHandlers({
     },
     [romParser, markSaved, setStatusMessage, prepareRomForWrite],
   );
+
+  /**
+   * Save the current ROM (with pending writes + checksum) to a temp file and
+   * open it in the configured emulator. Desktop only.
+   * @returns {Promise<{success: boolean, error?: string}>}
+   */
+  const handleTestInEmulator = useCallback(async () => {
+    if (!romParser) return { success: false };
+    if (!isElectron()) {
+      setStatusMessage('emulatorDesktopOnly');
+      return { success: false, error: 'emulatorDesktopOnly' };
+    }
+    prepareRomForWrite();
+    const ext = /\.smc$/i.test(romInfo?.fileName || '') ? '.smc' : '.sfc';
+    const res = await electronBridge.testInEmulator(Array.from(romParser.getRomData()), ext);
+    setStatusMessage(res.success ? `emulatorStarted` : res.error || 'emulatorError');
+    return res;
+  }, [romParser, romInfo, setStatusMessage, prepareRomForWrite]);
 
   /**
    * Export the current edits as an IPS/BPS patch.
@@ -671,10 +736,13 @@ export default function useRomHandlers({
     handleFormationChange,
     handleSwapPlayers,
     handleScenarioChange,
+    handleTeamDescriptionChange,
+    handleCopyTeam,
     handleMatchPaletteChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,
+    handleTestInEmulator,
     handleOpenRom,
     handleDrop,
     handleDragOver,

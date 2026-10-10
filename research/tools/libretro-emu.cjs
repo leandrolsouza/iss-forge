@@ -39,7 +39,7 @@ function createEmu(corePath, romPath) {
 
   // Registered by name: used in the retro_load_game signature
   koffi.struct('retro_game_info', {
-    path: 'const char *',
+    path: 'const void *', // persistent buffer (a JS string would be a temporary C string)
     data: 'const void *',
     size: 'size_t',
     meta: 'const char *',
@@ -84,7 +84,8 @@ function createEmu(corePath, romPath) {
   const sysdir = Buffer.from(require('os').tmpdir() + '\0');
 
   const env = koffi.register((cmd, data) => {
-    const c = cmd & 0xffff;
+    // Compare the full value: experimental commands are 0x10000 | n and must not alias n
+    const c = cmd;
     if (c === 10) {
       // SET_PIXEL_FORMAT
       pixelFormat = koffi.decode(data, 'int');
@@ -94,10 +95,9 @@ function createEmu(corePath, romPath) {
       koffi.encode(data, 'bool', false); // GET_CAN_DUPE
       return true;
     }
-    if (c === 9 || c === 31) {
-      koffi.encode(data, 'const char *', sysdir.toString('utf8', 0, sysdir.length - 1));
-      return true;
-    }
+    // GET_SYSTEM/SAVE_DIRECTORY (9/31) deliberately unsupported: a string encoded here
+    // would be freed after the callback while the core keeps the pointer.
+    if (c === 9 || c === 31) return false;
     return false;
   }, koffi.pointer(EnvCb));
   const video = koffi.register((data, w, h, pitch) => {
@@ -106,8 +106,13 @@ function createEmu(corePath, romPath) {
       api_stats.nulls++;
       return;
     }
-    const bytes = koffi.decode(data, koffi.array('uint8_t', pitch * h));
-    frame = { w, h, pitch, buf: Buffer.from(bytes) };
+    // The last line may be shorter than pitch: never read past width * bpp on it
+    const bpp = pixelFormat === 1 ? 4 : 2;
+    const len = pitch * (h - 1) + w * bpp;
+    const bytes = koffi.decode(data, koffi.array('uint8_t', len));
+    const buf = Buffer.alloc(pitch * h);
+    Buffer.from(bytes).copy(buf);
+    frame = { w, h, pitch, buf };
   }, koffi.pointer(VideoCb));
   const audio = koffi.register(() => {}, koffi.pointer(AudioCb));
   const audioBatch = koffi.register((d, frames) => frames, koffi.pointer(AudioBatchCb));
@@ -127,10 +132,16 @@ function createEmu(corePath, romPath) {
 
   const rom = fs.readFileSync(romPath);
   const romBuf = Buffer.from(rom);
-  const ok = f.load_game({ path: romPath, data: romBuf, size: romBuf.length, meta: null });
+  const pathBuf = Buffer.from(romPath + '\0', 'utf8');
+  const ok = f.load_game({ path: pathBuf, data: romBuf, size: romBuf.length, meta: null });
   if (!ok) throw new Error('retro_load_game failed');
 
+  // Keep native-facing buffers and callbacks alive: the core may keep pointers to them
+  // (the ROM data in particular). Letting the GC collect them causes random 0xC0000005 crashes.
+  const keepAlive = [romBuf, pathBuf, sysdir, env, video, audio, audioBatch, poll, state];
+
   const api = {
+    _keepAlive: keepAlive,
     BTN,
     run(frames = 1, buttons = []) {
       pressed = new Set(buttons.map((b) => (typeof b === 'string' ? BTN[b] : b)));

@@ -100,6 +100,12 @@ export const IconFormation = ({ size }) => (
   </Icon>
 );
 
+export const IconPlay = ({ size }) => (
+  <Icon size={size}>
+    <path d="M4 2.5v11l.76.43 9-5.5v-.86l-9-5.5L4 2.5zm1 1.39L12.6 8 5 12.11V3.89z" />
+  </Icon>
+);
+
 export const IconPitch = ({ size }) => (
   <Icon size={size}>
     <path d="M1.5 3h13l.5.5v9l-.5.5h-13l-.5-.5v-9l.5-.5zM2 4v8h5.5V9.95a2 2 0 0 1 0-3.9V4H2zm6.5 0v2.05a2 2 0 0 1 0 3.9V12H14V4H8.5zM8 7a1 1 0 1 0 0 2 1 1 0 0 0 0-2zM2 6h1.5v4H2V6zm10.5 0H14v4h-1.5V6z" />

@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS = {
   confirmBeforeSave: true,
   autoBackupBeforeSave: true,
   defaultExportPath: '',
+  emulatorPath: '',
+  emulatorArgs: '{rom}',
   aiEnabled: true,
   aiProvider: 'openai-compatible',
   aiEndpoint: 'http://localhost:1234/v1/chat/completions',

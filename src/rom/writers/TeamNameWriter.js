@@ -21,6 +21,34 @@ const TILE_FORMAT_OFFSETS = [
   0x93c6, 0x93cb, 0x3a7eb, 0x3a7f0, 0x3a7f5, 0x3a7fa, 0x3a7ff, 0x3a804, 0x3a809, 0x3a80e,
 ];
 
+/**
+ * Every ROM range a team-name write can touch: shared-pointer patches, the
+ * positional text area (entries shift when a name changes size), its pointer
+ * table, the tile-format flags, the tile pointer table and the compressed tile
+ * area (P17000, blocks shift too). Used to snapshot/restore names for undo,
+ * because re-encoding a name is not byte-for-byte reversible.
+ * [start, length] in file offsets (without copier header).
+ */
+export const TEAM_NAME_REGIONS = [
+  [0x39d78, 0x39dae + 27 * 2 - 0x39d78], // shared pointer patch + positional text pointers
+  [0x43ed5, 0x44486 - 0x43ed5 + 1], // positional text (selection menu)
+  [0x444eb, 243], // shared pointer patch 2
+  [0x93c6, 0x93cd + 27 * 2 - 0x93c6], // tile format flags + tile pointer table
+  [0x3a7eb, 0x3a80e - 0x3a7eb + 1], // tile format flags
+  [0x17680, 0x17fff - 0x17680 + 1], // in-game name tiles (P17000)
+];
+
+/** Snapshot of all team-name bytes */
+export function readTeamNameBytes(rom) {
+  return TEAM_NAME_REGIONS.map(([start, len]) => Array.from(rom.readBytes(start, len)));
+}
+
+/** Restore a snapshot taken with readTeamNameBytes */
+export function writeTeamNameBytes(rom, snapshot) {
+  if (!Array.isArray(snapshot) || snapshot.length !== TEAM_NAME_REGIONS.length) return;
+  TEAM_NAME_REGIONS.forEach(([start], i) => rom.writeBytes(start, snapshot[i]));
+}
+
 export function writeTeamNameText(rom, teamIndex, text) {
   try {
     // Fix shared pointers if needed (same as ISS Studio)

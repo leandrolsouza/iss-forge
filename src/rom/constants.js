@@ -238,6 +238,35 @@ export const MATCH_PALETTES = [
   { id: 'ball', group: 'ball', offset: 0x2dedf, count: 9 },
   // Referee and linesmen — OBJ row 14, same layout as the team kits
   { id: 'referee', group: 'referee', offset: 0x2e959, count: 15 },
+  // Stadium — shared by every pitch type and weather (blob $85:DC1F, BG rows 1-7)
+  { id: 'stadium_wall', group: 'stadium', offset: 0x2dc7b, count: 15 }, // BG row 4: perimeter wall + goal net
+  { id: 'stadium_people', group: 'stadium', offset: 0x2dc21, count: 15 }, // BG row 1: photographers by the pitch
+];
+
+/**
+ * Crowd (BG rows 5-6). Each team points to one of 20 crowd palettes through a
+ * per-team table indexed by ROM ordinal ($81:9362[$1720], loaded at $07:DB63):
+ * the crowd follows the HOME team (team 1). Several teams share palettes.
+ * Descriptors are 3 bytes at $81:88AB + n*3 → blob in bank $85 (31 colours,
+ * only the first 30 are visible: row 5 colours 1-15 and row 6 colours 1-15).
+ */
+export const CROWD_DATA = {
+  TEAM_TABLE: 0x9362,
+  DESCRIPTOR_START: 0x88ab,
+  DESCRIPTOR_STEP: 3,
+  COUNT: 20,
+  COLORS: 30,
+  BLOB_BANK_FILE_BASE: 0x28000, // bank $85
+};
+
+/** Colour slots in each crowd row (15 colours); offsets 0 and 15 give the two rows */
+export const CROWD_PARTS = [
+  { key: 'outline', from: 0, count: 1 },
+  { key: 'skin', from: 1, count: 4 },
+  { key: 'shirtA', from: 5, count: 3 },
+  { key: 'neutral', from: 8, count: 3 },
+  { key: 'shirtB', from: 11, count: 3 },
+  { key: 'shadow', from: 14, count: 1 },
 ];
 
 /** Colour slots of the referee palette (indexes into the 15 colours) */

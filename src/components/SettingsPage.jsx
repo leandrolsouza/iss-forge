@@ -82,6 +82,39 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+
+            <div className="settings-item">
+              <label className="settings-label">{t('settingsEmulator')}</label>
+              <p className="settings-hint">{t('settingsEmulatorHint')}</p>
+              <div className="settings-path-row">
+                <span className="settings-path-value">
+                  {settings.emulatorPath || t('settingsNoEmulator')}
+                </span>
+                {isElectron() && (
+                  <button
+                    className="settings-btn"
+                    onClick={async () => {
+                      const res = await electronBridge.selectEmulator();
+                      if (res?.success) updateSetting('emulatorPath', res.path);
+                    }}
+                  >
+                    {t('settingsSelectEmulator')}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="settings-item">
+              <label className="settings-label">{t('settingsEmulatorArgs')}</label>
+              <p className="settings-hint">{t('settingsEmulatorArgsHint')}</p>
+              <input
+                type="text"
+                className="settings-input"
+                value={settings.emulatorArgs ?? '{rom}'}
+                onChange={(e) => updateSetting('emulatorArgs', e.target.value)}
+                spellCheck={false}
+              />
+            </div>
           </section>
         )}
 

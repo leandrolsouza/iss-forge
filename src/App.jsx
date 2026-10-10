@@ -29,6 +29,7 @@ import {
   IconOpen,
   IconSave,
   IconPatch,
+  IconPlay,
   IconUndo,
   IconRedo,
   IconSettings,
@@ -59,6 +60,7 @@ export default function App() {
     handleOpenRom,
     handleSave,
     handleSaveToPath,
+    handleTestInEmulator,
     handlePlayerChange,
     handleUniformChange,
     handleHairSkinChange,
@@ -93,6 +95,14 @@ export default function App() {
     window.electronAPI.onMenuExportPatch?.(() => openPatchModal());
     return () => window.electronAPI.removeAllListeners('menu:exportPatch');
   }, [openPatchModal]);
+
+  useEffect(() => {
+    if (!isElectron()) return;
+    window.electronAPI.onMenuTestEmulator?.(() => {
+      if (romParser) handleTestInEmulator();
+    });
+    return () => window.electronAPI.removeAllListeners('menu:testEmulator');
+  }, [romParser, handleTestInEmulator]);
 
   // IPC listeners and keyboard shortcuts
   useEffect(() => {
@@ -293,6 +303,14 @@ export default function App() {
             disabled={!romParser}
           >
             <IconPatch size={16} />
+          </button>
+          <button
+            className="titlebar-btn"
+            onClick={handleTestInEmulator}
+            title={isElectron() ? t('toolbarTestEmulator') : t('emulatorDesktopOnly')}
+            disabled={!romParser || !isElectron()}
+          >
+            <IconPlay size={16} />
           </button>
           <button
             className="titlebar-btn"

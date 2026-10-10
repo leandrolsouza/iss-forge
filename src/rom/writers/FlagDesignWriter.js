@@ -16,6 +16,24 @@ const FLAG_POINTER_STEP = 4;
 const MAXIMUM_ADDRESS = 0x48a7f;
 
 /**
+ * ROM ranges a flag-design write can touch (pointer table + compressed data,
+ * blocks shift). Snapshotted for exact undo: recompression is not byte-identical.
+ */
+export const FLAG_DESIGN_REGIONS = [
+  [FLAG_POINTER_OFFSET, TEAM_COUNT * FLAG_POINTER_STEP],
+  [0x48000, MAXIMUM_ADDRESS - 0x48000 + 1],
+];
+
+export function readFlagDesignBytes(rom) {
+  return FLAG_DESIGN_REGIONS.map(([start, len]) => Array.from(rom.readBytes(start, len)));
+}
+
+export function writeFlagDesignBytes(rom, snapshot) {
+  if (!Array.isArray(snapshot) || snapshot.length !== FLAG_DESIGN_REGIONS.length) return;
+  FLAG_DESIGN_REGIONS.forEach(([start], i) => rom.writeBytes(start, snapshot[i]));
+}
+
+/**
  * Read the compressed size stored in the first 2 bytes at a given ROM address
  * (Konami format: first 2 bytes = total compressed size including header)
  */

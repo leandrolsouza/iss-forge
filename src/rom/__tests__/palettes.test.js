@@ -11,7 +11,7 @@ import {
   shadeRamp,
   GRASS_PRESETS,
 } from '../palettes';
-import { MATCH_PALETTES } from '../constants';
+import { MATCH_PALETTES, CROWD_DATA, TEAMS } from '../constants';
 import { rgbToSnesBytes } from '../writers/UniformWriter';
 
 const REAL_ROM = fileURLToPath(
@@ -114,5 +114,48 @@ describe.skipIf(!hasRealRom)('match palettes on the real ROM', () => {
 
   it('rejects wrong colour counts', () => {
     expect(() => load().writeMatchPalette('ball', [1, 2, 3])).toThrow();
+  });
+
+  it('reads the 20 crowd palettes and which one each home team uses', () => {
+    const p = load().readMatchPalettes();
+    expect(p.crowds).toHaveLength(CROWD_DATA.COUNT);
+    p.crowds.forEach((colors) => expect(colors).toHaveLength(30));
+    expect(p.crowdMap).toHaveLength(TEAMS.length);
+    expect(p.crowdMap.every((n) => n >= 0 && n < 20)).toBe(true);
+    const idx = (id) => TEAMS.findIndex((t) => t.id === id);
+    // Italy crowd: blue shirts (verified in-game)
+    expect(p.crowds[p.crowdMap[idx('ITALY')]].slice(5, 8)).toEqual([
+      c(0, 10, 25),
+      c(0, 8, 20),
+      c(0, 7, 14),
+    ]);
+    // Shared palettes in the original ROM
+    expect(p.crowdMap[idx('DENMARK')]).toBe(p.crowdMap[idx('NORWAY')]);
+    expect(p.crowdMap[idx('GERMANY')]).toBe(p.crowdMap[idx('SUPERSTAR')]);
+    expect(p.crowdMap[idx('BRAZIL')]).not.toBe(p.crowdMap[idx('ITALY')]);
+  });
+
+  it('edits a crowd palette and reassigns a team, with undo', () => {
+    const rom = load();
+    const original = rom.readMatchPalettes();
+    const brazil = TEAMS.findIndex((t) => t.id === 'BRAZIL');
+    const italyCrowd = original.crowdMap[TEAMS.findIndex((t) => t.id === 'ITALY')];
+    rom.applyPaletteUpdates({
+      [`crowd:${italyCrowd}`]: original.crowds[italyCrowd].map(() => c(31, 0, 0)),
+      [`crowdMap:${brazil}`]: italyCrowd,
+    });
+    const after = rom.readMatchPalettes();
+    expect(after.crowdMap[brazil]).toBe(italyCrowd);
+    expect(after.crowds[italyCrowd][0]).toBe(c(31, 0, 0));
+    // Only the crowd blob and Brazil's table entry changed
+    const changed = [];
+    const before = new RomParser(new Uint8Array(readFileSync(REAL_ROM))).getRomData();
+    rom.getRomData().forEach((b, i) => b !== before[i] && changed.push(i));
+    expect(
+      changed.every((i) => (i >= 0x28000 && i < 0x30000) || (i >= 0x9362 && i < 0x9362 + 54)),
+    ).toBe(true);
+
+    rom.restoreMatchPalettes(original);
+    expect(rom.readMatchPalettes()).toEqual(original);
   });
 });

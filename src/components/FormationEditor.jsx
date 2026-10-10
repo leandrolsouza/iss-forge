@@ -11,6 +11,7 @@ import {
   validateFormation,
 } from '../rom/formation';
 import { IconFormation } from './Icons';
+import TeamDescriptionPanel from './TeamDescriptionPanel';
 import '../styles/formation.css';
 
 // Pitch geometry (SVG units). Own goal at the bottom, attacking upwards.
@@ -359,6 +360,8 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
             </div>
             <p className="formation-hint">{t('formationBenchHelp')}</p>
           </div>
+
+          <TeamDescriptionPanel team={team} teamIndex={teamIndex} />
         </div>
       </div>
     </div>

@@ -217,3 +217,35 @@
   color: var(--text-accent);
   font-size: var(--font-size-sm);
 }
+
+/* Team description (selection screen) */
+.team-desc-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.team-desc-fields {
+  flex: 1;
+  min-width: 200px;
+}
+
+.team-desc-textarea {
+  width: 100%;
+  min-height: 110px;
+  box-sizing: border-box;
+}
+
+.team-desc-preview {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #101850;
+  border: 2px solid #f0a050;
+  border-radius: 4px;
+  color: #e8f0ff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre;
+}

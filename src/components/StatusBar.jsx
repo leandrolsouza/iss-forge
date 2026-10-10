@@ -8,7 +8,7 @@ export default function StatusBar({ message, modified, teamCount, selectedTeam }
     <div className="status-bar">
       <div className="status-bar-left">
         {modified && <span className="status-modified">&#9679; {t('modified')}</span>}
-        <span className="status-message">{message}</span>
+        <span className="status-message">{message ? t(message) : ''}</span>
       </div>
       <div className="status-bar-right">
         {selectedTeam && (

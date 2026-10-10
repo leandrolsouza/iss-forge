@@ -31,12 +31,18 @@ export function exportTeam(team) {
       techniqueIndex: p.techniqueIndex,
       hairStyle: p.hairStyle,
       isSpecial: p.isSpecial,
+      // Full 6-byte block: keeps the attributes the editor does not expose yet
+      // (bytes 0 and 4, high nibble of byte 3). See research/hidden-player-attributes.md
+      raw: Array.isArray(p.rawBytes) ? [...p.rawBytes] : undefined,
     })),
     uniforms: team.uniforms,
     hairSkin: team.hairSkin,
     flagColors: team.flagColors,
     flagDesign: team.flagDesign ? { grid: team.flagDesign.grid } : null,
+    specialHair: team.specialHair,
+    specialSkin: team.specialSkin,
     formation: team.formation ? { slots: team.formation.slots } : null,
+    description: team.description || null,
   };
 }
 
@@ -99,9 +105,15 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
       if (player.name) {
         romParser.writePlayerName(teamIndex, playerIndex, player.name);
       }
+      // Use the exported 6-byte block when present so hidden attributes travel with
+      // the team; older exports fall back to the destination slot's bytes.
+      const raw =
+        Array.isArray(player.raw) && player.raw.length === 6 && player.raw.every(Number.isInteger)
+          ? player.raw
+          : null;
       romParser.writePlayerData(teamIndex, playerIndex, {
         ...player,
-        rawBytes: null, // Force fresh write
+        rawBytes: raw,
       });
     });
   }
@@ -164,6 +176,52 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
   if (Array.isArray(teamData.formation?.slots) && teamData.formation.slots.length === 11) {
     romParser.writeFormation(teamIndex, teamData.formation.slots);
   }
+
+  // Selection-screen description (optional)
+  const d = teamData.description;
+  if (d && typeof d.title === 'string' && typeof d.body === 'string') {
+    romParser.writeTeamDescription(teamIndex, {
+      title: d.title,
+      titleColor: Number.isInteger(d.titleColor) ? d.titleColor : 0x2c,
+      body: d.body,
+    });
+  }
+
+  // Special hair / skin presets (optional)
+  if (Number.isInteger(teamData.specialHair))
+    romParser.writeSpecialHair(teamIndex, teamData.specialHair);
+  if (Number.isInteger(teamData.specialSkin))
+    romParser.writeSpecialSkin(teamIndex, teamData.specialSkin);
+
+  // Flag design (optional; 2D grid of palette indexes)
+  const grid = teamData.flagDesign?.grid;
+  if (Array.isArray(grid) && grid.length && Array.isArray(grid[0])) {
+    romParser.writeFlagDesign(teamIndex, grid);
+  }
+}
+
+/**
+ * Copy (or swap) a whole team between two slots: players incl. hidden
+ * attributes, kits, hair/skin, flag, names, formation, description and the
+ * crowd palette used when the team plays as team 1.
+ * @param {RomParser} romParser
+ * @param {number} from - source slot (TEAMS index)
+ * @param {number} to - destination slot
+ * @param {{ swap?: boolean }} [options]
+ */
+export function copyTeam(romParser, from, to, { swap = false } = {}) {
+  if (from === to) return;
+  const src = JSON.parse(JSON.stringify(exportTeam(romParser.readTeam(from))));
+  const dst = swap ? JSON.parse(JSON.stringify(exportTeam(romParser.readTeam(to)))) : null;
+  const { crowdMap } = romParser.readMatchPalettes();
+
+  applyImportedTeam(romParser, to, src);
+  const crowd = { [`crowdMap:${to}`]: crowdMap[from] };
+  if (swap) {
+    applyImportedTeam(romParser, from, dst);
+    crowd[`crowdMap:${from}`] = crowdMap[to];
+  }
+  romParser.applyPaletteUpdates(crowd);
 }
 
 /**

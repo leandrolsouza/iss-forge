@@ -291,6 +291,29 @@ export default {
 
   // Export Patch
   toolbarExportPatch: 'Exportar Patch BPS/IPS (Ctrl+E)',
+  toolbarTestEmulator: 'Testar no emulador (F5)',
+  copyTeamTarget: 'Time de destino',
+  copyTeamTo: 'Copiar para',
+  swapTeamWith: 'Trocar com',
+  copyTeamHelp:
+    'Copia o time inteiro (jogadores, atributos, uniformes, cabelo/pele, bandeira, nomes, formacao, descricao e torcida) para o slot escolhido.',
+  swapTeamHelp: 'Troca os dois times de lugar por completo.',
+  copyTeamDone: 'Time copiado.',
+  swapTeamDone: 'Times trocados.',
+  copyTeamNameTruncated:
+    'Feito, mas o nome foi encurtado: falta espaco na area de nomes da ROM. Ajuste em "Nome do Time".',
+  emulatorDesktopOnly: 'Testar no emulador so funciona no app desktop.',
+  emulatorStarted: 'Emulador aberto com a ROM atual (arquivo temporario).',
+  emulatorError: 'Nao foi possivel abrir o emulador.',
+  noEmulator: 'Configure o emulador em Configuracoes > Editor.',
+  settingsEmulator: 'Emulador para testes',
+  settingsEmulatorHint:
+    'Usado pelo botao "Testar no emulador" (F5): o editor salva a ROM atual num arquivo temporario e abre neste programa. Sua ROM nao e alterada.',
+  settingsNoEmulator: 'Nenhum emulador escolhido',
+  settingsSelectEmulator: 'Escolher...',
+  settingsEmulatorArgs: 'Argumentos do emulador',
+  settingsEmulatorArgsHint:
+    '{rom} vira o caminho da ROM temporaria. Ex. RetroArch: -L "C:\\RetroArch\\cores\\snes9x_libretro.dll" {rom}. Para bsnes/snes9x/Mesen basta {rom}.',
   patchTitle: 'Exportar Patch',
   patchSubtitle:
     'Gera um arquivo de patch com as suas alteracoes. E a forma correta de distribuir o hack sem compartilhar a ROM.',
@@ -355,6 +378,18 @@ export default {
   formationExtraGk: 'Ha mais de um goleiro na formacao.',
   formationFewDefenders: 'Menos de 2 defensores: a CPU pode se comportar de forma estranha.',
   formationRoleLineMismatch: 'Ha funcoes incompativeis com a linha (dado inconsistente).',
+  descTitle: 'Descricao na tela de selecao',
+  descHeading: 'Titulo (ate 15 caracteres)',
+  descHeadingColor: 'Cor do titulo',
+  descTitleOffensive: 'Rosa (usada nos "Offensive")',
+  descTitleDefensive: 'Amarela (usada nos "Defensive")',
+  descBody: 'Texto (ate 6 linhas de 15 caracteres)',
+  descHelp: 'Quebra automatica em 15 colunas; Enter forca nova linha. Sem acentos.',
+  descFormationMismatch: 'O titulo cita uma formacao diferente da formacao do time',
+  descUseFormation: 'Usar',
+  descTooLong: 'O texto passa de 6 linhas e sera cortado na tela.',
+  descFull: 'Sem espaco: as 27 descricoes juntas nao cabem na area original da ROM.',
+  descApplied: 'Descricao atualizada.',
 
   // Scenario Editor
   scenarioSubtitle: 'Situacoes do modo Scenario (9 desafios)',
@@ -449,6 +484,31 @@ export default {
   mpRefPreset_green: 'Verde',
   mpRefPreset_blue: 'Azul',
   mpRefPreset_pink: 'Rosa',
+  mpStadium: 'Estadio',
+  mpStadiumHelp:
+    'Valem para todos os tipos de gramado e climas. Para ver as partes no jogo, procure o muro em volta do campo, a rede do gol e os fotografos atras da linha de fundo.',
+  mp_stadium_wall: 'Muro e rede',
+  mp_stadium_people: 'Fotografos',
+  mpRestore: 'Restaurar original',
+  mpWall_original: 'Original',
+  mpWall_blue: 'Azulado',
+  mpWall_red: 'Avermelhado',
+  mpWall_dark: 'Escuro',
+  mpCrowd: 'Torcida',
+  mpCrowdHelp:
+    'A torcida usa as cores do time 1 (o primeiro escolhido na selecao de times). Sao 20 paletas para 27 times: alguns times compartilham a mesma, e voce pode trocar qual paleta cada time usa.',
+  mpCrowdHomeTeam: 'Time 1',
+  mpCrowdUses: 'Paleta de torcida usada',
+  mpCrowdUnused: 'nao usada',
+  mpCrowdShared: 'Esta paleta tambem e usada por',
+  mpCrowdRow: 'Grupo de torcedores',
+  mpCrowd_outline: 'Contorno',
+  mpCrowd_skin: 'Pele',
+  mpCrowd_shirtA: 'Camisa A',
+  mpCrowd_neutral: 'Neutros',
+  mpCrowd_shirtB: 'Camisa B',
+  mpCrowd_shadow: 'Sombra',
+  mpCrowdFromUniform: 'Usar cores do uniforme do time',
 
   // Help Tooltips - Player Editor
   helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',

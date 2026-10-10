@@ -4,6 +4,7 @@ const { autoUpdater } = electronUpdater;
 import Store from 'electron-store';
 import path from 'path';
 import fs from 'fs';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import {
   getProvider,
@@ -24,6 +25,8 @@ const settingsStore = new Store({
     confirmBeforeSave: true,
     autoBackupBeforeSave: true,
     defaultExportPath: '',
+    emulatorPath: '',
+    emulatorArgs: '{rom}',
     aiEnabled: true,
     aiProvider: 'openai-compatible',
     aiEndpoint: 'http://localhost:1234/v1/chat/completions',
@@ -179,6 +182,11 @@ function createMenu() {
           accelerator: 'CmdOrCtrl+E',
           click: () => mainWindow.webContents.send('menu:exportPatch'),
         },
+        {
+          label: 'Testar no Emulador',
+          accelerator: 'F5',
+          click: () => mainWindow.webContents.send('menu:testEmulator'),
+        },
         { type: 'separator' },
         {
           label: 'Sair',
@@ -305,6 +313,58 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
 });
 
 ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+
+// --- Test in emulator ---
+
+/** Split an argument string, honouring double quotes ("C:\My Path\core.dll") */
+function splitArgs(str) {
+  const out = [];
+  const re = /"([^"]*)"|(\S+)/g;
+  let m;
+  while ((m = re.exec(str || ''))) out.push(m[1] !== undefined ? m[1] : m[2]);
+  return out;
+}
+
+ipcMain.handle('emulator:test', async (event, { data, extension }) => {
+  try {
+    const exe = settingsStore.get('emulatorPath');
+    if (!exe || !fs.existsSync(exe)) {
+      return { success: false, error: 'noEmulator' };
+    }
+    // Fixed temp name: the emulator reloads the same file on every test
+    const ext = extension === '.smc' ? '.smc' : '.sfc';
+    const romPath = path.join(app.getPath('temp'), `iss-forge-test${ext}`);
+    fs.writeFileSync(romPath, Buffer.from(data));
+
+    let args = splitArgs(settingsStore.get('emulatorArgs') || '{rom}');
+    if (args.some((a) => a.includes('{rom}'))) args = args.map((a) => a.replace('{rom}', romPath));
+    else args.push(romPath);
+
+    const child = spawn(exe, args, { detached: true, stdio: 'ignore', cwd: path.dirname(exe) });
+    child.on('error', () => {});
+    child.unref();
+    return { success: true, path: romPath };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('emulator:select', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Escolher emulador',
+    properties: ['openFile'],
+    filters:
+      process.platform === 'win32'
+        ? [
+            { name: 'Programas', extensions: ['exe'] },
+            { name: 'Todos os Arquivos', extensions: ['*'] },
+          ]
+        : [{ name: 'Todos os Arquivos', extensions: ['*'] }],
+  });
+  if (result.canceled || !result.filePaths.length) return { success: false };
+  settingsStore.set('emulatorPath', result.filePaths[0]);
+  return { success: true, path: result.filePaths[0] };
+});
 
 ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
   try {

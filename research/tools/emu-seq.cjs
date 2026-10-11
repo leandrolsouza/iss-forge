@@ -10,6 +10,7 @@
  *   hold:BTN:N    hold a button for N frames
  *   shot:name     save emu-out/name.png
  *   dump:name     save emu-out/name.wram (128 KB WRAM; CGRAM mirror at 0x3200)
+ *   vram:name     save emu-out/name.vram (64 KB VRAM, if the core exposes it)
  *
  * env:
  *   ISS_CORE  libretro core (default: snes9x2010 from RetroArch)
@@ -46,6 +47,8 @@ for (const a of actions) {
     emu.run(Number(n), [b]);
   } else if (a.startsWith('dump:'))
     fs.writeFileSync(path.join(OUT, a.slice(5) + '.wram'), emu.wram());
+  else if (a.startsWith('vram:'))
+    fs.writeFileSync(path.join(OUT, a.slice(5) + '.vram'), emu.vram());
   else emu.press(a, 4, 30);
 }
 if (process.argv[3]) fs.writeFileSync(path.join(OUT, process.argv[3]), emu.saveState());

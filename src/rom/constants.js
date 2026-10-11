@@ -219,6 +219,143 @@ export const SCENARIO_TEXT_CHARSET =
   ' !"\',-.0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 // ============================================================
+// GAME TEXTS (training mode)
+//   Box texts (ASCII, 8x8 font, $80:E2AC like the scenarios; FD = new line,
+//   FF = end), found through word pointer tables in bank $02:
+//   - intros:  table $82:8CFB (5 words, read at $07:D419), 8 lines x 18 cols,
+//              strings packed in 0x10D05-0x10F3E
+//   - results: table $82:8F3F (5 words -> 5 sub-tables of 4 words, read at
+//              $04:C577), 5 lines x 16 cols; plus the "course record" text
+//              loaded with LDY #$92D4 at $04:C56D (operand at 0x2456E).
+//              Sub-tables and strings packed in 0x10F49-0x11307.
+//   Fixed-length texts (ISS charset, 8x16 font via $82:8AF4):
+//   - messages: table $82:9308 (4 words, $06:971A), 3 lines x 20 cols each
+//   - titles:   table $82:940A (5 words, $07:D405), 15 chars each
+//   See research/game-texts.md.
+// ============================================================
+
+export const GAME_TEXTS = {
+  BANK_FILE_BASE: 0x10000, // bank $02: file = 0x10000 + (ptr - 0x8000)
+  INTRO_TABLE: 0x10cfb,
+  INTRO_COUNT: 5,
+  INTRO_AREA: [0x10d05, 0x10f3f],
+  INTRO_BOX: { lines: 8, columns: 18 },
+  RESULT_TABLE: 0x10f3f,
+  RESULT_GROUPS: 5,
+  RESULT_PER_GROUP: 4,
+  RESULT_AREA: [0x10f49, 0x11308],
+  RESULT_BOX: { lines: 5, columns: 16 },
+  RECORD_OPERAND: 0x2456e, // LDY #$92D4 at $04:C56D
+  MESSAGE_TABLE: 0x11308,
+  MESSAGE_COUNT: 4,
+  MESSAGE_BOX: { lines: 3, columns: 20 },
+  TITLE_TABLE: 0x1140a,
+  TITLE_COUNT: 5,
+  TITLE_LENGTH: 15,
+};
+
+// ============================================================
+// MENU SCREENS (Europe ROM)
+//   Menus are 32x32 BG tilemaps (2048 bytes) packed with Konami's compressor.
+//   Text uses the 8x16 font: a character is a top tile on row r and a bottom
+//   tile on row r+1, as given by the table $82:8AF4 (FONT16_TABLE). A few
+//   screens use alternative tile pairs (e.g. "T" = E2/E1), listed in
+//   FONT16_EXTRA_PAIRS. Blocks are packed one after the other, so an edited
+//   screen must recompress into its original size (plus 0xFF padding).
+//   See research/game-texts.md.
+// ============================================================
+
+export const FONT16_TABLE = 0x10af4;
+
+/** Tile pairs ("top,bottom") seen in the menus that are not in FONT16_TABLE */
+export const FONT16_EXTRA_PAIRS = {
+  '226,225': 'T',
+  '276,281': 'e',
+  '276,301': 'o',
+  '180,247': 'V',
+  '312,321': 'y',
+};
+
+/**
+ * pointers: file offsets of every 3-byte long pointer to the screen (load
+ * descriptors in bank $02). Screens with pointers can be moved to free space
+ * when an edit no longer fits; the others (references inside code or not
+ * found) can only be rewritten in place.
+ */
+export const MENU_SCREENS = [
+  { offset: 0x3fe82, id: 'prematch', label: 'Pre-match menu (Open Game)', pointers: [0x10503] },
+  {
+    offset: 0xd49da,
+    id: 'prematchCup',
+    label: 'Pre-match menu (tournaments)',
+    pointers: [0x10557],
+  },
+  { offset: 0xbe003, id: 'prematchShort', label: 'Pre-match menu (short)', pointers: [0x1052d] },
+  { offset: 0x67124, id: 'players', label: '1P vs CPU / 1P vs 2P', pointers: [0x1048d] },
+  { offset: 0x67a94, id: 'rules', label: 'Rules', pointers: [0x10697] },
+  { offset: 0x6b63a, id: 'tactics', label: 'Tactics', pointers: [0x1040d] },
+  { offset: 0x7734b, id: 'options', label: 'Options', pointers: [0x105a5] },
+  { offset: 0xb7a01, id: 'sound', label: 'Sound', pointers: [0x1081d] },
+  { offset: 0x6fe61, id: 'password', label: 'Password', pointers: [] },
+  { offset: 0x277d8, id: 'enterPassword', label: 'Enter password', pointers: [0x10872] },
+  { offset: 0xf7030, id: 'cupGroup', label: 'International Cup group', pointers: [] },
+  {
+    offset: 0x779b8,
+    id: 'stageTable',
+    label: 'Stage table (won / lost)',
+    pointers: [0x1023e, 0x10247],
+  },
+  {
+    offset: 0xbe92d,
+    id: 'wsFixtures',
+    label: 'World Series fixtures',
+    pointers: [0x101f4, 0x101fd],
+  },
+  { offset: 0x57d78, id: 'wsResults', label: 'World Series results', pointers: [0x10223, 0x1022c] },
+  { offset: 0x8fb23, id: 'congrats', label: 'Congratulations', pointers: [] },
+  { offset: 0xf0c1f, id: 'trainingMenu', label: 'Training menu', pointers: [0x107cd] },
+  { offset: 0xf0a67, id: 'trainingName', label: 'Training: input name', pointers: [0x107bc] },
+  { offset: 0xf0f88, id: 'trainingLevels', label: 'Training: levels', pointers: [0x107fc] },
+  // Second half of the levels screen ($7E:4B90, descriptor at 0x10802): not checked in game yet
+  { offset: 0xf10c9, id: 'trainingScore', label: 'Training: score', pointers: [] },
+];
+
+/**
+ * Free space for relocated menu screens: 0xFF padding at the end of banks in the
+ * original ROM, [start, end) file offsets. Excludes areas used by other editors
+ * (0x17680-0x17FFF team-name tiles) and the padding right after the pre-match
+ * and password screens (already counted as their own room).
+ */
+export const MENU_FREE_SPACE = [
+  [0x0febb, 0x10000],
+  [0x1fe2a, 0x20000],
+  [0x27f53, 0x28000],
+  [0x47fa5, 0x48000],
+  [0x4ffc1, 0x50000],
+  [0x77f3b, 0x78000],
+  [0xa7f75, 0xa8000],
+  [0xbffab, 0xc0000],
+  [0xc7fc1, 0xc8000],
+  [0xd7f72, 0xd8000],
+  [0xeffcf, 0xf0000],
+];
+
+/**
+ * ISS charset for the 8x16 font (table $82:8AF4) — same codes as the player names.
+ * 0x52 is drawn as "!!" and 0x55 as a low dot. 0x59-0x5A = "1ST", 0x60-0x61 = "2ND".
+ */
+export const ISS_FONT16_CHARS = (() => {
+  const map = { 0x00: ' ', 0x52: '!', 0x53: '-', 0x54: '.', 0x55: ',', 0x56: '"', 0x57: '=' };
+  Object.assign(map, { 0x58: '+', 0x5b: '%', 0x5c: "'", 0x5d: '~', 0x5e: ':', 0x5f: '/' });
+  for (let i = 0; i < 10; i++) map[0x62 + i] = String(i);
+  for (let i = 0; i < 26; i++) {
+    map[0x6c + i] = String.fromCharCode(65 + i);
+    map[0x86 + i] = String.fromCharCode(97 + i);
+  }
+  return map;
+})();
+
+// ============================================================
 // MATCH PALETTES (pitch, ball, referee)
 //
 // Palettes are uploaded by a palette-script system ($80:AB2B / $80:ACF0):

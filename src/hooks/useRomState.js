@@ -27,6 +27,9 @@ export default function useRomState() {
   }, []);
   // Global (non-team) data: International Cup / World Series draws
   const [tournamentDraws, setTournamentDraws] = useState([]);
+  // Global (non-team) data: training mode texts
+  const [gameTexts, setGameTexts] = useState(null);
+  const [menuScreens, setMenuScreens] = useState([]);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -62,6 +65,8 @@ export default function useRomState() {
           setScenarios(parser.readScenarios());
           setMatchPalettes(parser.readMatchPalettes());
           setTournamentDraws(parser.readTournamentDraws());
+          setGameTexts(parser.readTrainingTexts());
+          setMenuScreens(parser.readMenuScreens());
           history.clearHistory();
 
           if (allTeams.length > 0) {
@@ -102,6 +107,9 @@ export default function useRomState() {
     flagBytes: romParserRef.current ? romParserRef.current.readFlagDesignBytes() : null,
     // Tournament draws (768 bytes, restored as-is)
     drawBytes: romParserRef.current ? romParserRef.current.readTournamentDrawBytes() : null,
+    // Training texts (re-packed on every edit)
+    gameTextBytes: romParserRef.current ? romParserRef.current.readTrainingTextBytes() : null,
+    menuBytes: romParserRef.current ? romParserRef.current.readMenuScreenBytes() : null,
   });
 
   const pushSnapshot = useCallback(
@@ -136,6 +144,14 @@ export default function useRomState() {
         if (!Array.isArray(restored) && restored.drawBytes) {
           romParser.restoreTournamentDrawBytes(restored.drawBytes);
           setTournamentDraws(romParser.readTournamentDraws());
+        }
+        if (!Array.isArray(restored) && restored.gameTextBytes) {
+          romParser.restoreTrainingTextBytes(restored.gameTextBytes);
+          setGameTexts(romParser.readTrainingTexts());
+        }
+        if (!Array.isArray(restored) && restored.menuBytes) {
+          romParser.restoreMenuScreenBytes(restored.menuBytes);
+          setMenuScreens(romParser.readMenuScreens());
         }
       }
     },
@@ -209,6 +225,10 @@ export default function useRomState() {
     setMatchPalettes,
     tournamentDraws,
     setTournamentDraws,
+    gameTexts,
+    setGameTexts,
+    menuScreens,
+    setMenuScreens,
     selectedTeamIndex,
     activeTab,
     openTabs,

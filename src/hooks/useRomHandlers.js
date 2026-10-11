@@ -17,6 +17,7 @@ import {
 import * as electronBridge from '../services/electronBridge';
 import { buildPatch, getPatchFilename } from '../rom/patches';
 import { withDerivedStats } from '../rom/playerStats';
+import { exportTexts, applyTexts } from '../utils/textsExport';
 
 export default function useRomHandlers({
   romParser,
@@ -32,6 +33,8 @@ export default function useRomHandlers({
   setScenarios,
   setMatchPalettes,
   setTournamentDraws,
+  setGameTexts,
+  setMenuScreens,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -519,6 +522,82 @@ export default function useRomHandlers({
   );
 
   /**
+   * Replace all training texts.
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  const handleGameTextsChange = useCallback(
+    (texts) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.writeTrainingTexts(texts);
+      if (result.ok) {
+        setGameTexts(romParser.readTrainingTexts());
+        markModified();
+      }
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setGameTexts],
+  );
+
+  /**
+   * Replace texts of one menu screen. `texts` maps run index -> new text.
+   * @returns {{ ok: boolean, error?: string, size: number, capacity: number }}
+   */
+  const handleMenuScreenChange = useCallback(
+    (offset, texts) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.writeMenuScreen(offset, texts);
+      if (result.ok) {
+        setMenuScreens(romParser.readMenuScreens());
+        markModified();
+      }
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setMenuScreens],
+  );
+
+  /** Export every translatable text as one JSON file */
+  const handleExportTexts = useCallback(() => {
+    if (!romParser) return;
+    const base = (romInfo?.fileName || 'iss')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_');
+    downloadJson(exportTexts(romParser), `${base}_texts.json`);
+    setStatusMessage(`Exported: ${base}_texts.json`);
+  }, [romParser, romInfo, setStatusMessage]);
+
+  /**
+   * Import a texts JSON file (all-or-nothing, one undo step).
+   * @returns {Promise<null | { ok: boolean, errors: string[], warnings: string[], changed: object }>}
+   */
+  const handleImportTexts = useCallback(async () => {
+    if (!romParser) return null;
+    const data = await readJsonFile();
+    if (!data) return null;
+    const res = applyTexts(romParser, data, { beforeCommit: () => pushSnapshot(teams) });
+    if (res.ok && Object.values(res.changed).some(Boolean)) {
+      setGameTexts(romParser.readTrainingTexts());
+      setMenuScreens(romParser.readMenuScreens());
+      setScenarios(romParser.readScenarios());
+      setTeams((prev) =>
+        prev.map((t, i) => ({ ...t, description: romParser.readTeamDescription(i) })),
+      );
+      markModified();
+    }
+    return res;
+  }, [
+    romParser,
+    teams,
+    pushSnapshot,
+    markModified,
+    setGameTexts,
+    setMenuScreens,
+    setScenarios,
+    setTeams,
+  ]);
+
+  /**
    * Flush pending (deferred) writes into the ROM buffer and repair the SNES
    * internal checksum. Must run before any save or patch export so the output
    * is complete and passes checksum checks in emulators/flashcarts.
@@ -756,6 +835,10 @@ export default function useRomHandlers({
     handleSwapPlayers,
     handleScenarioChange,
     handleTournamentDrawsChange,
+    handleGameTextsChange,
+    handleMenuScreenChange,
+    handleExportTexts,
+    handleImportTexts,
     handleTeamDescriptionChange,
     handleCopyTeam,
     handleMatchPaletteChange,

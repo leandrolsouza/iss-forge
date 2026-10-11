@@ -20,18 +20,22 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Todos os atributos dos jogadores (3 velocidades, disputa no ataque/defesa, chute do goleiro); barra SPEED igual à do jogo; JSON v2 | aba Jogadores | `hidden-player-attributes.md` |
 | Correção: atributos/número/cabelo lidos na ordem ordinal (times 5-24 estavam trocados) | aba Jogadores | `tournaments.md` |
 | Sorteios da International Cup / World Series (32 × 6 grupos), com trava contra o freeze | aba Torneios | `tournaments.md` |
+| Textos do treino (instruções, comentários, recorde, mensagens, títulos) e textos de 19 telas de menu; compressor Konami com parse ótimo | aba Textos do Jogo | `game-texts.md` |
 
 ## Pendente — prioridade sugerida
 
-### 1. Textos do jogo / tradução PT-BR
-- Já mapeado: textos de cenário (`0x114AF`), descrições dos times (`0x1202C`), dicas do treino e
-  mensagens (`0x10D00`-`0x11300`, ASCII, mesma fonte), fonte `$82:8C80`.
-- Falta: tabela dos **menus** (letras A=`0x61`, ex. `0x11661` "PENALTY"); mapear e criar um editor de
-  strings com controle de espaço.
-- Acentos não existem na fonte: seria preciso desenhar tiles novos (Tile Explorer + compressor Konami).
+### 1. Tela título, menu principal e logos
+- O menu principal (OPEN GAME, INTERNATIONAL CUP...) e os títulos dos modos usam outra fonte/gráficos,
+  não cobertos pela aba Textos. Usar o Tile Explorer + `KonamiCodec`. Falta localizar os tilemaps e as
+  paletas.
 
-### 2. Tela título e logos
-- Usar o Tile Explorer + `KonamiCodec`. Falta localizar tilemap/paleta da tela título.
+### 2. Restante da tradução
+- Textos de ajuda e rótulos na fonte 8x16 perto de `0x11F74` ("Press L or R button...", LOB/PASS/SHOOT/DASH,
+  NEXTGAME).
+- Textos do jogo durante a partida (GOAL, placar, nomes de posições na barra inferior) e telas que não
+  foram encontradas na varredura (só blocos de exatamente 2048 bytes foram procurados).
+- Acentos: não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16.
+- Ponteiros extras que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
 
 ### 3. Nome do time sem truncar ao copiar
 - A área de nomes do menu (`0x43ED5`-`0x44486`) fica cheia e nomes longos são cortados (ex.: copiar

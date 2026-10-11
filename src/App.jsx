@@ -5,6 +5,7 @@ import PlayerEditor from './components/PlayerEditor';
 import FormationEditor from './components/FormationEditor';
 import ScenarioEditor from './components/ScenarioEditor';
 import TournamentEditor from './components/TournamentEditor';
+import GameTextEditor from './components/GameTextEditor';
 import MatchPaletteEditor from './components/MatchPaletteEditor';
 import UniformEditor from './components/UniformEditor';
 import HairSkinEditor from './components/HairSkinEditor';
@@ -219,6 +220,7 @@ export default function App() {
     if (activeTab === 'compare' && teams.length > 0) return <TeamCompare teams={teams} />;
     if (activeTab === 'scenarios' && romParser) return <ScenarioEditor />;
     if (activeTab === 'tournaments' && romParser) return <TournamentEditor />;
+    if (activeTab === 'gameTexts' && romParser) return <GameTextEditor />;
     if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
 
     if (!romParser || selectedTeamIndex === null) {

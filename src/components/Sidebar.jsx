@@ -124,6 +124,13 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           </button>
           <button
             className="sidebar-icon-btn"
+            onClick={() => onOpenTab('gameTexts', t('editorGameTexts'))}
+            title={t('editorGameTexts')}
+          >
+            <IconTeamName size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
             onClick={() => onOpenTab('matchPalettes', t('editorMatchPalettes'))}
             title={t('editorMatchPalettes')}
           >
@@ -260,6 +267,15 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
                 <IconTrophy size={14} />
               </span>
               <span>{t('editorTournaments')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('gameTexts', t('editorGameTexts'))}
+            >
+              <span className="item-icon">
+                <IconTeamName size={14} />
+              </span>
+              <span>{t('editorGameTexts')}</span>
             </div>
             <div
               className="sidebar-item editor-item"

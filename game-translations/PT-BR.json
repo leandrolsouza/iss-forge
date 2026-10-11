@@ -1,0 +1,897 @@
+{
+  "_format": "iss-forge-texts",
+  "_version": 1,
+  "_exportedAt": "2026-10-11T13:03:00.383Z",
+  "_help": [
+    "Edite apenas os valores de \"text\" / \"title\" / \"body\". \"\\n\" força uma nova linha.",
+    "As fontes do jogo não têm acentos: eles são removidos na importação (técnico -> tecnico).",
+    "Textos de menu: no máximo \"max\" caracteres. \"original\" e \"at\" identificam o texto e não são importados.",
+    "{1S}{T} e {2N}{D} desenham \"1ST\" e \"2ND\". Códigos como {7a} mantêm tiles especiais.",
+    "Partes ou entradas podem ser removidas do arquivo: as ausentes ficam inalteradas."
+  ],
+  "training": {
+    "intros": [
+      "Use bem o sprint\ne o drible para\nevitar ser\ntacleado.\nColete todas as\nbandeiras o mais\nrapido possivel.",
+      "Passe a bola\npara todos os\ncompanheiros e\nevite ser tacleado\npelos adversarios.\nBusque um bom\ntempo.",
+      "Tente desviar\ndos adversarios\ne marque o mais\nrapido possivel.\nMire na\ncaixa piscante.",
+      "Roube a bola do\nadversario o mais\nrapido possivel.\nAs regras de\nimpedimento nao\nse aplicam. Se o\noutro time marcar\nvocê perde.",
+      "Você pode mirar\ndiretamente ou\ncentralizar a\nbola para chutar\ne marcar.\nMire na\ncaixa piscante."
+    ],
+    "results": [
+      [
+        "Você precisa\nmelhorar\nseu drible.",
+        "Continue\ntreinando.",
+        "Voce esta quase\nla.\nContinue assim.",
+        "Muito bem!\nOs defensores\nnao tem chance."
+      ],
+      [
+        "Nao desista.\nDeixe a bola\nfazer o trabalho.",
+        "Nao se acomode.\nSeu passe\nprecisa de\nmais trabalho.",
+        "Bom esforco.",
+        "Seu treino\nvaleu a pena.\nExcelentes\nhabilidades\nde passe."
+      ],
+      [
+        "Voce esta muito\nlonge do alvo.",
+        "Seu chute\nesta melhorando.",
+        "Voce ja cria\nmais chances\nde chute.",
+        "Fantastico.\nNada pode te\nimpedir de\nmarcar agora!"
+      ],
+      [
+        "Sua defesa\ne terrivel!\nSeu adversario\nvai marcar\nsuempre.",
+        "Voce ainda\nprecisa melhorar\nsuas habilidades\ndefensivas.",
+        "Defesa solida.",
+        "Ate o melhor\ntime tera\ndificuldade em\npassar por voce."
+      ],
+      [
+        "Nao subestime\na importancia\ndos escanteios.",
+        "Seja mais\nagressivo\nna area.",
+        "Continue\ntrabalhando nas\nbolas paradas.\nBom esforco!",
+        "Otimo trabalho.\nAgora tente isso\nem um jogo real."
+      ]
+    ],
+    "record": "Voce bateu\no recorde\ndo percurso.\nContinue assim.",
+    "messages": [
+      "Voce definitivamente\nprecisa treinar mais!",
+      "Voce tera problemas\npara manter seu\nlugar no time!",
+      "Bom esforco!\nTente bater o\nrecorde do percurso!",
+      "Fantastico!\nO treino te\naperfeicoou!"
+    ],
+    "titles": [
+      "~ Drible ~",
+      "~ Passe ~",
+      "~ Chute ~",
+      "~ Defesa ~",
+      "~ Escanteio ~"
+    ]
+  },
+  "menus": {
+    "prematch": [
+      {
+        "at": "5,11",
+        "max": 13,
+        "original": "Game Start",
+        "text": "Iniciar"
+      },
+      {
+        "at": "8,10",
+        "max": 14,
+        "original": "Substituting",
+        "text": "Substituicao"
+      },
+      {
+        "at": "11,12",
+        "max": 12,
+        "original": "Tactics",
+        "text": "Taticas"
+      },
+      {
+        "at": "14,12",
+        "max": 12,
+        "original": "Stadium",
+        "text": "Estadio"
+      },
+      {
+        "at": "17,13",
+        "max": 11,
+        "original": "Rules",
+        "text": "Regras"
+      },
+      {
+        "at": "20,10",
+        "max": 14,
+        "original": "Team Colours",
+        "text": "Cores do Time"
+      },
+      {
+        "at": "23,13",
+        "max": 11,
+        "original": "Sound",
+        "text": "Som"
+      }
+    ],
+    "prematchCup": [
+      {
+        "at": "6,10",
+        "max": 14,
+        "original": "Game Start",
+        "text": "Iniciar"
+      },
+      {
+        "at": "9,10",
+        "max": 14,
+        "original": "Substitute",
+        "text": "Substituir"
+      },
+      {
+        "at": "12,10",
+        "max": 14,
+        "original": "Tactics",
+        "text": "Taticas"
+      },
+      {
+        "at": "15,10",
+        "max": 14,
+        "original": "Ranking",
+        "text": "Ranking"
+      },
+      {
+        "at": "18,10",
+        "max": 14,
+        "original": "Team Colours",
+        "text": "Cores do Time"
+      },
+      {
+        "at": "21,10",
+        "max": 14,
+        "original": "Sound",
+        "text": "Som"
+      }
+    ],
+    "prematchShort": [
+      {
+        "at": "8,10",
+        "max": 14,
+        "original": "Game Start",
+        "text": "Iniciar"
+      },
+      {
+        "at": "11,10",
+        "max": 14,
+        "original": "Substituting",
+        "text": "Substituicao"
+      },
+      {
+        "at": "14,10",
+        "max": 14,
+        "original": "Tactics",
+        "text": "Taticas"
+      },
+      {
+        "at": "17,10",
+        "max": 14,
+        "original": "Sound",
+        "text": "Som"
+      }
+    ],
+    "players": [
+      {
+        "at": "10,10",
+        "max": 5,
+        "original": "1 P",
+        "text": "1 P"
+      },
+      {
+        "at": "10,15",
+        "max": 4,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "10,19",
+        "max": 5,
+        "original": "CPU",
+        "text": "CPU"
+      },
+      {
+        "at": "13,10",
+        "max": 5,
+        "original": "1 P",
+        "text": "1 P"
+      },
+      {
+        "at": "13,15",
+        "max": 4,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "13,19",
+        "max": 5,
+        "original": "2 P",
+        "text": "2 P"
+      },
+      {
+        "at": "16,10",
+        "max": 5,
+        "original": "CPU",
+        "text": "CPU"
+      },
+      {
+        "at": "16,15",
+        "max": 4,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "16,19",
+        "max": 5,
+        "original": "CPU",
+        "text": "CPU"
+      }
+    ],
+    "rules": [
+      {
+        "at": "3,4",
+        "max": 15,
+        "original": "Fouls",
+        "text": "Faltas"
+      },
+      {
+        "at": "3,19",
+        "max": 4,
+        "original": "ON",
+        "text": "ON"
+      },
+      {
+        "at": "3,23",
+        "max": 5,
+        "original": "OFF",
+        "text": "OFF"
+      },
+      {
+        "at": "6,4",
+        "max": 15,
+        "original": "Yellow Card",
+        "text": "Cartao Amarelo"
+      },
+      {
+        "at": "6,19",
+        "max": 4,
+        "original": "ON",
+        "text": "ON"
+      },
+      {
+        "at": "6,23",
+        "max": 5,
+        "original": "OFF",
+        "text": "OFF"
+      },
+      {
+        "at": "9,4",
+        "max": 15,
+        "original": "Offside",
+        "text": "Impedimento"
+      },
+      {
+        "at": "9,19",
+        "max": 4,
+        "original": "ON",
+        "text": "ON"
+      },
+      {
+        "at": "9,23",
+        "max": 5,
+        "original": "OFF",
+        "text": "OFF"
+      }
+    ],
+    "tactics": [
+      {
+        "at": "19,3",
+        "max": 13,
+        "original": "No Tactics",
+        "text": "Sem Taticas"
+      },
+      {
+        "at": "19,16",
+        "max": 15,
+        "original": "Counter Attack",
+        "text": "Contra-ataque"
+      },
+      {
+        "at": "21,3",
+        "max": 13,
+        "original": "All Offence",
+        "text": "Ataque Total"
+      },
+      {
+        "at": "21,16",
+        "max": 15,
+        "original": "Offside Trap",
+        "text": "Armadilha Imped"
+      },
+      {
+        "at": "23,3",
+        "max": 28,
+        "original": "All Defence",
+        "text": "Defesa Total"
+      }
+    ],
+    "options": [
+      {
+        "at": "4,3",
+        "max": 15,
+        "original": "TIME PER HALF",
+        "text": "TEMPO"
+      },
+      {
+        "at": "8,3",
+        "max": 10,
+        "original": "LEVEL",
+        "text": "NIVEL"
+      },
+      {
+        "at": "8,13",
+        "max": 18,
+        "original": "Easy Normal Hard",
+        "text": "Facil Normal Dific"
+      },
+      {
+        "at": "12,3",
+        "max": 10,
+        "original": "KEEPER",
+        "text": "GOLEIRO"
+      },
+      {
+        "at": "12,18",
+        "max": 13,
+        "original": "Auto Manual",
+        "text": "Auto Manual"
+      },
+      {
+        "at": "14,4",
+        "max": 9,
+        "original": "CONTROLS",
+        "text": "CONTROLE"
+      },
+      {
+        "at": "15,13",
+        "max": 2,
+        "original": "2P",
+        "text": "2J"
+      },
+      {
+        "at": "15,18",
+        "max": 13,
+        "original": "Auto Manual",
+        "text": "Auto Manual"
+      },
+      {
+        "at": "19,3",
+        "max": 28,
+        "original": "JOYPAD CONTROLS",
+        "text": "CONTROLES JOYPAD"
+      }
+    ],
+    "sound": [
+      {
+        "at": "10,4",
+        "max": 5,
+        "original": "SOUND",
+        "text": "SOM"
+      },
+      {
+        "at": "10,13",
+        "max": 8,
+        "original": "Stereo",
+        "text": "Estereo"
+      },
+      {
+        "at": "10,21",
+        "max": 10,
+        "original": "Monaural",
+        "text": "Monaural"
+      },
+      {
+        "at": "13,4",
+        "max": 11,
+        "original": "CROWD NOISE",
+        "text": "SOM TORCIDA"
+      },
+      {
+        "at": "13,18",
+        "max": 5,
+        "original": "ON",
+        "text": "ON"
+      },
+      {
+        "at": "13,23",
+        "max": 8,
+        "original": "OFF",
+        "text": "OFF"
+      }
+    ],
+    "password": [
+      {
+        "at": "6,12",
+        "max": 8,
+        "original": "PASSWORD",
+        "text": "SENHA"
+      }
+    ],
+    "enterPassword": [
+      {
+        "at": "1,9",
+        "max": 16,
+        "original": "ENTER PASSWORD",
+        "text": "DIGITAR SENHA"
+      }
+    ],
+    "cupGroup": [
+      {
+        "at": "5,3",
+        "max": 5,
+        "original": "GROUP",
+        "text": "GRUPO"
+      }
+    ],
+    "stageTable": [
+      {
+        "at": "3,10",
+        "max": 10,
+        "original": "STAGE",
+        "text": "FASE"
+      },
+      {
+        "at": "3,20",
+        "max": 5,
+        "original": "WON",
+        "text": "VENC"
+      },
+      {
+        "at": "3,25",
+        "max": 6,
+        "original": "LOST",
+        "text": "PERDEU"
+      }
+    ],
+    "wsFixtures": [
+      {
+        "at": "2,4",
+        "max": 15,
+        "original": "WORLD SERIES",
+        "text": "COPA DO MUNDO"
+      },
+      {
+        "at": "2,19",
+        "max": 12,
+        "original": "SEASON",
+        "text": "TEMPORAD"
+      },
+      {
+        "at": "5,7",
+        "max": 24,
+        "original": "STAGE FIXTURES",
+        "text": "FASE PARTIDAS"
+      },
+      {
+        "at": "8,15",
+        "max": 16,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "13,15",
+        "max": 16,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "18,15",
+        "max": 16,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "23,15",
+        "max": 16,
+        "original": "VS",
+        "text": "VS"
+      }
+    ],
+    "wsResults": [
+      {
+        "at": "2,4",
+        "max": 15,
+        "original": "WORLD SERIES",
+        "text": "COPA DO MUNDO"
+      },
+      {
+        "at": "2,19",
+        "max": 12,
+        "original": "SEASON",
+        "text": "TEMPORAD"
+      },
+      {
+        "at": "5,6",
+        "max": 11,
+        "original": "STAGE",
+        "text": "FASE"
+      },
+      {
+        "at": "5,17",
+        "max": 14,
+        "original": "GAME RESULT",
+        "text": "RESULTADO JOGO"
+      },
+      {
+        "at": "8,11",
+        "max": 11,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "13,11",
+        "max": 11,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "18,11",
+        "max": 11,
+        "original": "VS",
+        "text": "VS"
+      },
+      {
+        "at": "23,11",
+        "max": 11,
+        "original": "VS",
+        "text": "VS"
+      }
+    ],
+    "congrats": [
+      {
+        "at": "6,8",
+        "max": 21,
+        "original": "CONGRATULATIONS!",
+        "text": "PARABENS!"
+      },
+      {
+        "at": "10,10",
+        "max": 19,
+        "original": "SEE YOU",
+        "text": "ATE LOGO"
+      },
+      {
+        "at": "13,12",
+        "max": 17,
+        "original": "NEXT STAGE",
+        "text": "PROXIMA FASE"
+      },
+      {
+        "at": "17,6",
+        "max": 3,
+        "original": "LET",
+        "text": "VAI"
+      },
+      {
+        "at": "17,10",
+        "max": 19,
+        "original": "S TRY NORMAL MODE",
+        "text": "TENTAR MODO NORMAL"
+      }
+    ],
+    "trainingMenu": [
+      {
+        "at": "3,17",
+        "max": 13,
+        "original": "Dribble",
+        "text": "Drible"
+      },
+      {
+        "at": "5,17",
+        "max": 13,
+        "original": "Pass",
+        "text": "Passe"
+      },
+      {
+        "at": "7,17",
+        "max": 13,
+        "original": "Shoot",
+        "text": "Chute"
+      },
+      {
+        "at": "9,17",
+        "max": 13,
+        "original": "Defence",
+        "text": "Defesa"
+      },
+      {
+        "at": "11,17",
+        "max": 13,
+        "original": "Corner Kick",
+        "text": "Escanteio"
+      },
+      {
+        "at": "14,9",
+        "max": 7,
+        "original": "TOTAL",
+        "text": "TOTAL"
+      },
+      {
+        "at": "14,16",
+        "max": 9,
+        "original": "RANKING",
+        "text": "RANKING"
+      }
+    ],
+    "trainingName": [
+      {
+        "at": "3,10",
+        "max": 7,
+        "original": "INPUT",
+        "text": "INSIRA"
+      },
+      {
+        "at": "3,17",
+        "max": 6,
+        "original": "NAME",
+        "text": "NOME"
+      }
+    ],
+    "trainingLevels": [
+      {
+        "at": "1,8",
+        "max": 8,
+        "original": "LEVEL",
+        "text": "NIVEL"
+      },
+      {
+        "at": "5,9",
+        "max": 8,
+        "original": "Dribble",
+        "text": "Drible"
+      },
+      {
+        "at": "12,9",
+        "max": 5,
+        "original": "Pass",
+        "text": "Pass"
+      },
+      {
+        "at": "19,9",
+        "max": 6,
+        "original": "Shoot",
+        "text": "Chute"
+      },
+      {
+        "at": "26,9",
+        "max": 8,
+        "original": "Defence",
+        "text": "Defesa"
+      }
+    ],
+    "trainingScore": [
+      {
+        "at": "1,9",
+        "max": 12,
+        "original": "Corner Kick",
+        "text": "Escanteio"
+      },
+      {
+        "at": "8,9",
+        "max": 12,
+        "original": "TOTAL SCORE",
+        "text": "PONT TOTAL"
+      },
+      {
+        "at": "11,2",
+        "max": 7,
+        "original": "TIME",
+        "text": "TEMPO"
+      },
+      {
+        "at": "11,17",
+        "max": 7,
+        "original": "TIME",
+        "text": "TEMPO"
+      },
+      {
+        "at": "15,2",
+        "max": 5,
+        "original": "SCORE",
+        "text": "PONT"
+      },
+      {
+        "at": "15,17",
+        "max": 5,
+        "original": "SCORE",
+        "text": "PONT"
+      }
+    ]
+  },
+  "scenarios": [
+    {
+      "index": 1,
+      "match": "ITALY 1x1 HOLLAND",
+      "text": "Os brasileiros ficaram\ncom dez homens e\nestao lutando contra\no time dos EUA. XXX"
+    },
+    {
+      "index": 2,
+      "match": "ITALY 0x1 NIGERIA",
+      "text": "Os italianos ficaram\ncom nove jogadores\npor culpa do arbitro\nque favorece\na Nigeria!"
+    },
+    {
+      "index": 3,
+      "match": "SKOREA 0x2 SPAIN",
+      "text": "Os espanhois estao\ncom dois gols de\nvantagem e sao\nfavoritos, mas a\nCoreia nao desistiu\ne reage."
+    },
+    {
+      "index": 4,
+      "match": "SCOTLAND 1x0 HOLLAND",
+      "text": "O forte ataque\nholandes enfrenta\numa defesa solida e\na Escocia parece\nfavorita para vencer."
+    },
+    {
+      "index": 5,
+      "match": "BULGARIA 0x1 GERMANY",
+      "text": "A Alemanha converteu\num penalti cedo,\nmas os explosivos\natacantes bulgaros\nbuscam a virada."
+    },
+    {
+      "index": 6,
+      "match": "HOLLAND 1x2 BRAZIL",
+      "text": "A Holanda perdia\nde 2-0 mas acaba\nde marcar um otimo\ngol e precisa\nvencer para se\nclassificar."
+    },
+    {
+      "index": 7,
+      "match": "ARGENTINA 1x3 ROMANIA",
+      "text": "O principal atacante\nargentino foi\nexpulso sem motivo.\nEles conseguem ir\nas quartas sem ele\nvencendo este\notimo time\nromeno?"
+    },
+    {
+      "index": 8,
+      "match": "USA 2x1 COLOMBIA",
+      "text": "Os EUA vencem\npor 2-1.\nMas os colombianos\nsao muito habilidosos!\nFaca o possivel para\nimpedi-los nos\ndois ultimos minutos."
+    },
+    {
+      "index": 9,
+      "match": "BULGARIA 1x1 FRANCE",
+      "text": "A Bulgaria precisa\nvencer para avançar\nenquanto a Franca\nso precisa empatar.\nA complacencia\nfrancesa pode\ncustar caro."
+    }
+  ],
+  "teamDescriptions": [
+    {
+      "team": "GERMANY",
+      "title": "Defensivo 5-3-2",
+      "body": "Jogadores com\nbons atributos\ne a forca geral\ne uma das\nmelhores do\nmundo."
+    },
+    {
+      "team": "ITALY",
+      "title": "Ofensivo 4-4-2",
+      "body": "A defesa e a\nmais forte do\nmundo. Tem tambem\num meiocampo\ncohesivo."
+    },
+    {
+      "team": "HOLLAND",
+      "title": "Ofensivo 3-4-3",
+      "body": "Este time foca\nno ataque e pode\nrevirar o jogo\ndo adversario\ncontra ele."
+    },
+    {
+      "team": "SPAIN",
+      "title": "Ofensivo 3-4-3",
+      "body": "A forca deste\ntime esta no\nmeiocampo\ne na defesa."
+    },
+    {
+      "team": "ENGLAND",
+      "title": "Ofensivo 4-3-3",
+      "body": "O jogo de\npasses e o\nponto forte\ne marca gols\nde diversas\nformas."
+    },
+    {
+      "team": "WALES",
+      "title": "Ofensivo 4-4-2",
+      "body": "Este time\npassa a bola\ndireto para os\natacantes,\ncriando rapidas\naberturas."
+    },
+    {
+      "team": "FRANCE",
+      "title": "Ofensivo 4-3-3",
+      "body": "O meiocampo\natravessa a\ndefesa rival\npara criar\noportunidades\nde gol."
+    },
+    {
+      "team": "DENMARK",
+      "title": "Ofensivo 4-4-2",
+      "body": "Este time dri-\nbla de forma\nimpressiva,\nevitando tackles\nfaceis."
+    },
+    {
+      "team": "SWEDEN",
+      "title": "Defensivo 4-5-1",
+      "body": "Contra-ataque\nusando a forte\ndefesa e o\nveloce atacante."
+    },
+    {
+      "team": "NORWAY",
+      "title": "Defensivo 4-4-2",
+      "body": "Este time tem\nmais chances de\nmarcar com a\nbola no ar\nna boca\ndo gol."
+    },
+    {
+      "team": "IRELAND",
+      "title": "Defensivo 4-4-2",
+      "body": "Este time e\nmelhor usando\nos longos passes\ndos defensores."
+    },
+    {
+      "team": "BELGIUM",
+      "title": "Defensivo 4-4-2",
+      "body": "GK Van Riet\ninicia otimos\ncontra-ataques\ncom seu forte\nchutao."
+    },
+    {
+      "team": "AUSTRIA",
+      "title": "Defensivo 4-4-2",
+      "body": "Defesa forte\ntradicionalmente\nbarra gols\ne abre\nespacos."
+    },
+    {
+      "team": "SWISS",
+      "title": "Defensivo 4-4-2",
+      "body": "Embora fraco\nno meio, os\ndefensores sao\npoderosos e os\natacantes de\nalto nivel."
+    },
+    {
+      "team": "ROMANIA",
+      "title": "Ofensivo 4-5-1",
+      "body": "Dois meias\nsao o ponto\nforte com\njogo agressivo."
+    },
+    {
+      "team": "BULGARIA",
+      "title": "Ofensivo 4-3-3",
+      "body": "O stamina do\ntime e bom\ne brilham mais\nno segundo\ntempo."
+    },
+    {
+      "team": "RUSSIA",
+      "title": "Defensivo 5-3-2",
+      "body": "Jogadores com\nboa forca e o\ncontra-ataque\npelo meiocampo\ne muito forte."
+    },
+    {
+      "team": "ARGENTINA",
+      "title": "Ofensivo 4-4-2",
+      "body": "Este time tem\num MF craque\nRedonda e joga\nrapido e\ndireto."
+    },
+    {
+      "team": "BRAZIL",
+      "title": "Ofensivo 4-4-2",
+      "body": "O nivel tecnico\ngeral e tao\nalto que pode\nmarcar de\nmuitas formas."
+    },
+    {
+      "team": "COLOMBIA",
+      "title": "Ofensivo 4-4-2",
+      "body": "MF Murillo cria\notimos gols com\nbons passes.\nOs atacantes\nsao muito\nrapidos."
+    },
+    {
+      "team": "MEXICO",
+      "title": "Ofensivo 3-4-3",
+      "body": "GK Leone reage\nbem a todos\nos ataques."
+    },
+    {
+      "team": "USA",
+      "title": "Defensivo 4-4-2",
+      "body": "Este time foca\nna defesa mas\ntem otimo\ncontra-ataque."
+    },
+    {
+      "team": "NIGERIA",
+      "title": "Ofensivo 3-5-2",
+      "body": "Meias e\ndefensores\ntrabalham bem\njuntos para\ncriar\noportunidades."
+    },
+    {
+      "team": "CAMEROON",
+      "title": "Ofensivo 4-4-2",
+      "body": "Este time e\nbom em contra-\nataques, espe-\ncialmente sob\npressao."
+    },
+    {
+      "team": "SCOTLAND",
+      "title": "Defensivo 4-4-2",
+      "body": "Este time cria\nchances com\ndefesa firme\npara lançar\num contra-\nataque rapido."
+    },
+    {
+      "team": "SKOREA",
+      "title": "Ofensivo 3-5-2",
+      "body": "Este time tem\nmuitos jogadores\nvelozes e\nbate forte\nnos tackles."
+    },
+    {
+      "team": "SUPERSTAR",
+      "title": "Ofensivo 4-2-4",
+      "body": "O jogador\nmais habilidoso\nescolhido dos\ntimes de todo\no mundo."
+    }
+  ]
+}

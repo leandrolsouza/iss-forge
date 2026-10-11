@@ -1,0 +1,105 @@
+/* ============================================================
+   GAME TEXT EDITOR (training texts + menu screens)
+   ============================================================ */
+
+.gt-group-title {
+  margin: 10px 0 4px;
+}
+
+.game-text-editor .tournament-card {
+  grid-template-columns: 1fr 0 auto;
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.game-text-editor .editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gt-mode {
+  display: flex;
+  gap: 6px;
+}
+
+.gt-menu-runs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.gt-menu-run {
+  display: grid;
+  grid-template-columns: 52px 280px 52px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.gt-menu-pos,
+.gt-menu-len {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.gt-menu-input {
+  width: 100%;
+  padding: 4px 6px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+  font-family: var(--font-mono);
+}
+
+.gt-menu-len.over,
+.gt-menu-input.over {
+  color: var(--text-error);
+  border-color: var(--text-error);
+}
+
+.gt-menu-orig {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.gt-import-result {
+  margin: 12px 20px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.gt-import-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.gt-import-line {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.gt-import-section {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.gt-import-warn {
+  color: var(--text-muted);
+}
+
+.gt-moved-badge {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
+  font-size: var(--font-size-sm);
+  font-weight: normal;
+  color: var(--text-secondary);
+}

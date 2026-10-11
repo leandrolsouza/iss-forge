@@ -76,7 +76,7 @@ export function konamiDecompress(rom, offset, gameType = 1) {
         for (let i = 0; i < cnt; i++) {
           outBuf[outPos++] = chr;
           winBuf[bufPos++] = chr;
-          if (bufPos > WINDOW_SIZE) bufPos -= WINDOW_SIZE;
+          if (bufPos >= WINDOW_SIZE) bufPos -= WINDOW_SIZE;
         }
         break;
       }
@@ -87,7 +87,7 @@ export function konamiDecompress(rom, offset, gameType = 1) {
           const cnt = (inBuf[inPos - 1] & 0x1f) + 2;
           for (let i = 0; i < cnt; i++) {
             winBuf[bufPos++] = 0x00;
-            if (bufPos > WINDOW_SIZE) bufPos -= WINDOW_SIZE;
+            if (bufPos >= WINDOW_SIZE) bufPos -= WINDOW_SIZE;
             outBuf[outPos++] = 0x00;
           }
         } else {
@@ -95,7 +95,7 @@ export function konamiDecompress(rom, offset, gameType = 1) {
             const cnt = (inBuf[inPos - 1] & 0x1f) + 2;
             for (let i = 0; i < cnt; i++) {
               winBuf[bufPos++] = 0x00;
-              if (bufPos > WINDOW_SIZE) bufPos -= WINDOW_SIZE;
+              if (bufPos >= WINDOW_SIZE) bufPos -= WINDOW_SIZE;
               outBuf[outPos++] = 0x00;
             }
           } else {
@@ -103,7 +103,7 @@ export function konamiDecompress(rom, offset, gameType = 1) {
             const cnt = (chr & 0xff) + 2;
             for (let i = 0; i < cnt; i++) {
               winBuf[bufPos++] = 0x00;
-              if (bufPos > WINDOW_SIZE) bufPos -= WINDOW_SIZE;
+              if (bufPos >= WINDOW_SIZE) bufPos -= WINDOW_SIZE;
               outBuf[outPos++] = 0x00;
             }
           }
@@ -211,106 +211,6 @@ export function encodeSnes4bppTiles(grid) {
 }
 
 /**
- * Search for LZ (sliding window) match at current position
- * Ported from ProtonNoir's konami_c.cpp search_lz()
- * @param {Uint8Array} data - Input data
- * @param {number} pos - Current position
- * @param {number} inputSize - Total input size
- * @returns {{length: number, offset: number}} Best LZ match
- */
-function searchLz(data, pos, inputSize) {
-  let bestLen = 0;
-  let bestOff = 0;
-
-  // Window start: up to 0x3DF bytes back from current position
-  let winStart = pos - 0x3df;
-  if (winStart < 0) winStart = 0;
-
-  for (let i = winStart; i < pos && i + MAX_LENGTH < inputSize; i++) {
-    if (data[i] === data[pos]) {
-      let match = 1;
-      while (match < MAX_LENGTH && pos + match < inputSize && data[i + match] === data[pos + match])
-        match++;
-
-      if (match > bestLen) {
-        bestLen = match;
-        bestOff = i;
-      }
-      if (bestLen >= MAX_LENGTH) break;
-    }
-  }
-
-  if (bestLen >= 2 && pos + bestLen <= inputSize) {
-    return { length: bestLen, offset: bestOff };
-  }
-  return { length: 0, offset: 0 };
-}
-
-/**
- * Search for RLE pattern at current position
- * Ported from ProtonNoir's konami_c.cpp search_rle()
- * @param {Uint8Array} data - Input data
- * @param {number} pos - Current position
- * @param {number} inputSize - Total input size
- * @param {number} gameType - 0 or 1
- * @returns {{size: number, type: number, data: number, ar: Uint8Array|null}}
- */
-function searchRle(data, pos, inputSize, gameType) {
-  let candidate = { size: 0, type: 0, data: 0, ar: null };
-
-  // RLE_A0 (0xA0-0xBF) - alternating zero + byte
-  if (
-    pos + 3 < inputSize &&
-    data[pos] === 0x00 &&
-    data[pos + 1] !== 0x00 &&
-    data[pos + 2] === 0x00 &&
-    data[pos + 3] !== 0x00
-  ) {
-    let size = 0;
-    while (size <= MAX_LENGTH * 2 && pos + size < inputSize - 1) {
-      if (data[pos + size] !== 0x00) break;
-      size += 2;
-    }
-    const ar = new Uint8Array(MAX_LENGTH);
-    let s = 0;
-    let rep = 1;
-    while (rep <= size && pos + rep < inputSize - 1) {
-      if (data[pos + rep] === 0x00) break;
-      ar[s++] = data[pos + rep];
-      rep += 2;
-    }
-    rep = rep - 1;
-    if (rep > MAX_LENGTH * 2) rep = MAX_LENGTH * 2;
-    if (rep >= 4 && rep > candidate.size) {
-      candidate = { size: rep, type: 0xa0, data: 0, ar: ar.slice(0, rep / 2) };
-    }
-  }
-
-  // RLE_C0 (0xC0-0xDF) - single byte repeated (non-zero)
-  if (data[pos] !== 0x00) {
-    let size = 0;
-    while (size <= MAX_LENGTH && pos + size < inputSize && data[pos + size] === data[pos]) size++;
-    if (size > MAX_LENGTH) size = MAX_LENGTH;
-    if (size >= 2 && size > candidate.size) {
-      candidate = { size, type: 0xc0, data: data[pos], ar: null };
-    }
-  }
-
-  // RLE_E0 (0xE0-0xFF) - zero repeated
-  if (data[pos] === 0x00) {
-    const maxLen = gameType === 1 ? MAX_ZERO_LENGTH : MAX_LENGTH;
-    let size = 0;
-    while (size <= maxLen && pos + size < inputSize && data[pos + size] === 0x00) size++;
-    if (size > maxLen) size = maxLen;
-    if (size >= 2 && size > candidate.size) {
-      candidate = { size, type: 0xe0, data: 0, ar: null };
-    }
-  }
-
-  return candidate;
-}
-
-/**
  * Write LZ token to output buffer
  * @returns {number} Bytes written
  */
@@ -321,35 +221,6 @@ function writeLz(outBuf, outPos, lz) {
   outBuf[outPos] = (lzPointer >> 8) & 0xff;
   outBuf[outPos + 1] = lzPointer & 0xff;
   return 2;
-}
-
-/**
- * Write RLE token to output buffer
- * @returns {number} Bytes written
- */
-function writeRle(outBuf, outPos, rle) {
-  if (rle.type === 0xe0) {
-    if (rle.size <= MAX_LENGTH) {
-      outBuf[outPos] = 0xe0 | ((rle.size - 2) & 0x1f);
-      return 1;
-    } else {
-      outBuf[outPos] = 0xff;
-      outBuf[outPos + 1] = (rle.size - 2) & 0xff;
-      return 2;
-    }
-  } else if (rle.type === 0xa0) {
-    const size = Math.floor(rle.size / 2) - 2;
-    outBuf[outPos] = 0xa0 | (size & 0x1f);
-    for (let i = 0; i < Math.floor(rle.size / 2); i++) {
-      outBuf[outPos + 1 + i] = rle.ar[i];
-    }
-    return 1 + Math.floor(rle.size / 2);
-  } else {
-    // RLE_C0
-    outBuf[outPos] = 0xc0 | ((rle.size - 2) & 0x1f);
-    outBuf[outPos + 1] = rle.data;
-    return 2;
-  }
 }
 
 /**
@@ -366,81 +237,106 @@ function writeRaw(outBuf, outPos, raw, rawSize) {
 }
 
 /**
- * Compress data using Konami's algorithm
- * Full implementation with LZ search, matching ProtonNoir's konami_c.cpp
+ * Compress data using Konami's algorithm (format of ProtonNoir's konami_c).
+ *
+ * Optimal parse: dynamic programming over every token the decoder accepts
+ * (RAW chunks, LZ copies incl. overlapping ones, RLE_A0/C0/E0), so the output
+ * is never larger than a greedy encoder. On the original menu tilemaps it
+ * matches (or beats) the size of Konami's own data, which matters because
+ * edited blocks must fit back into their original slot.
  * @param {Uint8Array} data - Data to compress
- * @param {number} gameType - 0 or 1
+ * @param {number} gameType - 0 or 1 (ISS uses 1)
  * @returns {Uint8Array} Compressed data (includes 2-byte size header)
  */
 export function konamiCompress(data, gameType = 1) {
-  const outBuf = new Uint8Array(DATA_SIZE);
-  let outPos = 2; // Reserve 2 bytes for size header
-  let inPos = 0;
-  const inSize = data.length;
+  const n = data.length;
+  const INF = 1e9;
+  const cost = new Float64Array(n + 1).fill(INF);
+  const choice = new Array(n + 1);
+  cost[n] = 0;
 
-  const raw = new Uint8Array(MAX_RAW_SIZE);
-  let rawSize = 0;
-
-  while (inPos < inSize) {
-    let lz = { length: 0, offset: 0 };
-    const rle = searchRle(data, inPos, inSize, gameType);
-
-    if (rle.size <= MAX_LENGTH && inPos < inSize - 1) {
-      lz = searchLz(data, inPos, inSize);
+  // Longest LZ match at each position (window as in the original encoder)
+  const lzLen = new Uint8Array(n);
+  const lzOff = new Uint32Array(n);
+  for (let pos = 1; pos < n; pos++) {
+    const winStart = Math.max(0, pos - 0x3df);
+    let best = 0;
+    let bestOff = 0;
+    for (let i = pos - 1; i >= winStart; i--) {
+      if (data[i] !== data[pos]) continue;
+      let m = 1;
+      while (m < MAX_LENGTH && pos + m < n && data[i + m] === data[pos + m]) m++;
+      if (m > best) {
+        best = m;
+        bestOff = i;
+        if (best >= MAX_LENGTH) break;
+      }
     }
-
-    if (lz.length >= 2 && lz.length > rle.size) {
-      // LZ match is best
-      if (lz.length === 2 && rawSize > 0) {
-        // Short LZ match — absorb into RAW buffer instead
-        raw[rawSize++] = data[inPos++];
-        if (rawSize === MAX_RAW_SIZE) {
-          outPos += writeRaw(outBuf, outPos, raw, rawSize);
-          rawSize = 0;
-        }
-      } else {
-        outPos += writeRaw(outBuf, outPos, raw, rawSize);
-        rawSize = 0;
-        outPos += writeLz(outBuf, outPos, lz);
-        inPos += lz.length;
-      }
-    } else if (rle.size >= 2 && rle.size >= lz.length) {
-      // RLE match is best
-      if (rle.type === 0xe0) {
-        // Zero RLE always flushes raw first
-        outPos += writeRaw(outBuf, outPos, raw, rawSize);
-        rawSize = 0;
-        outPos += writeRle(outBuf, outPos, rle);
-        inPos += rle.size;
-      } else if (rle.size === 2 && rawSize !== 0) {
-        // Short RLE with pending raw — absorb
-        raw[rawSize++] = data[inPos++];
-        if (rawSize === MAX_RAW_SIZE) {
-          outPos += writeRaw(outBuf, outPos, raw, rawSize);
-          rawSize = 0;
-        }
-      } else {
-        outPos += writeRaw(outBuf, outPos, raw, rawSize);
-        rawSize = 0;
-        outPos += writeRle(outBuf, outPos, rle);
-        inPos += rle.size;
-      }
-    } else {
-      // No good match — accumulate raw
-      raw[rawSize++] = data[inPos++];
-      if (rawSize === MAX_RAW_SIZE) {
-        outPos += writeRaw(outBuf, outPos, raw, rawSize);
-        rawSize = 0;
-      }
+    if (best >= 2) {
+      lzLen[pos] = best;
+      lzOff[pos] = bestOff;
     }
   }
 
-  // Flush remaining raw bytes
-  outPos += writeRaw(outBuf, outPos, raw, rawSize);
+  const zeroMax = gameType === 1 ? MAX_ZERO_LENGTH : MAX_LENGTH;
+  for (let i = n - 1; i >= 0; i--) {
+    const take = (len, c, token) => {
+      const total = c + cost[i + len];
+      if (total < cost[i]) {
+        cost[i] = total;
+        choice[i] = token;
+      }
+    };
+    // RAW chunk of 1..31 bytes
+    for (let k = 1; k <= MAX_RAW_SIZE && i + k <= n; k++) take(k, k + 1, { t: 'raw', len: k });
+    // LZ copy
+    for (let len = 2; len <= lzLen[i]; len++) take(len, 2, { t: 'lz', len, off: lzOff[i] });
+    if (data[i] !== 0) {
+      // RLE_C0: same non-zero byte
+      let run = 1;
+      while (run < MAX_LENGTH && i + run < n && data[i + run] === data[i]) run++;
+      for (let len = 2; len <= run; len++) take(len, 2, { t: 'c0', len });
+    } else {
+      // RLE_E0: zeros (short form up to 32: 0xFF is the extended marker in type 1)
+      let run = 1;
+      while (run < zeroMax && i + run < n && data[i + run] === 0) run++;
+      const shortMax = gameType === 1 ? MAX_LENGTH - 1 : MAX_LENGTH;
+      for (let len = 2; len <= run; len++) take(len, len <= shortMax ? 1 : 2, { t: 'e0', len });
+      // RLE_A0: (00 xx) pairs
+      let pairs = 0;
+      while (pairs < MAX_LENGTH && i + pairs * 2 + 1 < n && data[i + pairs * 2] === 0) pairs++;
+      for (let p = 2; p <= pairs; p++) take(p * 2, 1 + p, { t: 'a0', len: p * 2 });
+    }
+  }
 
-  // Write size header (total compressed size including header)
+  const outBuf = new Uint8Array(Math.max(16, cost[0] + 4));
+  let outPos = 2;
+  for (let i = 0; i < n;) {
+    const c = choice[i];
+    if (c.t === 'raw') {
+      outPos += writeRaw(outBuf, outPos, data.subarray(i, i + c.len), c.len);
+    } else if (c.t === 'lz') {
+      outPos += writeLz(outBuf, outPos, { length: c.len, offset: c.off });
+    } else if (c.t === 'c0') {
+      outBuf[outPos++] = 0xc0 | ((c.len - 2) & 0x1f);
+      outBuf[outPos++] = data[i];
+    } else if (c.t === 'e0') {
+      const shortMax = gameType === 1 ? MAX_LENGTH - 1 : MAX_LENGTH;
+      if (c.len <= shortMax) outBuf[outPos++] = 0xe0 | ((c.len - 2) & 0x1f);
+      else {
+        outBuf[outPos++] = 0xff;
+        outBuf[outPos++] = (c.len - 2) & 0xff;
+      }
+    } else {
+      const p = c.len / 2;
+      outBuf[outPos++] = 0xa0 | ((p - 2) & 0x1f);
+      for (let k = 0; k < p; k++) outBuf[outPos++] = data[i + k * 2 + 1];
+    }
+    i += c.len;
+  }
+
+  // Size header (total compressed size including header)
   outBuf[0] = outPos & 0xff;
   outBuf[1] = (outPos >> 8) & 0xff;
-
   return outBuf.slice(0, outPos);
 }

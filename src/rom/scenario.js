@@ -56,14 +56,18 @@ export function secondsToClock(total) {
  * 8 lines x 23 columns, 0xFD = new line, 0xFF = end. Trailing spaces trimmed.
  * @returns {string} lines joined by "\n"
  */
-export function decodeScenarioText(rom, fileOffset) {
+export function decodeScenarioText(
+  rom,
+  fileOffset,
+  { lines: maxLines = S.TEXT_LINES, columns = S.TEXT_COLUMNS } = {},
+) {
   const lines = [];
   let p = fileOffset;
   let ended = false;
-  for (let line = 0; line < S.TEXT_LINES; line++) {
+  for (let line = 0; line < maxLines; line++) {
     let text = '';
     if (!ended) {
-      for (let col = 0; col < S.TEXT_COLUMNS; col++) {
+      for (let col = 0; col < columns; col++) {
         const c = rom.readByte(p);
         if (c === S.TEXT_END) {
           ended = true;
@@ -127,8 +131,8 @@ export function wrapScenarioText(text, columns = S.TEXT_COLUMNS) {
  * Encode display lines into bytes (FD between lines, FF at the end).
  * A line that fills all 23 columns wraps automatically, so no FD is needed after it.
  */
-export function encodeScenarioText(text) {
-  const lines = wrapScenarioText(text);
+export function encodeScenarioText(text, columns = S.TEXT_COLUMNS) {
+  const lines = wrapScenarioText(text, columns);
   while (lines.length && lines[lines.length - 1] === '') lines.pop();
   const bytes = [];
   lines.forEach((line, i) => {
@@ -136,7 +140,7 @@ export function encodeScenarioText(text) {
       const code = ch.charCodeAt(0);
       bytes.push(SCENARIO_TEXT_CHARSET.includes(ch) ? code : 0x20);
     }
-    if (i < lines.length - 1 && line.length < S.TEXT_COLUMNS) bytes.push(S.TEXT_NEWLINE);
+    if (i < lines.length - 1 && line.length < columns) bytes.push(S.TEXT_NEWLINE);
   });
   bytes.push(S.TEXT_END);
   return { bytes, lineCount: lines.length };

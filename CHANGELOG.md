@@ -18,8 +18,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tournaments tab** — edit the 32 International Cup / World Series draws (6 groups of 4). The editor
   blocks drafts that leave a selectable team out of every draw, which would freeze the game
   (see `research/tournaments.md`)
+- **Game Texts tab** — translate the training texts (instructions, result comments, record, ranking
+  messages, mode titles) with a preview of each box, and the texts of 19 menu screens (pre-match menu,
+  rules, options, sound, password, tournament and training screens). See `research/game-texts.md`
+- **Texts JSON export/import** — one file with every translatable text (training, menus, scenario texts,
+  team descriptions). Partial files are accepted and accents are removed on import. What does not fit is
+  left out and listed with the reason; the rest is imported as one undo step
+- Menu screens that no longer fit in place are moved to free ROM space (bank-end padding or the slot
+  left by another moved screen) and their load pointers are updated. When no single free area is big
+  enough, all movable screens are re-arranged at once
+- Translation strings accept `{name}` parameters
+
+### Changed
+- `konamiCompress` now uses an optimal parse. It matches the size of Konami's own data, so edited menu
+  screens fit back in place. The previous greedy encoder produced 2-5× larger tilemaps
 
 ### Fixed
+- Menu texts: "1ST"/"2ND" in "1ST SEASON", "1ST STAGE" are drawn by the game itself and are no longer
+  part of the editable text; a text can no longer grow into the next one ("TEMPO POR ETAPA3.5.7")
+- Importing a texts file over an earlier import: menu texts are matched against the original ROM text
+  ("text not found on the screen" warnings)
+- Konami decompressor: the window ring wrapped one byte late in RLE runs (`>` instead of `>=`). No real
+  block was affected
 - Player attribute blocks (numbers, hair, stats) were read in the menu team order. The game uses the ROM
   ordinal order (Scotland = 5), so teams 5-24 showed the data of a neighbouring team
 - The attribute formerly labelled "Speed" (byte 1, low nibble) is the goalkeeper kick power. The game only

@@ -14,8 +14,10 @@ export function I18nProvider({ children }) {
   });
 
   const t = useCallback(
-    (key) => {
-      return LANGUAGES[lang]?.[key] || LANGUAGES['pt-BR']?.[key] || key;
+    (key, params) => {
+      const s = LANGUAGES[lang]?.[key] || LANGUAGES['pt-BR']?.[key] || key;
+      if (!params) return s;
+      return s.replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? params[k] : m));
     },
     [lang],
   );

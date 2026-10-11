@@ -5,8 +5,8 @@ Scripts de apoio à engenharia reversa. **Não fazem parte do app.**
 | Arquivo | Para quê |
 |---------|----------|
 | `disasm65816.mjs` | Disassembler 65816 mínimo (acompanha `REP`/`SEP`). Aceita offset de arquivo ou endereço SNES (`$00:ED41`). |
-| `libretro-emu.cjs` | Frontend libretro headless (Node + koffi): roda um core sem janela, com controle, screenshots, save states, dump de WRAM e `poke(addr, bytes)` para escrever na WRAM (testes A/B em valores vivos). |
-| `emu-seq.cjs` | Roteiro de botões/esperas/screenshots/dumps para o emulador (ver o cabeçalho do arquivo). |
+| `libretro-emu.cjs` | Frontend libretro headless (Node + koffi): roda um core sem janela, com controle, screenshots, save states, dump de WRAM e VRAM (`vram()`) e `poke(addr, bytes)` para escrever na WRAM (testes A/B em valores vivos). |
+| `emu-seq.cjs` | Roteiro de botões/esperas/screenshots/dumps (`dump:` WRAM, `vram:` VRAM) para o emulador (ver o cabeçalho do arquivo). |
 | `cgram-match.cjs` | Lê o buffer de paletas (`$7E:3200`) de um dump de WRAM e localiza cada linha na ROM. |
 | `png-crop.cjs` | Recorta e amplia um trecho de screenshot (ex.: inspecionar um sprite). |
 | `png-montage.cjs` | Junta vários screenshots numa grade, para ver uma partida inteira de uma vez. |

@@ -41,6 +41,18 @@ import { readFormation, writeFormation, decodeFormation } from './formation';
 import { readScenarios, writeScenario } from './scenario';
 import { readDraws, writeDraw, readDrawBytes, restoreDrawBytes } from './tournament';
 import {
+  readTrainingTexts,
+  writeTrainingTexts,
+  readTrainingTextBytes,
+  restoreTrainingTextBytes,
+} from './gameTexts';
+import {
+  readMenuScreens,
+  writeMenuScreen,
+  readMenuScreenBytes,
+  restoreMenuScreenBytes,
+} from './menuScreens';
+import {
   readTeamDescription,
   readTeamDescriptions,
   writeTeamDescription,
@@ -219,6 +231,35 @@ export default class RomParser {
   }
   restoreTournamentDrawBytes(bytes) {
     restoreDrawBytes(this, bytes);
+  }
+
+  /** Training mode texts (intros, results, messages, titles) */
+  readTrainingTexts() {
+    return readTrainingTexts(this);
+  }
+  /** @returns {{ ok: boolean, error?: string }} */
+  writeTrainingTexts(texts) {
+    return writeTrainingTexts(this, texts);
+  }
+  readTrainingTextBytes() {
+    return readTrainingTextBytes(this);
+  }
+  restoreTrainingTextBytes(snap) {
+    restoreTrainingTextBytes(this, snap);
+  }
+
+  /** Menu screens (compressed tilemaps) and their texts */
+  readMenuScreens() {
+    return readMenuScreens(this);
+  }
+  writeMenuScreen(offset, texts) {
+    return writeMenuScreen(this, offset, texts);
+  }
+  readMenuScreenBytes() {
+    return readMenuScreenBytes(this);
+  }
+  restoreMenuScreenBytes(snap) {
+    restoreMenuScreenBytes(this, snap);
   }
 
   writeFormation(teamIndex, slots) {

@@ -92,6 +92,8 @@ export default {
   stFixedLimit: '{lines} linhas x {columns} letras (fonte grande)',
   stPack_joypadHelp: 'Espaco das ajudas dos controles',
   stPack_mainMenu: 'Espaco das listas de sprites do menu principal',
+  stFontConflict:
+    'A fonte do menu nao tem espaco para letras novas: o {extra} e desenhado no lugar do {replaced}, entao nenhum item pode usar {replaced} ao mesmo tempo.',
   st_joypad: 'Controles do joypad (Opcoes)',
   st_mainMenu: 'Menu principal',
   st_titles: 'Titulos dos modos (letras grandes)',
@@ -111,7 +113,7 @@ export default {
   stf_titles_worldSeries2: 'World Series: 2a temporada',
   stf_titles_special: 'Jogo especial',
   stSpriteHelp:
-    'Os itens do menu principal sao sprites: uma linha, so as letras {chars} (a fonte nao tem outras). A barra mostra onde o texto termina na tela.',
+    'Os itens do menu principal sao sprites: uma linha, so as letras {chars} (o H foi desenhado pelo ISS Forge no lugar do K: os dois nao podem ser usados juntos). A barra mostra onde o texto termina na tela.',
   stTitleHelp:
     'Letras grandes do titulo: ate 3 linhas, centralizadas; 32 colunas por linha (I e 1 ocupam 1 coluna, o espaco 1, as outras letras 2). So as letras {chars}.',
   stSpriteWidth: 'termina em x={x} de 252 · {sprites} sprites',

@@ -196,8 +196,8 @@ fatias da ROM e carregando um save state no menu: só `0x43C00`-`0x43EFF` estrag
 - **Fonte (tiles OBJ `0x100`-`0x13F`, base OBJ = VRAM `0x6000`):** letras inteiras 16x16 para A D E K M N O P
   R S W, e peças 8x8 para as outras: I = haste (`127`/`128`), T = barra (`12A`/`12B`) + haste, L = haste +
   pé do D (`112`) + `129`, C e G = metade esquerda do O (`10C`/`11C`) + `12E` e `12F`/`126`, U = duas
-  hastes + `136`/`137`, Y = `12C`/`12D` + haste. **Não há** B F H J Q V X Z (por isso PASSWORD virou
-  CODIGO, não SENHA).
+  hastes + `136`/`137`, Y = `12C`/`12D` + haste. **Não há** B F J Q V X Z. O H foi desenhado pelo editor
+  (ver abaixo).
 - **Espaçamento:** a Konami encostou as letras tinta com tinta (a última coluna desenhada de uma e a
   primeira da outra ficam lado a lado), com ajustes de 1-2 px em pares como AT; o espaço entre palavras
   é de 6-7 px. O editor faz o mesmo (`MENU_SPRITE_FONT` guarda as colunas de tinta de cada letra) e
@@ -206,6 +206,23 @@ fatias da ROM e carregando um save state no menu: só `0x43C00`-`0x43EFF` estrag
   INTERNACIONAL" usa 29 sprites e vai até x ≈ 242.
 - **Save state:** o objeto do menu guarda o ponteiro da lista. Um estado salvo no menu com outra ROM
   mostra lixo; é preciso ligar o jogo de novo (`wait:300 hold:START:10 wait:200 hold:START:10 wait:200`).
+
+### Letra nova no menu: H no lugar do K
+
+- **Tiles da fonte:** bloco comprimido `0x6CCC0` (1356 bytes, 56 tiles = OBJ `0x100`-`0x137`), carregado
+  em VRAM `0x7000` pela lista de carga do menu principal (`0x10455`, ponteiro em `0x1045E`; a lista só é
+  usada pelo registro do menu em `$87:9E57`). O tamanho do DMA é o da saída descomprimida.
+- **Não dá para crescer:** com mais 32 tiles o bloco comprime para ~2000 bytes, e a maior área livre
+  depois da tradução tem 350. Por isso uma letra nova usa os tiles de uma letra que o menu não usa: o
+  H é desenhado nos 4 tiles do K (`0x106`, `0x107`, `0x116`, `0x117`). Na tradução PT-BR não há K
+  (PENALTY KICK virou PENALTIS).
+- **Desenho:** duas hastes iguais às do I nas colunas do N e a barra do meio com as mesmas camadas do pé
+  do L (`e` / `7` / `5` / `4`, cada camada 1 px para a direita) (`MENU_SPRITE_EXTRA_GLYPHS`).
+- O editor desenha o H quando algum item usa H e devolve o K original quando nenhum usa. H e K juntos
+  é erro. O bloco é recomprimido no lugar: com o H fica com 1307 bytes.
+- Visto no jogo: SENHA no menu principal.
+- **Títulos:** o bloco `0x97B09` não tem folga (839 bytes, sem `0xFF` depois) e só tem 7 tiles vazios
+  (`0x59`-`0x5F`). Como a tradução não precisa de letras novas nos títulos, ficou de fora.
 
 ### Títulos dos modos: tilemaps
 

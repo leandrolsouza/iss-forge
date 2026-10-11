@@ -1,7 +1,7 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T16:59:38.693Z",
+  "_exportedAt": "2026-10-11T17:30:33.993Z",
   "_help": [
     "Edite apenas os valores de \"text\" / \"title\" / \"body\". \"\\n\" força uma nova linha.",
     "As fontes do jogo não têm acentos: eles são removidos na importação (técnico -> tecnico).",
@@ -719,42 +719,42 @@
     "mainMenu": [
       {
         "id": "openGame",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "AMISTOSO"
       },
       {
         "id": "internationalCup",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "COPA INTERNACIONAL"
       },
       {
         "id": "worldSeries",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "SERIE MUNDIAL"
       },
       {
         "id": "training",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "TREINO"
       },
       {
         "id": "scenarios",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "CENARIOS"
       },
       {
         "id": "penaltyKick",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "PENALTIS"
       },
       {
         "id": "password",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
-        "text": "CODIGO"
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "SENHA"
       },
       {
         "id": "options",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "OPCOES"
       }
     ],

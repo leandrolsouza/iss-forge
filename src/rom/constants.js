@@ -596,6 +596,48 @@ export const MENU_SPRITE_LAYOUT = {
   MAX_SPRITES: 31,
 };
 
+/**
+ * OBJ tiles of the menu font: compressed block (56 tiles, loaded to VRAM 0x7000 =
+ * tiles 0x100-0x137 by the main menu only). It cannot grow (no free area is big
+ * enough), so new letters take the tiles of a letter the texts do not use.
+ */
+export const MENU_FONT_BLOCK = {
+  offset: 0x6ccc0,
+  pointer: 0x1045e,
+  capacity: 1356,
+  firstTile: 0x100,
+};
+
+/**
+ * Letters drawn for the menu font. `replaces`: letter whose 16x16 tiles are
+ * reused (both cannot appear in the menu at once). pixels: 16 rows of colour
+ * indices (palette 6, "." = transparent), in the style of the other letters.
+ */
+export const MENU_SPRITE_EXTRA_GLYPHS = {
+  H: {
+    replaces: 'K',
+    ink: [1, 14],
+    pixels: [
+      '................',
+      '.663......663...',
+      '.7732.....7732..',
+      '.88321....88321.',
+      '.99321....99321.',
+      '.aa321....aa321.',
+      '.bbeeeeeeebb321.',
+      '.cc7777777cc321.',
+      '.dd3555555dd321.',
+      '.dd3244444dd321.',
+      '.ee321....ee321.',
+      '.ee321....ee321.',
+      '.ee321....ee321.',
+      '.77321....77321.',
+      '..5521.....5521.',
+      '...441......441.',
+    ],
+  },
+};
+
 const joypadName = (index, id, room = 26) => ({
   id,
   kind: 'fixed',
@@ -731,6 +773,7 @@ export const SCREEN_TEXT_RANGES = [
   [0x175ed, 0x17621],
   [0x39e1f, 0x39e2f],
   [0x43c4f, 0x43e3f],
+  [0x6ccc0, 0x6ccc0 + 1356], // menu font tiles (MENU_FONT_BLOCK)
 ];
 
 // ============================================================

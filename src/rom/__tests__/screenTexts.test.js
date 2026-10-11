@@ -9,7 +9,13 @@ import {
   measureScreenPacks,
   screenFieldAddress,
 } from '../screenTexts';
-import { layoutSpriteText, readSpriteEntries, decodeSpriteEntries } from '../menuSprites';
+import {
+  layoutSpriteText,
+  readSpriteEntries,
+  decodeSpriteEntries,
+  installedMenuGlyphs,
+  readMenuFontTiles,
+} from '../menuSprites';
 import { buildTitleWords } from '../titleScreens';
 import { readScreenWords } from '../menuScreens';
 import { SCREEN_TEXTS } from '../constants';
@@ -151,7 +157,7 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
     expect(xs(mine, 0x10e)).toEqual(xs(orig, 0x10e)); // P
     expect(Math.abs(xs(mine, 0x108)[0] - xs(orig, 0x108)[0])).toBeLessThanOrEqual(2); // M
     expect(decodeSpriteEntries(mine)).toBe('OPEN GAME');
-    expect(encodeScreenField(f, 'SENHA').error).toBe('noGlyph');
+    expect(encodeScreenField(f, 'BOLA').error).toBe('noGlyph');
     expect(encodeScreenField(f, 'COPA INTERNACIONAL COPA').error).toBe('tooWide');
   });
 
@@ -205,6 +211,33 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
     expect(back.worldSeries1).toBe('SERIE MUNDIAL\nTEMPORADA 1');
     expect(back.special).toBe('PARTIDA ESPECIAL');
     expect(back.championship).toBe('CHAMPION  SHIP');
+  });
+
+  it('draws H over the K tiles when the menu needs it, and puts K back', () => {
+    const rom = load();
+    const t = rom.readScreenTexts();
+    t.mainMenu.password = 'SENHA';
+    // PENALTY KICK still uses K
+    expect(validateScreenTexts(t).map((i) => i.error)).toContain('fontConflict');
+    t.mainMenu.penaltyKick = 'PENALTIS';
+    expect(validateScreenTexts(t)).toEqual([]);
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    expect(installedMenuGlyphs(rom)).toEqual(['H']);
+    expect(rom.readScreenTexts().mainMenu.password).toBe('SENHA');
+    const orig = readMenuFontTiles(new RomParser(rom.getOriginalData()));
+    const now = readMenuFontTiles(rom);
+    // only the 4 tiles of K changed
+    const changed = [];
+    for (let tile = 0; tile < orig.length / 32; tile++)
+      if (orig.slice(tile * 32, tile * 32 + 32).some((b, k) => now[tile * 32 + k] !== b))
+        changed.push(0x100 + tile);
+    expect(changed).toEqual([0x106, 0x107, 0x116, 0x117]);
+    t.mainMenu.password = 'PASSWORD';
+    t.mainMenu.penaltyKick = 'PENALTY KICK';
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    expect(installedMenuGlyphs(rom)).toEqual([]);
+    expect(Array.from(readMenuFontTiles(rom))).toEqual(Array.from(orig));
+    expect(rom.readScreenTexts().mainMenu.penaltyKick).toBe('PENALTY KICK');
   });
 
   it('restores the raw bytes for undo', () => {

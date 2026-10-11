@@ -217,6 +217,13 @@ export default function ScreenTextPanel() {
           </div>
         ))}
 
+        {issues
+          .filter((i) => i.error === 'fontConflict' && screen.id === 'mainMenu')
+          .map((i) => (
+            <div key={i.letters.join()} className="scenario-warnings">
+              {t('stFontConflict', { extra: i.letters[0], replaced: i.letters[1] })}
+            </div>
+          ))}
         {issues.length > 0 && <div className="scenario-warnings">{t('gtInvalid')}</div>}
         {message && (
           <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>

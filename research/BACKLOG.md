@@ -37,7 +37,7 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
      (Copa, Copa final, Série Mundial 1ª e 2ª, Partida especial).
   4. O arquivo foi reexportado: os `max` dos menus são os atuais e o `original` é o texto da ROM original.
 - **Nomes escolhidos:** menu AMISTOSO, COPA INTERNACIONAL, SERIE MUNDIAL, TREINO, CENARIOS, PENALTIS,
-  CODIGO (a fonte do menu não tem H, então não dá SENHA), OPCOES. Títulos: COPA / INTERNACIONAL (+ FINAL,
+  SENHA (o H foi desenhado no lugar do K), OPCOES. Títulos: COPA / INTERNACIONAL (+ FINAL,
   TORNEIO), CAMPEONATO, SERIE MUNDIAL / TEMPORADA 1 e 2, PARTIDA ESPECIAL. "WORLD SERIES" nas telas da
   World Series também virou SERIE MUNDIAL (antes "COPA DO MUNDO").
 - **Teste automático:** `src/utils/__tests__/textsExport.test.js` importa o `PT-BR.json` quando ele existe,
@@ -69,12 +69,11 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 ## Pendente — prioridade sugerida
 
 ### 1. Letras que faltam nas fontes grandes
-- Menu principal: não há B F H J Q V X Z (tiles OBJ `0x100`-`0x13F`; `0x140`-`0x17F` estão vazios no
-  menu). Desenhar um H permitiria SENHA. Falta achar o bloco comprimido desses tiles e ver se o jogo
-  carrega mais que `0x40` tiles.
-- Títulos: só 1 2 A C D E F G H I L M N O P R S T U W (bloco `0x97B09`, 105 tiles, `0x59`-`0x5F` vazios).
-  Daria para acrescentar letras no fim do bloco; falta conferir se o jogo copia o bloco descomprimido
-  inteiro para a VRAM.
+- Menu principal: feito o H (desenhado sobre o K). Continuam faltando B F J Q V X Z. O bloco dos tiles
+  (`0x6CCC0`) não pode crescer; outra letra nova só cabe sobre os tiles de uma letra que a tradução não
+  usa (W ou as peças do Y, por exemplo), como foi feito com o H (`MENU_SPRITE_EXTRA_GLYPHS`).
+- Títulos: só 1 2 A C D E F G H I L M N O P R S T U W (bloco `0x97B09`, 105 tiles, `0x59`-`0x5F` vazios,
+  sem folga depois do bloco). A tradução atual não precisa de outras letras.
 
 ### 2. Restante da tradução
 O que sobrou em inglês são gráficos/sprites (lista acima) e alguns textos achados sem tela conhecida.

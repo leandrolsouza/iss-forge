@@ -1,7 +1,7 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T16:59:39.844Z",
+  "_exportedAt": "2026-10-11T17:30:35.094Z",
   "_help": [
     "Edit only the \"text\" / \"title\" / \"body\" values. \"\\n\" forces a new line.",
     "The game fonts have no accents: they are removed on import (técnico -> tecnico).",
@@ -719,42 +719,42 @@
     "mainMenu": [
       {
         "id": "openGame",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "OPEN GAME"
       },
       {
         "id": "internationalCup",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "INTERNATIONAL CUP"
       },
       {
         "id": "worldSeries",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "WORLD SERIES"
       },
       {
         "id": "training",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "TRAINING"
       },
       {
         "id": "scenarios",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "SCENARIOS"
       },
       {
         "id": "penaltyKick",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "PENALTY KICK"
       },
       {
         "id": "password",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "PASSWORD"
       },
       {
         "id": "options",
-        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "limit": "big sprite font, letters ACDEGHIKLMNOPRSTUWY only, one line up to the right edge",
         "text": "OPTIONS"
       }
     ],

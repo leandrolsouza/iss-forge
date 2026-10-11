@@ -10,7 +10,7 @@ import { TEAMS, GAME_TEXTS, SCENARIO_DATA } from '../rom/constants';
 import { validateTrainingTexts, findInvalidBoxChars, findInvalidIssChars } from '../rom/gameTexts';
 import { findInvalidMenuChars, menuTextLength, writeMenuScreens } from '../rom/menuScreens';
 import { encodeScreenField, measureScreenPacks } from '../rom/screenTexts';
-import { MENU_SPRITE_CHARS } from '../rom/menuSprites';
+import { MENU_SPRITE_CHARS, menuFontNeeds } from '../rom/menuSprites';
 import { TITLE_CHARS } from '../rom/titleScreens';
 import { SCREEN_TEXTS } from '../rom/constants';
 import { findInvalidChars, wrapScenarioText } from '../rom/scenario';
@@ -380,6 +380,19 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
           `${it.path}: no room left in the ${pack} area (shorten the texts of this group)`,
         );
         next[it.id][it.f.id] = cur[it.id][it.f.id];
+        touched.splice(touched.indexOf(it), 1);
+      }
+    }
+    // Main menu font: a new letter (H) reuses the tiles of another one (K); not both
+    const menuFields = SCREEN_TEXTS.find((s) => s.id === 'mainMenu').fields;
+    for (const [extra, replaced] of menuFontNeeds(menuFields.map((f) => next.mainMenu[f.id]))
+      .conflicts) {
+      for (const it of touched.filter((t) => t.id === 'mainMenu')) {
+        if (!next.mainMenu[it.f.id].toUpperCase().includes(extra)) continue;
+        skipped.push(
+          `${it.path} "${next.mainMenu[it.f.id]}": the menu font draws ${extra} over ${replaced}, and another item still uses ${replaced}`,
+        );
+        next.mainMenu[it.f.id] = cur.mainMenu[it.f.id];
         touched.splice(touched.indexOf(it), 1);
       }
     }

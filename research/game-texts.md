@@ -120,8 +120,7 @@ muda nenhum bloco real (73 blocos conferidos: telas e bandeiras).
 
 ### Não coberto
 
-O menu principal (OPEN GAME, INTERNATIONAL CUP...), os títulos dos modos ("INTERNATIONAL CUP" em verde) e
-o logotipo usam outras fontes/gráficos. Ficam para o item "Tela título e logos".
+O menu principal e os títulos dos modos estão na seção 5. Continua de fora o logotipo da tela título.
 
 ### Varredura ampla (out/2026)
 
@@ -177,6 +176,63 @@ textos: procurar `JSL $80E1C3`/`$80E1FF`/`$80E2AC` e o `LDY #` logo antes.
 Código: `src/rom/screenTexts.js` (`SCREEN_TEXTS`, `SCREEN_TEXT_PACKS`, `SCREEN_TEXT_RANGES` em
 `constants.js`), painel `src/components/ScreenTextPanel.jsx`, testes em
 `src/rom/__tests__/screenTexts.test.js`.
+
+## 5. Menu principal e títulos dos modos (Outras telas)
+
+### Menu principal: sprites
+
+Os 8 itens (OPEN GAME ... OPTIONS) são **listas de sprites** no banco `$88`. Achei a área corrompendo
+fatias da ROM e carregando um save state no menu: só `0x43C00`-`0x43EFF` estragava as letras.
+
+- **Tabela:** `$87:9E1F`, 8 words (ponteiros no banco `$88`, arquivo = `0x40000` + ptr − `0x8000`). Logo
+  depois, em `$87:9E2F`, vêm as posições Y do cursor (`15 2D 45 ...`).
+- **Lista:** `n`, depois `n` × `[dy, dx, tile, attr]`, com `dx`/`dy` com sinal relativos ao centro da tela
+  (128, 112). `attr`: bit 4 = sprite 16x16, bit 0 = bit 8 do tile, paleta 6. O jogo troca a paleta do
+  item selecionado. As 8 listas ficam juntas em `0x43C4F`-`0x43E3E` (496 bytes = 122 sprites). O
+  menu usa 123 dos 128 sprites contando o cursor.
+- **OAM:** o jogo monta o buffer em `$01E0`-`$03DF` **ao contrário** (o DMA de `$00:81D3` decrementa a
+  partir de `$03DF`), com a tabela alta em `$03E0`. Para ler a OAM de um dump de WRAM: byte `k` =
+  `WRAM[0x3DF − k]`.
+- **Fonte (tiles OBJ `0x100`-`0x13F`, base OBJ = VRAM `0x6000`):** letras inteiras 16x16 para A D E K M N O P
+  R S W, e peças 8x8 para as outras: I = haste (`127`/`128`), T = barra (`12A`/`12B`) + haste, L = haste +
+  pé do D (`112`) + `129`, C e G = metade esquerda do O (`10C`/`11C`) + `12E` e `12F`/`126`, U = duas
+  hastes + `136`/`137`, Y = `12C`/`12D` + haste. **Não há** B F H J Q V X Z (por isso PASSWORD virou
+  CODIGO, não SENHA).
+- **Espaçamento:** a Konami encostou as letras tinta com tinta (a última coluna desenhada de uma e a
+  primeira da outra ficam lado a lado), com ajustes de 1-2 px em pares como AT; o espaço entre palavras
+  é de 6-7 px. O editor faz o mesmo (`MENU_SPRITE_FONT` guarda as colunas de tinta de cada letra) e
+  aperta 1-2 px quando o texto passaria de x = 252. Itens que não mudam mantêm a lista original.
+- **Limites:** 34 fatias de 8 px por linha de varredura (o cursor usa uma) e o espaço da área. "COPA
+  INTERNACIONAL" usa 29 sprites e vai até x ≈ 242.
+- **Save state:** o objeto do menu guarda o ponteiro da lista. Um estado salvo no menu com outra ROM
+  mostra lixo; é preciso ligar o jogo de novo (`wait:300 hold:START:10 wait:200 hold:START:10 wait:200`).
+
+### Títulos dos modos: tilemaps
+
+"INTERNATIONAL CUP", "WORLD SERIES 1ST SEASON" etc. são tilemaps 32×32 comprimidos (VRAM `0x0000`), todos
+sobre os mesmos 105 tiles (bloco `0x97B09` → VRAM `0x2000`, 4bpp, paleta 3). Cada letra tem 4 linhas ×
+1-2 colunas de tiles, alinhada aos tiles, e usa espelhamento para partes simétricas.
+
+| Título | Bloco | Ponteiro |
+|--------|-------|----------|
+| INTERNATIONAL / CUP | `0xD4B15` | `0x106FF` |
+| INTERNATIONAL / CUP / FINAL | `0xD4C4E` | `0x10707` |
+| INTERNATIONAL / CUP / TOURNAMENT | `0x97E5E` | `0x1070F` |
+| CHAMPION  SHIP | `0xD4D97` | `0x10760` |
+| WORLD SERIES / 1ST  SEASON | `0xD4EAC` | `0x10768` |
+| WORLD SERIES / 2ND  SEASON | `0xF367A` | `0x10770` |
+| SPECIAL GAME | `0xA6187` | `0x1078A` |
+
+- **Letras:** 1 2 A C D E F G H I L M N O P R S T U W (`TITLE_FONT`, extraído dos 7 títulos). I e 1
+  ocupam 1 coluna, o espaço 1, as outras 2 (o L tem o pé na 2ª coluna).
+- **Layout:** linhas nas linhas de tiles 8, 13 e 18, centralizadas (arredondando para a direita, como no
+  original). O editor reconstrói os 7 originais idênticos a partir do texto.
+- Os blocos entram em `MENU_SCREENS` (`title: true`), então usam a mesma realocação das telas de menu.
+  Com a tradução PT-BR, 5 títulos são movidos para espaço livre.
+- Só vi no jogo a Copa e a 1ª temporada da World Series; os outros usam o mesmo mecanismo.
+
+Código: `src/rom/menuSprites.js` (`MENU_SPRITE_FONT`, `MENU_SPRITE_LAYOUT`) e `src/rom/titleScreens.js`
+(`TITLE_FONT`, `TITLE_LAYOUT`); campos `kind: 'sprite'` e `kind: 'title'` em `SCREEN_TEXTS`.
 
 ## Arquivo de tradução (JSON)
 

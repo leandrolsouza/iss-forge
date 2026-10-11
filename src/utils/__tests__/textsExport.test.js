@@ -103,9 +103,12 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     expect(res.ok).toBe(true);
     expect(res.changed.menus).toBeGreaterThan(40);
     expect(res.moved.length).toBeGreaterThan(0);
-    // every moved screen still decodes with the imported texts
+    // every moved screen still decodes with the imported texts (titles are read as screen texts)
     const screens = rom.readMenuScreens();
-    for (const id of res.moved) expect(screens.find((s) => s.id === id).moved).toBe(true);
+    for (const id of res.moved.filter((x) => !x.startsWith('title')))
+      expect(screens.find((s) => s.id === id).moved).toBe(true);
+    const titles = rom.readScreenTexts().titles;
+    expect(Object.values(titles).join(' ')).not.toContain('?');
   });
 
   it('re-imports over an earlier import (matches by the original text, re-packs moved screens)', () => {

@@ -1,7 +1,7 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T15:18:09.410Z",
+  "_exportedAt": "2026-10-11T16:59:38.693Z",
   "_help": [
     "Edite apenas os valores de \"text\" / \"title\" / \"body\". \"\\n\" força uma nova linha.",
     "As fontes do jogo não têm acentos: eles são removidos na importação (técnico -> tecnico).",
@@ -461,7 +461,7 @@
         "at": "2,4",
         "max": 14,
         "original": "WORLD SERIES",
-        "text": "COPA DO MUNDO"
+        "text": "SERIE MUNDIAL"
       },
       {
         "at": "2,23",
@@ -507,7 +507,7 @@
         "at": "2,4",
         "max": 14,
         "original": "WORLD SERIES",
-        "text": "COPA DO MUNDO"
+        "text": "SERIE MUNDIAL"
       },
       {
         "at": "2,23",
@@ -716,6 +716,48 @@
     ]
   },
   "screens": {
+    "mainMenu": [
+      {
+        "id": "openGame",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "AMISTOSO"
+      },
+      {
+        "id": "internationalCup",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "COPA INTERNACIONAL"
+      },
+      {
+        "id": "worldSeries",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "SERIE MUNDIAL"
+      },
+      {
+        "id": "training",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "TREINO"
+      },
+      {
+        "id": "scenarios",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "CENARIOS"
+      },
+      {
+        "id": "penaltyKick",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "PENALTIS"
+      },
+      {
+        "id": "password",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "CODIGO"
+      },
+      {
+        "id": "options",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "OPCOES"
+      }
+    ],
     "joypad": [
       {
         "id": "intro",
@@ -934,6 +976,43 @@
         "id": "level",
         "limit": "7 letters",
         "text": " NIVEL"
+      }
+    ],
+    "titles": [
+      {
+        "id": "cup",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "COPA\nINTERNACIONAL"
+      },
+      {
+        "id": "cupFinal",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "COPA\nINTERNACIONAL\nFINAL"
+      },
+      {
+        "id": "cupTournament",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "COPA\nINTERNACIONAL\nTORNEIO"
+      },
+      {
+        "id": "championship",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "CAMPEONATO"
+      },
+      {
+        "id": "worldSeries1",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "SERIE MUNDIAL\nTEMPORADA 1"
+      },
+      {
+        "id": "worldSeries2",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "SERIE MUNDIAL\nTEMPORADA 2"
+      },
+      {
+        "id": "special",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "PARTIDA ESPECIAL"
       }
     ]
   },

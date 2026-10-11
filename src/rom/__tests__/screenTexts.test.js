@@ -7,7 +7,11 @@ import {
   screenTextCells,
   validateScreenTexts,
   measureScreenPacks,
+  screenFieldAddress,
 } from '../screenTexts';
+import { layoutSpriteText, readSpriteEntries, decodeSpriteEntries } from '../menuSprites';
+import { buildTitleWords } from '../titleScreens';
+import { readScreenWords } from '../menuScreens';
 import { SCREEN_TEXTS } from '../constants';
 
 const REAL_ROM = fileURLToPath(
@@ -114,6 +118,93 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
     );
     expect(rom.writeScreenTexts(t).ok).toBe(false);
     expect(field('cupGroup', 'nextGame').columns).toBe(8);
+  });
+
+  it('reads the main menu sprite lists as text', () => {
+    const t = load().readScreenTexts();
+    expect(Object.values(t.mainMenu)).toEqual([
+      'OPEN GAME',
+      'INTERNATIONAL CUP',
+      'WORLD SERIES',
+      'TRAINING',
+      'SCENARIOS',
+      'PENALTY KICK',
+      'PASSWORD',
+      'OPTIONS',
+    ]);
+  });
+
+  it('lays out new main menu items like the original ones', () => {
+    const f = field('mainMenu', 'openGame');
+    const res = encodeScreenField(f, 'OPEN GAME');
+    expect(res.error).toBeUndefined();
+    expect(res.sprites).toBe(11); // same pieces as the original list
+    // letters touch ink to ink, as Konami placed them (within a pixel or two)
+    const rom = load();
+    const orig = readSpriteEntries(rom, screenFieldAddress(rom, f));
+    const mine = layoutSpriteText('OPEN GAME', f).entries;
+    const xs = (list, tile) =>
+      list
+        .filter((e) => e.tile === tile && e.big)
+        .map((e) => e.dx)
+        .sort((a, b) => a - b);
+    expect(xs(mine, 0x10e)).toEqual(xs(orig, 0x10e)); // P
+    expect(Math.abs(xs(mine, 0x108)[0] - xs(orig, 0x108)[0])).toBeLessThanOrEqual(2); // M
+    expect(decodeSpriteEntries(mine)).toBe('OPEN GAME');
+    expect(encodeScreenField(f, 'SENHA').error).toBe('noGlyph');
+    expect(encodeScreenField(f, 'COPA INTERNACIONAL COPA').error).toBe('tooWide');
+  });
+
+  it('writes translated main menu items and keeps the unchanged ones byte for byte', () => {
+    const rom = load();
+    const t = rom.readScreenTexts();
+    const before = Array.from(rom.readBytes(0x43c4f, 0x43e3f - 0x43c4f));
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    expect(Array.from(rom.readBytes(0x43c4f, 0x43e3f - 0x43c4f))).toEqual(before);
+    t.mainMenu.openGame = 'AMISTOSO';
+    t.mainMenu.internationalCup = 'COPA INTERNACIONAL';
+    t.mainMenu.training = 'treino';
+    expect(validateScreenTexts(t)).toEqual([]);
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    const back = rom.readScreenTexts().mainMenu;
+    expect(back.openGame).toBe('AMISTOSO');
+    expect(back.internationalCup).toBe('COPA INTERNACIONAL');
+    expect(back.training).toBe('TREINO');
+    expect(back.options).toBe('OPTIONS');
+    // the table points into bank $88 and the lists stay inside the area
+    const ptr = rom.readByte(0x39e1f + 7 * 2) | (rom.readByte(0x39e20 + 7 * 2) << 8);
+    expect(0x40000 + ptr - 0x8000).toBeLessThan(0x43e3f);
+  });
+
+  it('reads the mode titles from their tilemaps and writes new ones', () => {
+    const rom = load();
+    const t = rom.readScreenTexts();
+    expect(t.titles).toEqual({
+      cup: 'INTERNATIONAL\nCUP',
+      cupFinal: 'INTERNATIONAL\nCUP\nFINAL',
+      cupTournament: 'INTERNATIONAL\nCUP\nTOURNAMENT',
+      championship: 'CHAMPION  SHIP',
+      worldSeries1: 'WORLD SERIES\n1ST  SEASON',
+      worldSeries2: 'WORLD SERIES\n2ND  SEASON',
+      special: 'SPECIAL GAME',
+    });
+    // the original layout is rebuilt exactly from the text
+    for (const f of SCREEN_TEXTS.find((s) => s.id === 'titles').fields) {
+      const words = buildTitleWords(rom, f.offset, t.titles[f.id]);
+      expect(Array.from(words), f.id).toEqual(Array.from(readScreenWords(rom, f.offset)));
+    }
+    expect(encodeScreenField(field('titles', 'cup'), 'COPA\nJOGO').error).toBe('noGlyph');
+    expect(encodeScreenField(field('titles', 'cup'), 'COPA INTERNACIONAL').error).toBe('tooWide');
+    t.titles.cup = 'COPA\nINTERNACIONAL';
+    t.titles.worldSeries1 = 'SERIE MUNDIAL\nTEMPORADA 1';
+    t.titles.special = 'PARTIDA ESPECIAL';
+    const res = rom.writeScreenTexts(t);
+    expect(res.ok).toBe(true);
+    const back = rom.readScreenTexts().titles;
+    expect(back.cup).toBe('COPA\nINTERNACIONAL');
+    expect(back.worldSeries1).toBe('SERIE MUNDIAL\nTEMPORADA 1');
+    expect(back.special).toBe('PARTIDA ESPECIAL');
+    expect(back.championship).toBe('CHAMPION  SHIP');
   });
 
   it('restores the raw bytes for undo', () => {

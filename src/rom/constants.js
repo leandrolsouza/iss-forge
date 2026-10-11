@@ -318,7 +318,132 @@ export const MENU_SCREENS = [
   { offset: 0xf0f88, id: 'trainingLevels', label: 'Training: levels', pointers: [0x107fc] },
   // Second half of the levels screen: same load descriptor, loaded to $7E:4B90
   { offset: 0xf10c9, id: 'trainingScore', label: 'Training: score', pointers: [0x10802] },
+  // Mode titles (VRAM 0x0000, tiles of TITLE_FONT at 0x2000): edited as screen texts
+  { offset: 0xd4b15, id: 'titleCup', label: 'Title: Intl Cup', pointers: [0x106ff], title: true },
+  {
+    offset: 0xd4c4e,
+    id: 'titleCupFinal',
+    label: 'Title: Intl Cup final',
+    pointers: [0x10707],
+    title: true,
+  },
+  {
+    offset: 0x97e5e,
+    id: 'titleCupTournament',
+    label: 'Title: Intl Cup tournament',
+    pointers: [0x1070f],
+    title: true,
+  },
+  {
+    offset: 0xd4d97,
+    id: 'titleChampionship',
+    label: 'Title: Championship',
+    pointers: [0x10760],
+    title: true,
+  },
+  { offset: 0xd4eac, id: 'titleWs1', label: 'Title: WS 1st', pointers: [0x10768], title: true },
+  { offset: 0xf367a, id: 'titleWs2', label: 'Title: WS 2nd', pointers: [0x10770], title: true },
+  {
+    offset: 0xa6187,
+    id: 'titleSpecial',
+    label: 'Title: Special game',
+    pointers: [0x1078a],
+    title: true,
+  },
 ];
+
+// ============================================================
+// MODE TITLE FONT
+//   The big titles ("INTERNATIONAL CUP", "WORLD SERIES 1ST SEASON"...) are
+//   32x32 tilemaps (compressed, loaded to VRAM 0x0000) over a shared set of 105
+//   tiles (block 0x97B09, loaded to 0x2000). Each letter is 4 rows x 1-2
+//   columns of tiles; a column lists the 4 tilemap words (tile | flip bits,
+//   palette 3 is added). Lines start at rows 8, 13, 18 and are centred.
+// ============================================================
+
+export const TITLE_FONT = {
+  1: [[79, 49168, 11, 80]],
+  2: [
+    [81, 83, 85, 87],
+    [82, 84, 86, 88],
+  ],
+  A: [
+    [10, 20, 28, 36],
+    [16394, 16404, 16412, 16420],
+  ],
+  C: [
+    [37, 39, 41, 48],
+    [38, 40, 42, 49],
+  ],
+  D: [
+    [8, 11, 11, 71],
+    [66, 68, 68, 72],
+  ],
+  E: [
+    [16386, 16, 32784, 16413],
+    [7, 17, 25, 34],
+  ],
+  F: [
+    [16386, 16, 32784, 16413],
+    [7, 17, 25, 1],
+  ],
+  G: [
+    [37, 39, 41, 48],
+    [38, 40, 63, 64],
+  ],
+  H: [
+    [73, 74, 75, 77],
+    [4, 13, 76, 78],
+  ],
+  I: [[2, 11, 11, 29]],
+  L: [
+    [16386, 16395, 16395, 16413],
+    [1, 1, 1, 46],
+  ],
+  M: [
+    [51, 52, 53, 54],
+    [16435, 16436, 16437, 16438],
+  ],
+  N: [
+    [3, 12, 21, 30],
+    [4, 13, 22, 31],
+  ],
+  O: [
+    [37, 43, 44, 45],
+    [16421, 16427, 16428, 16429],
+  ],
+  P: [
+    [8, 18, 26, 29],
+    [9, 19, 47, 1],
+  ],
+  R: [
+    [8, 18, 26, 29],
+    [9, 19, 27, 35],
+  ],
+  S: [
+    [55, 57, 59, 61],
+    [56, 58, 60, 62],
+  ],
+  T: [
+    [5, 14, 23, 32],
+    [6, 15, 24, 33],
+  ],
+  U: [
+    [2, 11, 11, 50],
+    [16386, 16395, 16395, 16434],
+  ],
+  W: [
+    [65, 67, 69, 70],
+    [16449, 16451, 16453, 16454],
+  ],
+};
+
+export const TITLE_LAYOUT = {
+  ROWS: [8, 13, 18], // first tile row of each line
+  BLANK: 0x0c01, // tile 1, palette 3
+  PALETTE: 0x0c00,
+  COLUMNS: 32,
+};
 
 /**
  * Free space for relocated menu screens: 0xFF padding at the end of banks in the
@@ -369,9 +494,106 @@ export const ISS_FONT16_CHARS = (() => {
 //   See research/game-texts.md ("Textos desenhados pelo código").
 // ============================================================
 
-/** Box texts re-packed together: word table (bank $02) + area [start, end) */
+/** Box texts re-packed together: word table + area [start, end) + bank file base */
 export const SCREEN_TEXT_PACKS = {
-  joypadHelp: { table: 0x11a57, area: [0x11a6d, 0x11f67] },
+  joypadHelp: { table: 0x11a57, area: [0x11a6d, 0x11f67], bank: 0x10000 },
+  // Main menu items: sprite lists in bank $88, pointers at $87:9E1F
+  mainMenu: { table: 0x39e1f, area: [0x43c4f, 0x43e3f], bank: 0x40000 },
+};
+
+// ============================================================
+// MAIN MENU SPRITE FONT
+//   The main menu items are sprite lists (bank $88): count, then count x
+//   [dy, dx, tile, attr] relative to the screen centre (128, 112). attr bit 4 =
+//   16x16 sprite, bit 0 = tile bit 8, palette 6 (the game swaps the palette of
+//   the selected item). Letters are built from the OBJ tiles 0x100-0x13F:
+//   16x16 glyphs for A D E K M N O P R S W, pieces for the others (C and G
+//   reuse the left half of O, L the foot of D, ...). There is no H, B, F, J, Q,
+//   V, X, Z. pieces: [dx, dy, tile, big]; ink: first and last column drawn.
+// ============================================================
+
+const bigGlyph = (tile, left, right) => ({ pieces: [[0, 0, tile, 1]], ink: [left, right] });
+
+export const MENU_SPRITE_FONT = {
+  A: bigGlyph(0x100, 0, 15),
+  D: bigGlyph(0x102, 2, 15),
+  E: bigGlyph(0x104, 4, 13),
+  K: bigGlyph(0x106, 1, 15),
+  M: bigGlyph(0x108, 1, 14),
+  N: bigGlyph(0x10a, 1, 14),
+  O: bigGlyph(0x10c, 0, 15),
+  P: bigGlyph(0x10e, 4, 14),
+  R: bigGlyph(0x120, 1, 15),
+  S: bigGlyph(0x122, 2, 12),
+  W: bigGlyph(0x124, 0, 15),
+  I: {
+    pieces: [
+      [0, 0, 0x127, 0],
+      [0, 8, 0x128, 0],
+    ],
+    ink: [2, 6],
+  },
+  T: {
+    pieces: [
+      [0, 0, 0x12a, 0],
+      [8, 0, 0x12b, 0],
+      [4, 8, 0x128, 0],
+    ],
+    ink: [2, 14],
+  },
+  L: {
+    pieces: [
+      [0, 0, 0x127, 0],
+      [0, 8, 0x112, 0],
+      [8, 8, 0x129, 0],
+    ],
+    ink: [2, 12],
+  },
+  C: {
+    pieces: [
+      [0, 0, 0x10c, 0],
+      [0, 8, 0x11c, 0],
+      [8, 0, 0x12e, 0],
+      [8, 8, 0x12f, 0],
+    ],
+    ink: [0, 13],
+  },
+  G: {
+    pieces: [
+      [0, 0, 0x10c, 0],
+      [0, 8, 0x11c, 0],
+      [8, 0, 0x12e, 0],
+      [8, 8, 0x126, 0],
+    ],
+    ink: [0, 13],
+  },
+  U: {
+    pieces: [
+      [0, 0, 0x127, 0],
+      [1, 8, 0x136, 0],
+      [8, 0, 0x127, 0],
+      [9, 8, 0x137, 0],
+    ],
+    ink: [2, 14],
+  },
+  Y: {
+    pieces: [
+      [0, 0, 0x12c, 0],
+      [8, 0, 0x12d, 0],
+      [4, 8, 0x128, 0],
+    ],
+    ink: [2, 13],
+  },
+};
+
+/** Layout of the main menu sprite texts */
+export const MENU_SPRITE_LAYOUT = {
+  SPACE: 7, // pixels between two words (ink to ink)
+  START: -95, // dx of the first letter (x = 128 + dx)
+  MAX_RIGHT: 124, // last ink column allowed (x = 252)
+  // 34 sprite slivers per scanline; the cursor takes 1
+  MAX_SLIVERS: 33,
+  MAX_SPRITES: 31,
 };
 
 const joypadName = (index, id, room = 26) => ({
@@ -391,7 +613,29 @@ const joypadHelp = (index, id) => ({
   columns: 26,
 });
 
+const mainMenuItem = (index, id) => ({
+  id,
+  kind: 'sprite',
+  pack: 'mainMenu',
+  index,
+  row: -91 + index * 24, // dy of the item (y = 112 + dy)
+});
+
 export const SCREEN_TEXTS = [
+  {
+    id: 'mainMenu',
+    label: 'Main menu',
+    fields: [
+      mainMenuItem(0, 'openGame'),
+      mainMenuItem(1, 'internationalCup'),
+      mainMenuItem(2, 'worldSeries'),
+      mainMenuItem(3, 'training'),
+      mainMenuItem(4, 'scenarios'),
+      mainMenuItem(5, 'penaltyKick'),
+      mainMenuItem(6, 'password'),
+      mainMenuItem(7, 'options'),
+    ],
+  },
   {
     id: 'joypad',
     label: 'Joypad controls (Options)',
@@ -464,6 +708,19 @@ export const SCREEN_TEXTS = [
     label: 'Training (before each drill)',
     fields: [{ id: 'level', kind: 'fixed', at: 0x11403, columns: 7 }],
   },
+  {
+    id: 'titles',
+    label: 'Mode titles (big letters)',
+    fields: [
+      { id: 'cup', kind: 'title', offset: 0xd4b15 },
+      { id: 'cupFinal', kind: 'title', offset: 0xd4c4e },
+      { id: 'cupTournament', kind: 'title', offset: 0x97e5e },
+      { id: 'championship', kind: 'title', offset: 0xd4d97 },
+      { id: 'worldSeries1', kind: 'title', offset: 0xd4eac },
+      { id: 'worldSeries2', kind: 'title', offset: 0xf367a },
+      { id: 'special', kind: 'title', offset: 0xa6187 },
+    ],
+  },
 ];
 
 /** [start, end) byte ranges touched by the screen texts (undo snapshots) */
@@ -472,6 +729,8 @@ export const SCREEN_TEXT_RANGES = [
   [0x11911, 0x1202c],
   [0x12aa5, 0x12afb],
   [0x175ed, 0x17621],
+  [0x39e1f, 0x39e2f],
+  [0x43c4f, 0x43e3f],
 ];
 
 // ============================================================

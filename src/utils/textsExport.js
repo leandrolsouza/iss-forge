@@ -10,6 +10,8 @@ import { TEAMS, GAME_TEXTS, SCENARIO_DATA } from '../rom/constants';
 import { validateTrainingTexts, findInvalidBoxChars, findInvalidIssChars } from '../rom/gameTexts';
 import { findInvalidMenuChars, menuTextLength, writeMenuScreens } from '../rom/menuScreens';
 import { encodeScreenField, measureScreenPacks } from '../rom/screenTexts';
+import { MENU_SPRITE_CHARS } from '../rom/menuSprites';
+import { TITLE_CHARS } from '../rom/titleScreens';
 import { SCREEN_TEXTS } from '../rom/constants';
 import { findInvalidChars, wrapScenarioText } from '../rom/scenario';
 import {
@@ -76,6 +78,10 @@ export function exportTexts(romParser) {
 
 /** Human-readable room of a screen text field (exported as "limit") */
 export function screenFieldLimit(f) {
+  if (f.kind === 'title')
+    return `up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters ${TITLE_CHARS} only`;
+  if (f.kind === 'sprite')
+    return `big sprite font, letters ${MENU_SPRITE_CHARS} only, one line up to the right edge`;
   if (f.kind === 'box') return `${f.lines} lines x ${f.columns} columns`;
   if (f.lines > 1) return `${f.lines} lines x ${f.columns} letters`;
   if (f.kind === 'label') return `${f.columns} letters (filled with dots)`;
@@ -378,9 +384,23 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       }
     }
     if (touched.length) {
-      const res = work.writeScreenTexts(next);
-      if (res.ok) changed.screens = touched.length;
-      else skipped.push('screens: could not be written');
+      let res = work.writeScreenTexts(next);
+      // a title that does not fit anywhere is left out, the rest is written again
+      for (let tries = 0; !res.ok && res.error === 'titleNoRoom' && tries < 3; tries++) {
+        for (const is of res.issues) {
+          const it = touched.find((t) => t.id === is.screen && t.f.id === is.field);
+          skipped.push(
+            `screens.${is.screen}.${is.field}: no room left in the ROM for this title (${is.size ?? '?'} bytes)`,
+          );
+          next[is.screen][is.field] = cur[is.screen][is.field];
+          if (it) touched.splice(touched.indexOf(it), 1);
+        }
+        res = work.writeScreenTexts(next);
+      }
+      if (res.ok) {
+        changed.screens = touched.length;
+        for (const id of res.moved || []) if (!moved.includes(id)) moved.push(id);
+      } else skipped.push('screens: could not be written');
     }
   }
 
@@ -462,11 +482,19 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
 
 /** Why a screen text does not fit, for the import report */
 function screenFieldError(f, text, res) {
+  if (f.kind === 'title') {
+    if (res.error === 'noGlyph') return `no glyph in the title font for ${res.invalid.join(' ')}`;
+    if (res.error === 'tooManyLines') return `${res.widths.length} lines, max 3`;
+    return `line widths ${res.widths.join(', ')} columns, max 32`;
+  }
   if (res.error === 'tooManyLines') {
     const lines = f.kind === 'box' ? wrapScenarioText(text, f.columns) : wrapFixed(text, f.columns);
     return `${lines.length} lines, max ${f.lines} (${f.columns} columns): ${showLines(lines)}`;
   }
   if (res.error === 'tooLong') return `${res.cells} letters, max ${f.columns}`;
+  if (res.error === 'noGlyph') return `no glyph in the menu font for ${res.invalid.join(' ')}`;
+  if (res.error === 'tooWide') return `too wide (ends at x=${128 + res.right}, max 252)`;
+  if (res.error === 'tooManySprites') return 'too many sprites on one line (shorten the text)';
   return `${res.bytes?.length ?? '?'} bytes, max ${f.room ?? f.columns}`;
 }
 

@@ -569,11 +569,13 @@ export default function useRomHandlers({
       const result = romParser.writeScreenTexts(texts);
       if (result.ok) {
         setScreenTexts(romParser.readScreenTexts());
+        // titles are placed like the menu screens and may move them
+        setMenuScreens(romParser.readMenuScreens());
         markModified();
       }
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setScreenTexts],
+    [romParser, teams, markModified, pushSnapshot, setScreenTexts, setMenuScreens],
   );
 
   /** Export every translatable text as one JSON file */

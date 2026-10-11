@@ -146,10 +146,10 @@ function decodeCells(words, map, row, col, count) {
   return s;
 }
 
-/** All menu screens with their text runs */
+/** All menu screens with their text runs (title screens are edited elsewhere) */
 export function readMenuScreens(rom) {
   const map = pairMap(rom);
-  return MENU_SCREENS.map((s) => {
+  return MENU_SCREENS.filter((s) => !s.title).map((s) => {
     const words = readScreenWords(rom, s.offset);
     return { ...s, ...screenSlot(rom, s.offset), runs: screenRuns(rom, s.offset, map, words) };
   });
@@ -304,13 +304,7 @@ function screenSlot(rom, offset) {
 
 /** Compress the screen with new texts (no write) */
 function packScreen(rom, offset, texts) {
-  const words = buildScreenWords(rom, offset, texts);
-  const raw = new Uint8Array(words.length * 2);
-  words.forEach((w, i) => {
-    raw[i * 2] = w & 0xff;
-    raw[i * 2 + 1] = w >> 8;
-  });
-  return konamiCompress(raw);
+  return packScreenWords(buildScreenWords(rom, offset, texts));
 }
 
 /**
@@ -327,6 +321,25 @@ export function writeMenuScreen(rom, offset, texts) {
   } catch (e) {
     return { ok: false, error: e.message, size: 0, capacity: currentCapacity(rom, screen) };
   }
+  return placeScreenBlock(rom, offset, packed);
+}
+
+/** Compress a full tilemap (1024 words) */
+export function packScreenWords(words) {
+  const raw = new Uint8Array(words.length * 2);
+  words.forEach((w, i) => {
+    raw[i * 2] = w & 0xff;
+    raw[i * 2 + 1] = w >> 8;
+  });
+  return konamiCompress(raw);
+}
+
+/**
+ * Write a compressed block for a screen of MENU_SCREENS: in its slot, where it
+ * is now, in free space or after re-arranging every movable screen.
+ */
+export function placeScreenBlock(rom, offset, packed) {
+  const screen = screenById(offset) || { offset, pointers: [] };
   const n = packed.length;
   const here = screenLocation(rom, screen);
   const write = (at) => {

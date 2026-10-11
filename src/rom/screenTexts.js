@@ -4,9 +4,16 @@
  *
  * See SCREEN_TEXTS in constants.js and research/game-texts.md.
  */
-import { SCREEN_TEXTS, SCREEN_TEXT_PACKS, SCREEN_TEXT_RANGES } from './constants';
+import { SCREEN_TEXTS, SCREEN_TEXT_PACKS, SCREEN_TEXT_RANGES, MENU_SCREENS } from './constants';
 import { decodeIss, encodeIss, layoutFixed, findInvalidBoxChars } from './gameTexts';
 import { decodeScenarioText, encodeScenarioText } from './scenario';
+import {
+  layoutSpriteText,
+  encodeSpriteEntries,
+  readSpriteEntries,
+  decodeSpriteEntries,
+} from './menuSprites';
+import { readTitleText, checkTitleText, writeTitleScreen } from './titleScreens';
 
 const BANK_FILE_BASE = 0x10000; // bank $02
 const PALETTE = 0xfe; // FE xx: palette of the next cells (takes no cell)
@@ -17,14 +24,23 @@ const writeWord = (rom, a, v) => {
   rom.writeByte(a, v & 0xff);
   rom.writeByte(a + 1, (v >> 8) & 0xff);
 };
-const toFile = (ptr) => BANK_FILE_BASE + (ptr - 0x8000);
-const toPtr = (file) => file - BANK_FILE_BASE + 0x8000;
+const toFile = (ptr, bank = BANK_FILE_BASE) => bank + (ptr - 0x8000);
+const toPtr = (file, bank = BANK_FILE_BASE) => file - bank + 0x8000;
 
 /** File offset of a field (direct, through a word table, or through its pack table) */
 export function screenFieldAddress(rom, field) {
-  if (field.pack) return toFile(word(rom, SCREEN_TEXT_PACKS[field.pack].table + field.index * 2));
+  if (field.pack) {
+    const pack = SCREEN_TEXT_PACKS[field.pack];
+    return toFile(word(rom, pack.table + field.index * 2), pack.bank);
+  }
   if (field.table !== undefined) return toFile(word(rom, field.table + field.index * 2));
   return field.at;
+}
+
+/** Bytes a packed field takes now in the ROM (sprite lists keep their exact bytes when unchanged) */
+function currentSpriteBytes(rom, field) {
+  const addr = screenFieldAddress(rom, field);
+  return Array.from(rom.readBytes(addr, 1 + rom.readByte(addr) * 4));
 }
 
 // --- Cells (FE xx takes no cell) ---
@@ -63,8 +79,11 @@ export const screenTextCells = (text) => encodeCells(text).cells;
 // --- Read ---
 
 function readField(rom, field) {
+  if (field.kind === 'title') return readTitleText(rom, field.offset);
   const addr = screenFieldAddress(rom, field);
   switch (field.kind) {
+    case 'sprite':
+      return decodeSpriteEntries(readSpriteEntries(rom, addr));
     case 'box':
       return decodeScenarioText(rom, addr, field);
     case 'label':
@@ -101,6 +120,15 @@ export function readScreenTexts(rom) {
  */
 export function encodeScreenField(field, text) {
   const value = String(text ?? '');
+  if (field.kind === 'title') return checkTitleText(value);
+  if (field.kind === 'sprite') {
+    const res = layoutSpriteText(value, field);
+    const bytes = encodeSpriteEntries(res.entries);
+    const out = { bytes, invalid: res.invalid, right: res.right, sprites: res.entries.length };
+    if (res.error) out.error = res.error;
+    else if (res.invalid.length) out.error = 'noGlyph';
+    return out;
+  }
   if (field.kind === 'box') {
     const { bytes, lineCount } = encodeScenarioText(value, field.columns);
     const invalid = findInvalidBoxChars(value);
@@ -133,7 +161,11 @@ export function measureScreenPacks(texts) {
     for (const s of SCREEN_TEXTS) {
       for (const f of s.fields) {
         if (f.pack !== id) continue;
-        used += encodeScenarioText(String(texts?.[s.id]?.[f.id] ?? ''), f.columns).bytes.length;
+        const text = String(texts?.[s.id]?.[f.id] ?? '');
+        used +=
+          f.kind === 'sprite'
+            ? encodeScreenField(f, text).bytes.length
+            : encodeScenarioText(text, f.columns).bytes.length;
       }
     }
     out[id] = { used, capacity: pack.area[1] - pack.area[0] };
@@ -167,10 +199,20 @@ export function writeScreenTexts(rom, texts) {
   const issues = validateScreenTexts(texts);
   if (issues.length) return { ok: false, error: 'screenTextsInvalid', issues };
 
+  const current = readScreenTexts(rom);
   const packs = {};
+  const titles = [];
   for (const s of SCREEN_TEXTS) {
     for (const f of s.fields) {
-      const { bytes } = encodeScreenField(f, texts[s.id][f.id]);
+      if (f.kind === 'title') {
+        if (texts[s.id][f.id] !== current[s.id][f.id]) titles.push({ s, f });
+        continue;
+      }
+      let { bytes } = encodeScreenField(f, texts[s.id][f.id]);
+      // An unchanged menu item keeps its original sprite list (hand-kerned by Konami)
+      if (f.kind === 'sprite' && texts[s.id][f.id] === current[s.id][f.id]) {
+        bytes = currentSpriteBytes(rom, f);
+      }
       if (f.pack) {
         (packs[f.pack] ||= []).push({ f, bytes });
         continue;
@@ -190,15 +232,26 @@ export function writeScreenTexts(rom, texts) {
   }
   for (const [id, items] of Object.entries(packs)) {
     const pack = SCREEN_TEXT_PACKS[id];
+    // every list is read before writing (unchanged lists may move)
     let p = pack.area[0];
     for (const { f, bytes } of items.sort((a, b) => a.f.index - b.f.index)) {
-      writeWord(rom, pack.table + f.index * 2, toPtr(p));
+      writeWord(rom, pack.table + f.index * 2, toPtr(p, pack.bank));
       rom.writeBytes(p, bytes);
       p += bytes.length;
     }
     rom.writeBytes(p, new Array(pack.area[1] - p).fill(0xff));
   }
-  return { ok: true };
+  // Titles are compressed tilemaps placed like the menu screens (may move)
+  const failed = [];
+  const moved = [];
+  for (const { s, f } of titles) {
+    const res = writeTitleScreen(rom, f.offset, texts[s.id][f.id]);
+    if (!res.ok)
+      failed.push({ screen: s.id, field: f.id, error: res.error || 'titleNoRoom', ...res });
+    else if (res.moved) moved.push(MENU_SCREENS.find((m) => m.offset === f.offset)?.id ?? f.id);
+  }
+  if (failed.length) return { ok: false, error: 'titleNoRoom', issues: failed, moved };
+  return { ok: true, moved };
 }
 
 // --- Undo ---

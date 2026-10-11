@@ -23,6 +23,7 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Textos do treino (instruções, comentários, recorde, mensagens, títulos) e textos de 19 telas de menu; compressor Konami com parse ótimo | aba Textos do Jogo | `game-texts.md` |
 | Exportar/importar todos os textos em JSON (importa o que couber, lista o resto; tira acentos); telas de menu que não cabem são movidas/reorganizadas no espaço livre | aba Textos do Jogo | `game-texts.md` |
 | Textos desenhados pelo código: tela de controles (títulos, ajudas, rótulos), cenário (placar, relógio, resultado), "NEXTGAME" do grupo, ordinais da World Series, "LEVEL" do treino; Senha, Grupo da Cup e Treino: pontuação agora podem ser movidas | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 4) |
+| Menu principal (listas de sprites montadas com a fonte grande do menu) e os 7 títulos dos modos (tilemaps com a fonte dos títulos, realocáveis como as telas de menu) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
 
 ## Tradução PT-BR — estado (para continuar)
 
@@ -31,39 +32,49 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 - **Como retomar:**
   1. Abrir a ROM original no editor.
   2. Ir em Textos do Jogo > Importar JSON e escolher `PT-BR.json`.
-  3. Hoje entra tudo: 0 textos de fora, 9 telas movidas (pré-jogo, Regras, Táticas, Senha, Tabela da
-     fase, World Series: jogos e resultados, Treino: nome e pontuação) e só o aviso de acentos.
+  3. Hoje entra tudo: 0 textos de fora e só o aviso de acentos. São movidas 8 telas de menu (pré-jogo,
+     Regras, Táticas, Senha, Tabela da fase, World Series: jogos e resultados, Treino: nome) e 5 títulos
+     (Copa, Copa final, Série Mundial 1ª e 2ª, Partida especial).
   4. O arquivo foi reexportado: os `max` dos menus são os atuais e o `original` é o texto da ROM original.
+- **Nomes escolhidos:** menu AMISTOSO, COPA INTERNACIONAL, SERIE MUNDIAL, TREINO, CENARIOS, PENALTIS,
+  CODIGO (a fonte do menu não tem H, então não dá SENHA), OPCOES. Títulos: COPA / INTERNACIONAL (+ FINAL,
+  TORNEIO), CAMPEONATO, SERIE MUNDIAL / TEMPORADA 1 e 2, PARTIDA ESPECIAL. "WORLD SERIES" nas telas da
+  World Series também virou SERIE MUNDIAL (antes "COPA DO MUNDO").
 - **Teste automático:** `src/utils/__tests__/textsExport.test.js` importa o `PT-BR.json` quando ele existe,
   inclusive por cima de uma importação anterior.
 - **Conferido no emulador com a tradução:**
+  - menu principal (ligando o jogo do zero) e os títulos da Copa e da Série Mundial 1ª temporada;
   - menus: pré-jogo (Open Game e torneios), 1P x CPU, Regras, Táticas, Opções, Grupo da Cup, World Series:
     jogos, Treino: menu e nome, Senha e Digitar senha;
   - outras telas: controles do joypad (todas as 10 ajudas), cenário antes da partida ("GOLS 0-0
     HORA 02:00"), "PROXIMO: [bandeira] VS [bandeira]" no grupo, "1a. TEMPORAD" / "1a. FASE PARTIDAS" na
     World Series, "NIVEL 1" no treino.
 - **Ainda não vistas no jogo:** pré-jogo curto, Som, Tabela da fase, World Series: resultados, Parabéns,
-  Treino: níveis e pontuação; no cenário, "EXTRA TIME" e as mensagens de vitória/derrota (a partida não
-  terminou no emulador: o relógio chega a 0:00 e o jogo continua até uma parada). Caminhos de menu em
-  `research/tools/README.md` (botões com `hold:BTN:10`; o menu principal começa em OPEN GAME, ↑ vai para
-  OPTIONS e ↑↑ para PASSWORD).
+  Treino: níveis e pontuação; os títulos FINAL, TORNEIO, CAMPEONATO, TEMPORADA 2 e PARTIDA ESPECIAL; no
+  cenário, "EXTRA TIME" e as mensagens de vitória/derrota (a partida não terminou no emulador: o relógio
+  chega a 0:00 e o jogo continua até uma parada). Caminhos de menu em `research/tools/README.md`
+  (botões com `hold:BTN:10`; o menu principal começa em OPEN GAME, ↑ vai para OPTIONS e ↑↑ para
+  PASSWORD).
 - **Na tradução atual:** o texto do cenário 1 termina com "XXX" (veio assim do arquivo anterior; parece
   marcador de teste).
 - **Textos vistos em inglês que ainda não têm editor** (todos são sprites ou gráficos, não texto):
-  - menu principal (OPEN GAME, INTERNATIONAL CUP, ...) e os títulos grandes dos modos;
   - tela de táticas por linha ("Defensive | Offensive", DF/MF/FW), que é outra tela;
   - "Referee" e os nomes dos árbitros na tela de Regras;
   - "TIME NAME SCORE NAME" no ranking do treino, "BONUS TIME", "TIME", "TIME UP" no exercício;
   - "1P"/"2P" e "TYPE A" na tela de controles; "VS" entre os nomes antes da partida; "PRESS START";
-  - textos da partida (placar, GOAL, posições na barra inferior).
+  - textos da partida (placar, GOAL, posições na barra inferior);
+  - logotipo da tela título.
   Os nomes dos times nos quadros (ITALY, ROMANIA...) são editados na aba Nome do Time.
 
 ## Pendente — prioridade sugerida
 
-### 1. Tela título, menu principal e logos
-- O menu principal (OPEN GAME, INTERNATIONAL CUP...) e os títulos dos modos usam outra fonte/gráficos,
-  não cobertos pela aba Textos. Usar o Tile Explorer + `KonamiCodec`. Falta localizar os tilemaps e as
-  paletas.
+### 1. Letras que faltam nas fontes grandes
+- Menu principal: não há B F H J Q V X Z (tiles OBJ `0x100`-`0x13F`; `0x140`-`0x17F` estão vazios no
+  menu). Desenhar um H permitiria SENHA. Falta achar o bloco comprimido desses tiles e ver se o jogo
+  carrega mais que `0x40` tiles.
+- Títulos: só 1 2 A C D E F G H I L M N O P R S T U W (bloco `0x97B09`, 105 tiles, `0x59`-`0x5F` vazios).
+  Daria para acrescentar letras no fim do bloco; falta conferir se o jogo copia o bloco descomprimido
+  inteiro para a VRAM.
 
 ### 2. Restante da tradução
 O que sobrou em inglês são gráficos/sprites (lista acima) e alguns textos achados sem tela conhecida.
@@ -77,7 +88,8 @@ Sugestão de ordem:
 - **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
   "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
 - **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
-  posições da partida, "Referee" e árbitros, títulos dos modos. Exigem editar tiles (Tile Explorer).
+  posições da partida, "Referee" e árbitros, logotipo. Exigem editar tiles (Tile Explorer). A técnica de
+  corromper fatias da ROM e ver o que estraga (`game-texts.md`, seção 5) acha rápido de onde vêm.
 - **Ponteiros extras** que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
 - **Acentos:** não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16 e mapear
   códigos livres.

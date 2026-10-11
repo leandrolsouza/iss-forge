@@ -11,6 +11,8 @@ import {
 } from '../rom/screenTexts';
 import { decodeIss, layoutFixed } from '../rom/gameTexts';
 import { wrapScenarioText } from '../rom/scenario';
+import { MENU_SPRITE_CHARS } from '../rom/menuSprites';
+import { TITLE_CHARS } from '../rom/titleScreens';
 
 /** Lines as the game draws them (fixed texts with several lines, boxes) */
 function previewLines(field, text) {
@@ -89,9 +91,56 @@ export default function ScreenTextPanel() {
               const value = draft[screen.id][f.id] ?? '';
               const res = encodeScreenField(f, value);
               const bad = Boolean(res.error) || res.invalid.length > 0;
-              const multi = f.kind === 'box' || f.lines > 1;
+              const multi = f.kind === 'box' || f.kind === 'title' || f.lines > 1;
               const label = t(`stf_${screen.id}_${f.id}`);
               const original = originals?.[screen.id]?.[f.id];
+              if (f.kind === 'sprite') {
+                return (
+                  <label key={f.id} className="gt-menu-run" title={label}>
+                    <span className="gt-menu-pos gt-screen-label">{label}</span>
+                    <input
+                      className={`gt-menu-input ${bad ? 'over' : ''}`}
+                      value={value}
+                      spellCheck={false}
+                      onChange={(e) => update(f.id, e.target.value.toUpperCase())}
+                    />
+                    <span className={`gt-menu-len ${res.error ? 'over' : ''}`}>
+                      {128 + res.right}
+                    </span>
+                    <span className="gt-menu-orig">
+                      {res.invalid.length
+                        ? `${t('scenarioInvalidChars')}: ${res.invalid.join(' ')}`
+                        : t('stSpriteWidth', { x: 128 + res.right, sprites: res.sprites })}
+                    </span>
+                  </label>
+                );
+              }
+              if (f.kind === 'title') {
+                return (
+                  <div key={f.id} className="gt-screen-box">
+                    <div className="gt-screen-box-title">
+                      {label}
+                      <span className="gt-menu-orig">
+                        {' '}
+                        {t('stTitleWidth', { widths: res.widths.join(', ') })}
+                        {original !== value ? ` · ${original.replace(/\n/g, ' / ')}` : ''}
+                      </span>
+                    </div>
+                    <textarea
+                      className={`scenario-textarea ${bad ? 'over' : ''}`}
+                      rows={3}
+                      value={value}
+                      spellCheck={false}
+                      onChange={(e) => update(f.id, e.target.value.toUpperCase())}
+                    />
+                    {res.invalid.length > 0 && (
+                      <p className="scenario-warning">
+                        {t('scenarioInvalidChars')}: {res.invalid.join(' ')}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
               if (!multi) {
                 return (
                   <label key={f.id} className="gt-menu-run" title={label}>
@@ -150,7 +199,13 @@ export default function ScreenTextPanel() {
               );
             })}
           </div>
-          <p className="scenario-hint">{t('stHelp')}</p>
+          <p className="scenario-hint">
+            {screen.id === 'mainMenu'
+              ? t('stSpriteHelp', { chars: MENU_SPRITE_CHARS })
+              : screen.id === 'titles'
+                ? t('stTitleHelp', { chars: TITLE_CHARS })
+                : t('stHelp')}
+          </p>
         </div>
 
         {usedPacks.map((p) => (

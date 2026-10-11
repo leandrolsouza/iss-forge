@@ -1,7 +1,7 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T15:18:33.416Z",
+  "_exportedAt": "2026-10-11T16:59:39.844Z",
   "_help": [
     "Edit only the \"text\" / \"title\" / \"body\" values. \"\\n\" forces a new line.",
     "The game fonts have no accents: they are removed on import (técnico -> tecnico).",
@@ -716,6 +716,48 @@
     ]
   },
   "screens": {
+    "mainMenu": [
+      {
+        "id": "openGame",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "OPEN GAME"
+      },
+      {
+        "id": "internationalCup",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "INTERNATIONAL CUP"
+      },
+      {
+        "id": "worldSeries",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "WORLD SERIES"
+      },
+      {
+        "id": "training",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "TRAINING"
+      },
+      {
+        "id": "scenarios",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "SCENARIOS"
+      },
+      {
+        "id": "penaltyKick",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "PENALTY KICK"
+      },
+      {
+        "id": "password",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "PASSWORD"
+      },
+      {
+        "id": "options",
+        "limit": "big sprite font, letters ACDEGIKLMNOPRSTUWY only, one line up to the right edge",
+        "text": "OPTIONS"
+      }
+    ],
     "joypad": [
       {
         "id": "intro",
@@ -934,6 +976,43 @@
         "id": "level",
         "limit": "7 letters",
         "text": " LEVEL"
+      }
+    ],
+    "titles": [
+      {
+        "id": "cup",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "INTERNATIONAL\nCUP"
+      },
+      {
+        "id": "cupFinal",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "INTERNATIONAL\nCUP\nFINAL"
+      },
+      {
+        "id": "cupTournament",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "INTERNATIONAL\nCUP\nTOURNAMENT"
+      },
+      {
+        "id": "championship",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "CHAMPION  SHIP"
+      },
+      {
+        "id": "worldSeries1",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "WORLD SERIES\n1ST  SEASON"
+      },
+      {
+        "id": "worldSeries2",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "WORLD SERIES\n2ND  SEASON"
+      },
+      {
+        "id": "special",
+        "limit": "up to 3 lines of 32 columns (I and 1 take 1 column, space 1, other letters 2); letters 12ACDEFGHILMNOPRSTUW only",
+        "text": "SPECIAL GAME"
       }
     ]
   },

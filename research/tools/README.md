@@ -11,6 +11,7 @@ Scripts de apoio à engenharia reversa. **Não fazem parte do app.**
 | `png-crop.cjs` | Recorta e amplia um trecho de screenshot (ex.: inspecionar um sprite). |
 | `png-montage.cjs` | Junta vários screenshots numa grade, para ver uma partida inteira de uma vez. |
 | `png-find-color.cjs` | Conta pixels de cores exatas e lista os frames onde mais aparecem. Serve para achar onde uma cor de teste, pintada na ROM, aparece no jogo. |
+| `rom-corrupt.cjs` | Copia a ROM com um trecho embaralhado (XOR). Carregando um save state com essa ROM, mostra se o que está na tela vem daquele trecho (busca binária: 16 fatias de 64 KB, depois de 4 KB, de 256 bytes). |
 
 ## Técnica usada nas paletas
 
@@ -56,6 +57,16 @@ FROM=mainmenu.st node research/tools/emu-seq.cjs "hold:UP:10 wait:30 hold:UP:10 
 
 Nos menus com cursor, cada `hold:DOWN` precisa de uma espera depois (`wait:30` ou mais); segurar por
 muitos quadros faz o cursor repetir.
+
+O menu principal é uma exceção: o objeto do menu guarda o ponteiro de cada lista de sprites, então um
+estado salvo nele com outra ROM mostra lixo. Para conferir o menu, ligue o jogo do zero:
+
+```
+ROM=traduzida.sfc node research/tools/emu-seq.cjs "wait:300 hold:START:10 wait:200 hold:START:10 wait:200 shot:menu" menu_pt.st
+```
+
+Para ver a OAM num dump de WRAM: o buffer fica em `$01E0`-`$03DF` de trás para frente (byte `k` =
+`WRAM[0x3DF − k]`) e a tabela alta em `$03E0`.
 
 ## Exemplo: partida de demonstração (CPU x CPU) e paletas
 

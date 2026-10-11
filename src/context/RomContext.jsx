@@ -29,6 +29,7 @@ export function RomProvider({ children }) {
     setTournamentDraws: state.setTournamentDraws,
     setGameTexts: state.setGameTexts,
     setMenuScreens: state.setMenuScreens,
+    setScreenTexts: state.setScreenTexts,
   });
 
   const autoSave = useAutoSave({

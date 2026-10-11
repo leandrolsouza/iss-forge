@@ -1,13 +1,14 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T13:03:00.383Z",
+  "_exportedAt": "2026-10-11T15:18:09.410Z",
   "_help": [
     "Edite apenas os valores de \"text\" / \"title\" / \"body\". \"\\n\" força uma nova linha.",
     "As fontes do jogo não têm acentos: eles são removidos na importação (técnico -> tecnico).",
     "Textos de menu: no máximo \"max\" caracteres. \"original\" e \"at\" identificam o texto e não são importados.",
     "{1S}{T} e {2N}{D} desenham \"1ST\" e \"2ND\". Códigos como {7a} mantêm tiles especiais.",
-    "Partes ou entradas podem ser removidas do arquivo: as ausentes ficam inalteradas."
+    "Partes ou entradas podem ser removidas do arquivo: as ausentes ficam inalteradas.",
+    "Outras telas (\"screens\"): \"limit\" diz quanto cabe em cada texto. {fe}{xx} muda a cor e não ocupa letra."
   ],
   "training": {
     "intros": [
@@ -25,7 +26,7 @@
         "Muito bem!\nOs defensores\nnao tem chance."
       ],
       [
-        "Nao desista.\nDeixe a bola\nfazer o trabalho.",
+        "Nao desista.\nDeixe a bola\nfazer o\ntrabalho.",
         "Nao se acomode.\nSeu passe\nprecisa de\nmais trabalho.",
         "Bom esforco.",
         "Seu treino\nvaleu a pena.\nExcelentes\nhabilidades\nde passe."
@@ -51,7 +52,7 @@
     ],
     "record": "Voce bateu\no recorde\ndo percurso.\nContinue assim.",
     "messages": [
-      "Voce definitivamente\nprecisa treinar mais!",
+      "Voce definitivamente\nprecisa treinar\nmais!",
       "Voce tera problemas\npara manter seu\nlugar no time!",
       "Bom esforco!\nTente bater o\nrecorde do percurso!",
       "Fantastico!\nO treino te\naperfeicoou!"
@@ -176,13 +177,13 @@
     "players": [
       {
         "at": "10,10",
-        "max": 5,
+        "max": 4,
         "original": "1 P",
         "text": "1 P"
       },
       {
         "at": "10,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -194,13 +195,13 @@
       },
       {
         "at": "13,10",
-        "max": 5,
+        "max": 4,
         "original": "1 P",
         "text": "1 P"
       },
       {
         "at": "13,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -212,13 +213,13 @@
       },
       {
         "at": "16,10",
-        "max": 5,
+        "max": 4,
         "original": "CPU",
         "text": "CPU"
       },
       {
         "at": "16,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -232,13 +233,13 @@
     "rules": [
       {
         "at": "3,4",
-        "max": 15,
+        "max": 14,
         "original": "Fouls",
         "text": "Faltas"
       },
       {
         "at": "3,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -250,13 +251,13 @@
       },
       {
         "at": "6,4",
-        "max": 15,
+        "max": 14,
         "original": "Yellow Card",
         "text": "Cartao Amarelo"
       },
       {
         "at": "6,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -268,13 +269,13 @@
       },
       {
         "at": "9,4",
-        "max": 15,
+        "max": 14,
         "original": "Offside",
         "text": "Impedimento"
       },
       {
         "at": "9,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -288,7 +289,7 @@
     "tactics": [
       {
         "at": "19,3",
-        "max": 13,
+        "max": 12,
         "original": "No Tactics",
         "text": "Sem Taticas"
       },
@@ -300,7 +301,7 @@
       },
       {
         "at": "21,3",
-        "max": 13,
+        "max": 12,
         "original": "All Offence",
         "text": "Ataque Total"
       },
@@ -320,13 +321,13 @@
     "options": [
       {
         "at": "4,3",
-        "max": 15,
+        "max": 14,
         "original": "TIME PER HALF",
         "text": "TEMPO"
       },
       {
         "at": "8,3",
-        "max": 10,
+        "max": 9,
         "original": "LEVEL",
         "text": "NIVEL"
       },
@@ -338,7 +339,7 @@
       },
       {
         "at": "12,3",
-        "max": 10,
+        "max": 9,
         "original": "KEEPER",
         "text": "GOLEIRO"
       },
@@ -350,7 +351,7 @@
       },
       {
         "at": "14,4",
-        "max": 9,
+        "max": 8,
         "original": "CONTROLS",
         "text": "CONTROLE"
       },
@@ -382,7 +383,7 @@
       },
       {
         "at": "10,13",
-        "max": 8,
+        "max": 7,
         "original": "Stereo",
         "text": "Estereo"
       },
@@ -400,7 +401,7 @@
       },
       {
         "at": "13,18",
-        "max": 5,
+        "max": 4,
         "original": "ON",
         "text": "ON"
       },
@@ -438,13 +439,13 @@
     "stageTable": [
       {
         "at": "3,10",
-        "max": 10,
+        "max": 9,
         "original": "STAGE",
         "text": "FASE"
       },
       {
         "at": "3,20",
-        "max": 5,
+        "max": 4,
         "original": "WON",
         "text": "VENC"
       },
@@ -458,20 +459,22 @@
     "wsFixtures": [
       {
         "at": "2,4",
-        "max": 15,
+        "max": 14,
         "original": "WORLD SERIES",
         "text": "COPA DO MUNDO"
       },
       {
-        "at": "2,19",
-        "max": 12,
+        "at": "2,23",
+        "max": 8,
         "original": "SEASON",
+        "note": "the game draws \"1ST\" right before this text",
         "text": "TEMPORAD"
       },
       {
-        "at": "5,7",
-        "max": 24,
+        "at": "5,11",
+        "max": 20,
         "original": "STAGE FIXTURES",
+        "note": "the game draws \"1ST\" right before this text",
         "text": "FASE PARTIDAS"
       },
       {
@@ -502,20 +505,22 @@
     "wsResults": [
       {
         "at": "2,4",
-        "max": 15,
+        "max": 14,
         "original": "WORLD SERIES",
         "text": "COPA DO MUNDO"
       },
       {
-        "at": "2,19",
-        "max": 12,
+        "at": "2,23",
+        "max": 8,
         "original": "SEASON",
+        "note": "the game draws \"1ST\" right before this text",
         "text": "TEMPORAD"
       },
       {
-        "at": "5,6",
-        "max": 11,
+        "at": "5,10",
+        "max": 6,
         "original": "STAGE",
+        "note": "the game draws \"1ST\" right before this text",
         "text": "FASE"
       },
       {
@@ -526,25 +531,25 @@
       },
       {
         "at": "8,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "13,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "18,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "23,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       }
@@ -614,13 +619,13 @@
       },
       {
         "at": "14,9",
-        "max": 7,
+        "max": 6,
         "original": "TOTAL",
         "text": "TOTAL"
       },
       {
         "at": "14,16",
-        "max": 9,
+        "max": 8,
         "original": "RANKING",
         "text": "RANKING"
       }
@@ -628,7 +633,7 @@
     "trainingName": [
       {
         "at": "3,10",
-        "max": 7,
+        "max": 6,
         "original": "INPUT",
         "text": "INSIRA"
       },
@@ -642,31 +647,31 @@
     "trainingLevels": [
       {
         "at": "1,8",
-        "max": 8,
+        "max": 7,
         "original": "LEVEL",
         "text": "NIVEL"
       },
       {
         "at": "5,9",
-        "max": 8,
+        "max": 7,
         "original": "Dribble",
         "text": "Drible"
       },
       {
         "at": "12,9",
-        "max": 5,
+        "max": 4,
         "original": "Pass",
         "text": "Pass"
       },
       {
         "at": "19,9",
-        "max": 6,
+        "max": 5,
         "original": "Shoot",
         "text": "Chute"
       },
       {
         "at": "26,9",
-        "max": 8,
+        "max": 7,
         "original": "Defence",
         "text": "Defesa"
       }
@@ -674,19 +679,19 @@
     "trainingScore": [
       {
         "at": "1,9",
-        "max": 12,
+        "max": 11,
         "original": "Corner Kick",
         "text": "Escanteio"
       },
       {
         "at": "8,9",
-        "max": 12,
+        "max": 11,
         "original": "TOTAL SCORE",
         "text": "PONT TOTAL"
       },
       {
         "at": "11,2",
-        "max": 7,
+        "max": 6,
         "original": "TIME",
         "text": "TEMPO"
       },
@@ -710,10 +715,232 @@
       }
     ]
   },
+  "screens": {
+    "joypad": [
+      {
+        "id": "intro",
+        "limit": "3 lines x 23 letters",
+        "text": "Aperte \"L\" ou \"R\" para\nver a funcao de cada\nbotao."
+      },
+      {
+        "id": "lob",
+        "limit": "9 letters (filled with dots)",
+        "text": "LANCAR"
+      },
+      {
+        "id": "pass",
+        "limit": "9 letters (filled with dots)",
+        "text": "PASSE"
+      },
+      {
+        "id": "shoot",
+        "limit": "9 letters (filled with dots)",
+        "text": "CHUTE"
+      },
+      {
+        "id": "dash",
+        "limit": "9 letters (filled with dots)",
+        "text": "CORRER"
+      },
+      {
+        "id": "playerChange",
+        "limit": "2 lines x 10 columns",
+        "text": "TROCAR\n   JOGADOR"
+      },
+      {
+        "id": "nameLob",
+        "limit": "26 letters",
+        "text": "= LANCAMENTO ="
+      },
+      {
+        "id": "helpLob",
+        "limit": "7 lines x 26 columns",
+        "text": "A distancia do lancamento\ndepende de quanto tempo o\nbotao fica apertado.\nUsado para cruzamentos e\npasses longos."
+      },
+      {
+        "id": "namePass",
+        "limit": "26 letters",
+        "text": "= PASSE ="
+      },
+      {
+        "id": "helpPass",
+        "limit": "7 lines x 26 columns",
+        "text": "O passe rasteiro e usado\nprincipalmente para passes\ncurtos."
+      },
+      {
+        "id": "nameShoot",
+        "limit": "26 letters",
+        "text": "= CHUTE ="
+      },
+      {
+        "id": "helpShoot",
+        "limit": "7 lines x 26 columns",
+        "text": "Chute apertando o botao no\ncampo do adversario.\nA altura do chute depende\nde quanto tempo o botao\nfica apertado."
+      },
+      {
+        "id": "nameDash",
+        "limit": "26 letters",
+        "text": "= CORRIDA ="
+      },
+      {
+        "id": "helpDash",
+        "limit": "7 lines x 26 columns",
+        "text": "Segurar o botao acelera o\njogador destacado.\nUsar demais esta funcao\ncansa o jogador, entao va\ntrocando de jogador."
+      },
+      {
+        "id": "nameTypeA",
+        "limit": "26 letters",
+        "text": "= TROCA JOGADOR {fe}{28}TIPO A{fe}{20} ="
+      },
+      {
+        "id": "helpTypeA",
+        "limit": "7 lines x 26 columns",
+        "text": "Controle para iniciantes.\nUse \"R\" para controlar o\njogador mais perto e o\nsegundo mais perto da\nbola."
+      },
+      {
+        "id": "nameTypeB",
+        "limit": "26 letters",
+        "text": "= TROCA JOGADOR {fe}{24}TIPO B{fe}{20} ="
+      },
+      {
+        "id": "helpTypeB",
+        "limit": "7 lines x 26 columns",
+        "text": "Controle avancado.\nUse \"R\" mais o direcional\npara controlar os\njogadores mais perto da\nbola.\n\n                  CONTINUA"
+      },
+      {
+        "id": "nameTypeB2",
+        "limit": "26 letters",
+        "text": "= TROCA JOGADOR {fe}{24}TIPO B{fe}{20} ="
+      },
+      {
+        "id": "helpTypeB2",
+        "limit": "7 lines x 26 columns",
+        "text": "Voce pode controlar\njogadores fora da tela\nolhando o mapa do campo na\nparte de baixo da tela."
+      },
+      {
+        "id": "nameStrategy",
+        "limit": "26 letters",
+        "text": "= ESTRATEGIA ="
+      },
+      {
+        "id": "helpStrategy",
+        "limit": "7 lines x 26 columns",
+        "text": "Depois de mudar a\nestrategia aperte \"L\" e a\nestrategia escolhida sera\nexecutada. Se nenhuma for\nescolhida, o time joga do\nseu jeito normal."
+      },
+      {
+        "id": "nameSkills",
+        "limit": "26 letters",
+        "text": "= DRIBLES COM A BOLA ="
+      },
+      {
+        "id": "helpSkills",
+        "limit": "7 lines x 26 columns",
+        "text": "Sem usar o direcional, um\ntoque rapido neste botao\nlevanta a bola.\nServe para enganar os\nadversarios."
+      },
+      {
+        "id": "nameFlick",
+        "limit": "26 letters",
+        "text": "= CHAPEU ="
+      },
+      {
+        "id": "helpFlick",
+        "limit": "7 lines x 26 columns",
+        "text": "Usando a corrida, solte o\ndirecional e chute para\ndar um chapeu por cima do\nproprio jogador.\nMuito eficiente para\npassar pelos adversarios."
+      }
+    ],
+    "scenario": [
+      {
+        "id": "vs",
+        "limit": "2 letters",
+        "text": "VS"
+      },
+      {
+        "id": "score",
+        "limit": "5 letters",
+        "text": "GOLS"
+      },
+      {
+        "id": "time",
+        "limit": "4 letters",
+        "text": "HORA"
+      },
+      {
+        "id": "extraTime",
+        "limit": "10 letters",
+        "text": "PRORROGADA"
+      },
+      {
+        "id": "congrats",
+        "limit": "16 letters",
+        "text": "PARABENS!"
+      },
+      {
+        "id": "qualify",
+        "limit": "2 lines x 18 columns",
+        "text": " Classificado para\n a proxima fase."
+      },
+      {
+        "id": "unlucky",
+        "limit": "2 lines x 18 columns",
+        "text": "NAO FOI DESSA VEZ.\nTENTE DE NOVO."
+      }
+    ],
+    "cupGroup": [
+      {
+        "id": "nextGame",
+        "limit": "8 letters",
+        "text": "PROXIMO:"
+      },
+      {
+        "id": "vs",
+        "limit": "2 letters",
+        "text": "VS"
+      }
+    ],
+    "worldSeries": [
+      {
+        "id": "season1",
+        "limit": "3 letters",
+        "text": "1a."
+      },
+      {
+        "id": "season2",
+        "limit": "3 letters",
+        "text": "2a."
+      },
+      {
+        "id": "stage1",
+        "limit": "2 letters",
+        "text": "a."
+      },
+      {
+        "id": "stage2",
+        "limit": "2 letters",
+        "text": "a."
+      },
+      {
+        "id": "stage3",
+        "limit": "2 letters",
+        "text": "a."
+      },
+      {
+        "id": "stageN",
+        "limit": "2 letters",
+        "text": "a."
+      }
+    ],
+    "training": [
+      {
+        "id": "level",
+        "limit": "7 letters",
+        "text": " NIVEL"
+      }
+    ]
+  },
   "scenarios": [
     {
       "index": 1,
-      "match": "ITALY 1x1 HOLLAND",
+      "match": "BRAZIL 0x0 USA",
       "text": "Os brasileiros ficaram\ncom dez homens e\nestao lutando contra\no time dos EUA. XXX"
     },
     {
@@ -766,12 +993,12 @@
     {
       "team": "ITALY",
       "title": "Ofensivo 4-4-2",
-      "body": "A defesa e a\nmais forte do\nmundo. Tem tambem\num meiocampo\ncohesivo."
+      "body": "A defesa e a\nmais forte do\nmundo. Tem\ntambem\num meiocampo\ncohesivo."
     },
     {
       "team": "HOLLAND",
       "title": "Ofensivo 3-4-3",
-      "body": "Este time foca\nno ataque e pode\nrevirar o jogo\ndo adversario\ncontra ele."
+      "body": "Este time foca\nno ataque e\npode\nrevirar o jogo\ndo adversario\ncontra ele."
     },
     {
       "team": "SPAIN",
@@ -796,12 +1023,12 @@
     {
       "team": "DENMARK",
       "title": "Ofensivo 4-4-2",
-      "body": "Este time dri-\nbla de forma\nimpressiva,\nevitando tackles\nfaceis."
+      "body": "Este time dri-\nbla de forma\nimpressiva,\nevitando\ntackles\nfaceis."
     },
     {
       "team": "SWEDEN",
       "title": "Defensivo 4-5-1",
-      "body": "Contra-ataque\nusando a forte\ndefesa e o\nveloce atacante."
+      "body": "Contra-ataque\nusando a forte\ndefesa e o\nveloce\natacante."
     },
     {
       "team": "NORWAY",
@@ -811,7 +1038,7 @@
     {
       "team": "IRELAND",
       "title": "Defensivo 4-4-2",
-      "body": "Este time e\nmelhor usando\nos longos passes\ndos defensores."
+      "body": "Este time e\nmelhor usando\nos longos\npasses\ndos defensores."
     },
     {
       "team": "BELGIUM",
@@ -821,7 +1048,7 @@
     {
       "team": "AUSTRIA",
       "title": "Defensivo 4-4-2",
-      "body": "Defesa forte\ntradicionalmente\nbarra gols\ne abre\nespacos."
+      "body": "Defesa forte\ntradicionalment\ne\nbarra gols\ne abre\nespacos."
     },
     {
       "team": "SWISS",
@@ -886,7 +1113,7 @@
     {
       "team": "SKOREA",
       "title": "Ofensivo 3-5-2",
-      "body": "Este time tem\nmuitos jogadores\nvelozes e\nbate forte\nnos tackles."
+      "body": "Este time tem\nmuitos\njogadores\nvelozes e\nbate forte\nnos tackles."
     },
     {
       "team": "SUPERSTAR",

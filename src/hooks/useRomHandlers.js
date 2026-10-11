@@ -35,6 +35,7 @@ export default function useRomHandlers({
   setTournamentDraws,
   setGameTexts,
   setMenuScreens,
+  setScreenTexts,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -557,6 +558,24 @@ export default function useRomHandlers({
     [romParser, teams, markModified, pushSnapshot, setMenuScreens],
   );
 
+  /**
+   * Replace the fixed texts drawn by code (joypad controls, scenario, ...).
+   * @returns {{ ok: boolean, error?: string, issues?: object[] }}
+   */
+  const handleScreenTextsChange = useCallback(
+    (texts) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.writeScreenTexts(texts);
+      if (result.ok) {
+        setScreenTexts(romParser.readScreenTexts());
+        markModified();
+      }
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setScreenTexts],
+  );
+
   /** Export every translatable text as one JSON file */
   const handleExportTexts = useCallback(() => {
     if (!romParser) return;
@@ -579,6 +598,7 @@ export default function useRomHandlers({
     if (res.ok && Object.values(res.changed).some(Boolean)) {
       setGameTexts(romParser.readTrainingTexts());
       setMenuScreens(romParser.readMenuScreens());
+      setScreenTexts(romParser.readScreenTexts());
       setScenarios(romParser.readScenarios());
       setTeams((prev) =>
         prev.map((t, i) => ({ ...t, description: romParser.readTeamDescription(i) })),
@@ -593,6 +613,7 @@ export default function useRomHandlers({
     markModified,
     setGameTexts,
     setMenuScreens,
+    setScreenTexts,
     setScenarios,
     setTeams,
   ]);
@@ -837,6 +858,7 @@ export default function useRomHandlers({
     handleTournamentDrawsChange,
     handleGameTextsChange,
     handleMenuScreenChange,
+    handleScreenTextsChange,
     handleExportTexts,
     handleImportTexts,
     handleTeamDescriptionChange,

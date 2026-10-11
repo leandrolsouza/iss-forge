@@ -20,10 +20,17 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     expect(json.menus.prematch.map((e) => e.text)).toContain('Substituting');
     expect(json.scenarios).toHaveLength(9);
     expect(json.teamDescriptions).toHaveLength(27);
+    expect(json.screens.joypad.find((e) => e.id === 'nameLob').text).toBe('= LOB =');
     const before = new Uint8Array(rom.getRomData());
     const res = applyTexts(rom, json);
     expect(res.ok).toBe(true);
-    expect(res.changed).toEqual({ training: 0, menus: 0, scenarios: 0, teamDescriptions: 0 });
+    expect(res.changed).toEqual({
+      training: 0,
+      menus: 0,
+      screens: 0,
+      scenarios: 0,
+      teamDescriptions: 0,
+    });
     expect(Buffer.compare(rom.getRomData(), before)).toBe(0);
   });
 
@@ -35,10 +42,19 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     json.menus.prematch.find((e) => e.original === 'Game Start').text = 'Iniciar Jogo';
     json.scenarios[0].text = 'O Brasil esta com dez homens.';
     json.teamDescriptions.find((d) => d.team === 'BRAZIL').body = 'Time muito tecnico.';
+    json.screens.joypad.find((e) => e.id === 'shoot').text = 'CHUTE';
+    json.screens.scenario.find((e) => e.id === 'congrats').text = 'PARABENS!';
     const res = applyTexts(rom, json);
     expect(res.errors).toEqual([]);
-    expect(res.changed).toEqual({ training: 2, menus: 1, scenarios: 1, teamDescriptions: 1 });
+    expect(res.changed).toEqual({
+      training: 2,
+      menus: 1,
+      screens: 2,
+      scenarios: 1,
+      teamDescriptions: 1,
+    });
     const again = exportTexts(rom);
+    expect(again.screens.joypad.find((e) => e.id === 'shoot').text).toBe('CHUTE');
     expect(again.training.titles[0]).toBe('~ Drible ~');
     expect(again.menus.prematch[0].text).toBe('Iniciar Jogo');
     expect(again.scenarios[0].text).toBe('O Brasil esta com dez\nhomens.');
@@ -65,11 +81,15 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     entry.text = 'x'.repeat(entry.max + 1);
     json.teamDescriptions[0].body =
       'Linha um\nlinha dois\nlinha tres\nlinha quatro\nlinha cinco\nseis\nsete';
+    json.screens.cupGroup.find((e) => e.id === 'nextGame').text = 'PROXIMO JOGO';
     const res = applyTexts(rom, json);
     expect(res.ok).toBe(true);
     expect(res.changed.training).toBe(1);
     expect(res.skipped.some((m) => m.startsWith('menus.prematch "Game Start"'))).toBe(true);
     expect(res.skipped.some((m) => /GERMANY: body has 7 lines, max 6/.test(m))).toBe(true);
+    expect(res.skipped.some((m) => /screens\.cupGroup\.nextGame .*12 letters, max 8/.test(m))).toBe(
+      true,
+    );
     const back = exportTexts(rom);
     expect(back.training.titles[0]).toBe('~ Drible ~');
     expect(back.menus.prematch[0].text).toBe('Game Start');

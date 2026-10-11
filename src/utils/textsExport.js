@@ -9,6 +9,8 @@ import RomParser from '../rom/RomParser';
 import { TEAMS, GAME_TEXTS, SCENARIO_DATA } from '../rom/constants';
 import { validateTrainingTexts, findInvalidBoxChars, findInvalidIssChars } from '../rom/gameTexts';
 import { findInvalidMenuChars, menuTextLength, writeMenuScreens } from '../rom/menuScreens';
+import { encodeScreenField, measureScreenPacks } from '../rom/screenTexts';
+import { SCREEN_TEXTS } from '../rom/constants';
 import { findInvalidChars, wrapScenarioText } from '../rom/scenario';
 import {
   writeTeamDescriptions,
@@ -29,7 +31,8 @@ export function exportTexts(romParser) {
     menus[screen.id] = screen.runs.map((r) => ({
       at: `${r.row},${r.col}`,
       max: r.maxLength,
-      original: r.text,
+      // text of the original ROM (the file matches by it when "at" is missing)
+      original: r.original ?? r.text,
       ...(r.prefix ? { note: `the game draws "${r.prefix}" right before this text` } : {}),
       text: r.text,
     }));
@@ -44,6 +47,13 @@ export function exportTexts(romParser) {
     title: d.title,
     body: d.body,
   }));
+  const current = romParser.readScreenTexts();
+  const screens = Object.fromEntries(
+    SCREEN_TEXTS.map((s) => [
+      s.id,
+      s.fields.map((f) => ({ id: f.id, limit: screenFieldLimit(f), text: current[s.id][f.id] })),
+    ]),
+  );
   return {
     _format: TEXTS_FORMAT,
     _version: TEXTS_VERSION,
@@ -54,12 +64,22 @@ export function exportTexts(romParser) {
       'Menu texts: at most "max" characters. "original" and "at" identify the text and are not imported.',
       '{1S}{T} and {2N}{D} draw "1ST" and "2ND". Codes like {7a} keep special tiles.',
       'Parts or entries can be removed from the file: missing ones are left unchanged.',
+      'Screens: "limit" tells the room of each text. {fe}{xx} changes the colour and takes no cell.',
     ],
     training,
     menus,
+    screens,
     scenarios,
     teamDescriptions,
   };
+}
+
+/** Human-readable room of a screen text field (exported as "limit") */
+export function screenFieldLimit(f) {
+  if (f.kind === 'box') return `${f.lines} lines x ${f.columns} columns`;
+  if (f.lines > 1) return `${f.lines} lines x ${f.columns} letters`;
+  if (f.kind === 'label') return `${f.columns} letters (filled with dots)`;
+  return `${f.columns} letters`;
 }
 
 export function validateTextsFile(data) {
@@ -121,7 +141,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
   const skipped = [];
   const warnings = [];
   const moved = [];
-  const changed = { training: 0, menus: 0, scenarios: 0, teamDescriptions: 0 };
+  const changed = { training: 0, menus: 0, screens: 0, scenarios: 0, teamDescriptions: 0 };
   const check = validateTextsFile(input);
   if (!check.valid) return { ok: false, errors: [check.error], skipped, warnings, moved, changed };
   const counter = { n: 0 };
@@ -311,6 +331,59 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     }
   }
 
+  // --- Screen texts (drawn by code) ---
+  if (data.screens && typeof data.screens === 'object') {
+    const cur = work.readScreenTexts();
+    const next = structuredClone(cur);
+    const touched = [];
+    for (const [id, entries] of Object.entries(data.screens)) {
+      const screen = SCREEN_TEXTS.find((s) => s.id === id);
+      if (!screen) {
+        warnings.push(`screens.${id}: unknown screen (ignored)`);
+        continue;
+      }
+      if (!Array.isArray(entries)) continue;
+      for (const e of entries) {
+        if (!e || !isStr(e.text)) continue;
+        const f = screen.fields.find((x) => x.id === e.id);
+        if (!f) {
+          warnings.push(`screens.${id}: unknown text "${e.id}" (ignored)`);
+          continue;
+        }
+        if (e.text === cur[id][f.id]) continue;
+        const path = `screens.${id}.${f.id}`;
+        const res = encodeScreenField(f, e.text);
+        if (res.error) {
+          skipped.push(`${path} "${e.text}": ${screenFieldError(f, e.text, res)}`);
+          continue;
+        }
+        invalidChars(path, res.invalid);
+        next[id][f.id] = e.text;
+        touched.push({ id, f, path });
+      }
+    }
+    // Packed areas: drop the longest new texts until everything fits
+    for (const [pack, m] of Object.entries(measureScreenPacks(next))) {
+      if (m.used <= m.capacity) continue;
+      const items = touched
+        .filter((t) => t.f.pack === pack)
+        .sort((a, b) => next[b.id][b.f.id].length - next[a.id][a.f.id].length);
+      while (measureScreenPacks(next)[pack].used > m.capacity && items.length) {
+        const it = items.shift();
+        skipped.push(
+          `${it.path}: no room left in the ${pack} area (shorten the texts of this group)`,
+        );
+        next[it.id][it.f.id] = cur[it.id][it.f.id];
+        touched.splice(touched.indexOf(it), 1);
+      }
+    }
+    if (touched.length) {
+      const res = work.writeScreenTexts(next);
+      if (res.ok) changed.screens = touched.length;
+      else skipped.push('screens: could not be written');
+    }
+  }
+
   // --- Scenarios ---
   if (Array.isArray(data.scenarios)) {
     const cur = work.readScenarios();
@@ -385,6 +458,16 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     romParser.getRomData().set(work.getRomData());
   }
   return { ok: true, errors, skipped, warnings, moved, changed };
+}
+
+/** Why a screen text does not fit, for the import report */
+function screenFieldError(f, text, res) {
+  if (res.error === 'tooManyLines') {
+    const lines = f.kind === 'box' ? wrapScenarioText(text, f.columns) : wrapFixed(text, f.columns);
+    return `${lines.length} lines, max ${f.lines} (${f.columns} columns): ${showLines(lines)}`;
+  }
+  if (res.error === 'tooLong') return `${res.cells} letters, max ${f.columns}`;
+  return `${res.bytes?.length ?? '?'} bytes, max ${f.room ?? f.columns}`;
 }
 
 /** Lines of a fixed-length text as layoutFixed breaks them */

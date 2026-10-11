@@ -30,6 +30,7 @@ export default function useRomState() {
   // Global (non-team) data: training mode texts
   const [gameTexts, setGameTexts] = useState(null);
   const [menuScreens, setMenuScreens] = useState([]);
+  const [screenTexts, setScreenTexts] = useState(null);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -67,6 +68,7 @@ export default function useRomState() {
           setTournamentDraws(parser.readTournamentDraws());
           setGameTexts(parser.readTrainingTexts());
           setMenuScreens(parser.readMenuScreens());
+          setScreenTexts(parser.readScreenTexts());
           history.clearHistory();
 
           if (allTeams.length > 0) {
@@ -110,6 +112,7 @@ export default function useRomState() {
     // Training texts (re-packed on every edit)
     gameTextBytes: romParserRef.current ? romParserRef.current.readTrainingTextBytes() : null,
     menuBytes: romParserRef.current ? romParserRef.current.readMenuScreenBytes() : null,
+    screenTextBytes: romParserRef.current ? romParserRef.current.readScreenTextBytes() : null,
   });
 
   const pushSnapshot = useCallback(
@@ -152,6 +155,10 @@ export default function useRomState() {
         if (!Array.isArray(restored) && restored.menuBytes) {
           romParser.restoreMenuScreenBytes(restored.menuBytes);
           setMenuScreens(romParser.readMenuScreens());
+        }
+        if (!Array.isArray(restored) && restored.screenTextBytes) {
+          romParser.restoreScreenTextBytes(restored.screenTextBytes);
+          setScreenTexts(romParser.readScreenTexts());
         }
       }
     },
@@ -229,6 +236,8 @@ export default function useRomState() {
     setGameTexts,
     menuScreens,
     setMenuScreens,
+    screenTexts,
+    setScreenTexts,
     selectedTeamIndex,
     activeTab,
     openTabs,

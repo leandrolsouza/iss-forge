@@ -21,6 +21,42 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Correção: atributos/número/cabelo lidos na ordem ordinal (times 5-24 estavam trocados) | aba Jogadores | `tournaments.md` |
 | Sorteios da International Cup / World Series (32 × 6 grupos), com trava contra o freeze | aba Torneios | `tournaments.md` |
 | Textos do treino (instruções, comentários, recorde, mensagens, títulos) e textos de 19 telas de menu; compressor Konami com parse ótimo | aba Textos do Jogo | `game-texts.md` |
+| Exportar/importar todos os textos em JSON (importa o que couber, lista o resto; tira acentos); telas de menu que não cabem são movidas/reorganizadas no espaço livre | aba Textos do Jogo | `game-texts.md` |
+| Textos desenhados pelo código: tela de controles (títulos, ajudas, rótulos), cenário (placar, relógio, resultado), "NEXTGAME" do grupo, ordinais da World Series, "LEVEL" do treino; Senha, Grupo da Cup e Treino: pontuação agora podem ser movidas | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 4) |
+
+## Tradução PT-BR — estado (para continuar)
+
+- **Arquivos:** `game-translations/EN.json` (exportado da ROM original) e `game-translations/PT-BR.json`
+  (tradução em andamento), versionados no git. Os dois já têm a seção `screens` (Outras telas).
+- **Como retomar:**
+  1. Abrir a ROM original no editor.
+  2. Ir em Textos do Jogo > Importar JSON e escolher `PT-BR.json`.
+  3. Hoje entra tudo: 0 textos de fora, 9 telas movidas (pré-jogo, Regras, Táticas, Senha, Tabela da
+     fase, World Series: jogos e resultados, Treino: nome e pontuação) e só o aviso de acentos.
+  4. O arquivo foi reexportado: os `max` dos menus são os atuais e o `original` é o texto da ROM original.
+- **Teste automático:** `src/utils/__tests__/textsExport.test.js` importa o `PT-BR.json` quando ele existe,
+  inclusive por cima de uma importação anterior.
+- **Conferido no emulador com a tradução:**
+  - menus: pré-jogo (Open Game e torneios), 1P x CPU, Regras, Táticas, Opções, Grupo da Cup, World Series:
+    jogos, Treino: menu e nome, Senha e Digitar senha;
+  - outras telas: controles do joypad (todas as 10 ajudas), cenário antes da partida ("GOLS 0-0
+    HORA 02:00"), "PROXIMO: [bandeira] VS [bandeira]" no grupo, "1a. TEMPORAD" / "1a. FASE PARTIDAS" na
+    World Series, "NIVEL 1" no treino.
+- **Ainda não vistas no jogo:** pré-jogo curto, Som, Tabela da fase, World Series: resultados, Parabéns,
+  Treino: níveis e pontuação; no cenário, "EXTRA TIME" e as mensagens de vitória/derrota (a partida não
+  terminou no emulador: o relógio chega a 0:00 e o jogo continua até uma parada). Caminhos de menu em
+  `research/tools/README.md` (botões com `hold:BTN:10`; o menu principal começa em OPEN GAME, ↑ vai para
+  OPTIONS e ↑↑ para PASSWORD).
+- **Na tradução atual:** o texto do cenário 1 termina com "XXX" (veio assim do arquivo anterior; parece
+  marcador de teste).
+- **Textos vistos em inglês que ainda não têm editor** (todos são sprites ou gráficos, não texto):
+  - menu principal (OPEN GAME, INTERNATIONAL CUP, ...) e os títulos grandes dos modos;
+  - tela de táticas por linha ("Defensive | Offensive", DF/MF/FW), que é outra tela;
+  - "Referee" e os nomes dos árbitros na tela de Regras;
+  - "TIME NAME SCORE NAME" no ranking do treino, "BONUS TIME", "TIME", "TIME UP" no exercício;
+  - "1P"/"2P" e "TYPE A" na tela de controles; "VS" entre os nomes antes da partida; "PRESS START";
+  - textos da partida (placar, GOAL, posições na barra inferior).
+  Os nomes dos times nos quadros (ITALY, ROMANIA...) são editados na aba Nome do Time.
 
 ## Pendente — prioridade sugerida
 
@@ -30,12 +66,21 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
   paletas.
 
 ### 2. Restante da tradução
-- Textos de ajuda e rótulos na fonte 8x16 perto de `0x11F74` ("Press L or R button...", LOB/PASS/SHOOT/DASH,
-  NEXTGAME).
-- Textos do jogo durante a partida (GOAL, placar, nomes de posições na barra inferior) e telas que não
-  foram encontradas na varredura (só blocos de exatamente 2048 bytes foram procurados).
-- Acentos: não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16.
-- Ponteiros extras que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
+O que sobrou em inglês são gráficos/sprites (lista acima) e alguns textos achados sem tela conhecida.
+Sugestão de ordem:
+- **Conferir no jogo** o que foi editado mas ainda não visto: mensagens de vitória/derrota e "EXTRA TIME"
+  do cenário, Treino: pontuação (agora móvel), Senha (agora móvel e movida pela importação), Som, Tabela
+  da fase, World Series: resultados, Parabéns.
+- **Textos sem leitor achado** (em `game-texts.md`, seção 4): títulos "ASIAN LEAGUE" / "INTERNATIONAL CUP"
+  / "WORLD SERIES 1ST STAGE" (`0x17621`, tabela `$87:A86A`), "NEXT GAME      VS" (`0x12A94`), "OK"/"NO"
+  (`0x12B05`). Achar a tela antes de pôr no editor.
+- **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
+  "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
+- **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
+  posições da partida, "Referee" e árbitros, títulos dos modos. Exigem editar tiles (Tile Explorer).
+- **Ponteiros extras** que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
+- **Acentos:** não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16 e mapear
+  códigos livres.
 
 ### 3. Nome do time sem truncar ao copiar
 - A área de nomes do menu (`0x43ED5`-`0x44486`) fica cheia e nomes longos são cortados (ex.: copiar

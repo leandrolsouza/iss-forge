@@ -1,13 +1,14 @@
 {
   "_format": "iss-forge-texts",
   "_version": 1,
-  "_exportedAt": "2026-10-11T13:03:00.383Z",
+  "_exportedAt": "2026-10-11T15:18:33.416Z",
   "_help": [
     "Edit only the \"text\" / \"title\" / \"body\" values. \"\\n\" forces a new line.",
     "The game fonts have no accents: they are removed on import (técnico -> tecnico).",
     "Menu texts: at most \"max\" characters. \"original\" and \"at\" identify the text and are not imported.",
     "{1S}{T} and {2N}{D} draw \"1ST\" and \"2ND\". Codes like {7a} keep special tiles.",
-    "Parts or entries can be removed from the file: missing ones are left unchanged."
+    "Parts or entries can be removed from the file: missing ones are left unchanged.",
+    "Screens: \"limit\" tells the room of each text. {fe}{xx} changes the colour and takes no cell."
   ],
   "training": {
     "intros": [
@@ -176,13 +177,13 @@
     "players": [
       {
         "at": "10,10",
-        "max": 5,
+        "max": 4,
         "original": "1 P",
         "text": "1 P"
       },
       {
         "at": "10,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -194,13 +195,13 @@
       },
       {
         "at": "13,10",
-        "max": 5,
+        "max": 4,
         "original": "1 P",
         "text": "1 P"
       },
       {
         "at": "13,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -212,13 +213,13 @@
       },
       {
         "at": "16,10",
-        "max": 5,
+        "max": 4,
         "original": "CPU",
         "text": "CPU"
       },
       {
         "at": "16,15",
-        "max": 4,
+        "max": 3,
         "original": "VS",
         "text": "VS"
       },
@@ -232,13 +233,13 @@
     "rules": [
       {
         "at": "3,4",
-        "max": 15,
+        "max": 14,
         "original": "Fouls",
         "text": "Fouls"
       },
       {
         "at": "3,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -250,13 +251,13 @@
       },
       {
         "at": "6,4",
-        "max": 15,
+        "max": 14,
         "original": "Yellow Card",
         "text": "Yellow Card"
       },
       {
         "at": "6,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -268,13 +269,13 @@
       },
       {
         "at": "9,4",
-        "max": 15,
+        "max": 14,
         "original": "Offside",
         "text": "Offside"
       },
       {
         "at": "9,19",
-        "max": 4,
+        "max": 3,
         "original": "ON",
         "text": "ON"
       },
@@ -288,7 +289,7 @@
     "tactics": [
       {
         "at": "19,3",
-        "max": 13,
+        "max": 12,
         "original": "No Tactics",
         "text": "No Tactics"
       },
@@ -300,7 +301,7 @@
       },
       {
         "at": "21,3",
-        "max": 13,
+        "max": 12,
         "original": "All Offence",
         "text": "All Offence"
       },
@@ -320,13 +321,13 @@
     "options": [
       {
         "at": "4,3",
-        "max": 15,
+        "max": 14,
         "original": "TIME PER HALF",
         "text": "TIME PER HALF"
       },
       {
         "at": "8,3",
-        "max": 10,
+        "max": 9,
         "original": "LEVEL",
         "text": "LEVEL"
       },
@@ -338,7 +339,7 @@
       },
       {
         "at": "12,3",
-        "max": 10,
+        "max": 9,
         "original": "KEEPER",
         "text": "KEEPER"
       },
@@ -350,7 +351,7 @@
       },
       {
         "at": "14,4",
-        "max": 9,
+        "max": 8,
         "original": "CONTROLS",
         "text": "CONTROLS"
       },
@@ -382,7 +383,7 @@
       },
       {
         "at": "10,13",
-        "max": 8,
+        "max": 7,
         "original": "Stereo",
         "text": "Stereo"
       },
@@ -400,7 +401,7 @@
       },
       {
         "at": "13,18",
-        "max": 5,
+        "max": 4,
         "original": "ON",
         "text": "ON"
       },
@@ -438,13 +439,13 @@
     "stageTable": [
       {
         "at": "3,10",
-        "max": 10,
+        "max": 9,
         "original": "STAGE",
         "text": "STAGE"
       },
       {
         "at": "3,20",
-        "max": 5,
+        "max": 4,
         "original": "WON",
         "text": "WON"
       },
@@ -458,21 +459,23 @@
     "wsFixtures": [
       {
         "at": "2,4",
-        "max": 15,
+        "max": 14,
         "original": "WORLD SERIES",
         "text": "WORLD SERIES"
       },
       {
-        "at": "2,19",
-        "max": 12,
-        "original": "1ST SEASON",
-        "text": "1ST SEASON"
+        "at": "2,23",
+        "max": 8,
+        "original": "SEASON",
+        "note": "the game draws \"1ST\" right before this text",
+        "text": "SEASON"
       },
       {
-        "at": "5,7",
-        "max": 24,
-        "original": "1ST STAGE FIXTURES",
-        "text": "1ST STAGE FIXTURES"
+        "at": "5,11",
+        "max": 20,
+        "original": "STAGE FIXTURES",
+        "note": "the game draws \"1ST\" right before this text",
+        "text": "STAGE FIXTURES"
       },
       {
         "at": "8,15",
@@ -502,21 +505,23 @@
     "wsResults": [
       {
         "at": "2,4",
-        "max": 15,
+        "max": 14,
         "original": "WORLD SERIES",
         "text": "WORLD SERIES"
       },
       {
-        "at": "2,19",
-        "max": 12,
-        "original": "1ST SEASON",
-        "text": "1ST SEASON"
+        "at": "2,23",
+        "max": 8,
+        "original": "SEASON",
+        "note": "the game draws \"1ST\" right before this text",
+        "text": "SEASON"
       },
       {
-        "at": "5,6",
-        "max": 11,
-        "original": "1ST STAGE",
-        "text": "1ST STAGE"
+        "at": "5,10",
+        "max": 6,
+        "original": "STAGE",
+        "note": "the game draws \"1ST\" right before this text",
+        "text": "STAGE"
       },
       {
         "at": "5,17",
@@ -526,25 +531,25 @@
       },
       {
         "at": "8,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "13,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "18,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       },
       {
         "at": "23,11",
-        "max": 11,
+        "max": 10,
         "original": "VS",
         "text": "VS"
       }
@@ -614,13 +619,13 @@
       },
       {
         "at": "14,9",
-        "max": 7,
+        "max": 6,
         "original": "TOTAL",
         "text": "TOTAL"
       },
       {
         "at": "14,16",
-        "max": 9,
+        "max": 8,
         "original": "RANKING",
         "text": "RANKING"
       }
@@ -628,7 +633,7 @@
     "trainingName": [
       {
         "at": "3,10",
-        "max": 7,
+        "max": 6,
         "original": "INPUT",
         "text": "INPUT"
       },
@@ -642,31 +647,31 @@
     "trainingLevels": [
       {
         "at": "1,8",
-        "max": 8,
+        "max": 7,
         "original": "LEVEL",
         "text": "LEVEL"
       },
       {
         "at": "5,9",
-        "max": 8,
+        "max": 7,
         "original": "Dribble",
         "text": "Dribble"
       },
       {
         "at": "12,9",
-        "max": 5,
+        "max": 4,
         "original": "Pass",
         "text": "Pass"
       },
       {
         "at": "19,9",
-        "max": 6,
+        "max": 5,
         "original": "Shoot",
         "text": "Shoot"
       },
       {
         "at": "26,9",
-        "max": 8,
+        "max": 7,
         "original": "Defence",
         "text": "Defence"
       }
@@ -674,19 +679,19 @@
     "trainingScore": [
       {
         "at": "1,9",
-        "max": 12,
+        "max": 11,
         "original": "Corner Kick",
         "text": "Corner Kick"
       },
       {
         "at": "8,9",
-        "max": 12,
+        "max": 11,
         "original": "TOTAL SCORE",
         "text": "TOTAL SCORE"
       },
       {
         "at": "11,2",
-        "max": 7,
+        "max": 6,
         "original": "TIME",
         "text": "TIME"
       },
@@ -710,11 +715,233 @@
       }
     ]
   },
+  "screens": {
+    "joypad": [
+      {
+        "id": "intro",
+        "limit": "3 lines x 23 letters",
+        "text": "Press\"L\"or\"R\"button to\nsee what functions each\nkey performs."
+      },
+      {
+        "id": "lob",
+        "limit": "9 letters (filled with dots)",
+        "text": "LOB"
+      },
+      {
+        "id": "pass",
+        "limit": "9 letters (filled with dots)",
+        "text": "PASS"
+      },
+      {
+        "id": "shoot",
+        "limit": "9 letters (filled with dots)",
+        "text": "SHOOT"
+      },
+      {
+        "id": "dash",
+        "limit": "9 letters (filled with dots)",
+        "text": "DASH"
+      },
+      {
+        "id": "playerChange",
+        "limit": "2 lines x 10 columns",
+        "text": "PLAYER\n    CHANGE"
+      },
+      {
+        "id": "nameLob",
+        "limit": "26 letters",
+        "text": "= LOB ="
+      },
+      {
+        "id": "helpLob",
+        "limit": "7 lines x 26 columns",
+        "text": "The distance of the lob is\ndetermined by how long you\nkeep the button depressed.\nUsed mainly for a centre\nand long pass."
+      },
+      {
+        "id": "namePass",
+        "limit": "26 letters",
+        "text": "= PASS ="
+      },
+      {
+        "id": "helpPass",
+        "limit": "7 lines x 26 columns",
+        "text": "The pass along the ground\nis used mainly for a short\npass."
+      },
+      {
+        "id": "nameShoot",
+        "limit": "26 letters",
+        "text": "= SHOOT ="
+      },
+      {
+        "id": "helpShoot",
+        "limit": "7 lines x 26 columns",
+        "text": "Shoot by depressing the\nbutton in the opposing\nteam's half.\nThe height of the shot is\ndetermined by the length\nof time the button is\ndepressed."
+      },
+      {
+        "id": "nameDash",
+        "limit": "26 letters",
+        "text": "= DASH ="
+      },
+      {
+        "id": "helpDash",
+        "limit": "7 lines x 26 columns",
+        "text": "Keeping the button\ndepressed speeds up the\nhighlighted player.\nToo much use of this\nfunction will tire a\nplayer so keep swapping\nplayers."
+      },
+      {
+        "id": "nameTypeA",
+        "limit": "26 letters",
+        "text": "= PLAYER CHANGE {fe}{28}TYPE A{fe}{20} ="
+      },
+      {
+        "id": "helpTypeA",
+        "limit": "7 lines x 26 columns",
+        "text": "Beginner's control.\nUse\"R\"to move the closest\nand second closest player\nto the ball."
+      },
+      {
+        "id": "nameTypeB",
+        "limit": "26 letters",
+        "text": "= PLAYER CHANGE {fe}{24}TYPE B{fe}{20} ="
+      },
+      {
+        "id": "helpTypeB",
+        "limit": "7 lines x 26 columns",
+        "text": "Advanced control.\nUse\"R\"plus the directional\nkeypad to move the\nclosest players to the\nball.\n\n                CONTINUED"
+      },
+      {
+        "id": "nameTypeB2",
+        "limit": "26 letters",
+        "text": "= PLAYER CHANGE {fe}{24}TYPE B{fe}{20} ="
+      },
+      {
+        "id": "helpTypeB2",
+        "limit": "7 lines x 26 columns",
+        "text": "You can move off-screen\nplayers by referring to\nthe full pitch map at the\nbotton of the screen."
+      },
+      {
+        "id": "nameStrategy",
+        "limit": "26 letters",
+        "text": "= STRATEGY ="
+      },
+      {
+        "id": "helpStrategy",
+        "limit": "7 lines x 26 columns",
+        "text": "After changing the stra-\ntegy press\"L\"and the\nstrategy selected will be\nperformed. If no strategy\nhas been selected the\nteam will perform in\nits normal way."
+      },
+      {
+        "id": "nameSkills",
+        "limit": "26 letters",
+        "text": "= ON THE BALL SKILLS ="
+      },
+      {
+        "id": "helpSkills",
+        "limit": "7 lines x 26 columns",
+        "text": "Without using the direc-\ntional keypad a short tap\non this key will send the\nball up in the air.\nCan be used to dummy\nopponents."
+      },
+      {
+        "id": "nameFlick",
+        "limit": "26 letters",
+        "text": "= FLICK OVER THE HEAD ="
+      },
+      {
+        "id": "helpFlick",
+        "limit": "7 lines x 26 columns",
+        "text": "Using the dash function\nrelease the directional\nkeypad and kick the ball\nto flick it over your own\nplayer's head.\nVery effective for beating\nopposing players."
+      }
+    ],
+    "scenario": [
+      {
+        "id": "vs",
+        "limit": "2 letters",
+        "text": "VS"
+      },
+      {
+        "id": "score",
+        "limit": "5 letters",
+        "text": "SCORE"
+      },
+      {
+        "id": "time",
+        "limit": "4 letters",
+        "text": "TIME"
+      },
+      {
+        "id": "extraTime",
+        "limit": "10 letters",
+        "text": "EXTRA TIME"
+      },
+      {
+        "id": "congrats",
+        "limit": "16 letters",
+        "text": "CONGRATULATIONS!"
+      },
+      {
+        "id": "qualify",
+        "limit": "2 lines x 18 columns",
+        "text": " You qualify for\n the next round."
+      },
+      {
+        "id": "unlucky",
+        "limit": "2 lines x 18 columns",
+        "text": "UNLUCKY THIS TIME.\n    TRY AGAIN."
+      }
+    ],
+    "cupGroup": [
+      {
+        "id": "nextGame",
+        "limit": "8 letters",
+        "text": "NEXTGAME"
+      },
+      {
+        "id": "vs",
+        "limit": "2 letters",
+        "text": "VS"
+      }
+    ],
+    "worldSeries": [
+      {
+        "id": "season1",
+        "limit": "3 letters",
+        "text": "1ST"
+      },
+      {
+        "id": "season2",
+        "limit": "3 letters",
+        "text": "2ND"
+      },
+      {
+        "id": "stage1",
+        "limit": "2 letters",
+        "text": "ST"
+      },
+      {
+        "id": "stage2",
+        "limit": "2 letters",
+        "text": "ND"
+      },
+      {
+        "id": "stage3",
+        "limit": "2 letters",
+        "text": "RD"
+      },
+      {
+        "id": "stageN",
+        "limit": "2 letters",
+        "text": "TH"
+      }
+    ],
+    "training": [
+      {
+        "id": "level",
+        "limit": "7 letters",
+        "text": " LEVEL"
+      }
+    ]
+  },
   "scenarios": [
     {
       "index": 1,
-      "match": "ITALY 1x1 HOLLAND",
-      "text": "The Brazilians are down\nto ten men and are\nstruggling against the\nU.S. Team. XXX"
+      "match": "BRAZIL 0x0 USA",
+      "text": "The Brazilians are down\nto ten men and are\nstruggling against the\nU.S. Team."
     },
     {
       "index": 2,

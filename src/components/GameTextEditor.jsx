@@ -14,6 +14,7 @@ import {
 import { wrapScenarioText } from '../rom/scenario';
 import { IconTeamName } from './Icons';
 import MenuTextPanel from './MenuTextPanel';
+import ScreenTextPanel from './ScreenTextPanel';
 import '../styles/scenario.css';
 import '../styles/tournament.css';
 import '../styles/game-texts.css';
@@ -163,6 +164,12 @@ export default function GameTextEditor() {
           >
             {t('gtModeMenus')}
           </button>
+          <button
+            className={`kit-btn ${mode === 'screens' ? 'active' : ''}`}
+            onClick={() => setMode('screens')}
+          >
+            {t('gtModeScreens')}
+          </button>
           <span className="preview-actions-sep" />
           <button className="kit-btn" onClick={handleExportTexts} title={t('gtExportHelp')}>
             {t('gtExportJson')}
@@ -196,6 +203,7 @@ export default function GameTextEditor() {
                 ? t('gtImportOk', {
                     training: importResult.changed.training,
                     menus: importResult.changed.menus,
+                    screens: importResult.changed.screens ?? 0,
                     scenarios: importResult.changed.scenarios,
                     descriptions: importResult.changed.teamDescriptions,
                   })
@@ -240,6 +248,8 @@ export default function GameTextEditor() {
 
       {mode === 'menus' ? (
         <MenuTextPanel />
+      ) : mode === 'screens' ? (
+        <ScreenTextPanel />
       ) : (
         <div className="scenario-body">
           <div className="scenario-list tournament-list">

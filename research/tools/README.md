@@ -42,6 +42,21 @@ FROM=premenu.st node research/tools/emu-seq.cjs "DOWN wait:20 hold:A:10 wait:150
 FROM=premenu.st node research/tools/emu-seq.cjs "hold:A:10 wait:900 hold:A:10 wait:300 hold:A:10 wait:300 hold:A:10 wait:300" kickoff.st   # moeda → partida
 ```
 
+## Exemplo: outras telas a partir do menu principal
+
+Com um save state no menu principal (cursor em OPEN GAME), por exemplo `mainmenu.st`. Um estado salvo com
+a ROM original funciona com uma ROM traduzida (`ROM=...`), porque as telas seguintes são carregadas de novo.
+
+```
+FROM=mainmenu.st node research/tools/emu-seq.cjs "hold:UP:10 wait:30 hold:A:10 wait:150 hold:UP:8 wait:40 hold:A:10 wait:150 shot:joy hold:R:10 wait:60 shot:joy_lob"   # Opções > Joypad controls (R troca a ajuda)
+FROM=mainmenu.st node research/tools/emu-seq.cjs "hold:DOWN:10 wait:30 hold:DOWN:10 wait:30 hold:DOWN:10 wait:30 hold:DOWN:10 wait:30 hold:A:10 wait:200 shot:scen"   # Cenários (placar e relógio)
+FROM=mainmenu.st node research/tools/emu-seq.cjs "hold:DOWN:10 wait:30 hold:A:10 wait:200 hold:A:10 wait:200 hold:A:10 wait:200 shot:group"   # International Cup: grupo (NEXTGAME)
+FROM=mainmenu.st node research/tools/emu-seq.cjs "hold:UP:10 wait:30 hold:UP:10 wait:30 hold:A:10 wait:200 shot:pw"   # Password (Digitar senha)
+```
+
+Nos menus com cursor, cada `hold:DOWN` precisa de uma espera depois (`wait:30` ou mais); segurar por
+muitos quadros faz o cursor repetir.
+
 ## Exemplo: partida de demonstração (CPU x CPU) e paletas
 
 ```

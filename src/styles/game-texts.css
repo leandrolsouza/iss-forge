@@ -103,3 +103,29 @@
   font-weight: normal;
   color: var(--text-secondary);
 }
+
+/* Other screens (texts drawn by code) */
+.gt-menu-run:has(.gt-screen-label) {
+  grid-template-columns: 210px 280px 52px 1fr;
+}
+
+.gt-screen-label {
+  font-family: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-screen-box {
+  margin-top: 6px;
+}
+
+.gt-screen-box-title {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.scenario-textarea.over {
+  border-color: var(--text-error);
+}

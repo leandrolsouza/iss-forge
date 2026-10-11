@@ -296,9 +296,9 @@ export const MENU_SCREENS = [
   { offset: 0x6b63a, id: 'tactics', label: 'Tactics', pointers: [0x1040d] },
   { offset: 0x7734b, id: 'options', label: 'Options', pointers: [0x105a5] },
   { offset: 0xb7a01, id: 'sound', label: 'Sound', pointers: [0x1081d] },
-  { offset: 0x6fe61, id: 'password', label: 'Password', pointers: [] },
+  { offset: 0x6fe61, id: 'password', label: 'Password', pointers: [0x1087b] },
   { offset: 0x277d8, id: 'enterPassword', label: 'Enter password', pointers: [0x10872] },
-  { offset: 0xf7030, id: 'cupGroup', label: 'International Cup group', pointers: [] },
+  { offset: 0xf7030, id: 'cupGroup', label: 'International Cup group', pointers: [0x10750] },
   {
     offset: 0x779b8,
     id: 'stageTable',
@@ -316,8 +316,8 @@ export const MENU_SCREENS = [
   { offset: 0xf0c1f, id: 'trainingMenu', label: 'Training menu', pointers: [0x107cd] },
   { offset: 0xf0a67, id: 'trainingName', label: 'Training: input name', pointers: [0x107bc] },
   { offset: 0xf0f88, id: 'trainingLevels', label: 'Training: levels', pointers: [0x107fc] },
-  // Second half of the levels screen ($7E:4B90, descriptor at 0x10802): not checked in game yet
-  { offset: 0xf10c9, id: 'trainingScore', label: 'Training: score', pointers: [] },
+  // Second half of the levels screen: same load descriptor, loaded to $7E:4B90
+  { offset: 0xf10c9, id: 'trainingScore', label: 'Training: score', pointers: [0x10802] },
 ];
 
 /**
@@ -354,6 +354,125 @@ export const ISS_FONT16_CHARS = (() => {
   }
   return map;
 })();
+
+// ============================================================
+// SCREEN TEXTS (Europe ROM)
+//   Texts drawn by code with a fixed length/position (bank $02), outside the
+//   menu tilemaps:
+//   - fixed: 8x16 font, ISS charset, drawn by $80:E1C3 (1 line) / $80:E1FF
+//            (lines x columns). Written in place. FE xx (palette) takes no cell.
+//   - label: fixed text padded with low dots (0x55), written at `at` and
+//            `at + mirror` (1P / 2P columns of the joypad screen).
+//   - box:   8x8 ASCII box text ($80:E2AC; FD = new line, FF = end). In place
+//            (`room` bytes) or re-packed with the other texts of a `pack`.
+//   - repeat: one 2-cell entry written to `count` consecutive slots.
+//   See research/game-texts.md ("Textos desenhados pelo código").
+// ============================================================
+
+/** Box texts re-packed together: word table (bank $02) + area [start, end) */
+export const SCREEN_TEXT_PACKS = {
+  joypadHelp: { table: 0x11a57, area: [0x11a6d, 0x11f67] },
+};
+
+const joypadName = (index, id, room = 26) => ({
+  id,
+  kind: 'fixed',
+  table: 0x11931,
+  index,
+  columns: 26,
+  room,
+});
+const joypadHelp = (index, id) => ({
+  id,
+  kind: 'box',
+  pack: 'joypadHelp',
+  index,
+  lines: 7,
+  columns: 26,
+});
+
+export const SCREEN_TEXTS = [
+  {
+    id: 'joypad',
+    label: 'Joypad controls (Options)',
+    fields: [
+      { id: 'intro', kind: 'fixed', at: 0x11f67, lines: 3, columns: 23 },
+      { id: 'lob', kind: 'label', at: 0x11fac, columns: 9, mirror: 14 },
+      { id: 'pass', kind: 'label', at: 0x11fc3, columns: 9, mirror: 14 },
+      { id: 'shoot', kind: 'label', at: 0x11fda, columns: 9, mirror: 14 },
+      { id: 'dash', kind: 'label', at: 0x11ff1, columns: 9, mirror: 14 },
+      { id: 'playerChange', kind: 'box', at: 0x12008, room: 22, lines: 2, columns: 10 },
+      joypadName(1, 'nameLob'),
+      joypadHelp(1, 'helpLob'),
+      joypadName(2, 'namePass'),
+      joypadHelp(2, 'helpPass'),
+      joypadName(3, 'nameShoot'),
+      joypadHelp(3, 'helpShoot'),
+      joypadName(4, 'nameDash'),
+      joypadHelp(4, 'helpDash'),
+      joypadName(5, 'nameTypeA', 30),
+      joypadHelp(5, 'helpTypeA'),
+      joypadName(6, 'nameTypeB', 30),
+      joypadHelp(6, 'helpTypeB'),
+      joypadName(7, 'nameTypeB2', 30),
+      joypadHelp(7, 'helpTypeB2'),
+      joypadName(8, 'nameStrategy'),
+      joypadHelp(8, 'helpStrategy'),
+      joypadName(9, 'nameSkills'),
+      joypadHelp(9, 'helpSkills'),
+      joypadName(10, 'nameFlick'),
+      joypadHelp(10, 'helpFlick'),
+    ],
+  },
+  {
+    id: 'scenario',
+    label: 'Scenario (before / after the match)',
+    fields: [
+      { id: 'vs', kind: 'fixed', at: 0x11911, columns: 2 },
+      // "SCORE" + 2 cells kept by the game + "-": the digits are drawn after it
+      { id: 'score', kind: 'fixed', at: 0x11913, columns: 5 },
+      // "TIME" + " 00:00" (digits drawn by the game)
+      { id: 'time', kind: 'fixed', at: 0x1191b, columns: 4 },
+      { id: 'extraTime', kind: 'fixed', at: 0x11927, columns: 10 },
+      { id: 'congrats', kind: 'fixed', at: 0x12aa7, columns: 16 },
+      { id: 'qualify', kind: 'box', at: 0x12ab7, room: 35, lines: 2, columns: 18 },
+      { id: 'unlucky', kind: 'box', at: 0x12ada, room: 33, lines: 2, columns: 18 },
+    ],
+  },
+  {
+    id: 'cupGroup',
+    label: 'International Cup group (bottom line)',
+    fields: [
+      { id: 'nextGame', kind: 'fixed', at: 0x1201e, columns: 8 },
+      { id: 'vs', kind: 'fixed', at: 0x1202a, columns: 2 },
+    ],
+  },
+  {
+    id: 'worldSeries',
+    label: 'World Series (season and stage ordinals)',
+    fields: [
+      { id: 'season1', kind: 'fixed', at: 0x175ed, columns: 3 },
+      { id: 'season2', kind: 'fixed', at: 0x175f0, columns: 3 },
+      { id: 'stage1', kind: 'fixed', at: 0x175f3, columns: 2 },
+      { id: 'stage2', kind: 'fixed', at: 0x175f5, columns: 2 },
+      { id: 'stage3', kind: 'fixed', at: 0x175f7, columns: 2 },
+      { id: 'stageN', kind: 'repeat', at: 0x175f9, columns: 2, count: 20 },
+    ],
+  },
+  {
+    id: 'training',
+    label: 'Training (before each drill)',
+    fields: [{ id: 'level', kind: 'fixed', at: 0x11403, columns: 7 }],
+  },
+];
+
+/** [start, end) byte ranges touched by the screen texts (undo snapshots) */
+export const SCREEN_TEXT_RANGES = [
+  [0x11403, 0x1140a],
+  [0x11911, 0x1202c],
+  [0x12aa5, 0x12afb],
+  [0x175ed, 0x17621],
+];
 
 // ============================================================
 // MATCH PALETTES (pitch, ball, referee)

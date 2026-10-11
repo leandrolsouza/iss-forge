@@ -53,6 +53,12 @@ import {
   restoreMenuScreenBytes,
 } from './menuScreens';
 import {
+  readScreenTexts,
+  writeScreenTexts,
+  readScreenTextBytes,
+  restoreScreenTextBytes,
+} from './screenTexts';
+import {
   readTeamDescription,
   readTeamDescriptions,
   writeTeamDescription,
@@ -260,6 +266,21 @@ export default class RomParser {
   }
   restoreMenuScreenBytes(snap) {
     restoreMenuScreenBytes(this, snap);
+  }
+
+  /** Fixed texts drawn by code (joypad controls, scenario, cup group, ...) */
+  readScreenTexts() {
+    return readScreenTexts(this);
+  }
+  /** @returns {{ ok: boolean, error?: string, issues?: object[] }} */
+  writeScreenTexts(texts) {
+    return writeScreenTexts(this, texts);
+  }
+  readScreenTextBytes() {
+    return readScreenTextBytes(this);
+  }
+  restoreScreenTextBytes(snap) {
+    restoreScreenTextBytes(this, snap);
   }
 
   writeFormation(teamIndex, slots) {

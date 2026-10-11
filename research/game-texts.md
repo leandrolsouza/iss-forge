@@ -172,6 +172,8 @@ textos: procurar `JSL $80E1C3`/`$80E1FF`/`$80E2AC` e o `LDY #` logo antes.
   "WORLD SERIES 1ST STAGE"/"2ND STAGE" (`0x17621`-`0x17669`). Não achei quem lê nem a tela, então ficaram
   de fora do editor.
 - Também ficaram de fora: "NEXT GAME      VS" em `0x12A94` e "OK"/"NO" em `0x12B05` (sem leitor achado).
+  Como "ASIAN LEAGUE" não existe nesta versão, esses textos provavelmente sobraram da versão asiática da
+  qual esta foi adaptada.
 
 Código: `src/rom/screenTexts.js` (`SCREEN_TEXTS`, `SCREEN_TEXT_PACKS`, `SCREEN_TEXT_RANGES` em
 `constants.js`), painel `src/components/ScreenTextPanel.jsx`, testes em

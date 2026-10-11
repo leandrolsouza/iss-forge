@@ -84,7 +84,9 @@ Sugestão de ordem:
   da fase, World Series: resultados, Parabéns.
 - **Textos sem leitor achado** (em `game-texts.md`, seção 4): títulos "ASIAN LEAGUE" / "INTERNATIONAL CUP"
   / "WORLD SERIES 1ST STAGE" (`0x17621`, tabela `$87:A86A`), "NEXT GAME      VS" (`0x12A94`), "OK"/"NO"
-  (`0x12B05`). Achar a tela antes de pôr no editor.
+  (`0x12B05`). Nenhum código lê esses endereços (nem `LDY #`/`LDA` direto, nem a tabela), e "ASIAN LEAGUE"
+  não existe nesta versão: provavelmente sobraram da versão asiática da qual esta foi adaptada. Fora do
+  editor; só voltar a isso se aparecer uma tela que os use.
 - **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
   "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
 - **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
@@ -94,12 +96,7 @@ Sugestão de ordem:
 - **Acentos:** não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16 e mapear
   códigos livres.
 
-### 3. Nome do time sem truncar ao copiar
-- A área de nomes do menu (`0x43ED5`-`0x44486`) fica cheia e nomes longos são cortados (ex.: copiar
-  Alemanha para o lugar da Itália gera "GERMA"). Ideia: realocar a área para espaço livre e
-  atualizar os ponteiros (`0x39DAE`).
-
-### 4. Outras ideias da lista original
+### 3. Outras ideias da lista original
 - Comparar duas ROMs (diff por time/campo).
 - Importar planilha CSV de elencos.
 - Gerador aleatório de times (com seed).
@@ -115,6 +112,14 @@ Sugestão de ordem:
     precisaria estar em algum sorteio, senão o jogo trava.
 - Auditar outras tabelas por time que o editor indexa pela ordem `TEAMS` (só os nomes usam essa ordem;
   atributos, bandeiras etc. usam o ordinal).
+
+## Descartado
+
+- **Nome do time sem truncar ao copiar** (ex.: Alemanha no lugar da Itália vira "GERMA"). Não é limite
+  do jogo, que mostra até ~9 letras (ARGENTINA): os 27 nomes do menu são listas de sprites coladas em
+  `0x43ED5`-`0x44486` (1458 bytes, 1443 usados no original), e os ponteiros (`0x39DAE`) são de 16 bits no
+  banco `$88`, onde só sobram 91 bytes livres. Daria para tentar uma codificação mais compacta (mais
+  pares de letras num sprite só), mas não vale o esforço agora.
 
 ## Dívida técnica observada
 - ~300 avisos de lint antigos (o ESLint não reconhece o uso de componentes em JSX: falta o

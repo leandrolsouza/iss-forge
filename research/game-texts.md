@@ -196,8 +196,8 @@ fatias da ROM e carregando um save state no menu: só `0x43C00`-`0x43EFF` estrag
 - **Fonte (tiles OBJ `0x100`-`0x13F`, base OBJ = VRAM `0x6000`):** letras inteiras 16x16 para A D E K M N O P
   R S W, e peças 8x8 para as outras: I = haste (`127`/`128`), T = barra (`12A`/`12B`) + haste, L = haste +
   pé do D (`112`) + `129`, C e G = metade esquerda do O (`10C`/`11C`) + `12E` e `12F`/`126`, U = duas
-  hastes + `136`/`137`, Y = `12C`/`12D` + haste. **Não há** B F J Q V X Z. O H foi desenhado pelo editor
-  (ver abaixo).
+  hastes + `136`/`137`, Y = `12C`/`12D` + haste. A Konami não fez B F H J Q V X Z; o editor acrescenta
+  B F J H V (ver abaixo).
 - **Espaçamento:** a Konami encostou as letras tinta com tinta (a última coluna desenhada de uma e a
   primeira da outra ficam lado a lado), com ajustes de 1-2 px em pares como AT; o espaço entre palavras
   é de 6-7 px. O editor faz o mesmo (`MENU_SPRITE_FONT` guarda as colunas de tinta de cada letra) e
@@ -207,22 +207,34 @@ fatias da ROM e carregando um save state no menu: só `0x43C00`-`0x43EFF` estrag
 - **Save state:** o objeto do menu guarda o ponteiro da lista. Um estado salvo no menu com outra ROM
   mostra lixo; é preciso ligar o jogo de novo (`wait:300 hold:START:10 wait:200 hold:START:10 wait:200`).
 
-### Letra nova no menu: H no lugar do K
+### Letras novas no menu: B F J montadas, H e V desenhadas
 
+- **Montadas com peças que já existem** (sempre disponíveis, sem mexer nos tiles):
+  - B = metade de cima do P (`10E`/`10F`) + metade de baixo do D (`112`/`113`) 2 px à direita, para as
+    hastes ficarem alinhadas (a barriga de baixo fica maior, como num B);
+  - F = metade de cima do E (`104`/`105`) + metade de baixo do P (`11E`/`11F`, só a haste);
+  - J = metade direita do U (`127` + `137`) + a curva de baixo da esquerda (`136`).
 - **Tiles da fonte:** bloco comprimido `0x6CCC0` (1356 bytes, 56 tiles = OBJ `0x100`-`0x137`), carregado
   em VRAM `0x7000` pela lista de carga do menu principal (`0x10455`, ponteiro em `0x1045E`; a lista só é
   usada pelo registro do menu em `$87:9E57`). O tamanho do DMA é o da saída descomprimida.
 - **Não dá para crescer:** com mais 32 tiles o bloco comprime para ~2000 bytes, e a maior área livre
-  depois da tradução tem 350. Por isso uma letra nova usa os tiles de uma letra que o menu não usa: o
-  H é desenhado nos 4 tiles do K (`0x106`, `0x107`, `0x116`, `0x117`). Na tradução PT-BR não há K
-  (PENALTY KICK virou PENALTIS).
-- **Desenho:** duas hastes iguais às do I nas colunas do N e a barra do meio com as mesmas camadas do pé
-  do L (`e` / `7` / `5` / `4`, cada camada 1 px para a direita) (`MENU_SPRITE_EXTRA_GLYPHS`).
-- O editor desenha o H quando algum item usa H e devolve o K original quando nenhum usa. H e K juntos
-  é erro. O bloco é recomprimido no lugar: com o H fica com 1307 bytes.
-- Visto no jogo: SENHA no menu principal.
-- **Títulos:** o bloco `0x97B09` não tem folga (839 bytes, sem `0xFF` depois) e só tem 7 tiles vazios
-  (`0x59`-`0x5F`). Como a tradução não precisa de letras novas nos títulos, ficou de fora.
+  depois da tradução tem 350. Por isso uma letra desenhada usa os tiles de uma letra que o menu não usa:
+  H sobre o K (`0x106`, `0x107`, `0x116`, `0x117`) e V sobre o W (`0x124`, `0x125`, `0x134`, `0x135`). Na
+  tradução PT-BR não há K nem W.
+- **Desenho:** hastes iguais às do I; a barra do H tem as mesmas camadas do pé do L (`e` / `7` / `5` /
+  `4`, cada camada 1 px para a direita); os braços do V descem 1 px a cada 2 linhas e só se juntam na
+  linha 11 (a primeira versão juntava na linha 8 e parecia um Y) (`MENU_SPRITE_EXTRA_GLYPHS`).
+- O editor desenha H/V quando algum item usa a letra e devolve o K/W original quando nenhum usa. A
+  letra nova e a que ela substitui juntas é erro. O bloco é recomprimido no lugar (com H e V cabe).
+- Visto no jogo: SENHA, BOLA BOB, FINAL JOGO FEIJAO, VOLTAR VIVO.
+
+### Letras novas nos títulos: B e J
+
+- Montadas com tiles que já existem (`TITLE_FONT`): B = linhas de cima do P (`8`/`9`, `18`/`19`) +
+  linhas de baixo do D (`11`/`68`, `71`/`72`); J = metade direita do U + o tile de baixo da metade
+  esquerda (`50`). Vistas no jogo ("BOLA JOGO / JUBA BEBE").
+- Para desenhar outras (V, K, Y...), há espaço: os tiles `0x59`-`0x68` não são usados por nenhum título e
+  o nosso compressor deixa o bloco `0x97B09` com 752 bytes, contra 839 do slot.
 
 ### Títulos dos modos: tilemaps
 
@@ -240,7 +252,7 @@ sobre os mesmos 105 tiles (bloco `0x97B09` → VRAM `0x2000`, 4bpp, paleta 3). C
 | WORLD SERIES / 2ND  SEASON | `0xF367A` | `0x10770` |
 | SPECIAL GAME | `0xA6187` | `0x1078A` |
 
-- **Letras:** 1 2 A C D E F G H I L M N O P R S T U W (`TITLE_FONT`, extraído dos 7 títulos). I e 1
+- **Letras:** 1 2 A C D E F G H I L M N O P R S T U W (`TITLE_FONT`, extraído dos 7 títulos), mais B e J montadas pelo editor. I e 1
   ocupam 1 coluna, o espaço 1, as outras 2 (o L tem o pé na 2ª coluna).
 - **Layout:** linhas nas linhas de tiles 8, 13 e 18, centralizadas (arredondando para a direita, como no
   original). O editor reconstrói os 7 originais idênticos a partir do texto.

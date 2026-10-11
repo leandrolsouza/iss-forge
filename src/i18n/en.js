@@ -112,7 +112,7 @@ export default {
   stf_titles_worldSeries2: 'World Series: 2nd season',
   stf_titles_special: 'Special game',
   stSpriteHelp:
-    'Main menu items are sprites: one line, letters {chars} only (H was drawn by ISS Forge over the tiles of K: they cannot be used together). The bar shows where the text ends on the screen.',
+    'Main menu items are sprites: one line, letters {chars} only (ISS Forge built B, F and J from other letters and draws H over K and V over W: each pair cannot be used together). The bar shows where the text ends on the screen.',
   stTitleHelp:
     'Big title letters: up to 3 lines, centred; 32 columns per line (I and 1 take 1 column, a space 1, the other letters 2). Letters {chars} only.',
   stSpriteWidth: 'ends at x={x} of 252 · {sprites} sprites',

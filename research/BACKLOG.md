@@ -69,11 +69,12 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 ## Pendente — prioridade sugerida
 
 ### 1. Letras que faltam nas fontes grandes
-- Menu principal: feito o H (desenhado sobre o K). Continuam faltando B F J Q V X Z. O bloco dos tiles
-  (`0x6CCC0`) não pode crescer; outra letra nova só cabe sobre os tiles de uma letra que a tradução não
-  usa (W ou as peças do Y, por exemplo), como foi feito com o H (`MENU_SPRITE_EXTRA_GLYPHS`).
-- Títulos: só 1 2 A C D E F G H I L M N O P R S T U W (bloco `0x97B09`, 105 tiles, `0x59`-`0x5F` vazios,
-  sem folga depois do bloco). A tradução atual não precisa de outras letras.
+- Menu principal: feitos B F J (montados com peças) e H V (desenhados sobre K e W). Faltam Q X Z. O bloco
+  dos tiles (`0x6CCC0`) não pode crescer; outra letra desenhada só cabe sobre os tiles de uma letra que a
+  tradução não usa (as peças do Y ou do G, por exemplo), como H e V (`MENU_SPRITE_EXTRA_GLYPHS`).
+- Títulos: feitos B e J (montados). Faltam K Q V X Y Z e os dígitos 0, 3-9. Há tiles livres
+  (`0x59`-`0x68`) e 87 bytes de folga no bloco `0x97B09` com o nosso compressor; seria preciso desenhar
+  os tiles copiando a textura dos que já existem.
 
 ### 2. Restante da tradução
 O que sobrou em inglês são gráficos/sprites (lista acima) e alguns textos achados sem tela conhecida.

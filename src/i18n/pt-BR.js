@@ -113,7 +113,7 @@ export default {
   stf_titles_worldSeries2: 'World Series: 2a temporada',
   stf_titles_special: 'Jogo especial',
   stSpriteHelp:
-    'Os itens do menu principal sao sprites: uma linha, so as letras {chars} (o H foi desenhado pelo ISS Forge no lugar do K: os dois nao podem ser usados juntos). A barra mostra onde o texto termina na tela.',
+    'Os itens do menu principal sao sprites: uma linha, so as letras {chars} (o ISS Forge montou B, F e J com pedacos de outras letras e desenha o H no lugar do K e o V no lugar do W: cada par nao pode ser usado junto). A barra mostra onde o texto termina na tela.',
   stTitleHelp:
     'Letras grandes do titulo: ate 3 linhas, centralizadas; 32 colunas por linha (I e 1 ocupam 1 coluna, o espaco 1, as outras letras 2). So as letras {chars}.',
   stSpriteWidth: 'termina em x={x} de 252 · {sprites} sprites',

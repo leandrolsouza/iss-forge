@@ -436,6 +436,16 @@ export const TITLE_FONT = {
     [65, 67, 69, 70],
     [16449, 16451, 16453, 16454],
   ],
+  // Built by ISS Forge from tiles of other letters: B = top of P + bottom of D,
+  // J = right half of U + the bottom of its left half
+  B: [
+    [8, 18, 11, 71],
+    [9, 19, 68, 72],
+  ],
+  J: [
+    [1, 1, 1, 50],
+    [16386, 16395, 16395, 16434],
+  ],
 };
 
 export const TITLE_LAYOUT = {
@@ -584,6 +594,34 @@ export const MENU_SPRITE_FONT = {
     ],
     ink: [2, 13],
   },
+  // Built by ISS Forge from pieces of other letters (no new tiles):
+  // B = top of P + bottom of D, F = top of E + bottom of P, J = right half of U
+  B: {
+    pieces: [
+      [0, 0, 0x10e, 0],
+      [8, 0, 0x10f, 0],
+      [2, 8, 0x112, 0],
+      [10, 8, 0x113, 0],
+    ],
+    ink: [4, 17],
+  },
+  F: {
+    pieces: [
+      [0, 0, 0x104, 0],
+      [8, 0, 0x105, 0],
+      [0, 8, 0x11e, 0],
+      [8, 8, 0x11f, 0],
+    ],
+    ink: [4, 13],
+  },
+  J: {
+    pieces: [
+      [0, 8, 0x136, 0],
+      [7, 0, 0x127, 0],
+      [8, 8, 0x137, 0],
+    ],
+    ink: [1, 13],
+  },
 };
 
 /** Layout of the main menu sprite texts */
@@ -634,6 +672,28 @@ export const MENU_SPRITE_EXTRA_GLYPHS = {
       '.77321....77321.',
       '..5521.....5521.',
       '...441......441.',
+    ],
+  },
+  V: {
+    replaces: 'W',
+    ink: [1, 14],
+    pixels: [
+      '................',
+      '.663......663...',
+      '.7732.....7732..',
+      '.88321....88321.',
+      '..99321..99321..',
+      '..aa321..aa321..',
+      '..bb321..bb321..',
+      '...cc321cc321...',
+      '...dd321dd321...',
+      '....dd3dd321....',
+      '....ee3ee321....',
+      '.....eeee321....',
+      '.....eee321.....',
+      '......77321.....',
+      '.......5521.....',
+      '........441.....',
     ],
   },
 };

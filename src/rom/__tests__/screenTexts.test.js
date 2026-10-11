@@ -15,8 +15,9 @@ import {
   decodeSpriteEntries,
   installedMenuGlyphs,
   readMenuFontTiles,
+  menuSpriteFont,
 } from '../menuSprites';
-import { buildTitleWords } from '../titleScreens';
+import { buildTitleWords, decodeTitleWords } from '../titleScreens';
 import { readScreenWords } from '../menuScreens';
 import { SCREEN_TEXTS } from '../constants';
 
@@ -157,7 +158,11 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
     expect(xs(mine, 0x10e)).toEqual(xs(orig, 0x10e)); // P
     expect(Math.abs(xs(mine, 0x108)[0] - xs(orig, 0x108)[0])).toBeLessThanOrEqual(2); // M
     expect(decodeSpriteEntries(mine)).toBe('OPEN GAME');
-    expect(encodeScreenField(f, 'BOLA').error).toBe('noGlyph');
+    expect(encodeScreenField(f, 'XADREZ').error).toBe('noGlyph');
+    for (const word of ['BOLA', 'FINAL', 'JOGO', 'VOLTAR'])
+      expect(decodeSpriteEntries(layoutSpriteText(word, f).entries, menuSpriteFont(['V']))).toBe(
+        word,
+      );
     expect(encodeScreenField(f, 'COPA INTERNACIONAL COPA').error).toBe('tooWide');
   });
 
@@ -199,7 +204,11 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
       const words = buildTitleWords(rom, f.offset, t.titles[f.id]);
       expect(Array.from(words), f.id).toEqual(Array.from(readScreenWords(rom, f.offset)));
     }
-    expect(encodeScreenField(field('titles', 'cup'), 'COPA\nJOGO').error).toBe('noGlyph');
+    expect(encodeScreenField(field('titles', 'cup'), 'COPA\nJOGO').error).toBeUndefined();
+    expect(encodeScreenField(field('titles', 'cup'), 'COPA\nVIVO').error).toBe('noGlyph');
+    expect(decodeTitleWords(buildTitleWords(rom, 0xd4b15, 'BOLA JOGO\nJUBA BEBE'))).toBe(
+      'BOLA JOGO\nJUBA BEBE',
+    );
     expect(encodeScreenField(field('titles', 'cup'), 'COPA INTERNACIONAL').error).toBe('tooWide');
     t.titles.cup = 'COPA\nINTERNACIONAL';
     t.titles.worldSeries1 = 'SERIE MUNDIAL\nTEMPORADA 1';
@@ -238,6 +247,25 @@ describe.skipIf(!existsSync(REAL_ROM))('screen texts (real ROM)', () => {
     expect(installedMenuGlyphs(rom)).toEqual([]);
     expect(Array.from(readMenuFontTiles(rom))).toEqual(Array.from(orig));
     expect(rom.readScreenTexts().mainMenu.penaltyKick).toBe('PENALTY KICK');
+  });
+
+  it('draws V over W too, and both new letters fit the font block', () => {
+    const rom = load();
+    const t = rom.readScreenTexts();
+    t.mainMenu.password = 'SENHA';
+    t.mainMenu.penaltyKick = 'PENALTIS';
+    t.mainMenu.worldSeries = 'VOLTAR';
+    expect(validateScreenTexts(t)).toEqual([]);
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    expect(installedMenuGlyphs(rom)).toEqual(['H', 'V']);
+    const back = rom.readScreenTexts().mainMenu;
+    expect(back.worldSeries).toBe('VOLTAR');
+    expect(back.password).toBe('SENHA');
+    // B, F and J are made of existing pieces: no font change needed
+    t.mainMenu.worldSeries = 'BOLA FIJO';
+    expect(rom.writeScreenTexts(t).ok).toBe(true);
+    expect(installedMenuGlyphs(rom)).toEqual(['H']);
+    expect(rom.readScreenTexts().mainMenu.worldSeries).toBe('BOLA FIJO');
   });
 
   it('restores the raw bytes for undo', () => {

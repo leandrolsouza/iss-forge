@@ -1,15 +1,18 @@
 /**
  * Main menu sprite texts: text <-> sprite lists built from the big OBJ font.
  *
- * The font block can hold extra letters (MENU_SPRITE_EXTRA_GLYPHS) drawn over the
- * tiles of a letter the menu does not use (H takes the place of K).
+ * Letters drawn by ISS Forge (MENU_SPRITE_DRAWN) take the 16x16 tiles of a
+ * letter that no menu item uses (MENU_FONT_SLOTS): the slots are chosen again
+ * on every write, so any translation can use any letter as long as there are
+ * enough unused letters.
  *
  * See MENU_SPRITE_FONT in constants.js and research/game-texts.md (section 5).
  */
 import {
   MENU_SPRITE_FONT,
   MENU_SPRITE_LAYOUT,
-  MENU_SPRITE_EXTRA_GLYPHS,
+  MENU_SPRITE_DRAWN,
+  MENU_FONT_SLOTS,
   MENU_FONT_BLOCK,
 } from './constants';
 import { konamiDecompress, konamiCompress } from './KonamiCodec';
@@ -18,25 +21,45 @@ const L = MENU_SPRITE_LAYOUT;
 const B = MENU_FONT_BLOCK;
 const s8 = (b) => (b > 127 ? b - 256 : b);
 
-/** Every letter the editor can write: the original ones plus the extra ones */
+/** The 4 tiles (top-left, top-right, bottom-left, bottom-right) of a 16x16 sprite */
+const bigTiles = (tile) => [tile, tile + 1, tile + 16, tile + 17];
+/** First tile of the 16x16 glyph of a slot letter */
+const slotTile = (letter) => MENU_SPRITE_FONT[letter].pieces[0][2];
+
+/** Tiles drawn by a glyph */
+const glyphTiles = (g) => g.pieces.flatMap(([, , tile, big]) => (big ? bigTiles(tile) : [tile]));
+
+/** A drawn letter placed in a slot */
+const drawnGlyph = (ch, slot) => ({
+  pieces: [[0, 0, slotTile(slot), 1]],
+  ink: MENU_SPRITE_DRAWN[ch].ink,
+});
+
+/**
+ * Every letter the editor can write (drawn letters at a placeholder slot: the
+ * layout only depends on the ink columns; the real tiles are set when writing)
+ */
 export const MENU_SPRITE_ALL = (() => {
   const all = { ...MENU_SPRITE_FONT };
-  for (const [ch, x] of Object.entries(MENU_SPRITE_EXTRA_GLYPHS)) {
-    all[ch] = { pieces: MENU_SPRITE_FONT[x.replaces].pieces, ink: x.ink };
-  }
+  for (const ch of Object.keys(MENU_SPRITE_DRAWN)) all[ch] = drawnGlyph(ch, MENU_FONT_SLOTS[0]);
   return all;
 })();
 
 /** Letters available (plus space) */
 export const MENU_SPRITE_CHARS = Object.keys(MENU_SPRITE_ALL).sort().join('');
 
-/** Glyph table with the given extra letters installed (they replace their slot letter) */
-export function menuSpriteFont(installed = []) {
-  const font = { ...MENU_SPRITE_FONT };
-  for (const ch of installed) {
-    delete font[MENU_SPRITE_EXTRA_GLYPHS[ch].replaces];
-    font[ch] = MENU_SPRITE_ALL[ch];
+/**
+ * Glyph table for a font state. `installed` maps drawn letter -> slot letter;
+ * letters that draw any tile of an occupied slot are gone (e.g. C and G use the
+ * left half of O).
+ */
+export function menuSpriteFont(installed = {}) {
+  const taken = new Set(Object.values(installed).flatMap((slot) => bigTiles(slotTile(slot))));
+  const font = {};
+  for (const [ch, g] of Object.entries(MENU_SPRITE_FONT)) {
+    if (!glyphTiles(g).some((t) => taken.has(t))) font[ch] = g;
   }
+  for (const [ch, slot] of Object.entries(installed)) font[ch] = drawnGlyph(ch, slot);
   return font;
 }
 
@@ -48,32 +71,52 @@ export function findInvalidSpriteChars(text) {
 }
 
 /**
- * Extra letters needed by a set of texts, and conflicts (an extra letter and the
- * letter whose tiles it reuses both used).
- * @returns {{ install: string[], conflicts: [string, string][] }}
+ * Slots for the drawn letters used by a set of texts. A slot is free when no
+ * original letter used by the texts draws any of its tiles. Letters already in
+ * a free slot stay there.
+ * @param {string[]} texts
+ * @param {object} [current] - drawn letter -> slot letter now in the ROM
+ * @returns {{ installed: object, missing: string[] }} missing: drawn letters without a free slot
  */
-export function menuFontNeeds(texts) {
+export function assignMenuFont(texts, current = {}) {
   const used = new Set(
     texts
       .join('')
       .toUpperCase()
       .replace(/[^A-Z]/g, ''),
   );
-  const install = [];
-  const conflicts = [];
-  for (const [ch, x] of Object.entries(MENU_SPRITE_EXTRA_GLYPHS)) {
-    if (!used.has(ch)) continue;
-    install.push(ch);
-    if (used.has(x.replaces)) conflicts.push([ch, x.replaces]);
+  const usedTiles = new Set();
+  for (const ch of used)
+    if (MENU_SPRITE_FONT[ch]) glyphTiles(MENU_SPRITE_FONT[ch]).forEach((t) => usedTiles.add(t));
+  const free = MENU_FONT_SLOTS.filter((s) => !bigTiles(slotTile(s)).some((t) => usedTiles.has(t)));
+  const needed = Object.keys(MENU_SPRITE_DRAWN).filter((ch) => used.has(ch));
+  const installed = {};
+  // keep the current slot when it is still free
+  for (const ch of needed) {
+    const slot = current[ch];
+    if (slot && free.includes(slot)) {
+      installed[ch] = slot;
+      free.splice(free.indexOf(slot), 1);
+    }
   }
-  return { install, conflicts };
+  const missing = [];
+  for (const ch of needed) {
+    if (installed[ch]) continue;
+    if (free.length) installed[ch] = free.shift();
+    else missing.push(ch);
+  }
+  return { installed, missing };
 }
 
 /**
  * Lay out a text as sprite entries (every letter, original or extra, is allowed).
  * @returns {{ entries: {dx,dy,tile,big}[], right: number, error?: string, invalid: string[] }}
  */
-export function layoutSpriteText(text, { row, start = L.START, maxRight = L.MAX_RIGHT }) {
+export function layoutSpriteText(
+  text,
+  { row, start = L.START, maxRight = L.MAX_RIGHT },
+  font = MENU_SPRITE_ALL,
+) {
   const value = String(text ?? '')
     .toUpperCase()
     .trim();
@@ -89,7 +132,7 @@ export function layoutSpriteText(text, { row, start = L.START, maxRight = L.MAX_
         space += L.SPACE;
         continue;
       }
-      const g = MENU_SPRITE_ALL[ch];
+      const g = font[ch];
       if (!g) continue;
       const origin =
         prev === null ? start : prev.origin + prev.g.ink[1] + 1 + gap + space - g.ink[0];
@@ -226,6 +269,18 @@ export function readMenuFontTiles(rom) {
   return konamiDecompress(romBytes(rom), blockAddress(rom) + (rom.headerOffset || 0));
 }
 
+/** Font tiles of the original ROM (the slots get their letter back from here) */
+function originalMenuFontTiles(rom) {
+  if (!rom.getOriginalData) return readMenuFontTiles(rom);
+  const orig = rom.getOriginalData();
+  const h = rom.headerOffset || 0;
+  return readMenuFontTiles({
+    getRomData: () => orig,
+    headerOffset: h,
+    readByte: (a) => orig[a + h],
+  });
+}
+
 /** 4bpp tile bytes of a 16x16 glyph drawn as 16 rows of colour indices */
 export function glyphTileBytes(pixels) {
   const tiles = [];
@@ -248,43 +303,45 @@ export function glyphTileBytes(pixels) {
   return tiles;
 }
 
-/** The 4 tiles (top-left, top-right, bottom-left, bottom-right) of a 16x16 sprite */
-const bigTiles = (tile) => [tile, tile + 1, tile + 16, tile + 17];
-const slotTile = (ch) => MENU_SPRITE_FONT[MENU_SPRITE_EXTRA_GLYPHS[ch].replaces].pieces[0][2];
+const DRAWN_TILES = Object.fromEntries(
+  Object.entries(MENU_SPRITE_DRAWN).map(([ch, x]) => [ch, glyphTileBytes(x.pixels)]),
+);
 
-/** Extra letters currently drawn in the font block */
+/** Drawn letters now in the font block: { letter: slot letter } */
 export function installedMenuGlyphs(rom) {
   const tiles = readMenuFontTiles(rom);
-  return Object.entries(MENU_SPRITE_EXTRA_GLYPHS)
-    .filter(([ch, x]) => {
-      const mine = glyphTileBytes(x.pixels);
-      return bigTiles(slotTile(ch)).every((t, i) => {
+  const out = {};
+  for (const slot of MENU_FONT_SLOTS) {
+    const quad = bigTiles(slotTile(slot));
+    for (const [ch, mine] of Object.entries(DRAWN_TILES)) {
+      const same = quad.every((t, i) => {
         const at = (t - B.firstTile) * 32;
         return mine[i].every((b, k) => tiles[at + k] === b);
       });
-    })
-    .map(([ch]) => ch);
+      if (same) out[ch] = slot;
+    }
+  }
+  return out;
 }
 
+/** Same font state? (drawn letter -> slot) */
+export const sameMenuFont = (a, b) =>
+  JSON.stringify(Object.entries(a).sort()) === JSON.stringify(Object.entries(b).sort());
+
 /**
- * Draw the given extra letters in the font block (and put back the original
- * tiles of the others). The block is recompressed in place.
+ * Draw the letters of `installed` (drawn letter -> slot letter) in the font block;
+ * every other slot gets its original letter back. Recompressed in place.
  * @returns {{ ok: boolean, size: number, capacity: number }}
  */
-export function writeMenuFont(rom, install) {
+export function writeMenuFont(rom, installed) {
   const tiles = readMenuFontTiles(rom);
-  const orig = rom.getOriginalData
-    ? readMenuFontTiles({
-        getRomData: () => rom.getOriginalData(),
-        headerOffset: rom.headerOffset,
-        readByte: (a) => rom.getOriginalData()[a + (rom.headerOffset || 0)],
-      })
-    : tiles;
-  for (const [ch, x] of Object.entries(MENU_SPRITE_EXTRA_GLYPHS)) {
-    const mine = install.includes(ch) ? glyphTileBytes(x.pixels) : null;
-    bigTiles(slotTile(ch)).forEach((t, i) => {
+  const orig = originalMenuFontTiles(rom);
+  const bySlot = Object.fromEntries(Object.entries(installed).map(([ch, s]) => [s, ch]));
+  for (const slot of MENU_FONT_SLOTS) {
+    const ch = bySlot[slot];
+    bigTiles(slotTile(slot)).forEach((t, i) => {
       const at = (t - B.firstTile) * 32;
-      tiles.set(mine ? mine[i] : orig.slice(at, at + 32), at);
+      tiles.set(ch ? DRAWN_TILES[ch][i] : orig.slice(at, at + 32), at);
     });
   }
   const packed = konamiCompress(tiles);

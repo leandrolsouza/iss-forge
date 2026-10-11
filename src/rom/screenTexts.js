@@ -4,7 +4,13 @@
  *
  * See SCREEN_TEXTS in constants.js and research/game-texts.md.
  */
-import { SCREEN_TEXTS, SCREEN_TEXT_PACKS, SCREEN_TEXT_RANGES, MENU_SCREENS } from './constants';
+import {
+  SCREEN_TEXTS,
+  SCREEN_TEXT_PACKS,
+  SCREEN_TEXT_RANGES,
+  MENU_SCREENS,
+  MENU_SPRITE_DRAWN,
+} from './constants';
 import { decodeIss, encodeIss, layoutFixed, findInvalidBoxChars } from './gameTexts';
 import { decodeScenarioText, encodeScenarioText } from './scenario';
 import {
@@ -14,10 +20,18 @@ import {
   decodeSpriteEntries,
   menuSpriteFont,
   installedMenuGlyphs,
-  menuFontNeeds,
+  assignMenuFont,
+  sameMenuFont,
   writeMenuFont,
 } from './menuSprites';
-import { readTitleText, checkTitleText, writeTitleScreen } from './titleScreens';
+import {
+  readTitleText,
+  checkTitleText,
+  writeTitleScreen,
+  installedTitleGlyphs,
+  titleFontNeeds,
+  writeTitleFont,
+} from './titleScreens';
 
 const BANK_FILE_BASE = 0x10000; // bank $02
 const PALETTE = 0xfe; // FE xx: palette of the next cells (takes no cell)
@@ -190,10 +204,9 @@ export function validateScreenTexts(texts) {
   for (const [id, m] of Object.entries(measureScreenPacks(texts))) {
     if (m.used > m.capacity) issues.push({ pack: id, error: 'packFull', ...m });
   }
-  // An extra letter of the menu font takes the tiles of another one: not both
-  for (const [extra, replaced] of menuFontNeeds(mainMenuTexts(texts)).conflicts) {
-    issues.push({ screen: 'mainMenu', error: 'fontConflict', letters: [extra, replaced] });
-  }
+  // Drawn letters of the menu font need the tiles of letters no item uses
+  const { missing } = assignMenuFont(mainMenuTexts(texts));
+  if (missing.length) issues.push({ screen: 'mainMenu', error: 'fontFull', letters: missing });
   return issues;
 }
 
@@ -214,6 +227,32 @@ export function writeScreenTexts(rom, texts) {
   if (issues.length) return { ok: false, error: 'screenTextsInvalid', issues };
 
   const current = readScreenTexts(rom);
+  // Menu font: slots of the drawn letters (kept where they are when possible)
+  const fontNow = installedMenuGlyphs(rom);
+  const fontNext = assignMenuFont(mainMenuTexts(texts), fontNow).installed;
+  const menuFont = menuSpriteFont(fontNext);
+  // Draw the letters the items need first (nothing is written when the font block is full);
+  // the other slots get their letter back
+  if (!sameMenuFont(fontNext, fontNow)) {
+    const res = writeMenuFont(rom, fontNext);
+    if (!res.ok)
+      return { ok: false, error: 'menuFontFull', issues: [{ error: 'menuFontFull', ...res }] };
+  }
+  // Title font: the tiles of the drawn letters the titles use
+  const titleTexts = SCREEN_TEXTS.find((s) => s.id === 'titles').fields.map((f) =>
+    String(texts.titles?.[f.id] ?? ''),
+  );
+  const titleNeeds = titleFontNeeds(titleTexts);
+  if (titleNeeds.join() !== installedTitleGlyphs(rom).join()) {
+    const res = writeTitleFont(rom, titleNeeds);
+    if (!res.ok)
+      return {
+        ok: false,
+        error: 'titleFontFull',
+        issues: [{ error: 'titleFontFull', letters: titleNeeds, ...res }],
+      };
+  }
+  const hasDrawn = (text) => [...String(text).toUpperCase()].some((ch) => MENU_SPRITE_DRAWN[ch]);
   const packs = {};
   const titles = [];
   for (const s of SCREEN_TEXTS) {
@@ -223,9 +262,11 @@ export function writeScreenTexts(rom, texts) {
         continue;
       }
       let { bytes } = encodeScreenField(f, texts[s.id][f.id]);
-      // An unchanged menu item keeps its original sprite list (hand-kerned by Konami)
-      if (f.kind === 'sprite' && texts[s.id][f.id] === current[s.id][f.id]) {
-        bytes = currentSpriteBytes(rom, f);
+      if (f.kind === 'sprite') {
+        const text = texts[s.id][f.id];
+        // An unchanged item keeps its original sprite list (hand-kerned by Konami)
+        if (text === current[s.id][f.id] && !hasDrawn(text)) bytes = currentSpriteBytes(rom, f);
+        else bytes = encodeSpriteEntries(layoutSpriteText(text, f, menuFont).entries);
       }
       if (f.pack) {
         (packs[f.pack] ||= []).push({ f, bytes });
@@ -254,13 +295,6 @@ export function writeScreenTexts(rom, texts) {
       p += bytes.length;
     }
     rom.writeBytes(p, new Array(pack.area[1] - p).fill(0xff));
-  }
-  // Menu font: draw the extra letters the items need (put the original ones back otherwise)
-  const install = menuFontNeeds(mainMenuTexts(texts)).install;
-  if (install.join() !== installedMenuGlyphs(rom).join()) {
-    const res = writeMenuFont(rom, install);
-    if (!res.ok)
-      return { ok: false, error: 'menuFontFull', issues: [{ error: 'menuFontFull', ...res }] };
   }
   // Titles are compressed tilemaps placed like the menu screens (may move)
   const failed = [];

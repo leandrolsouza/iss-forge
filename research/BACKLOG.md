@@ -24,6 +24,7 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Exportar/importar todos os textos em JSON (importa o que couber, lista o resto; tira acentos); telas de menu que não cabem são movidas/reorganizadas no espaço livre | aba Textos do Jogo | `game-texts.md` |
 | Textos desenhados pelo código: tela de controles (títulos, ajudas, rótulos), cenário (placar, relógio, resultado), "NEXTGAME" do grupo, ordinais da World Series, "LEVEL" do treino; Senha, Grupo da Cup e Treino: pontuação agora podem ser movidas | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 4) |
 | Menu principal (listas de sprites montadas com a fonte grande do menu) e os 7 títulos dos modos (tilemaps com a fonte dos títulos, realocáveis como as telas de menu) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
+| Alfabeto completo nas fontes grandes: no menu, B F J montadas e H Q V X Z desenhadas (ocupam letras 16x16 não usadas); nos títulos, B J montadas e K Q V X Y Z desenhadas (tiles novos no bloco da fonte) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
 
 ## Tradução PT-BR — estado (para continuar)
 
@@ -68,14 +69,13 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 
 ## Pendente — prioridade sugerida
 
-### 1. Letras que faltam nas fontes grandes
-- Menu principal: feitos B F J (montados com peças) e H V (desenhados sobre K e W). Faltam Q X Z. O bloco
-  dos tiles (`0x6CCC0`) não pode crescer; outra letra desenhada só cabe sobre os tiles de uma letra que a
-  tradução não usa (as peças do Y ou do G, por exemplo), como H e V (`MENU_SPRITE_EXTRA_GLYPHS`).
-- Títulos: feitos B e J (montados). Faltam K Q V X Y Z e os dígitos 0, 3-9. Há tiles livres
-  (`0x59`-`0x68`) e 87 bytes de folga no bloco `0x97B09` com o nosso compressor; seria preciso desenhar
-  os tiles copiando a textura dos que já existem.
-
+### 1. Fontes grandes: alfabeto completo (feito)
+- Menu principal e títulos têm as 26 letras (`game-texts.md`, seção 5). Limites: no menu, cada letra
+  desenhada (H Q V X Z) precisa de uma letra 16x16 que nenhum item use; nos títulos, cabem 3 das letras
+  desenhadas (K Q V X Y Z) ao mesmo tempo.
+- Faltam os dígitos 0 e 3-9 nos títulos e acentos nas duas fontes.
+- Para caber mais letras nos títulos: mover o bloco de 14 bytes em `0x97E50` (ponteiro `0x103D4`) libera
+  14 bytes logo depois do bloco da fonte (4 letras passariam).
 ### 2. Restante da tradução
 O que sobrou em inglês são gráficos/sprites (lista acima) e alguns textos achados sem tela conhecida.
 Sugestão de ordem:

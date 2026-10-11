@@ -10,7 +10,7 @@ import { TEAMS, GAME_TEXTS, SCENARIO_DATA } from '../rom/constants';
 import { validateTrainingTexts, findInvalidBoxChars, findInvalidIssChars } from '../rom/gameTexts';
 import { findInvalidMenuChars, menuTextLength, writeMenuScreens } from '../rom/menuScreens';
 import { encodeScreenField, measureScreenPacks } from '../rom/screenTexts';
-import { MENU_SPRITE_CHARS, menuFontNeeds } from '../rom/menuSprites';
+import { MENU_SPRITE_CHARS, assignMenuFont } from '../rom/menuSprites';
 import { TITLE_CHARS } from '../rom/titleScreens';
 import { SCREEN_TEXTS } from '../rom/constants';
 import { findInvalidChars, wrapScenarioText } from '../rom/scenario';
@@ -383,21 +383,37 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         touched.splice(touched.indexOf(it), 1);
       }
     }
-    // Main menu font: a new letter (H) reuses the tiles of another one (K); not both
+    // Main menu font: each drawn letter (H, V, Q, X, Z) needs the tiles of a 16x16
+    // letter that no item uses; leave out the new items with a letter that has no room
     const menuFields = SCREEN_TEXTS.find((s) => s.id === 'mainMenu').fields;
-    for (const [extra, replaced] of menuFontNeeds(menuFields.map((f) => next.mainMenu[f.id]))
-      .conflicts) {
-      for (const it of touched.filter((t) => t.id === 'mainMenu')) {
-        if (!next.mainMenu[it.f.id].toUpperCase().includes(extra)) continue;
-        skipped.push(
-          `${it.path} "${next.mainMenu[it.f.id]}": the menu font draws ${extra} over ${replaced}, and another item still uses ${replaced}`,
-        );
-        next.mainMenu[it.f.id] = cur.mainMenu[it.f.id];
-        touched.splice(touched.indexOf(it), 1);
-      }
+    const menuTexts = () => menuFields.map((f) => next.mainMenu[f.id]);
+    for (const it of touched.filter((t) => t.id === 'mainMenu').reverse()) {
+      const { missing } = assignMenuFont(menuTexts());
+      if (!missing.length) break;
+      const text = next.mainMenu[it.f.id].toUpperCase();
+      if (!missing.some((ch) => text.includes(ch))) continue;
+      skipped.push(
+        `${it.path} "${next.mainMenu[it.f.id]}": no room in the menu font for ${missing.join(' ')} (each drawn letter takes the place of a big letter no item uses)`,
+      );
+      next.mainMenu[it.f.id] = cur.mainMenu[it.f.id];
+      touched.splice(touched.indexOf(it), 1);
     }
     if (touched.length) {
       let res = work.writeScreenTexts(next);
+      // the title font block has room for 3-4 drawn letters: leave out the last titles that need one
+      const drawnTitle = (text) => /[KQVXYZ]/i.test(text);
+      for (let guard = 0; !res.ok && res.error === 'titleFontFull' && guard < 8; guard++) {
+        const it = [...touched]
+          .reverse()
+          .find((t) => t.id === 'titles' && drawnTitle(next.titles[t.f.id]));
+        if (!it) break;
+        skipped.push(
+          `${it.path}: no room in the title font for more drawn letters (${res.issues[0].letters.join(' ')}); use fewer of K Q V X Y Z`,
+        );
+        next.titles[it.f.id] = cur.titles[it.f.id];
+        touched.splice(touched.indexOf(it), 1);
+        res = work.writeScreenTexts(next);
+      }
       // a title that does not fit anywhere is left out, the rest is written again
       for (let tries = 0; !res.ok && res.error === 'titleNoRoom' && tries < 3; tries++) {
         for (const is of res.issues) {

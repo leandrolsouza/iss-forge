@@ -56,12 +56,30 @@ export function validateRom(teams) {
           message: `Jogador ${playerIndex + 1} "${player.name}" chute invalido: ${player.shooting}`,
         });
       }
-      if (player.speed < 1 || player.speed > 16) {
+      const nibbleLabels = {
+        acceleration: 'arranque',
+        topSpeed: 'velocidade',
+        dribbleSpeed: 'velocidade com bola',
+        attack: 'ataque',
+        defense: 'defesa',
+      };
+      for (const [key, label] of Object.entries(nibbleLabels)) {
+        const v = player[key];
+        if (v !== undefined && (v < 1 || v > 16)) {
+          warnings.push({
+            teamIndex,
+            teamName: team.name,
+            type: 'error',
+            message: `Jogador ${playerIndex + 1} "${player.name}" ${label} fora de 1-16: ${v}`,
+          });
+        }
+      }
+      if (player.gkKickIndex !== undefined && (player.gkKickIndex < 0 || player.gkKickIndex > 7)) {
         warnings.push({
           teamIndex,
           teamName: team.name,
           type: 'error',
-          message: `Jogador ${playerIndex + 1} "${player.name}" velocidade invalida: ${player.speed}`,
+          message: `Jogador ${playerIndex + 1} "${player.name}" chute do goleiro fora de 0-7: ${player.gkKickIndex}`,
         });
       }
       if (player.stamina < 1 || player.stamina > 16) {

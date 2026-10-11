@@ -3,7 +3,23 @@
  * Allows sharing team configurations between users
  */
 
-const EXPORT_VERSION = 1;
+const EXPORT_VERSION = 2;
+
+/**
+ * Player fields to write on import.
+ * v2+: `speed` is the read-only SPEED bar and is ignored.
+ * v1: `speed` was the editor's name for byte 1 low nibble, which is really the
+ * goalkeeper kick power (gkKickIndex = speed - 1, capped at 7).
+ */
+function importedPlayerFields(player, version) {
+  const fields = { ...player };
+  delete fields.speed;
+  delete fields.raw;
+  if (version < 2 && player.gkKickIndex == null && Number.isFinite(player.speed)) {
+    fields.gkKickIndex = Math.max(0, Math.min(7, Math.round(player.speed) - 1));
+  }
+  return fields;
+}
 
 /**
  * Export a team to a JSON-compatible object
@@ -25,14 +41,21 @@ export function exportTeam(team) {
       number: p.number,
       shooting: p.shooting,
       shootingIndex: p.shootingIndex,
-      speed: p.speed,
       stamina: p.stamina,
       technique: p.technique,
       techniqueIndex: p.techniqueIndex,
+      acceleration: p.acceleration,
+      topSpeed: p.topSpeed,
+      dribbleSpeed: p.dribbleSpeed,
+      attack: p.attack,
+      defense: p.defense,
+      gkKickIndex: p.gkKickIndex,
+      // Read-only: the SPEED bar shown by the game (derived from the three speeds)
+      speed: p.speed,
       hairStyle: p.hairStyle,
       isSpecial: p.isSpecial,
-      // Full 6-byte block: keeps the attributes the editor does not expose yet
-      // (bytes 0 and 4, high nibble of byte 3). See research/hidden-player-attributes.md
+      // Full 6-byte block, so the exact bytes travel with the team
+      // (see research/hidden-player-attributes.md)
       raw: Array.isArray(p.rawBytes) ? [...p.rawBytes] : undefined,
     })),
     uniforms: team.uniforms,
@@ -99,20 +122,21 @@ export function validateImport(data) {
  * @param {object} teamData - Imported team data
  */
 export function applyImportedTeam(romParser, teamIndex, teamData) {
+  const version = Number.isFinite(teamData._version) ? teamData._version : 1;
   // Write players
   if (teamData.players) {
     teamData.players.forEach((player, playerIndex) => {
       if (player.name) {
         romParser.writePlayerName(teamIndex, playerIndex, player.name);
       }
-      // Use the exported 6-byte block when present so hidden attributes travel with
-      // the team; older exports fall back to the destination slot's bytes.
+      // Use the exported 6-byte block when present so every bit travels with
+      // the team; files without it fall back to the destination slot's bytes.
       const raw =
         Array.isArray(player.raw) && player.raw.length === 6 && player.raw.every(Number.isInteger)
           ? player.raw
           : null;
       romParser.writePlayerData(teamIndex, playerIndex, {
-        ...player,
+        ...importedPlayerFields(player, version),
         rawBytes: raw,
       });
     });

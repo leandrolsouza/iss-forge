@@ -192,6 +192,28 @@ export const SCENARIO_DATA = {
   MAX_MINUTES: 9,
 };
 
+// ============================================================
+// TOURNAMENT DRAWS (International Cup / World Series)
+//   32 pre-set draws at $87:A17B, 24 bytes each (ROM ordinal x2), read
+//   in groups of 4 (groups A-F). When a tournament starts, $05:8A95 lists
+//   the draws containing the player's team and $05:8AE1 picks one at
+//   random. International Cup: the draw is copied to $7E:9090, a random
+//   group (A-F) is shuffled and the player's team takes its first slot.
+//   World Series: the same draw is the 24-team league ($7E:9128).
+//   A selectable team missing from every draw freezes the game.
+//   See research/tournaments.md.
+// ============================================================
+
+export const TOURNAMENT_DRAWS = {
+  OFFSET: 0x3a17b,
+  COUNT: 32,
+  TEAMS: 24,
+  GROUPS: 6,
+  GROUP_SIZE: 4,
+  /** Team ids selectable in the menus (0-25; Super Star is not selectable) */
+  SELECTABLE_ORDINALS: 26,
+};
+
 /** Characters with a glyph in the scenario text font ($82:8C80) */
 export const SCENARIO_TEXT_CHARSET =
   ' !"\',-.0123456789:?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -298,13 +320,17 @@ export const PLAYER_DATA = {
   BASE_OFFSET: 0x387ec,
   PLAYER_LENGTH: 6, // 6 bytes per player
   TEAM_LENGTH: 90, // 15 players * 6 bytes = 90 bytes per team
+  // The blocks are in ROM ordinal order (Scotland = 5): the game reads them through the
+  // pointer table $01:DED7 indexed by the team id. Use playerDataOffset() below.
+  POINTERS: 0x0ded7,
 
-  // Within each 6-byte player block:
-  // Byte 0: Abilities byte 0 (unknown/general)
-  // Byte 1: High nibble = Shooting index, Low nibble = Speed?
-  // Byte 2: High nibble = Stamina, Low nibble = Technique index
-  // Byte 3: Player Number (lower nibble % 16 + 1)
-  // Byte 4: Unknown
+  // Within each 6-byte player block (decoded by the game at $05:A8EB, see
+  // research/hidden-player-attributes.md):
+  // Byte 0: High nibble = top speed without the ball, Low nibble = start speed (acceleration)
+  // Byte 1: Bits 6-4 = Shooting index, Low nibble = goalkeeper kick power (0-7, GK only)
+  // Byte 2: High nibble = Stamina, Bits 2-0 = Technique index
+  // Byte 3: High nibble = top speed with the ball, Low nibble = shirt number - 1
+  // Byte 4: High nibble = attack duel (opponent half), Low nibble = defence duel (own half)
   // Byte 5: Upper 2 bits = Color type (NORMAL/SPECIAL), Lower 4 bits = Hair Style
 };
 

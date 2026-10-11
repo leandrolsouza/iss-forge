@@ -1,8 +1,27 @@
 import React, { useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
 import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/formation';
+import { NIBBLE_STATS, INDEX_STATS, clampStat, clampIndex } from '../rom/playerStats';
 import { useI18n } from '../i18n';
 import { IconPlayers } from './Icons';
+
+/**
+ * Editable attribute columns, in table order.
+ * kind 'index': 3-bit value (0-7) shown as SHOOTING_VALUES; kind 'nibble': 1-16.
+ */
+const STAT_COLUMNS = [
+  { field: 'shootingIndex', kind: 'index', label: 'shooting', help: 'helpShooting' },
+  { field: 'techniqueIndex', kind: 'index', label: 'technique', help: 'helpTechnique' },
+  { field: 'stamina', kind: 'nibble', label: 'stamina', help: 'helpStamina' },
+  { field: 'acceleration', kind: 'nibble', label: 'statAcceleration', help: 'helpAcceleration' },
+  { field: 'topSpeed', kind: 'nibble', label: 'statTopSpeed', help: 'helpTopSpeed' },
+  { field: 'dribbleSpeed', kind: 'nibble', label: 'statDribbleSpeed', help: 'helpDribbleSpeed' },
+  { field: 'attack', kind: 'nibble', label: 'statAttack', help: 'helpAttack' },
+  { field: 'defense', kind: 'nibble', label: 'statDefense', help: 'helpDefense' },
+  { field: 'gkKickIndex', kind: 'index', label: 'statGkKick', help: 'helpGkKick' },
+];
+// #, pos, num, name + stats + hair, type
+const TABLE_COLUMNS = 4 + STAT_COLUMNS.length + 2;
 
 function HelpTooltip({ text }) {
   return (
@@ -35,13 +54,10 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
   };
 
   const handleStatChange = (playerIndex, field, value) => {
-    const val = parseInt(value);
-    if (field === 'shootingIndex' || field === 'techniqueIndex') {
-      onPlayerChange(teamIndex, playerIndex, field, Math.max(0, Math.min(7, val)));
-    } else if (field === 'stamina') {
-      onPlayerChange(teamIndex, playerIndex, field, Math.max(1, Math.min(16, val)));
-    } else if (field === 'speed') {
-      onPlayerChange(teamIndex, playerIndex, field, Math.max(1, Math.min(16, val)));
+    if (INDEX_STATS.includes(field)) {
+      onPlayerChange(teamIndex, playerIndex, field, clampIndex(value));
+    } else if (field === 'stamina' || NIBBLE_STATS.includes(field)) {
+      onPlayerChange(teamIndex, playerIndex, field, clampStat(value));
     }
   };
 
@@ -104,22 +120,12 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                   {t('name')}
                   <HelpTooltip text={t('helpName')} />
                 </th>
-                <th className="col-stat">
-                  {t('shooting')}
-                  <HelpTooltip text={t('helpShooting')} />
-                </th>
-                <th className="col-stat">
-                  {t('speed')}
-                  <HelpTooltip text={t('helpSpeed')} />
-                </th>
-                <th className="col-stat">
-                  {t('stamina')}
-                  <HelpTooltip text={t('helpStamina')} />
-                </th>
-                <th className="col-stat">
-                  {t('technique')}
-                  <HelpTooltip text={t('helpTechnique')} />
-                </th>
+                {STAT_COLUMNS.map((c) => (
+                  <th key={c.field} className="col-stat">
+                    {t(c.label)}
+                    <HelpTooltip text={t(c.help)} />
+                  </th>
+                ))}
                 <th className="col-hair">
                   {t('hair')}
                   <HelpTooltip text={t('helpHair')} />
@@ -132,7 +138,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
             </thead>
             <tbody>
               <tr className="player-table-divider">
-                <td colSpan={10}>
+                <td colSpan={TABLE_COLUMNS}>
                   <div className="divider-label">{t('starting')}</div>
                 </td>
               </tr>
@@ -140,7 +146,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                 <React.Fragment key={idx}>
                   {idx === 11 && (
                     <tr className="player-table-divider">
-                      <td colSpan={10}>
+                      <td colSpan={TABLE_COLUMNS}>
                         <div className="divider-label">{t('substitutes')}</div>
                       </td>
                     </tr>
@@ -174,52 +180,32 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                         onChange={(e) => handleNameChange(idx, e.target.value)}
                       />
                     </td>
-                    <td className="col-stat">
-                      <select
-                        className="input-stat"
-                        value={p.shootingIndex}
-                        onChange={(e) => handleStatChange(idx, 'shootingIndex', e.target.value)}
-                      >
-                        {SHOOTING_VALUES.map((val, i) => (
-                          <option key={i} value={i}>
-                            {val}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="col-stat">
-                      <input
-                        type="number"
-                        className="input-mini"
-                        value={p.speed}
-                        min={1}
-                        max={16}
-                        onChange={(e) => handleStatChange(idx, 'speed', e.target.value)}
-                      />
-                    </td>
-                    <td className="col-stat">
-                      <input
-                        type="number"
-                        className="input-mini"
-                        value={p.stamina}
-                        min={1}
-                        max={16}
-                        onChange={(e) => handleStatChange(idx, 'stamina', e.target.value)}
-                      />
-                    </td>
-                    <td className="col-stat">
-                      <select
-                        className="input-stat"
-                        value={p.techniqueIndex}
-                        onChange={(e) => handleStatChange(idx, 'techniqueIndex', e.target.value)}
-                      >
-                        {SHOOTING_VALUES.map((val, i) => (
-                          <option key={i} value={i}>
-                            {val}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+                    {STAT_COLUMNS.map((c) => (
+                      <td key={c.field} className="col-stat">
+                        {c.kind === 'index' ? (
+                          <select
+                            className="input-stat"
+                            value={p[c.field] ?? 0}
+                            onChange={(e) => handleStatChange(idx, c.field, e.target.value)}
+                          >
+                            {SHOOTING_VALUES.map((val, i) => (
+                              <option key={i} value={i}>
+                                {val}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="number"
+                            className="input-mini"
+                            value={p[c.field] ?? 1}
+                            min={1}
+                            max={16}
+                            onChange={(e) => handleStatChange(idx, c.field, e.target.value)}
+                          />
+                        )}
+                      </td>
+                    ))}
                     <td className="col-hair">
                       <select
                         className="input-hair"
@@ -264,18 +250,46 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
 
               <div className="detail-section">
                 <div className="detail-section-title-row">
-                  {t('attributes')}
+                  {t('gameDataBars')}
                   <HelpTooltip text={t('helpAttributes')} />
                 </div>
                 <div className="stat-bars">
-                  <StatBar label={t('shooting')} value={player.shooting} max={15} color="#4fc3f7" />
-                  <StatBar label={t('speed')} value={player.speed} max={16} color="#81c784" />
-                  <StatBar label={t('stamina')} value={player.stamina} max={16} color="#ffb74d" />
                   <StatBar
                     label={t('technique')}
                     value={player.technique}
                     max={15}
                     color="#ce93d8"
+                  />
+                  <StatBar label={t('shooting')} value={player.shooting} max={15} color="#4fc3f7" />
+                  <StatBar
+                    label={t('speed')}
+                    value={player.speed}
+                    max={16}
+                    color="#81c784"
+                    title={t('helpSpeed')}
+                  />
+                  <StatBar label={t('stamina')} value={player.stamina} max={16} color="#ffb74d" />
+                </div>
+              </div>
+
+              <div className="detail-section">
+                <div className="detail-section-title-row">{t('detailedAttributes')}</div>
+                <div className="stat-bars">
+                  {NIBBLE_STATS.map((k) => (
+                    <StatBar
+                      key={k}
+                      label={t(`stat${k[0].toUpperCase()}${k.slice(1)}Long`)}
+                      value={player[k]}
+                      max={16}
+                      color={k === 'attack' ? '#ef5350' : k === 'defense' ? '#4fc3f7' : '#81c784'}
+                    />
+                  ))}
+                  <StatBar
+                    label={t('statGkKickLong')}
+                    value={player.gkKick}
+                    max={15}
+                    color="#ffb74d"
+                    title={t('helpGkKick')}
                   />
                 </div>
               </div>
@@ -335,10 +349,10 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
   );
 }
 
-function StatBar({ label, value, max, color }) {
-  const percentage = (value / max) * 100;
+function StatBar({ label, value, max, color, title }) {
+  const percentage = ((value || 0) / max) * 100;
   return (
-    <div className="stat-bar-row">
+    <div className="stat-bar-row" title={title}>
       <span className="stat-bar-label">{label}</span>
       <div className="stat-bar-track">
         <div

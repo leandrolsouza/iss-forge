@@ -21,6 +21,7 @@ export default {
   editorPlayers: 'Players',
   editorFormation: 'Formation',
   editorScenarios: 'Scenarios',
+  editorTournaments: 'Tournaments',
   editorMatchPalettes: 'Pitch & Ball',
   editorUniforms: 'Uniforms',
   editorHairSkin: 'Hair & Skin',
@@ -42,7 +43,7 @@ export default {
   welcomeFeatures: 'What you can edit:',
   welcomePlayerNames: 'Player names',
   welcomeShirtNumbers: 'Shirt numbers',
-  welcomeAttributes: 'Attributes (Shooting, Speed, Stamina, Technique)',
+  welcomeAttributes: 'Attributes (Shooting, Technique, Stamina, 3 speeds, Attack, Defence)',
   welcomeHairStyle: 'Hair style and skin color',
   welcomeUniformColors: 'Uniform colors (home, away, goalkeeper)',
   welcomeCompatible: 'Compatible ROM:',
@@ -68,6 +69,20 @@ export default {
   speed: 'Spd',
   stamina: 'Stam',
   technique: 'Tech',
+  statAcceleration: 'Acc',
+  statTopSpeed: 'Spd',
+  statDribbleSpeed: 'Drb',
+  statAttack: 'Att',
+  statDefense: 'Def',
+  statGkKick: 'GKk',
+  statAccelerationLong: 'Start speed',
+  statTopSpeedLong: 'Speed without ball',
+  statDribbleSpeedLong: 'Speed with ball',
+  statAttackLong: 'Attacking duels',
+  statDefenseLong: 'Defensive duels',
+  statGkKickLong: 'Goalkeeper kick',
+  gameDataBars: 'In-game DATA screen',
+  detailedAttributes: 'Detailed attributes',
   hair: 'Hair',
   type: 'Type',
   normal: 'Normal',
@@ -392,6 +407,22 @@ export default {
   descApplied: 'Description updated.',
 
   // Scenario Editor
+  tournamentSubtitle: 'International Cup and World Series draws (32)',
+  tournamentDraw: 'Draw',
+  tournamentGroup: 'Group',
+  tournamentHowItWorks:
+    "When a tournament starts, the game picks one of the 32 draws that contain the chosen team. In the International Cup it also picks a group (A-F), shuffles that group and puts your team in its first slot; the team that was there moves to your team's original slot. In the World Series the 24 teams of the draw form the league.",
+  tournamentMissing: 'Teams missing from every draw (the game freezes when one of them is chosen)',
+  tournamentDuplicate: 'A team appears twice in this draw: it would play itself.',
+  tournamentShuffle: 'Shuffle',
+  tournamentRestoreAll: 'Restore all',
+  tournamentCoverage: 'Team coverage',
+  tournamentCoverageHelp:
+    'How many draws each team appears in. More draws means more varied groups when that team is chosen.',
+  tournamentOrderNote:
+    'The order of the teams on the selection screen is fixed in the game code (Germany, Italy, Holland, ..., S.Korea, by id). Super Star is not selectable and does not need to be in the draws.',
+
+  // Scenario Editor
   scenarioSubtitle: 'Scenario mode situations (9 challenges)',
   scenarioLabel: 'Scenario',
   scenarioNoClock: 'no clock',
@@ -511,17 +542,29 @@ export default {
   mpCrowdFromUniform: "Use the team's kit colours",
 
   // Help Tooltips - Player Editor
-  helpShooting: 'Shot power. Higher values = stronger, more accurate shots. Range: 7-15.',
-  helpSpeed: 'Player running speed. Range: 1-16.',
+  helpShooting: 'Shot power. Scale 1-15 (8 levels).',
+  helpSpeed:
+    'Speed as shown by the game (SPEED bar): (2 x start speed + speed without ball + speed with ball) / 4. Read-only: edit the three speeds.',
   helpStamina:
     'Physical endurance. Players with high stamina tire less during the match. Range: 1-16.',
   helpTechnique:
-    'Technical skill (ball control, passing). Higher values = better control. Range: 7-15.',
+    'Shot accuracy: chance that a shot goes where it was aimed. Scale 1-15 (8 levels).',
+  helpAcceleration:
+    'Start speed: the speed a player starts running at. It then grows 1 point every 16 frames up to the top speed. Counts twice in the SPEED bar. Range: 1-16.',
+  helpTopSpeed: 'Top running speed without the ball. Range: 1-16.',
+  helpDribbleSpeed: 'Top running speed with the ball (dribbling). Range: 1-16.',
+  helpAttack:
+    "Strength in ball duels (tackling/shielding) in the opponent's half. Compared with the rival's Defence. Forwards usually rate high. Range: 1-16.",
+  helpDefense:
+    "Strength in ball duels (tackling/shielding) in the player's own half. Compared with the rival's Attack. Defenders and keepers usually rate high. Range: 1-16.",
+  helpGkKick:
+    'Maximum power of the goalkeeper kick from the hands. Only matters for the goalkeeper (slot 1). Scale 1-15 (8 levels).',
   helpHair: 'Player hair style and color in-game.',
   helpType: 'Normal: uses team hair/skin colors. Special: uses unique individual colors.',
   helpNum: 'Shirt number displayed in-game (1-16). Does not define tactical position.',
   helpName: 'Player name (max 8 characters).',
-  helpAttributes: "Attributes that define the player's performance on the field.",
+  helpAttributes:
+    'The four bars the game shows in the DATA box of the Substituting screen. Speed is computed from the three speeds below.',
   helpAppearance: "Controls the player's visual appearance during matches.",
   helpListPosition:
     "Tactical position read from the team's default formation in the ROM. The player in list slot N plays formation slot N (edit it in the Formation tab).",

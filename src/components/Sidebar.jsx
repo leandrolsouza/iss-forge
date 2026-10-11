@@ -13,6 +13,7 @@ import {
   IconOverview,
   IconCompare,
   IconScenario,
+  IconTrophy,
   IconPitch,
   IconMenu,
   IconSun,
@@ -22,11 +23,7 @@ import {
   IconSparkle,
 } from './Icons';
 
-export default function Sidebar({
-  onOpenTab,
-  collapsed,
-  onToggleCollapse,
-}) {
+export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
   const { t, lang, switchLang, languages } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { settings: appSettings } = useSettings();
@@ -117,6 +114,13 @@ export default function Sidebar({
             title={t('editorScenarios')}
           >
             <IconScenario size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('tournaments', t('editorTournaments'))}
+            title={t('editorTournaments')}
+          >
+            <IconTrophy size={20} />
           </button>
           <button
             className="sidebar-icon-btn"
@@ -247,6 +251,15 @@ export default function Sidebar({
                 <IconScenario size={14} />
               </span>
               <span>{t('editorScenarios')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('tournaments', t('editorTournaments'))}
+            >
+              <span className="item-icon">
+                <IconTrophy size={14} />
+              </span>
+              <span>{t('editorTournaments')}</span>
             </div>
             <div
               className="sidebar-item editor-item"

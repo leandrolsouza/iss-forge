@@ -17,9 +17,9 @@
  *   FROM      start from emu-out/<FROM> save state instead of power-on
  *   OUT       output folder (default: research/tools/emu-out)
  *
- * Menu path used in the research (Europe ROM): wait:600 START wait:400 A
- * (Open Game) DOWN DOWN A (CPU vs CPU) A A (teams) → pre-match menu
- * (Game Start / Stadium / ...).
+ * Menu path (Europe ROM): buttons must be held a few frames (hold:BTN:10), otherwise
+ * the game falls into the attract demo. See research/tools/README.md for the full
+ * sequence to the pre-match menu (Game Start / Substituting / ...).
  */
 const { createEmu } = require('./libretro-emu.cjs');
 const fs = require('fs');

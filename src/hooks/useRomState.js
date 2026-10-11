@@ -25,6 +25,8 @@ export default function useRomState() {
     matchPalettesRef.current = value;
     setMatchPalettesState(value);
   }, []);
+  // Global (non-team) data: International Cup / World Series draws
+  const [tournamentDraws, setTournamentDraws] = useState([]);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -59,6 +61,7 @@ export default function useRomState() {
           setTeams(allTeams);
           setScenarios(parser.readScenarios());
           setMatchPalettes(parser.readMatchPalettes());
+          setTournamentDraws(parser.readTournamentDraws());
           history.clearHistory();
 
           if (allTeams.length > 0) {
@@ -97,6 +100,8 @@ export default function useRomState() {
     teamDescBytes: romParserRef.current ? romParserRef.current.readTeamDescriptionBytes() : null,
     // ...and the flag designs (recompression is not byte-identical either)
     flagBytes: romParserRef.current ? romParserRef.current.readFlagDesignBytes() : null,
+    // Tournament draws (768 bytes, restored as-is)
+    drawBytes: romParserRef.current ? romParserRef.current.readTournamentDrawBytes() : null,
   });
 
   const pushSnapshot = useCallback(
@@ -127,6 +132,10 @@ export default function useRomState() {
         if (!Array.isArray(restored) && restored.matchPalettes) {
           romParser.restoreMatchPalettes(restored.matchPalettes);
           setMatchPalettes(romParser.readMatchPalettes());
+        }
+        if (!Array.isArray(restored) && restored.drawBytes) {
+          romParser.restoreTournamentDrawBytes(restored.drawBytes);
+          setTournamentDraws(romParser.readTournamentDraws());
         }
       }
     },
@@ -198,6 +207,8 @@ export default function useRomState() {
     setScenarios,
     matchPalettes,
     setMatchPalettes,
+    tournamentDraws,
+    setTournamentDraws,
     selectedTeamIndex,
     activeTab,
     openTabs,

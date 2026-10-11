@@ -39,6 +39,7 @@ import { quickValidate } from './romValidator';
 import { fixChecksum, inspectChecksum } from './checksum';
 import { readFormation, writeFormation, decodeFormation } from './formation';
 import { readScenarios, writeScenario } from './scenario';
+import { readDraws, writeDraw, readDrawBytes, restoreDrawBytes } from './tournament';
 import {
   readTeamDescription,
   readTeamDescriptions,
@@ -204,6 +205,20 @@ export default class RomParser {
     scenarios.forEach((sc, i) => {
       if (JSON.stringify(sc) !== JSON.stringify(current[i])) writeScenario(this, i, sc);
     });
+  }
+
+  /** International Cup / World Series draws: 32 x 24 TEAMS indexes */
+  readTournamentDraws() {
+    return readDraws(this);
+  }
+  writeTournamentDraw(index, teams) {
+    writeDraw(this, index, teams);
+  }
+  readTournamentDrawBytes() {
+    return readDrawBytes(this);
+  }
+  restoreTournamentDrawBytes(bytes) {
+    restoreDrawBytes(this, bytes);
   }
 
   writeFormation(teamIndex, slots) {

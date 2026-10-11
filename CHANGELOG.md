@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Player attributes** — every bit of the 6-byte player block is now editable: start speed, top speed
+  without/with the ball, attacking/defensive duel strength and goalkeeper kick power
+  (see `research/hidden-player-attributes.md`)
+- The SPEED bar is computed like the game's DATA screen: `(2 × start + top + dribble) / 4`
+- Team JSON format v2 with the new fields; v1 files are still imported
+- **Tournaments tab** — edit the 32 International Cup / World Series draws (6 groups of 4). The editor
+  blocks drafts that leave a selectable team out of every draw, which would freeze the game
+  (see `research/tournaments.md`)
+
+### Fixed
+- Player attribute blocks (numbers, hair, stats) were read in the menu team order. The game uses the ROM
+  ordinal order (Scotland = 5), so teams 5-24 showed the data of a neighbouring team
+- The attribute formerly labelled "Speed" (byte 1, low nibble) is the goalkeeper kick power. The game only
+  uses 0-7, so the editor now caps it at that range
+- The shooting/technique bars in the player details now update right after an edit
+
+---
+
 ## [0.1.0-beta] - 2025-01-01
 
 ### Added

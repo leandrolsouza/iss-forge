@@ -4,6 +4,7 @@
  * Builds a system prompt with ROM constraints and validates LLM output
  * against the existing iss-forge-team JSON schema.
  */
+import { clampStat, gameSpeed } from '../rom/playerStats';
 
 /**
  * SNES color values must be multiples of 8 (5-bit RGB: 0-248 in steps of 8)
@@ -68,19 +69,21 @@ export function buildSystemPrompt() {
 |-----------|-------|-------|
 | shooting | ${CONSTRAINTS.shootingValues.join(', ')} | Pick from this set only |
 | shootingIndex | 0-7 | Index into shooting values (0→1, 1→3, 2→5, 3→7, 4→9, 5→11, 6→13, 7→15) |
-| speed | 1-16 | Integer. Higher = faster |
+| speed | 1-16 | Integer. Running speed (sets start speed, top speed and speed with the ball) |
 | stamina | 1-16 | Integer. Higher = more endurance |
-| technique | ${CONSTRAINTS.techniqueValues.join(', ')} | Same set as shooting |
+| technique | ${CONSTRAINTS.techniqueValues.join(', ')} | Same set as shooting. Shot accuracy |
 | techniqueIndex | 0-7 | Same mapping as shootingIndex |
+| attack | 1-16 | Optional. Strength in ball duels in the opponent's half (forwards high) |
+| defense | 1-16 | Optional. Strength in ball duels in the own half (defenders high) |
 
 IMPORTANT: shootingIndex and techniqueIndex MUST match the shooting/technique values.
 Example: shooting=13 → shootingIndex=6. technique=9 → techniqueIndex=4.
 
 ## Stat Distribution Guidelines
-- Goalkeepers: high stamina (12-16), low speed (6-10)
-- Defenders: high stamina (12-16), moderate speed
+- Goalkeepers: high stamina (12-16), low speed (6-10), high defense
+- Defenders: high stamina (12-16), moderate speed, high defense (10-15), low attack
 - Midfielders: balanced stats, high technique for playmakers
-- Forwards: high speed and shooting, lower stamina
+- Forwards: high speed and shooting, lower stamina, high attack (10-15), low defense
 - Star players: 1-3 per team with stats 13-15+
 - Average players: stats around 7-9
 - Make stat variation REALISTIC: not everyone should have the same values
@@ -138,7 +141,7 @@ Return ONLY a valid JSON object. No markdown fences, no explanation, no comments
 
 {
   "_format": "iss-forge-team",
-  "_version": 1,
+  "_version": 2,
   "name": "Team Display Name",
   "id": "TEAMID",
   "teamNameText": "TEAMNAME",
@@ -153,6 +156,8 @@ Return ONLY a valid JSON object. No markdown fences, no explanation, no comments
       "stamina": 14,
       "technique": 9,
       "techniqueIndex": 4,
+      "attack": 2,
+      "defense": 12,
       "hairStyle": 0,
       "isSpecial": false
     }
@@ -271,7 +276,7 @@ export function sanitizeGeneratedTeam(data) {
 
   const team = {
     _format: 'iss-forge-team',
-    _version: 1,
+    _version: 2,
     name: String(data.name || 'AI Team').substring(0, 20),
     id: String(data.id || 'AITEAM')
       .substring(0, 10)
@@ -303,6 +308,14 @@ export function sanitizeGeneratedTeam(data) {
     }
     usedNumbers.add(number);
 
+    // "speed" is the overall running speed; the ROM stores three speeds
+    const speed = clampStat(p.speed ?? 8);
+    const speeds = {
+      acceleration: clampStat(p.acceleration ?? speed),
+      topSpeed: clampStat(p.topSpeed ?? speed),
+      dribbleSpeed: clampStat(p.dribbleSpeed ?? speed),
+    };
+
     team.players.push({
       name: String(p.name || `PLAY${i + 1}`)
         .substring(0, CONSTRAINTS.playerNameMaxLength)
@@ -313,13 +326,16 @@ export function sanitizeGeneratedTeam(data) {
         p.shootingIndex != null
           ? Math.max(0, Math.min(7, p.shootingIndex))
           : getShootingIndex(shooting),
-      speed: Math.max(1, Math.min(16, Math.round(p.speed || 8))),
+      ...speeds,
+      speed: gameSpeed(speeds), // read-only summary (ignored on import)
       stamina: Math.max(1, Math.min(16, Math.round(p.stamina || 8))),
       technique,
       techniqueIndex:
         p.techniqueIndex != null
           ? Math.max(0, Math.min(7, p.techniqueIndex))
           : getShootingIndex(technique),
+      ...(p.attack != null ? { attack: clampStat(p.attack) } : {}),
+      ...(p.defense != null ? { defense: clampStat(p.defense) } : {}),
       hairStyle: Math.max(0, Math.min(10, Math.round(p.hairStyle || 0))),
       isSpecial: Boolean(p.isSpecial),
     });

@@ -29,17 +29,71 @@ describe.skipIf(!existsSync(REAL_ROM))('team export/import round-trip (real ROM)
     expect(italy.description).toEqual(brazil.description);
   });
 
-  it('still imports older files without raw bytes / description', () => {
+  it('imports files without raw bytes / description using the named fields', () => {
     const rom = new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
-    const json = JSON.parse(JSON.stringify(exportTeam(rom.readTeam(idx('BRAZIL')))));
+    const brazil = rom.readTeam(idx('BRAZIL'));
+    const json = JSON.parse(JSON.stringify(exportTeam(brazil)));
     json.players.forEach((p) => delete p.raw);
     delete json.description;
     const italyBefore = rom.readTeam(idx('ITALY'));
     applyImportedTeam(rom, idx('ITALY'), json);
     const italy = rom.readTeam(idx('ITALY'));
-    // Hidden bytes stay those of the destination slot (old behaviour), description untouched
-    expect(italy.players[3].rawBytes[0]).toBe(italyBefore.players[3].rawBytes[0]);
+    // Every attribute has a named field now, so the 6 bytes match (b5 bits 4-5/7 are 0 in the ROM)
+    italy.players.forEach((p, i) => expect(p.rawBytes).toEqual(brazil.players[i].rawBytes));
     expect(italy.description).toEqual(italyBefore.description);
+  });
+
+  it('imports v1 files: "speed" was the goalkeeper kick, bytes 0/4 stay those of the slot', () => {
+    const rom = new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+    const brazil = rom.readTeam(idx('BRAZIL'));
+    const json = JSON.parse(JSON.stringify(exportTeam(brazil)));
+    json._version = 1;
+    json.players.forEach((p) => {
+      p.speed = p.gkKickIndex + 1;
+      for (const k of [
+        'raw',
+        'gkKickIndex',
+        'acceleration',
+        'topSpeed',
+        'dribbleSpeed',
+        'attack',
+        'defense',
+      ])
+        delete p[k];
+    });
+    const italyBefore = rom.readTeam(idx('ITALY'));
+    applyImportedTeam(rom, idx('ITALY'), json);
+    const italy = rom.readTeam(idx('ITALY'));
+    italy.players.forEach((p, i) => {
+      expect(p.rawBytes[0]).toBe(italyBefore.players[i].rawBytes[0]);
+      expect(p.rawBytes[4]).toBe(italyBefore.players[i].rawBytes[4]);
+      expect(p.rawBytes[3] >> 4).toBe(italyBefore.players[i].rawBytes[3] >> 4);
+      expect(p.gkKickIndex).toBe(brazil.players[i].gkKickIndex);
+      expect(p.shootingIndex).toBe(brazil.players[i].shootingIndex);
+    });
+  });
+});
+
+describe.skipIf(!existsSync(REAL_ROM))('player attributes (real ROM)', () => {
+  it('reads attribute blocks in ROM ordinal order (as the game does via $01:DED7)', () => {
+    const rom = new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+    // Values seen in WRAM ($7E:A010) when playing with Scotland (id 5) and Wales (id 6)
+    const scot = rom.readTeam(idx('SCOTLAND')).players[0].rawBytes;
+    const wales = rom.readTeam(idx('WALES')).players[0].rawBytes;
+    expect(scot).toEqual([0x54, 0x22, 0x82, 0x50, 0x2c, 0x00]);
+    expect(wales[0]).toBe(((37 - 0x1c) << 4) | (34 - 0x1c));
+  });
+
+  it('decodes the Super Star team as all maxed out', () => {
+    const rom = new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+    const star = rom.readTeam(idx('SUPERSTAR'));
+    star.players.forEach((p) => {
+      expect([p.acceleration, p.topSpeed, p.dribbleSpeed, p.attack, p.defense]).toEqual([
+        16, 16, 16, 16, 16,
+      ]);
+      expect(p.speed).toBe(16);
+      expect(p.gkKickIndex).toBe(7);
+    });
   });
 });
 

@@ -102,7 +102,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const data = {
         shootingIndex: 5,
         shooting: 11,
-        speed: 10,
+        topSpeed: 10,
         stamina: 12,
         techniqueIndex: 3,
         technique: 7,
@@ -117,15 +117,15 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       expect(result[0].shooting).toBe(11);
     });
 
-    it('should roundtrip speed value', () => {
+    it('should roundtrip the speed nibbles and derive the game SPEED bar', () => {
       const rom = createMockRom();
       const data = {
         shootingIndex: 3,
-        shooting: 7,
-        speed: 14,
+        acceleration: 9, // b0.lo = 8
+        topSpeed: 14, // b0.hi = 13
+        dribbleSpeed: 11, // b3.hi = 10
         stamina: 8,
         techniqueIndex: 2,
-        technique: 5,
         number: 7,
         hairStyle: 0,
         isSpecial: false,
@@ -133,7 +133,46 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       };
       writePlayerData(rom, 0, 0, data);
       const result = readPlayerData(rom, 0);
-      expect(result[0].speed).toBe(14);
+      expect(result[0].acceleration).toBe(9);
+      expect(result[0].topSpeed).toBe(14);
+      expect(result[0].dribbleSpeed).toBe(11);
+      expect(result[0].rawBytes[0]).toBe(0xd8);
+      expect(result[0].rawBytes[3] >> 4).toBe(10);
+      // (2*8 + 13 + 10) / 4 = 9 → shown as 10 on the 1-16 scale
+      expect(result[0].speed).toBe(10);
+    });
+
+    it('should roundtrip attack/defense (byte 4) and goalkeeper kick (byte 1 low)', () => {
+      const rom = createMockRom();
+      writePlayerData(rom, 0, 0, {
+        shootingIndex: 5,
+        gkKickIndex: 6,
+        attack: 3,
+        defense: 13,
+        rawBytes: [0, 0, 0, 0, 0, 0],
+      });
+      const [p] = readPlayerData(rom, 0);
+      expect(p.attack).toBe(3);
+      expect(p.defense).toBe(13);
+      expect(p.gkKickIndex).toBe(6);
+      expect(p.gkKick).toBe(13);
+      expect(p.rawBytes[1]).toBe(0x56);
+      expect(p.rawBytes[4]).toBe(0x2c);
+    });
+
+    it('should keep bytes it is not asked to change', () => {
+      const rom = createMockRom();
+      writePlayerData(rom, 0, 0, { stamina: 5, rawBytes: [0xa8, 0x54, 0xf4, 0x80, 0x2c, 0x07] });
+      const [p] = readPlayerData(rom, 0);
+      expect(p.rawBytes).toEqual([0xa8, 0x54, 0x44, 0x80, 0x2c, 0x07]);
+    });
+
+    it('should cap goalkeeper kick at 7 (the game treats 8-15 as 7)', () => {
+      const rom = createMockRom();
+      writePlayerData(rom, 0, 0, { rawBytes: [0, 0x0c, 0, 0, 0, 0] });
+      expect(readPlayerData(rom, 0)[0].gkKickIndex).toBe(7);
+      writePlayerData(rom, 0, 0, { gkKickIndex: 12, rawBytes: [0, 0, 0, 0, 0, 0] });
+      expect(readPlayerData(rom, 0)[0].rawBytes[1]).toBe(0x07);
     });
 
     it('should roundtrip stamina value', () => {
@@ -141,7 +180,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const data = {
         shootingIndex: 0,
         shooting: 1,
-        speed: 1,
+        topSpeed: 1,
         stamina: 16,
         techniqueIndex: 0,
         technique: 1,
@@ -160,7 +199,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const data = {
         shootingIndex: 2,
         shooting: 5,
-        speed: 8,
+        topSpeed: 8,
         stamina: 10,
         techniqueIndex: 6,
         technique: 13,
@@ -180,7 +219,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const data = {
         shootingIndex: 3,
         shooting: 7,
-        speed: 5,
+        topSpeed: 5,
         stamina: 5,
         techniqueIndex: 3,
         technique: 7,
@@ -199,7 +238,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const data = {
         shootingIndex: 1,
         shooting: 3,
-        speed: 6,
+        topSpeed: 6,
         stamina: 9,
         techniqueIndex: 1,
         technique: 3,
@@ -218,7 +257,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const dataSpecial = {
         shootingIndex: 4,
         shooting: 9,
-        speed: 12,
+        topSpeed: 12,
         stamina: 14,
         techniqueIndex: 5,
         technique: 11,
@@ -242,7 +281,9 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const input = {
         shootingIndex: 7,
         shooting: 15,
-        speed: 15,
+        acceleration: 15,
+        topSpeed: 15,
+        dribbleSpeed: 15,
         stamina: 16,
         techniqueIndex: 7,
         technique: 15,
@@ -270,7 +311,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const player0 = {
         shootingIndex: 7,
         shooting: 15,
-        speed: 15,
+        topSpeed: 15,
         stamina: 16,
         techniqueIndex: 7,
         technique: 15,
@@ -282,7 +323,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const player1 = {
         shootingIndex: 2,
         shooting: 5,
-        speed: 8,
+        topSpeed: 8,
         stamina: 10,
         techniqueIndex: 1,
         technique: 3,
@@ -307,7 +348,7 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const minPlayer = {
         shootingIndex: 0,
         shooting: 1,
-        speed: 1,
+        topSpeed: 1,
         stamina: 1,
         techniqueIndex: 0,
         technique: 1,
@@ -326,7 +367,9 @@ describe('PlayerReader/PlayerWriter Roundtrip', () => {
       const maxPlayer = {
         shootingIndex: 7,
         shooting: 15,
-        speed: 16,
+        acceleration: 16,
+        topSpeed: 16,
+        dribbleSpeed: 16,
         stamina: 16,
         techniqueIndex: 7,
         technique: 15,

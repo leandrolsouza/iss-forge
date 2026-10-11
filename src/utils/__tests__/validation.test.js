@@ -6,7 +6,7 @@ function makePlayer(overrides = {}) {
     name: 'PLAYER',
     number: 1,
     shooting: 7,
-    speed: 8,
+    topSpeed: 8,
     stamina: 10,
     ...overrides,
   };
@@ -112,27 +112,38 @@ describe('validateRom', () => {
       expect(warnings.filter((w) => w.message.includes('chute'))).toHaveLength(0);
     });
 
-    it('should detect speed below 1', () => {
-      const teams = [makeTeam({ players: [makePlayer({ speed: 0 })] })];
+    it('should detect top speed below 1', () => {
+      const teams = [makeTeam({ players: [makePlayer({ topSpeed: 0 })] })];
       const warnings = validateRom(teams);
       expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('velocidade invalida')),
+        warnings.some((w) => w.type === 'error' && w.message.includes('velocidade fora de 1-16')),
       ).toBe(true);
     });
 
-    it('should detect speed above 16', () => {
-      const teams = [makeTeam({ players: [makePlayer({ speed: 17 })] })];
-      const warnings = validateRom(teams);
-      expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('velocidade invalida')),
-      ).toBe(true);
+    it('should detect hidden attributes above 16', () => {
+      for (const key of ['acceleration', 'topSpeed', 'dribbleSpeed', 'attack', 'defense']) {
+        const teams = [makeTeam({ players: [makePlayer({ [key]: 17 })] })];
+        const warnings = validateRom(teams);
+        expect(warnings.some((w) => w.type === 'error' && w.message.includes('fora de 1-16'))).toBe(
+          true,
+        );
+      }
     });
 
-    it('should accept speed at boundaries (1 and 16)', () => {
-      const players = [makePlayer({ speed: 1 }), makePlayer({ speed: 16, number: 2 })];
+    it('should accept attributes at boundaries (1 and 16)', () => {
+      const players = [
+        makePlayer({ topSpeed: 1, attack: 1, defense: 1 }),
+        makePlayer({ topSpeed: 16, attack: 16, defense: 16, number: 2 }),
+      ];
       const teams = [makeTeam({ players })];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('velocidade'))).toHaveLength(0);
+      expect(warnings.filter((w) => w.message.includes('fora de'))).toHaveLength(0);
+    });
+
+    it('should detect goalkeeper kick index out of 0-7', () => {
+      const teams = [makeTeam({ players: [makePlayer({ gkKickIndex: 8 })] })];
+      const warnings = validateRom(teams);
+      expect(warnings.some((w) => w.message.includes('chute do goleiro'))).toBe(true);
     });
 
     it('should detect stamina below 1', () => {
@@ -210,7 +221,7 @@ describe('validateRom', () => {
     it('should accumulate warnings from all teams', () => {
       const teams = [
         makeTeam({ players: [makePlayer({ shooting: 0 })] }),
-        makeTeam({ players: [makePlayer({ speed: 0 })] }),
+        makeTeam({ players: [makePlayer({ topSpeed: 0 })] }),
       ];
       const warnings = validateRom(teams);
       expect(warnings.length).toBeGreaterThanOrEqual(2);

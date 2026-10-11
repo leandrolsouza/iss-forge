@@ -119,6 +119,12 @@ export const IconScenario = ({ size }) => (
   </Icon>
 );
 
+export const IconTrophy = ({ size }) => (
+  <Icon size={size}>
+    <path d="M4 2h8v1h2.5l.5.5V5a3 3 0 0 1-3.1 3A4 4 0 0 1 8.5 10.9V12H11v1H5v-1h2.5v-1.1A4 4 0 0 1 4.1 8 3 3 0 0 1 1 5V2.5l.5-.5H4V2zm0 2H2v1a2 2 0 0 0 2 2V4zm8 0v3a2 2 0 0 0 2-2V4h-2zM5 3v4a3 3 0 0 0 6 0V3H5z" />
+  </Icon>
+);
+
 export const IconOverview = ({ size }) => (
   <Icon size={size}>
     <path d="M1.5 2h13l.5.5v11l-.5.5h-13l-.5-.5v-11l.5-.5zM2 3v2h12V3H2zm0 3v7h12V6H2z" />

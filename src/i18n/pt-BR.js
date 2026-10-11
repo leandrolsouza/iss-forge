@@ -21,6 +21,7 @@ export default {
   editorPlayers: 'Jogadores',
   editorFormation: 'Formacao',
   editorScenarios: 'Cenarios',
+  editorTournaments: 'Torneios',
   editorMatchPalettes: 'Campo e Bola',
   editorUniforms: 'Uniformes',
   editorHairSkin: 'Cabelo e Pele',
@@ -42,7 +43,7 @@ export default {
   welcomeFeatures: 'O que voce pode editar:',
   welcomePlayerNames: 'Nomes dos jogadores',
   welcomeShirtNumbers: 'Numeros das camisas',
-  welcomeAttributes: 'Atributos (Chute, Velocidade, Stamina, Tecnica)',
+  welcomeAttributes: 'Atributos (Chute, Tecnica, Stamina, 3 velocidades, Ataque, Defesa)',
   welcomeHairStyle: 'Estilo de cabelo e cor da pele',
   welcomeUniformColors: 'Cores dos uniformes (titular, reserva, goleiro)',
   welcomeCompatible: 'ROM compativel:',
@@ -68,6 +69,20 @@ export default {
   speed: 'Vel',
   stamina: 'Stam',
   technique: 'Tec',
+  statAcceleration: 'Arr',
+  statTopSpeed: 'Vel',
+  statDribbleSpeed: 'VBola',
+  statAttack: 'Atq',
+  statDefense: 'Def',
+  statGkKick: 'ChGL',
+  statAccelerationLong: 'Arranque',
+  statTopSpeedLong: 'Velocidade sem bola',
+  statDribbleSpeedLong: 'Velocidade com bola',
+  statAttackLong: 'Disputa no ataque',
+  statDefenseLong: 'Disputa na defesa',
+  statGkKickLong: 'Chute do goleiro',
+  gameDataBars: 'Tela DATA do jogo',
+  detailedAttributes: 'Atributos detalhados',
   hair: 'Cabelo',
   type: 'Tipo',
   normal: 'Normal',
@@ -392,6 +407,22 @@ export default {
   descApplied: 'Descricao atualizada.',
 
   // Scenario Editor
+  tournamentSubtitle: 'Sorteios da International Cup e da World Series (32)',
+  tournamentDraw: 'Sorteio',
+  tournamentGroup: 'Grupo',
+  tournamentHowItWorks:
+    'Ao iniciar um torneio, o jogo sorteia um dos 32 sorteios que contem o time escolhido. Na International Cup ele tambem sorteia um grupo (A-F), embaralha a ordem desse grupo e coloca o seu time na primeira vaga dele; o time que estava ali vai para a vaga original do seu time. Na World Series os 24 times do sorteio formam a liga.',
+  tournamentMissing: 'Times que nao aparecem em nenhum sorteio (o jogo trava ao escolher um deles)',
+  tournamentDuplicate: 'Time repetido neste sorteio: ele enfrentaria a si mesmo.',
+  tournamentShuffle: 'Embaralhar',
+  tournamentRestoreAll: 'Restaurar todos',
+  tournamentCoverage: 'Presenca dos times',
+  tournamentCoverageHelp:
+    'Em quantos sorteios cada time aparece. Quanto mais sorteios, mais variados sao os grupos quando ele e escolhido.',
+  tournamentOrderNote:
+    'A ordem dos times na tela de selecao e fixa no codigo do jogo (Germany, Italy, Holland, ..., S.Korea, na ordem dos ids). O Super Star nao e selecionavel e nao precisa estar nos sorteios.',
+
+  // Scenario Editor
   scenarioSubtitle: 'Situacoes do modo Scenario (9 desafios)',
   scenarioLabel: 'Cenario',
   scenarioNoClock: 'sem relogio',
@@ -511,17 +542,29 @@ export default {
   mpCrowdFromUniform: 'Usar cores do uniforme do time',
 
   // Help Tooltips - Player Editor
-  helpShooting: 'Forca do chute. Valores maiores = chutes mais fortes e precisos. Varia de 7 a 15.',
-  helpSpeed: 'Velocidade de corrida do jogador. Varia de 1 a 16.',
+  helpShooting: 'Forca do chute a gol. Escala 1-15 (8 niveis).',
+  helpSpeed:
+    'Velocidade mostrada pelo jogo (barra SPEED): (2 x Arranque + Vel. sem bola + Vel. com bola) / 4. So leitura: edite as tres velocidades.',
   helpStamina:
     'Resistencia fisica. Jogadores com stamina alta cansam menos durante a partida. Varia de 1 a 16.',
   helpTechnique:
-    'Habilidade tecnica (controle de bola, passes). Valores maiores = melhor controle. Varia de 7 a 15.',
+    'Precisao do chute a gol: chance de o chute sair na direcao mirada. Escala 1-15 (8 niveis).',
+  helpAcceleration:
+    'Arranque: velocidade com que o jogador comeca a correr. Depois ela sobe 1 ponto a cada 16 quadros ate a velocidade maxima. Conta em dobro na barra SPEED. Varia de 1 a 16.',
+  helpTopSpeed: 'Velocidade maxima correndo sem a bola. Varia de 1 a 16.',
+  helpDribbleSpeed: 'Velocidade maxima conduzindo a bola (drible). Varia de 1 a 16.',
+  helpAttack:
+    'Forca na disputa de bola (desarme/protecao) no campo adversario. Comparada com a Defesa do rival. Atacantes costumam ter valores altos. Varia de 1 a 16.',
+  helpDefense:
+    'Forca na disputa de bola (desarme/protecao) no proprio campo. Comparada com o Ataque do rival. Zagueiros e goleiros costumam ter valores altos. Varia de 1 a 16.',
+  helpGkKick:
+    'Forca maxima do chute do goleiro com a bola na mao. So tem efeito no goleiro (posicao 1). Escala 1-15 (8 niveis).',
   helpHair: 'Estilo e cor do cabelo do jogador no jogo.',
   helpType: 'Normal: usa as cores de cabelo/pele do time. Especial: usa cores unicas proprias.',
   helpNum: 'Numero da camisa exibido no jogo (1-16). Nao define a posicao tatica.',
   helpName: 'Nome do jogador (max 8 caracteres).',
-  helpAttributes: 'Atributos que definem a performance do jogador em campo.',
+  helpAttributes:
+    'As quatro barras que o jogo mostra no quadro DATA da tela Substituting. A velocidade e calculada a partir das tres velocidades abaixo.',
   helpAppearance: 'Controla a aparencia visual do jogador durante as partidas.',
   helpListPosition:
     'Posicao tatica lida da formacao padrao do time na ROM. O jogador na posicao N da lista ocupa a posicao N da formacao (edite na aba Formacao).',

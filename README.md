@@ -38,9 +38,10 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 
 ## Features
 
-- **Players** — Edit names, shirt numbers and attributes (shooting, speed, stamina, technique)
+- **Players** — Edit names, shirt numbers and every attribute in the ROM: shooting, technique, stamina, start speed, speed without/with the ball, attacking/defensive duels and goalkeeper kick (the SPEED bar is computed like the game does)
 - **Formation & Lineup** — Edit each team's default formation stored in the ROM (drag positions on a pitch, roles, 9 presets taken from original teams) and swap starters/substitutes
 - **Scenarios** — Edit the 9 Scenario mode challenges: teams, score, clocks and intro text (with an 8×23 screen preview)
+- **Tournaments** — Edit the 32 International Cup / World Series draws (6 groups of 4), with a guard against the freeze caused by a team missing from every draw
 - **Pitch & Ball** — Recolour the pitch for every type (A/B/C) and weather (sunny/rain/snow), the ball and the referee/linesmen kit, with presets and hue/saturation/brightness tools
 - **Stadium & Crowd** — Recolour the perimeter wall/goal net and photographers, edit the 20 crowd palettes and choose which one each team's fans use
 - **Team Descriptions** — Edit the selection-screen text ("Offensive 4-4-2" + description) with a 15×8 preview, kept in sync with the formation
@@ -207,7 +208,9 @@ Based on the work of:
 - [x] Pitch, ball and referee palettes
 - [x] Stadium and crowd palettes
 - [x] Team descriptions, copy/swap teams, test in emulator
-- [ ] Hidden player attributes, tournaments, text translation (see `research/BACKLOG.md`)
+- [x] All player attributes (3 speeds, attack/defence duels, goalkeeper kick)
+- [x] International Cup / World Series draws
+- [ ] Text translation (see `research/BACKLOG.md`)
 - [x] AI team generator
 - [x] Tile Explorer
 - [x] Undo/Redo

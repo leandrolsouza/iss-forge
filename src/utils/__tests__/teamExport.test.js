@@ -439,7 +439,8 @@ describe('Team Import/Export Integration', () => {
       WAKANDA.players.forEach((player, i) => {
         expect(team.players[i].shooting).toBe(player.shooting);
         expect(team.players[i].shootingIndex).toBe(player.shootingIndex);
-        expect(team.players[i].speed).toBe(player.speed);
+        // v1 file: "speed" was the editor's name for the goalkeeper kick nibble
+        expect(team.players[i].gkKickIndex).toBe(Math.min(7, player.speed - 1));
         expect(team.players[i].stamina).toBe(player.stamina);
         expect(team.players[i].technique).toBe(player.technique);
         expect(team.players[i].techniqueIndex).toBe(player.techniqueIndex);
@@ -503,7 +504,9 @@ describe('Team Import/Export Integration', () => {
       const exported = exportTeam(team);
 
       expect(exported._format).toBe('iss-forge-team');
-      expect(exported._version).toBe(1);
+      expect(exported._version).toBe(2);
+      expect(exported.players[0]).toHaveProperty('topSpeed');
+      expect(exported.players[0]).toHaveProperty('gkKickIndex');
       expect(exported.players).toHaveLength(15);
       expect(exported.uniforms).toBeDefined();
       expect(exported.hairSkin).toBeDefined();

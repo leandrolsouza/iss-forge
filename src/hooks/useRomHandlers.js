@@ -16,6 +16,7 @@ import {
 } from '../utils/teamExport';
 import * as electronBridge from '../services/electronBridge';
 import { buildPatch, getPatchFilename } from '../rom/patches';
+import { withDerivedStats } from '../rom/playerStats';
 
 export default function useRomHandlers({
   romParser,
@@ -30,6 +31,7 @@ export default function useRomHandlers({
   pushSnapshot,
   setScenarios,
   setMatchPalettes,
+  setTournamentDraws,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -40,7 +42,8 @@ export default function useRomHandlers({
         const newTeams = [...prev];
         const team = { ...newTeams[teamIndex] };
         const players = [...team.players];
-        players[playerIndex] = { ...players[playerIndex], [field]: value };
+        const updated = { ...players[playerIndex], [field]: value };
+        players[playerIndex] = field === 'name' ? updated : withDerivedStats(updated);
         team.players = players;
         newTeams[teamIndex] = team;
         return newTeams;
@@ -500,6 +503,22 @@ export default function useRomHandlers({
   );
 
   /**
+   * Replace tournament draws. `changes` maps draw index -> 24 TEAMS indexes.
+   */
+  const handleTournamentDrawsChange = useCallback(
+    (changes) => {
+      if (!romParser || !changes) return;
+      pushSnapshot(teams);
+      Object.entries(changes).forEach(([index, draw]) =>
+        romParser.writeTournamentDraw(Number(index), draw),
+      );
+      setTournamentDraws(romParser.readTournamentDraws());
+      markModified();
+    },
+    [romParser, teams, markModified, pushSnapshot, setTournamentDraws],
+  );
+
+  /**
    * Flush pending (deferred) writes into the ROM buffer and repair the SNES
    * internal checksum. Must run before any save or patch export so the output
    * is complete and passes checksum checks in emulators/flashcarts.
@@ -736,6 +755,7 @@ export default function useRomHandlers({
     handleFormationChange,
     handleSwapPlayers,
     handleScenarioChange,
+    handleTournamentDrawsChange,
     handleTeamDescriptionChange,
     handleCopyTeam,
     handleMatchPaletteChange,

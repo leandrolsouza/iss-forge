@@ -157,6 +157,14 @@ function createEmu(corePath, romPath) {
       const ptr = f.get_memory_data(2);
       return Buffer.from(koffi.decode(ptr, koffi.array('uint8_t', size)));
     },
+    /** Write bytes into WRAM (offset 0 = $7E:0000). Useful for A/B tests on live values. */
+    poke(addr, bytes) {
+      const size = Number(f.get_memory_size(2));
+      const list = Array.isArray(bytes) ? bytes : [bytes];
+      if (addr < 0 || addr + list.length > size) throw new Error('poke out of WRAM range');
+      const ptr = f.get_memory_data(2);
+      koffi.encode(ptr, addr, koffi.array('uint8_t', list.length), list);
+    },
     saveState() {
       const n = Number(f.serialize_size());
       const b = Buffer.alloc(n);

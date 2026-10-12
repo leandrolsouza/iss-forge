@@ -39,19 +39,10 @@ import {
 } from './components/Icons';
 import { useRom } from './context/RomContext';
 import { useGuardDrafts } from './context/ConfirmContext';
+import { useToast } from './context/ToastContext';
+import { isTeamTab } from './components/editors';
+import { OPEN_TEAM_PICKER_EVENT } from './components/TeamSelector';
 import { useI18n } from './i18n';
-
-/** Editors that are not tied to the selected team */
-const GLOBAL_TABS = new Set([
-  'scenarios',
-  'tournaments',
-  'gameTexts',
-  'matchPalettes',
-  'titleScreen',
-  'settings',
-  'about',
-  'compare',
-]);
 
 const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'url', 'email', 'password', '']);
 
@@ -67,6 +58,7 @@ function isEditableFocused() {
 
 export default function App() {
   const { t, lang } = useI18n();
+  const toast = useToast();
   const {
     romParser,
     romInfo,
@@ -149,12 +141,58 @@ export default function App() {
   const selectTeamGuarded = useCallback(
     async (index) => {
       // global editors keep their drafts across team changes
-      if (index !== selectedTeamIndex && !GLOBAL_TABS.has(activeTab) && !(await guardDrafts()))
-        return;
+      if (index !== selectedTeamIndex && isTeamTab(activeTab) && !(await guardDrafts())) return;
       selectTeam(index);
     },
     [activeTab, selectedTeamIndex, guardDrafts, selectTeam],
   );
+
+  // Navigation shortcuts (desktop and web; the browser may keep some of them for itself):
+  //   Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PageDown / PageUp  next / previous tab
+  //   Ctrl+1..9  go to tab N          Ctrl+W  close tab
+  //   Alt+Left / Alt+Right  previous / next team      Ctrl+G  team picker
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      const index = openTabs.findIndex((tab) => tab.id === activeTab);
+
+      if (ctrl && (e.key === 'Tab' || e.key === 'PageDown' || e.key === 'PageUp')) {
+        if (openTabs.length < 2) return;
+        e.preventDefault();
+        const back = e.key === 'PageUp' || (e.key === 'Tab' && e.shiftKey);
+        const next = (index + (back ? -1 : 1) + openTabs.length) % openTabs.length;
+        goToTab(openTabs[next].id);
+      } else if (ctrl && !e.shiftKey && !e.altKey && /^[1-9]$/.test(e.key)) {
+        const target = e.key === '9' ? openTabs[openTabs.length - 1] : openTabs[Number(e.key) - 1];
+        if (!target) return;
+        e.preventDefault();
+        goToTab(target.id);
+      } else if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'w') {
+        if (!activeTab || index < 0) return;
+        e.preventDefault();
+        closeTabGuarded(activeTab);
+      } else if (ctrl && !e.shiftKey && e.key.toLowerCase() === 'g') {
+        if (selectedTeamIndex === null || !isTeamTab(activeTab)) return;
+        e.preventDefault();
+        window.dispatchEvent(new Event(OPEN_TEAM_PICKER_EVENT));
+      } else if (e.altKey && !ctrl && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        if (selectedTeamIndex === null || !isTeamTab(activeTab) || isEditableFocused()) return;
+        e.preventDefault();
+        const next = selectedTeamIndex + (e.key === 'ArrowLeft' ? -1 : 1);
+        if (next >= 0 && next < teams.length) selectTeamGuarded(next);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [
+    openTabs,
+    activeTab,
+    goToTab,
+    closeTabGuarded,
+    selectedTeamIndex,
+    teams.length,
+    selectTeamGuarded,
+  ]);
 
   useEffect(() => {
     if (!isElectron()) return;
@@ -255,8 +293,9 @@ export default function App() {
     }
   }, [modified]);
 
-  // Sync locale to main process (for native dialog i18n)
+  // Sync locale to main process (for native dialog i18n) and to <html lang>
   useEffect(() => {
+    document.documentElement.lang = lang;
     if (isElectron()) {
       window.electronAPI.setLocale(lang);
     }
@@ -310,8 +349,9 @@ export default function App() {
       // Save needs a "Save As" dialog (or failed): keep the current ROM untouched
       cancelPendingLoad();
       setStatusMessage('unsavedSaveNeedsPath');
+      toast.info(t('unsavedSaveNeedsPath'));
     }
-  }, [handleSave, confirmPendingLoad, cancelPendingLoad, setStatusMessage]);
+  }, [handleSave, confirmPendingLoad, cancelPendingLoad, setStatusMessage, toast, t]);
 
   // Editor renderer
   const renderEditor = () => {
@@ -403,13 +443,19 @@ export default function App() {
     <div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
       <div className="app-titlebar">
         <div className="app-titlebar-actions">
-          <button className="titlebar-btn" onClick={handleOpenRom} title="Open ROM (Ctrl+O)">
+          <button
+            className="titlebar-btn"
+            onClick={handleOpenRom}
+            title={t('toolbarOpen')}
+            aria-label={t('toolbarOpen')}
+          >
             <IconOpen size={16} />
           </button>
           <button
             className="titlebar-btn"
             onClick={handleSave}
-            title="Save ROM (Ctrl+S)"
+            title={t('toolbarSave')}
+            aria-label={t('toolbarSave')}
             disabled={!romParser}
           >
             <IconSave size={16} />
@@ -418,6 +464,7 @@ export default function App() {
             className="titlebar-btn"
             onClick={openPatchModal}
             title={t('toolbarExportPatch')}
+            aria-label={t('toolbarExportPatch')}
             disabled={!romParser}
           >
             <IconPatch size={16} />
@@ -426,6 +473,7 @@ export default function App() {
             className="titlebar-btn"
             onClick={handleTestInEmulator}
             title={isElectron() ? t('toolbarTestEmulator') : t('emulatorDesktopOnly')}
+            aria-label={t('toolbarTestEmulator')}
             disabled={!romParser || !isElectron()}
           >
             <IconPlay size={16} />
@@ -434,6 +482,7 @@ export default function App() {
             className="titlebar-btn"
             onClick={performUndo}
             title={t('toolbarUndo')}
+            aria-label={t('toolbarUndo')}
             disabled={!canUndo}
           >
             <IconUndo size={16} />
@@ -442,6 +491,7 @@ export default function App() {
             className="titlebar-btn"
             onClick={performRedo}
             title={t('toolbarRedo')}
+            aria-label={t('toolbarRedo')}
             disabled={!canRedo}
           >
             <IconRedo size={16} />
@@ -450,6 +500,7 @@ export default function App() {
             className="titlebar-btn"
             onClick={() => openTabGuarded('settings', t('settingsTitle'))}
             title={t('settingsTitle')}
+            aria-label={t('settingsTitle')}
           >
             <IconSettings size={16} />
           </button>
@@ -466,6 +517,7 @@ export default function App() {
       <div className="app-body">
         <Sidebar
           onOpenTab={openTabGuarded}
+          activeTab={activeTab}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
@@ -478,7 +530,8 @@ export default function App() {
               onCloseTab={closeTabGuarded}
             />
           )}
-          {teams.length > 0 && selectedTeamIndex !== null && (
+          {/* Only on editors of the selected team: global ones (Scenarios, Texts...) ignore it */}
+          {teams.length > 0 && selectedTeamIndex !== null && isTeamTab(activeTab) && (
             <TeamSelector
               teams={teams}
               selectedTeamIndex={selectedTeamIndex}
@@ -493,7 +546,9 @@ export default function App() {
         message={statusMessage}
         modified={modified}
         teamCount={teams.length}
-        selectedTeam={selectedTeamIndex !== null ? TEAMS[selectedTeamIndex]?.name : null}
+        selectedTeam={
+          selectedTeamIndex !== null && isTeamTab(activeTab) ? TEAMS[selectedTeamIndex]?.name : null
+        }
       />
 
       <UpdateNotification />

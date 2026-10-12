@@ -57,6 +57,8 @@
   align-items: center;
   padding-top: 8px;
   gap: 4px;
+  overflow-y: auto;
+  scrollbar-width: none;
 }
 
 .sidebar-icon-btn {
@@ -177,4 +179,43 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Items and section headers are <button>s: reset the native look */
+button.sidebar-item,
+button.sidebar-section-header {
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: var(--font-family);
+}
+
+/* Active editor: VS Code-style accent bar on the left */
+.sidebar-item.selected,
+.sidebar-icon-btn.selected {
+  box-shadow: inset 2px 0 0 var(--border-active);
+}
+
+.sidebar-item.selected .item-icon {
+  color: inherit;
+}
+
+.sidebar-icon-btn.selected {
+  color: var(--text-primary);
+  background: var(--bg-active);
+}
+
+.sidebar-item:focus-visible,
+.sidebar-section-header:focus-visible,
+.sidebar-icon-btn:focus-visible,
+.sidebar-collapse-btn:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  margin: 4px 12px 4px 28px;
+  background: var(--border-primary);
 }

@@ -9,27 +9,45 @@
   align-items: flex-end;
   border-bottom: 1px solid var(--border-primary);
   overflow-x: auto;
+  overflow-y: hidden;
   flex-shrink: 0;
-  scrollbar-width: none;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Thin scrollbar that only shows on hover, so overflowing tabs are discoverable */
+.tab-bar:hover {
+  scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 .tab-bar::-webkit-scrollbar {
-  display: none;
+  height: 3px;
+}
+
+.tab-bar::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.tab-bar:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
 }
 
 .tab {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   height: 34px;
-  padding: 0 12px;
+  padding: 0 6px 0 12px;
   cursor: pointer;
   font-size: var(--font-size);
   color: var(--text-secondary);
   background: var(--bg-tertiary);
   border-right: 1px solid var(--border-primary);
   white-space: nowrap;
-  gap: 8px;
-  transition: background var(--transition), color var(--transition);
+  gap: 6px;
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .tab:hover {
@@ -41,6 +59,22 @@
   color: var(--text-white);
   border-bottom: 1px solid var(--bg-primary);
   margin-bottom: -1px;
+  box-shadow: inset 0 1px 0 var(--border-active);
+}
+
+.tab:focus-visible {
+  outline: 1px solid var(--border-focus);
+  outline-offset: -1px;
+}
+
+.tab-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.tab.active .tab-icon {
+  color: var(--text-accent);
 }
 
 .tab-label {
@@ -59,7 +93,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 3px;
-  opacity: 0;
+  /* faintly visible so the action is discoverable; full on hover/active */
+  opacity: 0.35;
   transition: opacity var(--transition);
 }
 

@@ -6,6 +6,7 @@ import { ThemeProvider } from './theme/ThemeProvider';
 import { RomProvider } from './context/RomContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { ConfirmProvider } from './context/ConfirmContext';
+import { ToastProvider } from './context/ToastContext';
 import './styles/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -13,11 +14,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <ThemeProvider>
       <I18nProvider>
         <SettingsProvider>
-          <ConfirmProvider>
-            <RomProvider>
-              <App />
-            </RomProvider>
-          </ConfirmProvider>
+          <ToastProvider>
+            <ConfirmProvider>
+              <RomProvider>
+                <App />
+              </RomProvider>
+            </ConfirmProvider>
+          </ToastProvider>
         </SettingsProvider>
       </I18nProvider>
     </ThemeProvider>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useConfirm, DraftGuard } from '../context/ConfirmContext';
+import { useToast } from '../context/ToastContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, TOURNAMENT_DRAWS } from '../rom/constants';
 import { drawGroups, drawCoverage, validateDraws, SELECTABLE_TEAMS } from '../rom/tournament';
@@ -23,6 +24,7 @@ function shuffle(list) {
 export default function TournamentEditor() {
   const { t } = useI18n();
   const confirm = useConfirm();
+  const toast = useToast();
   const { romParser, teams, tournamentDraws, handleTournamentDrawsChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState(null);
@@ -58,7 +60,10 @@ export default function TournamentEditor() {
 
   const setSlot = (slot, team) => setDraft((d) => d.map((v, i) => (i === slot ? team : v)));
 
-  const apply = () => handleTournamentDrawsChange({ [selected]: draft });
+  const apply = () => {
+    handleTournamentDrawsChange({ [selected]: draft });
+    toast.success(t('tournamentApplied'));
+  };
   const restoreAll = async () => {
     const ok = await confirm({
       message: t('confirmRestoreAllDraws'),

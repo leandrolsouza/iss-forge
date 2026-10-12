@@ -446,6 +446,8 @@ export default {
   menuRedo: 'Redo',
   toolbarUndo: 'Undo (Ctrl+Z)',
   toolbarRedo: 'Redo (Ctrl+Y)',
+  toolbarOpen: 'Open ROM (Ctrl+O)',
+  toolbarSave: 'Save ROM (Ctrl+S)',
   menuView: 'View',
   menuHelp: 'Help',
   menuAbout: 'About ISS Forge',
@@ -488,6 +490,28 @@ export default {
     'Importing texts from a JSON file replaces the current ROM texts (training, menus, screens, scenarios, descriptions and title screen).',
   confirmClearRecents: 'Clear the recent ROMs list?',
   confirmDiscardDraft: 'There are changes that were not applied yet. Discard them?',
+
+  // Toasts
+  toastClose: 'Close notification',
+  toastRomInvalid: '"{file}" does not look like an ISS ROM.',
+  toastRomLoadFailed: 'Could not open "{file}".',
+  toastValidation: 'ROM saved with issues: {errors} error(s), {warnings} warning(s).',
+  toastValidationMore: '...and {count} more.',
+  toastSaved: 'ROM saved: {file}',
+  toastDownloaded: 'ROM downloaded: {file}',
+  toastSaveFailed: 'Could not save the ROM.',
+  toastExported: 'Exported: {file}',
+  toastImportFailed: 'Could not import the file.',
+  toastImportSingleTeam: 'Pick a file with a single team.',
+  toastTeamImported: '{name} imported into slot {slot}.',
+  tournamentApplied: 'Draw applied.',
+
+  // Tabs & navigation
+  closeTab: 'Close',
+  closeTabHint: 'Close (Ctrl+W, middle click)',
+  teamSelectorSearch: 'Search team...',
+  teamSelectorNoMatch: 'No team found',
+  collapseSidebar: 'Collapse',
 
   // Export Patch
   toolbarExportPatch: 'Export BPS/IPS Patch (Ctrl+E)',

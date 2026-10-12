@@ -8,7 +8,7 @@ import useHistory from './useHistory';
 import { isElectron } from '../utils/fileHelpers';
 import * as electronBridge from '../services/electronBridge';
 
-export default function useRomState() {
+export default function useRomState({ toast, t } = {}) {
   const [romParser, setRomParser] = useState(null);
   const romParserRef = useRef(null);
   const [romInfo, setRomInfo] = useState(null);
@@ -68,6 +68,7 @@ export default function useRomState() {
 
           if (!validation.isValid) {
             setStatusMessage(`Error: ${validation.message}`);
+            toast?.error(t('toastRomInvalid', { file: fileName }), { detail: validation.message });
             setLoading(false);
             return;
           }
@@ -93,18 +94,19 @@ export default function useRomState() {
 
           if (allTeams.length > 0) {
             setSelectedTeamIndex(0);
-            setOpenTabs([{ id: 'players', label: 'Players' }]);
+            setOpenTabs([{ id: 'players', label: 'editorPlayers' }]);
             setActiveTab('players');
           }
         } catch (err) {
           console.error('[ROM] Failed to load:', err);
           setStatusMessage(`Error: ${err.message}`);
+          toast?.error(t('toastRomLoadFailed', { file: fileName }), { detail: err.message });
         } finally {
           setLoading(false);
         }
       }, 50);
     },
-    [history, setScenarios, setMatchPalettes],
+    [history, setScenarios, setMatchPalettes, toast, t],
   );
 
   /**
@@ -237,7 +239,7 @@ export default function useRomState() {
     (teamIndex) => {
       setSelectedTeamIndex(teamIndex);
       if (!openTabs.find((t) => t.id === 'players')) {
-        setOpenTabs((prev) => [...prev, { id: 'players', label: 'Players' }]);
+        setOpenTabs((prev) => [...prev, { id: 'players', label: 'editorPlayers' }]);
       }
       if (!activeTab || !openTabs.find((t) => t.id === activeTab)) {
         setActiveTab('players');

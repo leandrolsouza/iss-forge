@@ -12,6 +12,8 @@ const Icon = ({ children, size = 16, className = '' }) => (
     fill="currentColor"
     className={`iss-icon ${className}`}
     xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
   >
     {children}
   </svg>
@@ -86,6 +88,14 @@ export const IconFlagDesign = ({ size }) => (
 export const IconTeamName = ({ size }) => (
   <Icon size={size}>
     <path d="M1 3h14v1H1V3zm2 3h10v1H3V6zm1 3h8v1H4V9zm2 3h4v1H6v-1z" />
+  </Icon>
+);
+
+/** Speech bubble with text lines (in-game texts) */
+export const IconGameText = ({ size }) => (
+  <Icon size={size}>
+    <path d="M1.5 2h13l.5.5v8l-.5.5H8.207L5.354 13.854 4.5 13.5V11h-3l-.5-.5v-8l.5-.5zM2 3v7h3l.5.5v1.793l2.146-2.147L8 10h6V3H2z" />
+    <path d="M4 5h8v1H4V5zm0 2h5v1H4V7z" />
   </Icon>
 );
 

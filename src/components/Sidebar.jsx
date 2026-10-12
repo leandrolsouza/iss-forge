@@ -2,29 +2,10 @@ import React, { useState } from 'react';
 import { useI18n } from '../i18n';
 import { useTheme } from '../theme/ThemeProvider';
 import { useSettings } from '../context/SettingsContext';
-import {
-  IconPlayers,
-  IconFormation,
-  IconUniform,
-  IconHairSkin,
-  IconFlag,
-  IconFlagDesign,
-  IconTeamName,
-  IconOverview,
-  IconCompare,
-  IconScenario,
-  IconTrophy,
-  IconPitch,
-  IconTitleScreen,
-  IconMenu,
-  IconSun,
-  IconMoon,
-  IconChevron,
-  IconInfo,
-  IconSparkle,
-} from './Icons';
+import { IconSun, IconMoon, IconChevron, IconInfo, IconMenu } from './Icons';
+import { EDITORS } from './editors';
 
-export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
+export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleCollapse }) {
   const { t, lang, switchLang, languages } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { settings: appSettings } = useSettings();
@@ -39,281 +20,84 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
     }));
   };
 
+  const editors = EDITORS.filter((e) => !e.ai || appSettings.aiEnabled);
+  const open = (e) => onOpenTab(e.id, t(e.labelKey));
+
   if (collapsed) {
     return (
-      <div className="sidebar sidebar-collapsed">
+      <nav className="sidebar sidebar-collapsed" aria-label={t('editors')}>
         <div className="sidebar-icons">
-          <button className="sidebar-icon-btn" onClick={onToggleCollapse} title={t('expand')}>
+          <button
+            className="sidebar-icon-btn"
+            onClick={onToggleCollapse}
+            title={t('expand')}
+            aria-label={t('expand')}
+          >
             <IconMenu size={20} />
           </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('players', t('editorPlayers'))}
-            title={t('editorPlayers')}
-          >
-            <IconPlayers size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('formation', t('editorFormation'))}
-            title={t('editorFormation')}
-          >
-            <IconFormation size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('uniforms', t('editorUniforms'))}
-            title={t('editorUniforms')}
-          >
-            <IconUniform size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('hairskin', t('editorHairSkin'))}
-            title={t('editorHairSkin')}
-          >
-            <IconHairSkin size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('flagcolors', t('editorFlagColors'))}
-            title={t('editorFlagColors')}
-          >
-            <IconFlag size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('flagdesign', t('editorFlagDesign'))}
-            title={t('editorFlagDesign')}
-          >
-            <IconFlagDesign size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('teamname', t('editorTeamName'))}
-            title={t('editorTeamName')}
-          >
-            <IconTeamName size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('preview', t('editorPreview'))}
-            title={t('editorPreview')}
-          >
-            <IconOverview size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('compare', t('editorCompare'))}
-            title={t('editorCompare')}
-          >
-            <IconCompare size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('scenarios', t('editorScenarios'))}
-            title={t('editorScenarios')}
-          >
-            <IconScenario size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('tournaments', t('editorTournaments'))}
-            title={t('editorTournaments')}
-          >
-            <IconTrophy size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('gameTexts', t('editorGameTexts'))}
-            title={t('editorGameTexts')}
-          >
-            <IconTeamName size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('matchPalettes', t('editorMatchPalettes'))}
-            title={t('editorMatchPalettes')}
-          >
-            <IconPitch size={20} />
-          </button>
-          <button
-            className="sidebar-icon-btn"
-            onClick={() => onOpenTab('titleScreen', t('editorTitleScreen'))}
-            title={t('editorTitleScreen')}
-          >
-            <IconTitleScreen size={20} />
-          </button>
-          {appSettings.aiEnabled && (
+          {editors.map((e) => (
             <button
-              className="sidebar-icon-btn"
-              onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
-              title={t('editorAiGenerator')}
+              key={e.id}
+              className={`sidebar-icon-btn ${activeTab === e.id ? 'selected' : ''}`}
+              onClick={() => open(e)}
+              title={t(e.labelKey)}
+              aria-label={t(e.labelKey)}
+              aria-current={activeTab === e.id ? 'page' : undefined}
             >
-              <IconSparkle size={20} />
+              <e.Icon size={20} />
             </button>
-          )}
+          ))}
         </div>
-      </div>
+      </nav>
     );
   }
 
   return (
-    <div className="sidebar">
+    <nav className="sidebar" aria-label={t('explorer')}>
       <div className="sidebar-header">
         <span className="sidebar-title">{t('explorer')}</span>
-        <button className="sidebar-collapse-btn" onClick={onToggleCollapse} title="Recolher">
+        <button
+          className="sidebar-collapse-btn"
+          onClick={onToggleCollapse}
+          title={t('collapseSidebar')}
+          aria-label={t('collapseSidebar')}
+        >
           <IconMenu size={16} />
         </button>
       </div>
 
       {/* Editors Section */}
       <div className="sidebar-section">
-        <div className="sidebar-section-header" onClick={() => toggleSection('editors')}>
+        <button
+          className="sidebar-section-header"
+          onClick={() => toggleSection('editors')}
+          aria-expanded={expandedSections.editors}
+        >
           <span className={`chevron ${expandedSections.editors ? 'expanded' : ''}`}>
             <IconChevron expanded={expandedSections.editors} />
           </span>
           <span className="section-label">{t('editors')}</span>
-        </div>
+        </button>
         {expandedSections.editors && (
           <div className="sidebar-section-content">
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('players', t('editorPlayers'))}
-            >
-              <span className="item-icon">
-                <IconPlayers size={14} />
-              </span>
-              <span>{t('editorPlayers')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('formation', t('editorFormation'))}
-            >
-              <span className="item-icon">
-                <IconFormation size={14} />
-              </span>
-              <span>{t('editorFormation')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('uniforms', t('editorUniforms'))}
-            >
-              <span className="item-icon">
-                <IconUniform size={14} />
-              </span>
-              <span>{t('editorUniforms')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('hairskin', t('editorHairSkin'))}
-            >
-              <span className="item-icon">
-                <IconHairSkin size={14} />
-              </span>
-              <span>{t('editorHairSkin')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('flagcolors', t('editorFlagColors'))}
-            >
-              <span className="item-icon">
-                <IconFlag size={14} />
-              </span>
-              <span>{t('editorFlagColors')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('flagdesign', t('editorFlagDesign'))}
-            >
-              <span className="item-icon">
-                <IconFlagDesign size={14} />
-              </span>
-              <span>{t('editorFlagDesign')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('teamname', t('editorTeamName'))}
-            >
-              <span className="item-icon">
-                <IconTeamName size={14} />
-              </span>
-              <span>{t('editorTeamName')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('preview', t('editorPreview'))}
-            >
-              <span className="item-icon">
-                <IconOverview size={14} />
-              </span>
-              <span>{t('editorPreview')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('compare', t('editorCompare'))}
-            >
-              <span className="item-icon">
-                <IconCompare size={14} />
-              </span>
-              <span>{t('editorCompare')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('scenarios', t('editorScenarios'))}
-            >
-              <span className="item-icon">
-                <IconScenario size={14} />
-              </span>
-              <span>{t('editorScenarios')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('tournaments', t('editorTournaments'))}
-            >
-              <span className="item-icon">
-                <IconTrophy size={14} />
-              </span>
-              <span>{t('editorTournaments')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('gameTexts', t('editorGameTexts'))}
-            >
-              <span className="item-icon">
-                <IconTeamName size={14} />
-              </span>
-              <span>{t('editorGameTexts')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('matchPalettes', t('editorMatchPalettes'))}
-            >
-              <span className="item-icon">
-                <IconPitch size={14} />
-              </span>
-              <span>{t('editorMatchPalettes')}</span>
-            </div>
-            <div
-              className="sidebar-item editor-item"
-              onClick={() => onOpenTab('titleScreen', t('editorTitleScreen'))}
-            >
-              <span className="item-icon">
-                <IconTitleScreen size={14} />
-              </span>
-              <span>{t('editorTitleScreen')}</span>
-            </div>
-            {appSettings.aiEnabled && (
-              <div
-                className="sidebar-item editor-item"
-                onClick={() => onOpenTab('ai', t('editorAiGenerator'))}
-              >
-                <span className="item-icon">
-                  <IconSparkle size={14} />
-                </span>
-                <span>{t('editorAiGenerator')}</span>
-              </div>
-            )}
+            {editors.map((e, i) => (
+              <React.Fragment key={e.id}>
+                {/* visual break between team editors and whole-ROM editors */}
+                {i > 0 && editors[i - 1].scope !== e.scope && (
+                  <div className="sidebar-divider" role="separator" />
+                )}
+                <button
+                  className={`sidebar-item editor-item ${activeTab === e.id ? 'selected' : ''}`}
+                  onClick={() => open(e)}
+                  aria-current={activeTab === e.id ? 'page' : undefined}
+                >
+                  <span className="item-icon">
+                    <e.Icon size={14} />
+                  </span>
+                  <span>{t(e.labelKey)}</span>
+                </button>
+              </React.Fragment>
+            ))}
           </div>
         )}
       </div>
@@ -324,6 +108,7 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           className="sidebar-setting-btn"
           onClick={toggleTheme}
           title={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
+          aria-label={theme === 'dark' ? t('lightTheme') : t('darkTheme')}
         >
           {theme === 'dark' ? <IconSun size={14} /> : <IconMoon size={14} />}
         </button>
@@ -331,6 +116,7 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           className="sidebar-setting-btn"
           onClick={() => onOpenTab('about', t('aboutTitle'))}
           title={t('aboutTitle')}
+          aria-label={t('aboutTitle')}
         >
           <IconInfo size={14} />
         </button>
@@ -338,9 +124,11 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           <button
             className={`lang-flag-btn ${lang === 'pt-BR' ? 'active' : ''}`}
             onClick={() => switchLang('pt-BR')}
-            title="Portugues"
+            title={languages['pt-BR']}
+            aria-label={languages['pt-BR']}
+            aria-pressed={lang === 'pt-BR'}
           >
-            <svg width="20" height="14" viewBox="0 0 20 14">
+            <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true">
               <rect width="20" height="14" fill="#009739" />
               <polygon points="10,1 19,7 10,13 1,7" fill="#FEDD00" />
               <circle cx="10" cy="7" r="3" fill="#012169" />
@@ -349,9 +137,11 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           <button
             className={`lang-flag-btn ${lang === 'en' ? 'active' : ''}`}
             onClick={() => switchLang('en')}
-            title="English"
+            title={languages.en}
+            aria-label={languages.en}
+            aria-pressed={lang === 'en'}
           >
-            <svg width="20" height="14" viewBox="0 0 20 14">
+            <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true">
               <rect width="20" height="14" fill="#012169" />
               <path d="M0,0 L20,14 M20,0 L0,14" stroke="#fff" strokeWidth="2.5" />
               <path d="M0,0 L20,14 M20,0 L0,14" stroke="#C8102E" strokeWidth="1.5" />
@@ -361,6 +151,6 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
           </button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }

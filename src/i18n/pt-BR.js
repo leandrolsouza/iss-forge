@@ -447,6 +447,8 @@ export default {
   menuRedo: 'Refazer',
   toolbarUndo: 'Desfazer (Ctrl+Z)',
   toolbarRedo: 'Refazer (Ctrl+Y)',
+  toolbarOpen: 'Abrir ROM (Ctrl+O)',
+  toolbarSave: 'Salvar ROM (Ctrl+S)',
   menuView: 'Visualizar',
   menuHelp: 'Ajuda',
   menuAbout: 'Sobre ISS Forge',
@@ -490,6 +492,28 @@ export default {
     'Importar textos de um JSON vai substituir os textos atuais da ROM (treino, menus, telas, cenarios, descricoes e tela titulo).',
   confirmClearRecents: 'Limpar a lista de ROMs recentes?',
   confirmDiscardDraft: 'Ha alteracoes que ainda nao foram aplicadas. Descarta-las?',
+
+  // Toasts
+  toastClose: 'Fechar notificacao',
+  toastRomInvalid: '"{file}" nao parece ser uma ROM do ISS.',
+  toastRomLoadFailed: 'Nao foi possivel abrir "{file}".',
+  toastValidation: 'ROM salva com avisos: {errors} erro(s), {warnings} alerta(s).',
+  toastValidationMore: '...e mais {count}.',
+  toastSaved: 'ROM salva: {file}',
+  toastDownloaded: 'ROM baixada: {file}',
+  toastSaveFailed: 'Nao foi possivel salvar a ROM.',
+  toastExported: 'Exportado: {file}',
+  toastImportFailed: 'Falha ao importar o arquivo.',
+  toastImportSingleTeam: 'Escolha um arquivo com um unico time.',
+  toastTeamImported: '{name} importado para o slot {slot}.',
+  tournamentApplied: 'Sorteio aplicado.',
+
+  // Tabs & navigation
+  closeTab: 'Fechar',
+  closeTabHint: 'Fechar (Ctrl+W, clique do meio)',
+  teamSelectorSearch: 'Buscar time...',
+  teamSelectorNoMatch: 'Nenhum time encontrado',
+  collapseSidebar: 'Recolher',
 
   // Export Patch
   toolbarExportPatch: 'Exportar Patch BPS/IPS (Ctrl+E)',

@@ -4,6 +4,7 @@ import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/f
 import { NIBBLE_STATS, INDEX_STATS, clampStat, clampIndex } from '../rom/playerStats';
 import { useI18n } from '../i18n';
 import { IconPlayers } from './Icons';
+import DraftInput from './DraftInput';
 
 /**
  * Editable attribute columns, in table order.
@@ -42,21 +43,24 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
 
   const player = team.players[selectedPlayer];
 
+  // Text/number fields commit on Enter/blur (see DraftInput): one undo step per edit
+  const sanitizeName = (value) => value.slice(0, 8).replace(/[^A-Za-z0-9 .'"/]/g, '');
+
   const handleNameChange = (playerIndex, value) => {
-    // Limit to 8 chars, allow letters, digits, and supported special chars
-    const sanitized = value.slice(0, 8).replace(/[^A-Za-z0-9 .'"/]/g, '');
-    onPlayerChange(teamIndex, playerIndex, 'name', sanitized);
+    onPlayerChange(teamIndex, playerIndex, 'name', sanitizeName(value));
   };
 
   const handleNumberChange = (playerIndex, value) => {
-    const num = Math.max(1, Math.min(16, parseInt(value) || 1));
-    onPlayerChange(teamIndex, playerIndex, 'number', num);
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) return; // emptied field: keep the stored number
+    onPlayerChange(teamIndex, playerIndex, 'number', Math.max(1, Math.min(16, parsed)));
   };
 
   const handleStatChange = (playerIndex, field, value) => {
     if (INDEX_STATS.includes(field)) {
       onPlayerChange(teamIndex, playerIndex, field, clampIndex(value));
     } else if (field === 'stamina' || NIBBLE_STATS.includes(field)) {
+      if (value === '' || Number.isNaN(parseInt(value, 10))) return;
       onPlayerChange(teamIndex, playerIndex, field, clampStat(value));
     }
   };
@@ -162,22 +166,26 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                       </span>
                     </td>
                     <td className="col-num">
-                      <input
+                      <DraftInput
                         type="number"
                         className="input-mini"
                         value={p.number}
                         min={1}
                         max={16}
-                        onChange={(e) => handleNumberChange(idx, e.target.value)}
+                        aria-label={`${t('num')} - ${p.name || idx + 1}`}
+                        onCommit={(v) => handleNumberChange(idx, v)}
                       />
                     </td>
                     <td className="col-name">
-                      <input
+                      <DraftInput
                         type="text"
                         className="input-name"
                         value={p.name}
                         maxLength={8}
-                        onChange={(e) => handleNameChange(idx, e.target.value)}
+                        spellCheck={false}
+                        aria-label={`${t('name')} - ${idx + 1}`}
+                        sanitize={sanitizeName}
+                        onCommit={(v) => handleNameChange(idx, v)}
                       />
                     </td>
                     {STAT_COLUMNS.map((c) => (
@@ -186,6 +194,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                           <select
                             className="input-stat"
                             value={p[c.field] ?? 0}
+                            aria-label={`${t(c.label)} - ${p.name || idx + 1}`}
                             onChange={(e) => handleStatChange(idx, c.field, e.target.value)}
                           >
                             {SHOOTING_VALUES.map((val, i) => (
@@ -195,13 +204,14 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                             ))}
                           </select>
                         ) : (
-                          <input
+                          <DraftInput
                             type="number"
                             className="input-mini"
                             value={p[c.field] ?? 1}
                             min={1}
                             max={16}
-                            onChange={(e) => handleStatChange(idx, c.field, e.target.value)}
+                            aria-label={`${t(c.label)} - ${p.name || idx + 1}`}
+                            onCommit={(v) => handleStatChange(idx, c.field, v)}
                           />
                         )}
                       </td>
@@ -210,6 +220,7 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                       <select
                         className="input-hair"
                         value={p.hairStyle}
+                        aria-label={`${t('hair')} - ${p.name || idx + 1}`}
                         onChange={(e) => handleHairChange(idx, e.target.value)}
                       >
                         {HAIR_STYLES.map((h) => (

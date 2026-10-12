@@ -269,10 +269,14 @@ export default function useRomHandlers({
     [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
+  /**
+   * Paint one pixel. `newStep` = false continues the current brush stroke
+   * (mouse still down), so a whole stroke is one undo step.
+   */
   const handleFlagDesignChange = useCallback(
-    (teamIndex, row, col, colorIdx) => {
+    (teamIndex, row, col, colorIdx, newStep = true) => {
       if (!romParser) return;
-      pushSnapshot(teams);
+      if (newStep) pushSnapshot(teams);
 
       setTeams((prev) => {
         const newTeams = [...prev];
@@ -901,7 +905,6 @@ export default function useRomHandlers({
   const handleImportTeam = useCallback(
     async (teamIndex) => {
       if (!romParser) return;
-      pushSnapshot(teams);
 
       const data = await readJsonFile();
       if (!data) return;
@@ -918,6 +921,8 @@ export default function useRomHandlers({
         return;
       }
 
+      // Snapshot only once there is something to apply (no empty undo steps)
+      pushSnapshot(teams);
       applyImportedTeam(romParser, teamIndex, teamData);
 
       // Reload team from ROM to get fresh state

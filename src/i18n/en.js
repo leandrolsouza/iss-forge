@@ -467,6 +467,28 @@ export default {
   noEditorOpenHint: 'Pick an editor from the Explorer panel on the left.',
   noEditorOpenPlayers: 'Open Players',
 
+  // Confirmations
+  confirmTitle: 'Confirm',
+  confirmOk: 'Continue',
+  confirmCopyBtn: 'Copy',
+  confirmImportBtn: 'Import',
+  exportJson: 'Export JSON',
+  importJson: 'Import JSON',
+  confirmCopyTeam:
+    'Copy "{from}" over "{to}"?\nAll of "{to}" (players, kits, flag, name) will be replaced.',
+  confirmImportTeam: 'Importing a JSON file will replace all data of "{team}".',
+  confirmFlagFill: 'Paint the whole flag with "{color}"? The current design will be lost.',
+  confirmFlagClear: 'Erase the whole flag design?',
+  confirmFormationPreset: 'Apply the "{name}" formation? The current positions will be replaced.',
+  confirmFormationRestore: "Go back to this team's original formation?",
+  confirmRestoreAllDraws: 'Restore the 32 original draws? All tournament changes will be lost.',
+  confirmTitleRestoreAll:
+    'Restore the whole title screen (logo, background, colours, players and texts) to the original?',
+  confirmImportTexts:
+    'Importing texts from a JSON file replaces the current ROM texts (training, menus, screens, scenarios, descriptions and title screen).',
+  confirmClearRecents: 'Clear the recent ROMs list?',
+  confirmDiscardDraft: 'There are changes that were not applied yet. Discard them?',
+
   // Export Patch
   toolbarExportPatch: 'Export BPS/IPS Patch (Ctrl+E)',
   toolbarTestEmulator: 'Test in emulator (F5)',

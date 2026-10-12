@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useConfirm, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, TITLE_SCREEN } from '../rom/constants';
 import { adjustPalette, GRASS_PRESETS } from '../rom/palettes';
@@ -329,6 +330,7 @@ function TitleTexts({ t, texts, original, onApply }) {
 
   return (
     <div className="ts-texts">
+      <DraftGuard dirty={changed} />
       <label className="mp-field ts-field">
         <span>{t('tsCopyrightText')}</span>
         <textarea
@@ -824,6 +826,7 @@ function ObjectsEditor({ t, objects, original, setDraft, onCommit }) {
 
 export default function TitleScreenEditor() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const {
     romParser,
     titleScreen,
@@ -881,7 +884,13 @@ export default function TitleScreenEditor() {
     });
     handleTitleScreenChange(updates);
   };
-  const restoreAll = () => {
+  const restoreAll = async () => {
+    const ok = await confirm({
+      message: t('confirmTitleRestoreAll'),
+      confirmLabel: t('tsRestoreAll'),
+      danger: true,
+    });
+    if (!ok) return;
     const logoParts = ['logoTop', 'logoBottom'];
     const imported = titleScreen.logo?.original === false;
     // the logo (blocks + its colours) first, then everything else

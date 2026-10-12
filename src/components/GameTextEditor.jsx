@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useConfirm, useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { GAME_TEXTS } from '../rom/constants';
 import {
@@ -96,6 +97,8 @@ function previewLines(item, text) {
 
 export default function GameTextEditor() {
   const { t } = useI18n();
+  const confirm = useConfirm();
+  const guardDrafts = useGuardDrafts();
   const { romParser, gameTexts, handleGameTextsChange, handleExportTexts, handleImportTexts } =
     useRom();
   const [importResult, setImportResult] = useState(null);
@@ -141,8 +144,27 @@ export default function GameTextEditor() {
 
   const groups = [...new Set(items.map((i) => i.group))];
 
+  // Menus / Screens panels keep their draft locally and lose it when unmounted
+  const switchMode = async (next) => {
+    if (next === mode) return;
+    if (mode !== 'training' && !(await guardDrafts())) return;
+    setMode(next);
+  };
+
+  const importTexts = async () => {
+    const ok = await confirm({
+      message: t('confirmImportTexts'),
+      confirmLabel: t('confirmImportBtn'),
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await handleImportTexts();
+    if (res) setImportResult(res);
+  };
+
   return (
     <div className="editor-panel scenario-editor game-text-editor">
+      <DraftGuard dirty={dirty} />
       <div className="editor-header">
         <div className="editor-header-title">
           <span className="editor-icon">
@@ -154,19 +176,19 @@ export default function GameTextEditor() {
         <div className="gt-mode">
           <button
             className={`kit-btn ${mode === 'training' ? 'active' : ''}`}
-            onClick={() => setMode('training')}
+            onClick={() => switchMode('training')}
           >
             {t('gtModeTraining')}
           </button>
           <button
             className={`kit-btn ${mode === 'menus' ? 'active' : ''}`}
-            onClick={() => setMode('menus')}
+            onClick={() => switchMode('menus')}
           >
             {t('gtModeMenus')}
           </button>
           <button
             className={`kit-btn ${mode === 'screens' ? 'active' : ''}`}
-            onClick={() => setMode('screens')}
+            onClick={() => switchMode('screens')}
           >
             {t('gtModeScreens')}
           </button>
@@ -174,14 +196,7 @@ export default function GameTextEditor() {
           <button className="kit-btn" onClick={handleExportTexts} title={t('gtExportHelp')}>
             {t('gtExportJson')}
           </button>
-          <button
-            className="kit-btn"
-            title={t('gtImportHelp')}
-            onClick={async () => {
-              const res = await handleImportTexts();
-              if (res) setImportResult(res);
-            }}
-          >
+          <button className="kit-btn" title={t('gtImportHelp')} onClick={importTexts}>
             {t('gtImportJson')}
           </button>
         </div>

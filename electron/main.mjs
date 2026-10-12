@@ -209,8 +209,10 @@ function createMenu() {
           click: () => mainWindow.webContents.send('menu:redo'),
         },
         { type: 'separator' },
+        { label: 'Recortar', accelerator: 'CmdOrCtrl+X', role: 'cut' },
         { label: 'Copiar', accelerator: 'CmdOrCtrl+C', role: 'copy' },
         { label: 'Colar', accelerator: 'CmdOrCtrl+V', role: 'paste' },
+        { label: 'Selecionar tudo', accelerator: 'CmdOrCtrl+A', role: 'selectAll' },
       ],
     },
     {

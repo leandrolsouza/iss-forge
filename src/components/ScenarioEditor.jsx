@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, SCENARIO_DATA } from '../rom/constants';
 import {
@@ -28,6 +29,7 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, Number.isFinite(v) ? 
 
 export default function ScenarioEditor() {
   const { t } = useI18n();
+  const guardDrafts = useGuardDrafts();
   const { romParser, scenarios, teams, handleScenarioChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState(null);
@@ -102,6 +104,7 @@ export default function ScenarioEditor() {
 
   return (
     <div className="editor-panel scenario-editor">
+      <DraftGuard dirty={dirty} />
       <div className="editor-header">
         <div className="editor-header-title">
           <span className="editor-icon">
@@ -118,7 +121,9 @@ export default function ScenarioEditor() {
             <button
               key={i}
               className={`scenario-card ${i === selected ? 'active' : ''}`}
-              onClick={() => {
+              onClick={async () => {
+                if (i === selected) return;
+                if (dirty && !(await guardDrafts())) return;
                 setSelected(i);
                 setMessage(null);
               }}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useConfirm, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, TOURNAMENT_DRAWS } from '../rom/constants';
 import { drawGroups, drawCoverage, validateDraws, SELECTABLE_TEAMS } from '../rom/tournament';
@@ -21,6 +22,7 @@ function shuffle(list) {
 
 export default function TournamentEditor() {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const { romParser, teams, tournamentDraws, handleTournamentDrawsChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState(null);
@@ -57,11 +59,32 @@ export default function TournamentEditor() {
   const setSlot = (slot, team) => setDraft((d) => d.map((v, i) => (i === slot ? team : v)));
 
   const apply = () => handleTournamentDrawsChange({ [selected]: draft });
-  const restoreAll = () =>
-    handleTournamentDrawsChange(Object.fromEntries(originals.map((d, i) => [i, d])));
+  const restoreAll = async () => {
+    const ok = await confirm({
+      message: t('confirmRestoreAllDraws'),
+      confirmLabel: t('tournamentRestoreAll'),
+      danger: true,
+    });
+    if (ok) handleTournamentDrawsChange(Object.fromEntries(originals.map((d, i) => [i, d])));
+  };
+
+  // Switching draw drops the unapplied draft: ask first
+  const selectDraw = async (index) => {
+    if (index === selected) return;
+    if (dirty) {
+      const ok = await confirm({
+        message: t('confirmDiscardDraft'),
+        confirmLabel: t('scenarioDiscard'),
+        danger: true,
+      });
+      if (!ok) return;
+    }
+    setSelected(index);
+  };
 
   return (
     <div className="editor-panel scenario-editor tournament-editor">
+      <DraftGuard dirty={dirty} />
       <div className="editor-header">
         <div className="editor-header-title">
           <span className="editor-icon">
@@ -78,7 +101,7 @@ export default function TournamentEditor() {
             <button
               key={i}
               className={`scenario-card tournament-card ${i === selected ? 'active' : ''}`}
-              onClick={() => setSelected(i)}
+              onClick={() => selectDraw(i)}
               title={drawGroups(d)
                 .map((g, gi) => `${GROUP_LETTERS[gi]}: ${g.map(teamName).join(', ')}`)
                 .join('\n')}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { SCREEN_TEXTS } from '../rom/constants';
 import {
@@ -62,6 +63,7 @@ export default function ScreenTextPanel() {
 
   return (
     <div className="scenario-body">
+      <DraftGuard dirty={dirty} />
       <div className="scenario-list tournament-list">
         {SCREEN_TEXTS.map((s) => (
           <button

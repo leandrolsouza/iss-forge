@@ -38,7 +38,32 @@ import {
   IconSettings,
 } from './components/Icons';
 import { useRom } from './context/RomContext';
+import { useGuardDrafts } from './context/ConfirmContext';
 import { useI18n } from './i18n';
+
+/** Editors that are not tied to the selected team */
+const GLOBAL_TABS = new Set([
+  'scenarios',
+  'tournaments',
+  'gameTexts',
+  'matchPalettes',
+  'titleScreen',
+  'settings',
+  'about',
+  'compare',
+]);
+
+const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'url', 'email', 'password', '']);
+
+/** True when keyboard focus is in a field with its own text undo/redo */
+function isEditableFocused() {
+  const el = document.activeElement;
+  if (!el) return false;
+  if (el.isContentEditable || el.tagName === 'TEXTAREA') return true;
+  return (
+    el.tagName === 'INPUT' && TEXT_INPUT_TYPES.has((el.getAttribute('type') || '').toLowerCase())
+  );
+}
 
 export default function App() {
   const { t, lang } = useI18n();
@@ -97,6 +122,40 @@ export default function App() {
   }, [romParser]);
   const closePatchModal = useCallback(() => setShowPatchModal(false), []);
 
+  // Navigation that unmounts the current editor asks before dropping an unapplied draft
+  const guardDrafts = useGuardDrafts();
+  const goToTab = useCallback(
+    async (tabId) => {
+      if (tabId !== activeTab && !(await guardDrafts())) return;
+      setActiveTab(tabId);
+    },
+    [activeTab, guardDrafts, setActiveTab],
+  );
+  const openTabGuarded = useCallback(
+    async (tabId, label) => {
+      if (tabId !== activeTab && !(await guardDrafts())) return;
+      openTab(tabId, label);
+    },
+    [activeTab, guardDrafts, openTab],
+  );
+  const closeTabGuarded = useCallback(
+    async (tabId) => {
+      // only the active tab is mounted, so only it can hold a draft
+      if (tabId === activeTab && !(await guardDrafts())) return;
+      closeTab(tabId);
+    },
+    [activeTab, guardDrafts, closeTab],
+  );
+  const selectTeamGuarded = useCallback(
+    async (index) => {
+      // global editors keep their drafts across team changes
+      if (index !== selectedTeamIndex && !GLOBAL_TABS.has(activeTab) && !(await guardDrafts()))
+        return;
+      selectTeam(index);
+    },
+    [activeTab, selectedTeamIndex, guardDrafts, selectTeam],
+  );
+
   useEffect(() => {
     if (!isElectron()) return;
     window.electronAPI.onMenuExportPatch?.(() => openPatchModal());
@@ -113,14 +172,20 @@ export default function App() {
 
   // IPC listeners and keyboard shortcuts
   useEffect(() => {
+    // Inside a text field Ctrl+Z / Ctrl+Y belong to the field (native text undo),
+    // not to the ROM history
+    const undo = () => (isEditableFocused() ? document.execCommand('undo') : performUndo());
+    const redo = () => (isEditableFocused() ? document.execCommand('redo') : performRedo());
+
     if (isElectron()) {
       window.electronAPI.onRomLoaded((data) =>
         requestLoadRom(new Uint8Array(data.data), data.name, data.path || null),
       );
       window.electronAPI.onMenuSave(() => handleSave());
       window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
-      window.electronAPI.onMenuUndo(() => performUndo());
-      window.electronAPI.onMenuRedo(() => performRedo());
+      window.electronAPI.onMenuUndo(undo);
+      window.electronAPI.onMenuRedo(redo);
+      window.electronAPI.onMenuAbout?.(() => openTabGuarded('about', t('aboutTitle')));
 
       // Cancel loading if dialog was dismissed without selecting a file
       window.electronAPI.onRomLoadCancelled?.(() => setLoading(false));
@@ -140,12 +205,12 @@ export default function App() {
         e.preventDefault();
         openPatchModal();
       }
-      // Undo: Ctrl+Z (web fallback)
+      // Undo / redo (web fallback): leave text fields to the browser's own undo
+      if (isEditableFocused()) return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         performUndo();
       }
-      // Redo: Ctrl+Shift+Z or Ctrl+Y (web fallback)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         performRedo();
@@ -166,6 +231,7 @@ export default function App() {
         'rom:save-as-path',
         'menu:undo',
         'menu:redo',
+        'menu:about',
         'rom:loadCancelled',
       ].forEach((channel) => window.electronAPI.removeAllListeners(channel));
     };
@@ -178,6 +244,8 @@ export default function App() {
     performUndo,
     performRedo,
     openPatchModal,
+    openTabGuarded,
+    t,
   ]);
 
   // Sync modified state to main process (for close guard)
@@ -380,7 +448,7 @@ export default function App() {
           </button>
           <button
             className="titlebar-btn"
-            onClick={() => openTab('settings', t('settingsTitle'))}
+            onClick={() => openTabGuarded('settings', t('settingsTitle'))}
             title={t('settingsTitle')}
           >
             <IconSettings size={16} />
@@ -397,7 +465,7 @@ export default function App() {
 
       <div className="app-body">
         <Sidebar
-          onOpenTab={openTab}
+          onOpenTab={openTabGuarded}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
@@ -406,15 +474,15 @@ export default function App() {
             <TabBar
               tabs={openTabs}
               activeTab={activeTab}
-              onSelectTab={setActiveTab}
-              onCloseTab={closeTab}
+              onSelectTab={goToTab}
+              onCloseTab={closeTabGuarded}
             />
           )}
           {teams.length > 0 && selectedTeamIndex !== null && (
             <TeamSelector
               teams={teams}
               selectedTeamIndex={selectedTeamIndex}
-              onSelectTeam={selectTeam}
+              onSelectTeam={selectTeamGuarded}
             />
           )}
           <div className="editor-area">{renderEditor()}</div>

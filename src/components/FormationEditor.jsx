@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { FORMATION_PRESETS, FORMATION_ROLES, FORMATION_DATA } from '../rom/constants';
 import {
   getFormationName,
@@ -35,6 +36,7 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 export default function FormationEditor({ team, teamIndex, onFormationChange, onSwapPlayers }) {
   const { t, lang } = useI18n();
   const { romParser } = useRom();
+  const confirm = useConfirm();
   const svgRef = useRef(null);
   const [draft, setDraft] = useState(team?.formation?.slots || []);
   const [selected, setSelected] = useState(1);
@@ -103,10 +105,22 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
   };
 
   // --- Actions ---
-  const applyPreset = () => commit(getPresetSlots(presetId));
+  const applyPreset = async () => {
+    const preset = FORMATION_PRESETS.find((p) => p.id === presetId);
+    const ok = await confirm({
+      message: t('confirmFormationPreset', { name: preset ? presetLabel(preset) : presetId }),
+      confirmLabel: t('formationApplyPreset'),
+    });
+    if (ok) commit(getPresetSlots(presetId));
+  };
 
-  const restoreOriginal = () => {
-    if (romParser) commit(romParser.readOriginalFormation(teamIndex));
+  const restoreOriginal = async () => {
+    if (!romParser) return;
+    const ok = await confirm({
+      message: t('confirmFormationRestore'),
+      confirmLabel: t('formationRestore'),
+    });
+    if (ok) commit(romParser.readOriginalFormation(teamIndex));
   };
 
   const mirror = () =>

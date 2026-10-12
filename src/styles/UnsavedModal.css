@@ -119,3 +119,16 @@
   background: var(--bg-hover, #2a2d2e);
   color: var(--text-primary, #cccccc);
 }
+
+.unsaved-btn-danger {
+  background: #c42b1c;
+  color: var(--text-white, #ffffff);
+}
+
+.unsaved-btn-danger:hover {
+  background: #d13a2b;
+}
+
+.unsaved-message {
+  white-space: pre-line;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
+import { useConfirm } from '../context/ConfirmContext';
 import { isElectron } from '../utils/fileHelpers';
 import { IconOpen, IconCartridge, IconUpload } from './Icons';
 
@@ -13,6 +14,7 @@ function isValidRomFile(file) {
 
 export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
   const { t } = useI18n();
+  const confirm = useConfirm();
   const [recentRoms, setRecentRoms] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [dragInvalid, setDragInvalid] = useState(false);
@@ -46,6 +48,12 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
 
   const handleClearRecents = async () => {
     if (!isElectron()) return;
+    const ok = await confirm({
+      message: t('confirmClearRecents'),
+      confirmLabel: t('recentRomsClear'),
+      danger: true,
+    });
+    if (!ok) return;
     await window.electronAPI.clearRecentRoms();
     setRecentRoms([]);
   };

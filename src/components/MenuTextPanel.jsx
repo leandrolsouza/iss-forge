@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import { menuTextLength, findInvalidMenuChars } from '../rom/menuScreens';
 
 /** Menu screens: edit the text runs of the compressed tilemaps */
 export default function MenuTextPanel() {
   const { t } = useI18n();
+  const guardDrafts = useGuardDrafts();
   const { menuScreens, handleMenuScreenChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState([]);
@@ -39,12 +41,15 @@ export default function MenuTextPanel() {
 
   return (
     <div className="scenario-body">
+      <DraftGuard dirty={dirty} />
       <div className="scenario-list tournament-list">
         {menuScreens.map((s, i) => (
           <button
             key={s.id}
             className={`scenario-card tournament-card ${i === selected ? 'active' : ''}`}
-            onClick={() => {
+            onClick={async () => {
+              if (i === selected) return;
+              if (dirty && !(await guardDrafts())) return;
               setSelected(i);
               setMessage(null);
             }}

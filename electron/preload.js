@@ -47,6 +47,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuRedo: (callback) => {
     ipcRenderer.on('menu:redo', () => callback());
   },
+  onMenuAbout: (callback) => {
+    ipcRenderer.on('menu:about', () => callback());
+  },
 
   // App state
   setModifiedState: (isModified) => ipcRenderer.send('rom:modifiedState', isModified),

@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { IconOverview } from './Icons';
 
 export default function TeamPreview({ team, teamIndex }) {
   const { t, lang } = useI18n();
+  const confirm = useConfirm();
   const { teams, handleExportTeam, handleImportTeam, handleCopyTeam } = useRom();
   const [copyTarget, setCopyTarget] = useState(teamIndex === 0 ? 1 : 0);
   useEffect(() => {
@@ -15,6 +17,27 @@ export default function TeamPreview({ team, teamIndex }) {
   if (!team || !team.players) {
     return <div className="editor-panel empty">{t('openRomToSee')}</div>;
   }
+
+  const copyToTarget = async () => {
+    const ok = await confirm({
+      message: t('confirmCopyTeam', {
+        from: team.name,
+        to: teams[copyTarget]?.name || copyTarget + 1,
+      }),
+      confirmLabel: t('confirmCopyBtn'),
+      danger: true,
+    });
+    if (ok) handleCopyTeam(teamIndex, copyTarget, false);
+  };
+
+  const importIntoTeam = async () => {
+    const ok = await confirm({
+      message: t('confirmImportTeam', { team: team.name }),
+      confirmLabel: t('confirmImportBtn'),
+      danger: true,
+    });
+    if (ok) handleImportTeam(teamIndex);
+  };
 
   const uniforms = team.uniforms?.home;
   const shirtColor = uniforms?.shirt?.[0]
@@ -63,10 +86,10 @@ export default function TeamPreview({ team, teamIndex }) {
         {/* Import/Export Actions */}
         <div className="preview-actions">
           <button className="kit-btn active" onClick={() => handleExportTeam(teamIndex)}>
-            Export JSON
+            {t('exportJson')}
           </button>
-          <button className="kit-btn" onClick={() => handleImportTeam(teamIndex)}>
-            Import JSON
+          <button className="kit-btn" onClick={importIntoTeam}>
+            {t('importJson')}
           </button>
           <span className="preview-actions-sep" />
           <select
@@ -86,7 +109,7 @@ export default function TeamPreview({ team, teamIndex }) {
           <button
             className="kit-btn"
             title={t('copyTeamHelp')}
-            onClick={() => handleCopyTeam(teamIndex, copyTarget, false)}
+            onClick={copyToTarget}
           >
             {t('copyTeamTo')}
           </button>

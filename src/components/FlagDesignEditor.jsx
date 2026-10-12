@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
+import { useConfirm } from '../context/ConfirmContext';
 import FlagTemplateSelector from './FlagTemplateSelector';
 import FlagImageImport from './FlagImageImport';
 import { IconFlagDesign } from './Icons';
@@ -19,6 +20,8 @@ export default function FlagDesignEditor({
   const [selectedColor, setSelectedColor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef(null);
+  const strokeStarted = useRef(false);
+  const confirm = useConfirm();
   const { t } = useI18n();
 
   const COLOR_LABELS = [
@@ -43,42 +46,54 @@ export default function FlagDesignEditor({
     return `rgb(${color.r},${color.g},${color.b})`;
   };
 
-  const handlePixelClick = (row, col) => {
-    if (grid[row][col] !== selectedColor) {
-      onFlagDesignChange(teamIndex, row, col, selectedColor);
-    }
+  // A brush stroke (mouse down -> up) is a single undo step: only the first
+  // pixel of the stroke pushes a snapshot
+  const paint = (row, col) => {
+    if (grid[row][col] === selectedColor) return;
+    onFlagDesignChange(teamIndex, row, col, selectedColor, !strokeStarted.current);
+    strokeStarted.current = true;
   };
 
-  const handleMouseDown = (row, col) => {
+  const handleMouseDown = (e, row, col) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    strokeStarted.current = false;
     setIsDrawing(true);
-    handlePixelClick(row, col);
+    paint(row, col);
   };
 
   const handleMouseEnter = (row, col) => {
-    if (isDrawing) {
-      handlePixelClick(row, col);
-    }
+    if (isDrawing) paint(row, col);
   };
 
   const handleMouseUp = () => {
     setIsDrawing(false);
+    strokeStarted.current = false;
   };
 
-  const handleFill = () => {
-    // Fill entire grid with selected color
-    for (let r = 0; r < GRID_HEIGHT; r++) {
-      for (let c = 0; c < GRID_WIDTH; c++) {
-        onFlagDesignChange(teamIndex, r, c, selectedColor);
-      }
-    }
+  const isUniform = (value) => grid.every((row) => row.every((p) => p === value));
+  const solidGrid = (value) =>
+    Array.from({ length: GRID_HEIGHT }, () => new Array(GRID_WIDTH).fill(value));
+
+  // Fill / Clear replace the whole design: one bulk write (one undo step), after confirming
+  const handleFill = async () => {
+    if (isUniform(selectedColor)) return;
+    const ok = await confirm({
+      message: t('confirmFlagFill', { color: COLOR_LABELS[selectedColor] }),
+      confirmLabel: t('fill'),
+      danger: true,
+    });
+    if (ok) onFlagDesignBulkChange(teamIndex, solidGrid(selectedColor));
   };
 
-  const handleClear = () => {
-    for (let r = 0; r < GRID_HEIGHT; r++) {
-      for (let c = 0; c < GRID_WIDTH; c++) {
-        onFlagDesignChange(teamIndex, r, c, 0);
-      }
-    }
+  const handleClear = async () => {
+    if (isUniform(0)) return;
+    const ok = await confirm({
+      message: t('confirmFlagClear'),
+      confirmLabel: t('clear'),
+      danger: true,
+    });
+    if (ok) onFlagDesignBulkChange(teamIndex, solidGrid(0));
   };
 
   return (
@@ -164,7 +179,7 @@ export default function FlagDesignEditor({
                     height: PIXEL_SIZE,
                     cursor: 'crosshair',
                   }}
-                  onMouseDown={() => handleMouseDown(r, c)}
+                  onMouseDown={(e) => handleMouseDown(e, r, c)}
                   onMouseEnter={() => handleMouseEnter(r, c)}
                 />
               )),

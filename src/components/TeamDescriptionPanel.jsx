@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { DraftGuard } from '../context/ConfirmContext';
 import {
   TEAM_DESC,
   TEAM_DESC_CAPACITY,
@@ -60,6 +61,7 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
 
   return (
     <div className="detail-section team-desc">
+      <DraftGuard dirty={dirty} />
       <div className="detail-section-title">{t('descTitle')}</div>
 
       <div className="team-desc-row">

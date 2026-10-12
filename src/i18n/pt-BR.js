@@ -468,6 +468,29 @@ export default {
   noEditorOpenHint: 'Escolha um editor no painel Explorer a esquerda.',
   noEditorOpenPlayers: 'Abrir Jogadores',
 
+  // Confirmations
+  confirmTitle: 'Confirmar',
+  confirmOk: 'Continuar',
+  confirmCopyBtn: 'Copiar',
+  confirmImportBtn: 'Importar',
+  exportJson: 'Exportar JSON',
+  importJson: 'Importar JSON',
+  confirmCopyTeam:
+    'Copiar "{from}" por cima de "{to}"?\nTodos os dados de "{to}" (jogadores, uniformes, bandeira, nome) serao substituidos.',
+  confirmImportTeam: 'Importar um arquivo JSON vai substituir todos os dados de "{team}".',
+  confirmFlagFill: 'Pintar a bandeira inteira com "{color}"? O desenho atual sera perdido.',
+  confirmFlagClear: 'Apagar todo o desenho da bandeira?',
+  confirmFormationPreset: 'Aplicar a formacao "{name}"? As posicoes atuais serao substituidas.',
+  confirmFormationRestore: 'Voltar a formacao original deste time?',
+  confirmRestoreAllDraws:
+    'Restaurar os 32 sorteios originais? Todas as alteracoes nos torneios serao perdidas.',
+  confirmTitleRestoreAll:
+    'Restaurar toda a tela titulo (logo, fundo, cores, jogadores e textos) ao original?',
+  confirmImportTexts:
+    'Importar textos de um JSON vai substituir os textos atuais da ROM (treino, menus, telas, cenarios, descricoes e tela titulo).',
+  confirmClearRecents: 'Limpar a lista de ROMs recentes?',
+  confirmDiscardDraft: 'Ha alteracoes que ainda nao foram aplicadas. Descarta-las?',
+
   // Export Patch
   toolbarExportPatch: 'Exportar Patch BPS/IPS (Ctrl+E)',
   toolbarTestEmulator: 'Testar no emulador (F5)',

@@ -100,18 +100,26 @@ function addRecentRom(filePath) {
   saveRecentRoms(filtered.slice(0, MAX_RECENT_ROMS));
 }
 
+/** Window controls overlay colours per theme (match --bg-titlebar / --text-primary) */
+const TITLEBAR_COLORS = {
+  dark: { color: '#1f1f1f', symbolColor: '#cccccc' },
+  light: { color: '#f8f8f8', symbolColor: '#1e1e1e' },
+};
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1000,
     minHeight: 700,
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#1f1f1f',
     icon: path.join(__dirname, '..', 'public', 'icon.ico'),
     titleBarStyle: 'hidden',
+    // Same colours as --bg-titlebar / --text-primary (dark); the renderer
+    // updates them when the theme changes ('app:setTheme')
     titleBarOverlay: {
-      color: '#323233',
-      symbolColor: '#cccccc',
+      color: TITLEBAR_COLORS.dark.color,
+      symbolColor: TITLEBAR_COLORS.dark.symbolColor,
       height: 32,
     },
     webPreferences: {
@@ -409,6 +417,17 @@ ipcMain.on('rom:modifiedState', (event, isModified) => {
 // Track locale from renderer (for native dialog i18n)
 ipcMain.on('app:setLocale', (event, locale) => {
   currentLocale = locale;
+});
+
+// Keep the native window controls in the theme colours
+ipcMain.on('app:setTheme', (event, theme) => {
+  const colors = TITLEBAR_COLORS[theme] || TITLEBAR_COLORS.dark;
+  try {
+    mainWindow?.setTitleBarOverlay?.({ ...colors, height: 32 });
+    mainWindow?.setBackgroundColor?.(colors.color);
+  } catch {
+    // setTitleBarOverlay is Windows/Linux only
+  }
 });
 
 // Handle close response from renderer custom modal

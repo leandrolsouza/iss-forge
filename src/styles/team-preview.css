@@ -42,6 +42,12 @@
   margin-top: 2px;
 }
 
+.preview-stat-value--text {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 28px;
+}
+
 .preview-players-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -76,7 +82,7 @@
   font-family: var(--font-mono);
   font-size: var(--font-size);
   font-weight: 600;
-  color: var(--text-white);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -87,14 +93,6 @@
   align-items: center;
   gap: 6px;
   margin-top: 2px;
-}
-
-.preview-pos-badge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-  color: #000;
 }
 
 .preview-player-hair {
@@ -149,6 +147,8 @@
 
 .preview-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-bottom: 16px;
 }

@@ -132,7 +132,7 @@ export default function FlagDesignEditor({
             <button className="kit-btn" onClick={handleFill} title={t('fillAll')}>
               {t('fill')}
             </button>
-            <button className="kit-btn" onClick={handleClear} title={t('clear')}>
+            <button className="kit-btn danger" onClick={handleClear} title={t('clear')}>
               {t('clear')}
             </button>
           </div>
@@ -158,14 +158,8 @@ export default function FlagDesignEditor({
             className="flag-design-grid"
             ref={canvasRef}
             style={{
-              display: 'grid',
               gridTemplateColumns: `repeat(${GRID_WIDTH}, ${PIXEL_SIZE}px)`,
               gridTemplateRows: `repeat(${GRID_HEIGHT}, ${PIXEL_SIZE}px)`,
-              gap: '1px',
-              backgroundColor: '#333',
-              border: '2px solid #555',
-              width: 'fit-content',
-              userSelect: 'none',
             }}
           >
             {grid.map((row, r) =>
@@ -173,12 +167,7 @@ export default function FlagDesignEditor({
                 <div
                   key={`${r}-${c}`}
                   className="flag-pixel"
-                  style={{
-                    backgroundColor: getDisplayColor(pixel),
-                    width: PIXEL_SIZE,
-                    height: PIXEL_SIZE,
-                    cursor: 'crosshair',
-                  }}
+                  style={{ backgroundColor: getDisplayColor(pixel) }}
                   onMouseDown={(e) => handleMouseDown(e, r, c)}
                   onMouseEnter={() => handleMouseEnter(r, c)}
                 />
@@ -188,42 +177,36 @@ export default function FlagDesignEditor({
         </div>
 
         {/* Mini Preview */}
-        <div className="kit-preview-section" style={{ marginTop: 16 }}>
+        <div className="kit-preview-section">
           <div className="detail-section-title">{t('flagPreviewRealSize')}</div>
           <div className="kit-preview">
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div className="flag-mini-wrap">
               <div
+                className="flag-mini-grid"
                 style={{
-                  display: 'grid',
                   gridTemplateColumns: `repeat(${GRID_WIDTH}, 4px)`,
                   gridTemplateRows: `repeat(${GRID_HEIGHT}, 4px)`,
-                  gap: 0,
-                  border: '1px solid #555',
                 }}
               >
                 {grid.map((row, r) =>
                   row.map((pixel, c) => (
                     <div
                       key={`mini-${r}-${c}`}
-                      style={{
-                        backgroundColor: getDisplayColor(pixel),
-                        width: 4,
-                        height: 4,
-                      }}
+                      style={{ backgroundColor: getDisplayColor(pixel) }}
                     />
                   )),
                 )}
               </div>
-              <span style={{ fontSize: 11, color: '#999' }}>{t('flagPreviewScale')}</span>
+              <span className="flag-mini-caption">{t('flagPreviewScale')}</span>
             </div>
           </div>
         </div>
 
         <div className="kit-preview-section">
           <div className="detail-section-title">{t('information')}</div>
-          <div className="welcome-info" style={{ marginTop: 8 }}>
+          <div className="editor-info-box">
             <p>{t('flagDesignInfo')}</p>
-            <p style={{ marginTop: 4 }}>{t('flagDesignColorHint')}</p>
+            <p>{t('flagDesignColorHint')}</p>
           </div>
         </div>
       </div>

@@ -24,7 +24,7 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
 
       <div className="uniform-editor-body">
         {/* Flag Preview */}
-        <div className="kit-preview-section" style={{ marginBottom: 24 }}>
+        <div className="kit-preview-section flag-color-preview">
           <div className="detail-section-title">{t('flagPreview')}</div>
           <div className="kit-preview">
             <FlagPreview colors={colors} t={t} />
@@ -48,7 +48,7 @@ export default function FlagColorEditor({ team, teamIndex, onFlagColorChange }) 
 
         <div className="kit-preview-section">
           <div className="detail-section-title">{t('information')}</div>
-          <div className="welcome-info" style={{ marginTop: 8 }}>
+          <div className="editor-info-box">
             <p>{t('flagInfoDetail')}</p>
           </div>
         </div>

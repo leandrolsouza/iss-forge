@@ -239,6 +239,8 @@ export default {
   special: 'Especial',
   unknown: 'Desconhecido',
   playerDetails: 'Detalhes do Jogador',
+  playerDetailsShow: 'Mostrar detalhes do jogador',
+  playerDetailsHide: 'Esconder detalhes do jogador',
   attributes: 'Atributos',
   appearance: 'Aparencia',
   listPosition: 'Posicao na Lista',

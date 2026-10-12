@@ -254,10 +254,6 @@
 
 .scenario-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-}
-
-.scenario-actions .kit-btn:disabled {
-  opacity: 0.5;
-  cursor: default;
 }

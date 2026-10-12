@@ -69,8 +69,7 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
       const item = e.dataTransfer.items[0];
       const name = item.type || '';
       const hasValidType =
-        name === '' ||
-        VALID_ROM_EXTENSIONS.some((ext) => name.includes(ext.slice(1)));
+        name === '' || VALID_ROM_EXTENSIONS.some((ext) => name.includes(ext.slice(1)));
       setDragActive(true);
       setDragInvalid(!hasValidType && name !== '');
     }
@@ -133,7 +132,12 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
         {/* Hero Section */}
         <div className="welcome-hero">
           <div className="welcome-logo">
-            <img src="/logo.png" alt="ISS Forge" className="welcome-logo-img" />
+            {/* BASE_URL ('./'): an absolute "/logo.png" breaks under file:// in the packaged app */}
+            <img
+              src={`${import.meta.env.BASE_URL}logo.png`}
+              alt="ISS Forge"
+              className="welcome-logo-img"
+            />
           </div>
           <h1 className="welcome-title">
             <span className="welcome-title-main">{t('welcomeTitle')}</span>
@@ -183,7 +187,16 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
                     <li
                       key={rom.path}
                       className="welcome-recent-item"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => handleOpenRecent(rom.path)}
+                      onKeyDown={(e) => {
+                        if (e.target !== e.currentTarget) return;
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleOpenRecent(rom.path);
+                        }
+                      }}
                     >
                       <IconCartridge size={16} />
                       <div className="welcome-recent-item-info">
@@ -220,7 +233,6 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
             <p>{t('welcomeCompatibleDesc')}</p>
           </div>
         </div>
-
       </div>
     </div>
   );

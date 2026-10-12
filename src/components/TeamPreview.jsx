@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
+import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/formation';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useConfirm } from '../context/ConfirmContext';
@@ -50,18 +51,18 @@ export default function TeamPreview({ team, teamIndex }) {
     ? `rgb(${uniforms.shorts[0].r},${uniforms.shorts[0].g},${uniforms.shorts[0].b})`
     : '#333';
 
+  // Positions come from the team's formation (same as the Players tab), not the list order
+  const formationSlots = team.formation?.slots || [];
   const getPositionLabel = (idx) => {
-    if (idx === 0) return 'GK';
-    if (idx <= 4) return 'DEF';
-    if (idx <= 9) return 'MID';
-    return 'ATK';
+    if (idx >= 11) return 'SUB';
+    const slot = formationSlots[idx];
+    if (slot) return slotPositionLabel(slot);
+    return idx === 0 ? 'GK' : '?';
   };
-
-  const getPositionColor = (idx) => {
-    if (idx === 0) return '#ffb74d';
-    if (idx <= 4) return '#4fc3f7';
-    if (idx <= 9) return '#81c784';
-    return '#ef5350';
+  const getPositionCategory = (idx) => {
+    if (idx >= 11) return 'sub';
+    const slot = formationSlots[idx];
+    return slot ? getLineCategory(slot.line) : idx === 0 ? 'gk' : 'mid';
   };
 
   // Calculate team averages
@@ -106,11 +107,7 @@ export default function TeamPreview({ team, teamIndex }) {
               ),
             )}
           </select>
-          <button
-            className="kit-btn"
-            title={t('copyTeamHelp')}
-            onClick={copyToTarget}
-          >
+          <button className="kit-btn danger" title={t('copyTeamHelp')} onClick={copyToTarget}>
             {t('copyTeamTo')}
           </button>
           <button
@@ -126,31 +123,31 @@ export default function TeamPreview({ team, teamIndex }) {
         <div className="preview-summary">
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('shooting')}</div>
-            <div className="preview-stat-value" style={{ color: '#4fc3f7' }}>
+            <div className="preview-stat-value" style={{ color: 'var(--stat-shooting)' }}>
               {avgShooting}
             </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('speed')}</div>
-            <div className="preview-stat-value" style={{ color: '#81c784' }}>
+            <div className="preview-stat-value" style={{ color: 'var(--stat-speed)' }}>
               {avgSpeed}
             </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('stamina')}</div>
-            <div className="preview-stat-value" style={{ color: '#ffb74d' }}>
+            <div className="preview-stat-value" style={{ color: 'var(--stat-stamina)' }}>
               {avgStamina}
             </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('technique')}</div>
-            <div className="preview-stat-value" style={{ color: '#ce93d8' }}>
+            <div className="preview-stat-value" style={{ color: 'var(--stat-technique)' }}>
               {avgTechnique}
             </div>
           </div>
           <div className="preview-stat-card">
             <div className="preview-stat-label">{t('name')}</div>
-            <div className="preview-stat-value" style={{ color: '#fff', fontSize: 14 }}>
+            <div className="preview-stat-value preview-stat-value--text">
               {team.teamNameText || team.name}
             </div>
           </div>
@@ -187,10 +184,7 @@ export default function TeamPreview({ team, teamIndex }) {
               <div className="preview-player-info">
                 <div className="preview-player-name">{player.name || '---'}</div>
                 <div className="preview-player-pos">
-                  <span
-                    className="preview-pos-badge"
-                    style={{ backgroundColor: getPositionColor(idx) }}
-                  >
+                  <span className={`pos-badge pos-${getPositionCategory(idx)}`}>
                     {getPositionLabel(idx)}
                   </span>
                   <span className="preview-player-hair">
@@ -205,10 +199,30 @@ export default function TeamPreview({ team, teamIndex }) {
 
               {/* Stats bars */}
               <div className="preview-player-stats">
-                <MiniBar value={player.shooting} max={15} color="#4fc3f7" label="C" />
-                <MiniBar value={player.speed} max={16} color="#81c784" label="V" />
-                <MiniBar value={player.stamina} max={16} color="#ffb74d" label="S" />
-                <MiniBar value={player.technique} max={15} color="#ce93d8" label="T" />
+                <MiniBar
+                  value={player.shooting}
+                  max={15}
+                  color="var(--stat-shooting)"
+                  label={t('shooting')}
+                />
+                <MiniBar
+                  value={player.speed}
+                  max={16}
+                  color="var(--stat-speed)"
+                  label={t('speed')}
+                />
+                <MiniBar
+                  value={player.stamina}
+                  max={16}
+                  color="var(--stat-stamina)"
+                  label={t('stamina')}
+                />
+                <MiniBar
+                  value={player.technique}
+                  max={15}
+                  color="var(--stat-technique)"
+                  label={t('technique')}
+                />
               </div>
             </div>
           ))}
@@ -218,11 +232,14 @@ export default function TeamPreview({ team, teamIndex }) {
   );
 }
 
+/** `label` is the full attribute name: its first letter is shown, the rest goes in the tooltip */
 function MiniBar({ value, max, color, label }) {
   const pct = (value / max) * 100;
   return (
-    <div className="preview-mini-bar">
-      <span className="preview-mini-label">{label}</span>
+    <div className="preview-mini-bar" title={`${label}: ${value}`}>
+      <span className="preview-mini-label" aria-hidden="true">
+        {label.charAt(0).toUpperCase()}
+      </span>
       <div className="preview-mini-track">
         <div className="preview-mini-fill" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>

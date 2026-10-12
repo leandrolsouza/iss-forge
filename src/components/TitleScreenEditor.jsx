@@ -951,7 +951,7 @@ export default function TitleScreenEditor() {
           <h2>{t('editorTitleScreen')}</h2>
           <span className="editor-subtitle">- {t('tsSubtitle')}</span>
         </div>
-        <button className="kit-btn" disabled={allOriginal} onClick={restoreAll}>
+        <button className="kit-btn danger" disabled={allOriginal} onClick={restoreAll}>
           {t('tsRestoreAll')}
         </button>
       </div>

@@ -33,9 +33,19 @@ function HelpTooltip({ text }) {
   );
 }
 
+const DETAIL_PANEL_KEY = 'iss-forge-player-detail-open';
+
 export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
   const [selectedPlayer, setSelectedPlayer] = useState(0);
+  const [detailOpen, setDetailOpen] = useState(
+    () => localStorage.getItem(DETAIL_PANEL_KEY) !== 'false',
+  );
   const { t, lang } = useI18n();
+
+  const toggleDetail = (open) => {
+    setDetailOpen(open);
+    localStorage.setItem(DETAIL_PANEL_KEY, String(open));
+  };
 
   if (!team || !team.players) {
     return <div className="editor-panel empty">{t('openRomToSee')}</div>;
@@ -247,114 +257,153 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
           </table>
         </div>
 
-        {/* Player Detail Panel */}
-        <div className="player-detail-panel">
-          <div className="detail-header">
-            <h3>{t('playerDetails')}</h3>
-          </div>
-          {player && (
-            <div className="detail-content">
-              <div className="detail-card">
-                <div className="detail-player-name">{player.name || '---'}</div>
-                <div className="detail-player-number">#{player.number}</div>
-              </div>
-
-              <div className="detail-section">
-                <div className="detail-section-title-row">
-                  {t('gameDataBars')}
-                  <HelpTooltip text={t('helpAttributes')} />
-                </div>
-                <div className="stat-bars">
-                  <StatBar
-                    label={t('technique')}
-                    value={player.technique}
-                    max={15}
-                    color="#ce93d8"
-                  />
-                  <StatBar label={t('shooting')} value={player.shooting} max={15} color="#4fc3f7" />
-                  <StatBar
-                    label={t('speed')}
-                    value={player.speed}
-                    max={16}
-                    color="#81c784"
-                    title={t('helpSpeed')}
-                  />
-                  <StatBar label={t('stamina')} value={player.stamina} max={16} color="#ffb74d" />
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <div className="detail-section-title-row">{t('detailedAttributes')}</div>
-                <div className="stat-bars">
-                  {NIBBLE_STATS.map((k) => (
-                    <StatBar
-                      key={k}
-                      label={t(`stat${k[0].toUpperCase()}${k.slice(1)}Long`)}
-                      value={player[k]}
-                      max={16}
-                      color={k === 'attack' ? '#ef5350' : k === 'defense' ? '#4fc3f7' : '#81c784'}
-                    />
-                  ))}
-                  <StatBar
-                    label={t('statGkKickLong')}
-                    value={player.gkKick}
-                    max={15}
-                    color="#ffb74d"
-                    title={t('helpGkKick')}
-                  />
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <div className="detail-section-title-row">
-                  {t('appearance')}
-                  <HelpTooltip text={t('helpAppearance')} />
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">{t('hairColor')}:</span>
-                  <span className="detail-value">
-                    {HAIR_STYLES[player.hairStyle]
-                      ? lang === 'en'
-                        ? HAIR_STYLES[player.hairStyle].nameEn
-                        : HAIR_STYLES[player.hairStyle].name
-                      : t('unknown')}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">{t('type')}:</span>
-                  <span className={`detail-value badge ${player.isSpecial ? 'special' : 'normal'}`}>
-                    {player.isSpecial ? t('special') : t('normal')}
-                  </span>
-                </div>
-              </div>
-
-              <div className="detail-section">
-                <div className="detail-section-title-row">
-                  {t('listPosition')}
-                  <HelpTooltip text={t('helpListPosition')} />
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">{t('pos')}:</span>
-                  <span className="detail-value">
-                    <span className={`pos-badge pos-${getPositionCategory(selectedPlayer)}`}>
-                      {getPositionLabel(selectedPlayer)}
-                    </span>
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">{t('formation')}:</span>
-                  <span className="detail-value">{formationName}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">{t('index')}:</span>
-                  <span className="detail-value">
-                    {selectedPlayer + 1} {t('of')} 15
-                  </span>
-                </div>
-              </div>
+        {/* Player Detail Panel (collapsible: gives the table room on smaller windows) */}
+        {!detailOpen && (
+          <button
+            className="player-detail-reopen"
+            onClick={() => toggleDetail(true)}
+            title={t('playerDetailsShow')}
+            aria-label={t('playerDetailsShow')}
+          >
+            <span aria-hidden="true">‹</span>
+            <span className="player-detail-reopen-label">{t('playerDetails')}</span>
+          </button>
+        )}
+        {detailOpen && (
+          <div className="player-detail-panel">
+            <div className="detail-header">
+              <h3>{t('playerDetails')}</h3>
+              <button
+                className="detail-collapse-btn"
+                onClick={() => toggleDetail(false)}
+                title={t('playerDetailsHide')}
+                aria-label={t('playerDetailsHide')}
+              >
+                ›
+              </button>
             </div>
-          )}
-        </div>
+            {player && (
+              <div className="detail-content">
+                <div className="detail-card">
+                  <div className="detail-player-name">{player.name || '---'}</div>
+                  <div className="detail-player-number">#{player.number}</div>
+                </div>
+
+                <div className="detail-section">
+                  <div className="detail-section-title-row">
+                    {t('gameDataBars')}
+                    <HelpTooltip text={t('helpAttributes')} />
+                  </div>
+                  <div className="stat-bars">
+                    <StatBar
+                      label={t('technique')}
+                      value={player.technique}
+                      max={15}
+                      color="var(--stat-technique)"
+                    />
+                    <StatBar
+                      label={t('shooting')}
+                      value={player.shooting}
+                      max={15}
+                      color="var(--stat-shooting)"
+                    />
+                    <StatBar
+                      label={t('speed')}
+                      value={player.speed}
+                      max={16}
+                      color="var(--stat-speed)"
+                      title={t('helpSpeed')}
+                    />
+                    <StatBar
+                      label={t('stamina')}
+                      value={player.stamina}
+                      max={16}
+                      color="var(--stat-stamina)"
+                    />
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <div className="detail-section-title-row">{t('detailedAttributes')}</div>
+                  <div className="stat-bars">
+                    {NIBBLE_STATS.map((k) => (
+                      <StatBar
+                        key={k}
+                        label={t(`stat${k[0].toUpperCase()}${k.slice(1)}Long`)}
+                        value={player[k]}
+                        max={16}
+                        color={
+                          k === 'attack'
+                            ? 'var(--stat-attack)'
+                            : k === 'defense'
+                              ? 'var(--stat-defense)'
+                              : 'var(--stat-speed)'
+                        }
+                      />
+                    ))}
+                    <StatBar
+                      label={t('statGkKickLong')}
+                      value={player.gkKick}
+                      max={15}
+                      color="var(--stat-stamina)"
+                      title={t('helpGkKick')}
+                    />
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <div className="detail-section-title-row">
+                    {t('appearance')}
+                    <HelpTooltip text={t('helpAppearance')} />
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('hairColor')}:</span>
+                    <span className="detail-value">
+                      {HAIR_STYLES[player.hairStyle]
+                        ? lang === 'en'
+                          ? HAIR_STYLES[player.hairStyle].nameEn
+                          : HAIR_STYLES[player.hairStyle].name
+                        : t('unknown')}
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('type')}:</span>
+                    <span
+                      className={`detail-value badge ${player.isSpecial ? 'special' : 'normal'}`}
+                    >
+                      {player.isSpecial ? t('special') : t('normal')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="detail-section">
+                  <div className="detail-section-title-row">
+                    {t('listPosition')}
+                    <HelpTooltip text={t('helpListPosition')} />
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('pos')}:</span>
+                    <span className="detail-value">
+                      <span className={`pos-badge pos-${getPositionCategory(selectedPlayer)}`}>
+                        {getPositionLabel(selectedPlayer)}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('formation')}:</span>
+                    <span className="detail-value">{formationName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('index')}:</span>
+                    <span className="detail-value">
+                      {selectedPlayer + 1} {t('of')} 15
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

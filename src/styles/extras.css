@@ -10,11 +10,17 @@
   .uniform-colors-grid {
     grid-template-columns: 1fr;
   }
+
+  /* normal players / goalkeeper side by side gets too narrow */
+  .hair-skin-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
+  /* the detail panel is collapsible now: keep it, just narrower */
   .player-detail-panel {
-    display: none;
+    width: 200px;
   }
 
   :root {

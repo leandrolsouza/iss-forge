@@ -69,6 +69,22 @@
   color: var(--text-secondary);
 }
 
+/* Informational paragraph block shown under several editors */
+.editor-info-box {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+  line-height: 1.5;
+}
+
+.editor-info-box p + p {
+  margin-top: 6px;
+}
+
 /* ============================================================
    PLAYER EDITOR
    ============================================================ */
@@ -100,8 +116,10 @@
   font-weight: 600;
   font-size: var(--font-size-sm);
   text-transform: uppercase;
-  padding: 6px 4px;
+  padding: 6px 3px;
   text-align: left;
+  vertical-align: bottom;
+  line-height: 1.15;
   border-bottom: 1px solid var(--border-primary);
   position: sticky;
   top: 0;
@@ -110,7 +128,7 @@
 }
 
 .player-table td {
-  padding: 2px 4px;
+  padding: 1px 3px;
   border-bottom: 1px solid var(--border-primary);
   vertical-align: middle;
 }
@@ -125,78 +143,93 @@
 
 .player-row.selected {
   background: var(--bg-active);
+  box-shadow: inset 2px 0 0 var(--border-active);
 }
 
 .player-row.selected td {
   border-bottom-color: var(--border-secondary);
 }
 
-/* Column widths */
+/* Column widths (compact: ~860px, fits next to the detail panel at 1400px) */
 .col-idx {
-  width: 30px;
+  width: 28px;
   text-align: center;
   color: var(--text-muted);
 }
 
 .col-pos {
-  width: 48px;
+  width: 44px;
   text-align: center;
 }
 
 .col-num {
-  width: 52px;
+  width: 44px;
 }
 
 .col-name {
-  width: 110px;
+  width: 100px;
 }
 
 .col-stat {
-  width: 60px;
+  width: 50px;
 }
 
 .col-hair {
-  width: 140px;
+  width: 112px;
 }
 
 .col-color {
-  width: 90px;
+  width: 84px;
 }
 
-/* Inputs */
+/* Inputs: a faint border so fields are findable, a real one on hover/focus */
 .input-name {
   width: 100%;
   font-family: var(--font-mono);
-  border-color: transparent;
-}
-
-.input-name:focus {
-  border-color: var(--border-focus);
 }
 
 .input-mini {
-  width: 46px;
+  width: 100%;
+  max-width: 44px;
+  padding-left: 2px;
+  padding-right: 2px;
   font-family: var(--font-mono);
   text-align: center;
-  border-color: transparent;
-}
-
-.input-mini:focus {
-  border-color: var(--border-focus);
 }
 
 .input-stat,
 .input-hair,
 .input-color-type {
   width: 100%;
-  border-color: transparent;
   cursor: pointer;
 }
 
-.input-stat:focus,
-.input-hair:focus,
-.input-color-type:focus {
+.player-table .input-name,
+.player-table .input-mini,
+.player-table .input-stat,
+.player-table .input-hair,
+.player-table .input-color-type {
+  background-color: transparent;
+  border-color: color-mix(in srgb, var(--border-input) 45%, transparent);
+}
+
+.player-table .input-stat,
+.player-table .input-hair,
+.player-table .input-color-type {
+  padding-left: 4px;
+  padding-right: 18px;
+  background-position: right 3px center;
+}
+
+.player-table input:hover,
+.player-table select:hover {
+  border-color: var(--border-secondary);
+}
+
+.player-table input:focus,
+.player-table select:focus {
   border-color: var(--border-focus);
+  background-color: var(--bg-input);
 }
 
 /* ============================================================
@@ -212,8 +245,62 @@
 }
 
 .detail-header {
-  padding: 10px 16px;
+  padding: 10px 8px 10px 16px;
   border-bottom: 1px solid var(--border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-collapse-btn,
+.player-detail-reopen {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-family);
+  border-radius: 3px;
+}
+
+.detail-collapse-btn {
+  font-size: 18px;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+}
+
+.detail-collapse-btn:hover,
+.player-detail-reopen:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.detail-collapse-btn:focus-visible,
+.player-detail-reopen:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -2px;
+}
+
+/* Collapsed panel: thin vertical strip that reopens it */
+.player-detail-reopen {
+  flex-shrink: 0;
+  width: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-left: 1px solid var(--border-primary);
+  border-radius: 0;
+  background: var(--bg-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.player-detail-reopen-label {
+  writing-mode: vertical-rl;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .detail-header h3 {
@@ -292,13 +379,13 @@
 }
 
 .detail-value.badge.normal {
-  background: #2d4a2d;
-  color: var(--text-success);
+  background: var(--badge-normal-bg);
+  color: var(--badge-normal-fg);
 }
 
 .detail-value.badge.special {
-  background: #4a2d4a;
-  color: #ce93d8;
+  background: var(--badge-special-bg);
+  color: var(--badge-special-fg);
 }
 
 .detail-hint {
@@ -369,23 +456,101 @@
   width: fit-content;
 }
 
+/* ------------------------------------------------------------
+   Buttons. `.kit-btn` is the editor button everywhere:
+     .kit-btn                  secondary (default)
+     .kit-btn.active           primary action / selected toggle
+     .kit-btn.danger           destructive (restore all, clear...)
+     .kit-btn.ghost            low emphasis (inside toolbars)
+   Disabled buttons look disabled everywhere (not only in some editors).
+   ------------------------------------------------------------ */
 .kit-btn {
-  padding: 8px 20px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--input-height);
+  padding: 4px 14px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-button-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
   font-size: var(--font-size);
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
-  border-radius: 4px;
-  transition: all var(--transition);
+  border-radius: var(--input-border-radius);
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition);
 }
 
-.kit-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-hover);
+.kit-btn:hover:not(:disabled) {
+  background: var(--bg-button-secondary-hover);
+  border-color: var(--border-secondary);
 }
 
 .kit-btn.active {
+  background: var(--bg-button);
+  border-color: var(--bg-button);
+  color: var(--text-white);
+}
+
+.kit-btn.active:hover:not(:disabled) {
+  background: var(--bg-button-hover);
+  border-color: var(--bg-button-hover);
+}
+
+.kit-btn.danger {
+  color: var(--text-error);
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  background: transparent;
+}
+
+.kit-btn.danger:hover:not(:disabled) {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--text-white);
+}
+
+.kit-btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+.kit-btn.ghost:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+.kit-btn:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 1px;
+}
+
+.kit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Segmented toggles (kit selector): no borders, the group draws the frame */
+.kit-selector .kit-btn {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 6px 20px;
+}
+
+.kit-selector .kit-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: transparent;
+  color: var(--text-primary);
+}
+
+.kit-selector .kit-btn.active {
   background: var(--bg-button);
   color: var(--text-white);
 }
@@ -483,11 +648,6 @@
 .color-hex-input {
   width: 80px;
   font-family: var(--font-mono);
-  border-color: transparent;
-}
-
-.color-hex-input:focus {
-  border-color: var(--border-focus);
 }
 
 .color-rgb-row {
@@ -511,11 +671,6 @@
   width: 48px;
   font-family: var(--font-mono);
   text-align: center;
-  border-color: transparent;
-}
-
-.input-rgb:focus {
-  border-color: var(--border-focus);
 }
 
 .color-snes-info {
@@ -760,30 +915,30 @@
 
 .pos-badge.pos-gol,
 .pos-badge.pos-gk {
-  background: #1a3a4a;
-  color: #4fc3f7;
+  background: var(--pos-gk-bg);
+  color: var(--pos-gk-fg);
 }
 
 .pos-badge.pos-def {
-  background: #1a3a1a;
-  color: #81c784;
+  background: var(--pos-def-bg);
+  color: var(--pos-def-fg);
 }
 
 .pos-badge.pos-mei,
 .pos-badge.pos-mid {
-  background: #3a3a1a;
-  color: #ffb74d;
+  background: var(--pos-mid-bg);
+  color: var(--pos-mid-fg);
 }
 
 .pos-badge.pos-ata,
 .pos-badge.pos-fwd {
-  background: #3a1a1a;
-  color: #ef5350;
+  background: var(--pos-fwd-bg);
+  color: var(--pos-fwd-fg);
 }
 
 .pos-badge.pos-sub {
-  background: #2a2a2a;
-  color: var(--text-muted);
+  background: var(--pos-sub-bg);
+  color: var(--pos-sub-fg);
 }
 
 /* ============================================================
@@ -843,7 +998,9 @@
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.15s ease, visibility 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
 }
 
 .help-tooltip::after {
@@ -856,7 +1013,7 @@
   border-bottom-color: var(--border-secondary);
 }
 
-.help-icon:hover+.help-tooltip,
+.help-icon:hover + .help-tooltip,
 .help-tooltip-wrapper:hover .help-tooltip {
   opacity: 1;
   visibility: visible;

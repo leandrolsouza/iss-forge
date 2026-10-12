@@ -55,6 +55,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setModifiedState: (isModified) => ipcRenderer.send('rom:modifiedState', isModified),
   notifySaveComplete: () => ipcRenderer.send('rom:saveComplete'),
   setLocale: (locale) => ipcRenderer.send('app:setLocale', locale),
+  setTheme: (theme) => ipcRenderer.send('app:setTheme', theme),
   sendCloseResponse: (choice) => ipcRenderer.send('app:closeResponse', choice),
   onConfirmClose: (callback) => {
     ipcRenderer.on('app:confirmClose', () => callback());

@@ -121,12 +121,12 @@
 }
 
 .unsaved-btn-danger {
-  background: #c42b1c;
+  background: var(--danger);
   color: var(--text-white, #ffffff);
 }
 
 .unsaved-btn-danger:hover {
-  background: #d13a2b;
+  background: var(--danger-hover);
 }
 
 .unsaved-message {

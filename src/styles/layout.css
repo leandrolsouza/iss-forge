@@ -16,9 +16,15 @@
   align-items: center;
   justify-content: center;
   -webkit-app-region: drag;
-  border-bottom: 1px solid #1a1a1a;
+  border-bottom: 1px solid var(--border-primary);
   flex-shrink: 0;
   padding: 0 8px;
+  /* Electron's window controls overlay (min/max/close) sits on the right:
+     keep the title clear of it (env() resolves to 0 in the browser) */
+  padding-right: max(
+    8px,
+    calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw))
+  );
 }
 
 .app-titlebar-actions {
@@ -38,12 +44,19 @@
   color: var(--text-secondary);
   cursor: pointer;
   border-radius: 4px;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .titlebar-btn:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+}
+
+.titlebar-btn:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: -1px;
 }
 
 .titlebar-btn:disabled {

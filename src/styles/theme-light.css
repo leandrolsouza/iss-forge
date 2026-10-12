@@ -2,7 +2,7 @@
    LIGHT THEME
    ============================================================ */
 
-[data-theme="light"] {
+[data-theme='light'] {
   --bg-primary: #ffffff;
   --bg-secondary: #f8f8f8;
   --bg-tertiary: #e8e8e8;
@@ -37,120 +37,108 @@
 
   --focus-ring: 0 0 0 1px var(--border-focus);
 
+  --danger: #b3261e;
+  --danger-hover: #c7372f;
+
+  /* darker attribute colours: the pastel ones are unreadable on white */
+  --stat-shooting: #0277bd;
+  --stat-speed: #2e7d32;
+  --stat-stamina: #e65100;
+  --stat-technique: #7b1fa2;
+  --stat-attack: #c62828;
+  --stat-defense: #0277bd;
+
+  --pos-gk-bg: #e1f5fe;
+  --pos-gk-fg: #0277bd;
+  --pos-def-bg: #e8f5e9;
+  --pos-def-fg: #2e7d32;
+  --pos-mid-bg: #fff3e0;
+  --pos-mid-fg: #e65100;
+  --pos-fwd-bg: #fbe9e7;
+  --pos-fwd-fg: #c62828;
+  --pos-sub-bg: #f5f5f5;
+  --pos-sub-fg: #9e9e9e;
+
+  --badge-normal-bg: #c8e6c9;
+  --badge-normal-fg: #2e7d32;
+  --badge-special-bg: #e1bee7;
+  --badge-special-fg: #7b1fa2;
+
+  --canvas-border: #9e9e9e;
+  --canvas-gap: #bdbdbd;
+
   --scrollbar-bg: #f3f3f3;
   --scrollbar-thumb: #c1c1c1;
   --scrollbar-thumb-hover: #a8a8a8;
 }
 
-[data-theme="light"] .app-titlebar {
-  border-bottom-color: #c8c8c8;
-}
-
-[data-theme="light"] .status-modified {
+[data-theme='light'] .status-modified {
   color: #bf8803;
 }
 
-[data-theme="light"] .detail-player-name {
+[data-theme='light'] .detail-player-name {
   color: var(--text-primary);
 }
 
-[data-theme="light"] .detail-player-number {
+[data-theme='light'] .detail-player-number {
   color: var(--text-accent);
 }
 
-[data-theme="light"] .preview-player-name {
+[data-theme='light'] .preview-player-name {
   color: var(--text-primary);
 }
 
-[data-theme="light"] .teamname-current {
+[data-theme='light'] .teamname-current {
   color: var(--text-primary);
 }
 
-[data-theme="light"] .teamname-input {
+[data-theme='light'] .teamname-input {
   color: var(--text-primary);
   border-color: var(--border-primary);
 }
 
-[data-theme="light"] .flag-palette-btn.active {
+[data-theme='light'] .flag-palette-btn.active {
   border-color: #333;
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
 }
 
-[data-theme="light"] .tab.active {
+[data-theme='light'] .tab.active {
   background: var(--bg-primary);
   color: var(--text-primary);
   border-bottom-color: var(--bg-primary);
 }
 
-[data-theme="light"] .sidebar-item.selected {
+[data-theme='light'] .sidebar-item.selected {
   background: var(--bg-selected);
   color: var(--text-primary);
 }
 
-[data-theme="light"] .player-row.selected {
+[data-theme='light'] .player-row.selected {
   background: #e8f0fe;
 }
 
-[data-theme="light"] .detail-value.badge.normal {
-  background: #c8e6c9;
-  color: #2e7d32;
-}
-
-[data-theme="light"] .detail-value.badge.special {
-  background: #e1bee7;
-  color: #7b1fa2;
-}
-
-[data-theme="light"] .welcome-btn {
+[data-theme='light'] .welcome-btn {
   color: #fff;
 }
 
-[data-theme="light"] .pos-badge.pos-gol,
-[data-theme="light"] .pos-badge.pos-gk {
-  background: #e1f5fe;
-  color: #0277bd;
-}
-
-[data-theme="light"] .pos-badge.pos-def {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-[data-theme="light"] .pos-badge.pos-mei,
-[data-theme="light"] .pos-badge.pos-mid {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-[data-theme="light"] .pos-badge.pos-ata,
-[data-theme="light"] .pos-badge.pos-fwd {
-  background: #fbe9e7;
-  color: #c62828;
-}
-
-[data-theme="light"] .pos-badge.pos-sub {
-  background: #f5f5f5;
-  color: #9e9e9e;
-}
-
-[data-theme="light"] .help-tooltip {
+[data-theme='light'] .help-tooltip {
   background: #ffffff;
   border-color: #c8c8c8;
   color: #1e1e1e;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="light"] .help-tooltip::after {
+[data-theme='light'] .help-tooltip::after {
   border-bottom-color: #c8c8c8;
 }
 
-[data-theme="light"] .help-icon {
+[data-theme='light'] .help-icon {
   background: #e8e8e8;
   border-color: #c8c8c8;
   color: #616161;
 }
 
-[data-theme="light"] .help-icon:hover {
+[data-theme='light'] .help-icon:hover {
   background: #0066b8;
   color: #ffffff;
   border-color: #0066b8;

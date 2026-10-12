@@ -4,7 +4,10 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('iss-editor-theme') || 'dark';
+    const saved = localStorage.getItem('iss-editor-theme');
+    if (saved) return saved;
+    // First run: follow the OS preference
+    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   });
 
   const toggleTheme = useCallback(() => {
@@ -17,6 +20,8 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    // Electron: recolour the native window controls (min / max / close)
+    window.electronAPI?.setTheme?.(theme);
   }, [theme]);
 
   return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;

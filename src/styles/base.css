@@ -41,6 +41,42 @@
 
   /* Focus ring (outer glow for accessibility) */
   --focus-ring: 0 0 0 1px var(--border-focus);
+  /* Keyboard focus outline for buttons / clickable items */
+  --focus-outline: 2px solid var(--border-focus);
+
+  /* Destructive actions */
+  --danger: #c42b1c;
+  --danger-hover: #d13a2b;
+
+  /* Player attributes (bars, averages) */
+  --stat-shooting: #4fc3f7;
+  --stat-speed: #81c784;
+  --stat-stamina: #ffb74d;
+  --stat-technique: #ce93d8;
+  --stat-attack: #ef5350;
+  --stat-defense: #4fc3f7;
+
+  /* Position badges (formation lines) */
+  --pos-gk-bg: #1a3a4a;
+  --pos-gk-fg: #4fc3f7;
+  --pos-def-bg: #1a3a1a;
+  --pos-def-fg: #81c784;
+  --pos-mid-bg: #3a3a1a;
+  --pos-mid-fg: #ffb74d;
+  --pos-fwd-bg: #3a1a1a;
+  --pos-fwd-fg: #ef5350;
+  --pos-sub-bg: #2a2a2a;
+  --pos-sub-fg: #6a6a6a;
+
+  /* Player type badges */
+  --badge-normal-bg: #2d4a2d;
+  --badge-normal-fg: #89d185;
+  --badge-special-bg: #4a2d4a;
+  --badge-special-fg: #ce93d8;
+
+  /* Pixel-art canvases (flag grid) */
+  --canvas-border: #555555;
+  --canvas-gap: #333333;
 
   /* Scrollbar */
   --scrollbar-bg: #1f1f1f;
@@ -125,6 +161,14 @@ body {
    FORM FIELDS — VS Code Dark Modern Design System
    Unified styling for input, select, and textarea elements.
    ============================================================ */
+
+/* Keyboard focus for every button / tab-stop that has no specific style */
+button:focus-visible,
+[role='tab']:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 1px;
+}
 
 /* Base input styles (text, number, email, etc.) */
 input[type='text'],

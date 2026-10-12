@@ -188,7 +188,7 @@ export default function TournamentEditor() {
             >
               {t('scenarioRestore')}
             </button>
-            <button className="kit-btn" onClick={restoreAll}>
+            <button className="kit-btn danger" onClick={restoreAll}>
               {t('tournamentRestoreAll')}
             </button>
           </div>

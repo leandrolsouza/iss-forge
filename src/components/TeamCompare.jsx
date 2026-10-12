@@ -21,17 +21,19 @@ export default function TeamCompare({ teams }) {
   };
 
   const stats = [
-    { key: 'shooting', label: t('avgShooting'), max: 15, color: '#4fc3f7' },
-    { key: 'speed', label: t('avgSpeed'), max: 16, color: '#81c784' },
-    { key: 'stamina', label: t('avgStamina'), max: 16, color: '#ffb74d' },
-    { key: 'technique', label: t('avgTechnique'), max: 15, color: '#ce93d8' },
+    { key: 'shooting', label: t('avgShooting'), max: 15, color: 'var(--stat-shooting)' },
+    { key: 'speed', label: t('avgSpeed'), max: 16, color: 'var(--stat-speed)' },
+    { key: 'stamina', label: t('avgStamina'), max: 16, color: 'var(--stat-stamina)' },
+    { key: 'technique', label: t('avgTechnique'), max: 15, color: 'var(--stat-technique)' },
   ];
 
   return (
     <div className="editor-panel team-compare-panel">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon"><IconCompare size={18} /></span>
+          <span className="editor-icon">
+            <IconCompare size={18} />
+          </span>
           <h2>{t('compare')}</h2>
         </div>
       </div>
@@ -40,8 +42,12 @@ export default function TeamCompare({ teams }) {
         {/* Team Selectors */}
         <div className="compare-selectors">
           <div className="compare-selector">
-            <label>{t('selectTeamA')}</label>
-            <select value={teamAIndex} onChange={(e) => setTeamAIndex(parseInt(e.target.value))}>
+            <label htmlFor="compare-team-a">{t('selectTeamA')}</label>
+            <select
+              id="compare-team-a"
+              value={teamAIndex}
+              onChange={(e) => setTeamAIndex(parseInt(e.target.value))}
+            >
               {teams.map((team, i) => (
                 <option key={i} value={i}>
                   {String(i + 1).padStart(2, '0')}. {team.name}
@@ -51,8 +57,12 @@ export default function TeamCompare({ teams }) {
           </div>
           <div className="compare-vs">VS</div>
           <div className="compare-selector">
-            <label>{t('selectTeamB')}</label>
-            <select value={teamBIndex} onChange={(e) => setTeamBIndex(parseInt(e.target.value))}>
+            <label htmlFor="compare-team-b">{t('selectTeamB')}</label>
+            <select
+              id="compare-team-b"
+              value={teamBIndex}
+              onChange={(e) => setTeamBIndex(parseInt(e.target.value))}
+            >
               {teams.map((team, i) => (
                 <option key={i} value={i}>
                   {String(i + 1).padStart(2, '0')}. {team.name}

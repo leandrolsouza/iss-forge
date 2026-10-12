@@ -238,6 +238,8 @@ export default {
   special: 'Special',
   unknown: 'Unknown',
   playerDetails: 'Player Details',
+  playerDetailsShow: 'Show player details',
+  playerDetailsHide: 'Hide player details',
   attributes: 'Attributes',
   appearance: 'Appearance',
   listPosition: 'List Position',

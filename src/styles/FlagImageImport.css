@@ -1,3 +1,5 @@
+/* Flag image import (uses the global design tokens, so it follows the theme) */
+
 .flag-import-section {
   margin-top: 12px;
 }
@@ -7,29 +9,31 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  background: none;
-  border: 1px solid var(--border-color, #444);
-  border-radius: 4px;
-  padding: 6px 12px;
-  color: var(--text-color, #ccc);
-  font-size: 12px;
-  transition: background-color 0.15s;
+  background: var(--bg-button-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--input-border-radius);
+  min-height: var(--input-height);
+  padding: 4px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  transition: background-color var(--transition);
 }
 
 .flag-import-btn:hover {
-  background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+  background-color: var(--bg-button-secondary-hover);
 }
 
 .flag-import-btn .import-icon {
-  font-size: 14px;
+  display: inline-flex;
 }
 
 .flag-import-options {
   margin-top: 10px;
   padding: 10px;
-  border: 1px solid var(--border-color, #444);
-  border-radius: 4px;
-  background-color: var(--panel-bg, rgba(0, 0, 0, 0.15));
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  background-color: var(--bg-secondary);
 }
 
 .flag-import-mode-selector {
@@ -41,31 +45,32 @@
 .flag-import-mode-btn {
   flex: 1;
   padding: 6px 8px;
-  font-size: 11px;
-  border: 1px solid var(--border-color, #444);
-  border-radius: 4px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--input-border-radius);
   background: none;
-  color: var(--text-muted, #999);
+  color: var(--text-secondary);
   cursor: pointer;
   transition:
-    background-color 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+    background-color var(--transition),
+    border-color var(--transition),
+    color var(--transition);
 }
 
 .flag-import-mode-btn:hover {
-  background-color: var(--hover-bg, rgba(255, 255, 255, 0.05));
+  background-color: var(--bg-hover);
 }
 
 .flag-import-mode-btn.active {
-  border-color: var(--accent-color, #4fc3f7);
-  color: var(--accent-color, #4fc3f7);
-  background-color: rgba(79, 195, 247, 0.08);
+  border-color: var(--border-active);
+  color: var(--text-accent);
+  background-color: color-mix(in srgb, var(--border-active) 10%, transparent);
 }
 
 .flag-import-mode-desc {
-  font-size: 11px;
-  color: var(--text-muted, #999);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   margin-bottom: 10px;
   line-height: 1.4;
 }
@@ -77,9 +82,10 @@
   justify-content: center;
   gap: 6px;
   padding: 16px;
-  border: 2px dashed var(--border-color, #555);
+  border: 2px dashed var(--border-secondary);
   border-radius: 6px;
   cursor: pointer;
+  color: var(--text-secondary);
   transition:
     border-color 0.2s,
     background-color 0.2s;
@@ -87,24 +93,26 @@
 }
 
 .flag-import-drop-zone:hover,
-.flag-import-drop-zone.drag-over {
-  border-color: var(--accent-color, #4fc3f7);
-  background-color: rgba(79, 195, 247, 0.05);
+.flag-import-drop-zone.drag-over,
+.flag-import-drop-zone:focus-visible {
+  border-color: var(--border-active);
+  background-color: color-mix(in srgb, var(--border-active) 6%, transparent);
+  outline: none;
 }
 
 .flag-import-drop-zone .drop-icon {
-  font-size: 20px;
-  opacity: 0.6;
+  display: inline-flex;
+  opacity: 0.7;
 }
 
 .flag-import-drop-zone .drop-text {
-  font-size: 11px;
-  color: var(--text-muted, #999);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .flag-import-drop-zone .drop-hint {
   font-size: 10px;
-  color: var(--text-muted, #666);
+  color: var(--text-muted);
 }
 
 .flag-import-preview {
@@ -115,7 +123,7 @@
 }
 
 .flag-import-preview-grid {
-  border: 1px solid var(--border-color, #555);
+  border: 1px solid var(--canvas-border);
   image-rendering: pixelated;
 }
 
@@ -127,36 +135,39 @@
 
 .flag-import-apply-btn {
   padding: 6px 14px;
-  font-size: 12px;
+  font-family: var(--font-family);
+  font-size: var(--font-size);
   border: none;
-  border-radius: 4px;
-  background-color: var(--accent-color, #4fc3f7);
-  color: #000;
+  border-radius: var(--input-border-radius);
+  background-color: var(--bg-button);
+  color: var(--text-white);
   cursor: pointer;
   font-weight: 500;
-  transition: opacity 0.15s;
+  transition: background-color var(--transition);
 }
 
 .flag-import-apply-btn:hover {
-  opacity: 0.85;
+  background-color: var(--bg-button-hover);
 }
 
 .flag-import-cancel-btn {
   padding: 4px 10px;
-  font-size: 11px;
-  border: 1px solid var(--border-color, #444);
-  border-radius: 4px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--input-border-radius);
   background: none;
-  color: var(--text-muted, #999);
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
 .flag-import-cancel-btn:hover {
-  color: var(--text-color, #ccc);
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
 .flag-import-error {
   margin-top: 8px;
-  font-size: 11px;
+  font-size: var(--font-size-sm);
   color: var(--text-error);
 }

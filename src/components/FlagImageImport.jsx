@@ -128,7 +128,15 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
           {!preview && (
             <div
               className={`flag-import-drop-zone ${dragOver ? 'drag-over' : ''}`}
+              role="button"
+              tabIndex={0}
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}

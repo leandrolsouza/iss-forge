@@ -142,12 +142,12 @@ export default function TeamNameEditor({
         </div>
 
         {/* Info */}
-        <div className="kit-preview-section" style={{ marginTop: 24 }}>
+        <div className="kit-preview-section">
           <div className="detail-section-title">{t('teamNameHowTitle')}</div>
-          <div className="welcome-info" style={{ marginTop: 8 }}>
+          <div className="editor-info-box">
             <p>{t('teamNameHowTwo1')}</p>
-            <p style={{ marginTop: 8 }}>{t('teamNameHowTwo2')}</p>
-            <p style={{ marginTop: 8 }}>
+            <p>{t('teamNameHowTwo2')}</p>
+            <p>
               <strong>{t('teamNameHowTwo3')}</strong>
             </p>
           </div>

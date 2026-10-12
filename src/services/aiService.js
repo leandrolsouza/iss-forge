@@ -6,6 +6,7 @@
  */
 import { clampStat, gameSpeed } from '../rom/playerStats';
 import { textPixelWidth, IN_GAME_NAME_WIDTH } from '../rom/TeamNameTileFont';
+import { aiError, fetchErrorToAi, responseErrorToAi } from './aiProviders';
 
 /** Scoreboard name: letters the editor font can draw, cut to the 32-pixel graphic */
 function fitInGameName(text) {
@@ -432,7 +433,7 @@ function sanitizeColorArray(arr, expectedLength) {
  */
 export function parseLLMResponse(responseText) {
   if (!responseText || typeof responseText !== 'string') {
-    return { success: false, error: 'Empty response from AI' };
+    return { success: false, error: aiError('empty') };
   }
 
   let text = responseText.trim();
@@ -454,11 +455,11 @@ export function parseLLMResponse(responseText) {
     const data = JSON.parse(text);
     const sanitized = sanitizeGeneratedTeam(data);
     if (!sanitized) {
-      return { success: false, error: 'Could not parse team data from AI response' };
+      return { success: false, error: aiError('parse', 'not a JSON object') };
     }
     return { success: true, team: sanitized };
   } catch (e) {
-    return { success: false, error: `JSON parse error: ${e.message}` };
+    return { success: false, error: aiError('parse', e.message) };
   }
 }
 
@@ -532,8 +533,7 @@ export function streamLLMWeb({ systemPrompt, userPrompt, settings, onChunk, onDo
   })
     .then(async (response) => {
       if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        onError(`API error ${response.status}: ${errorText || response.statusText}`);
+        onError(await responseErrorToAi(response));
         return;
       }
 
@@ -591,7 +591,7 @@ export function streamLLMWeb({ systemPrompt, userPrompt, settings, onChunk, onDo
     })
     .catch((err) => {
       if (err.name === 'AbortError') return;
-      onError(err.message || 'Connection failed');
+      onError(fetchErrorToAi(err, endpoint));
     });
 
   return () => controller.abort();

@@ -3,11 +3,46 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import RomParser from '../../rom/RomParser';
-import { exportTexts, applyTexts, validateTextsFile, stripAccents } from '../textsExport';
+import {
+  exportTexts,
+  applyTexts as applyTextsRaw,
+  validateTextsFile,
+  stripAccents,
+  importMessageText,
+} from '../textsExport';
+import en from '../../i18n/en';
+import ptBR from '../../i18n/pt-BR';
 
 const REAL_ROM = fileURLToPath(
   new URL('../../../rom/original/International Superstar Soccer (Europe).sfc', import.meta.url),
 );
+
+const tEn = (key, params) =>
+  (en[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (params?.[k] !== undefined ? params[k] : m));
+
+/** Every report line must have a message in both languages */
+function checkKeys(m) {
+  for (const key of [m.key, ...Object.values(m.params || {}).map((v) => v?.key)].filter(Boolean)) {
+    expect(en[key], `en.${key}`).toBeTypeOf('string');
+    expect(ptBR[key], `pt-BR.${key}`).toBeTypeOf('string');
+  }
+}
+
+/** applyTexts with the report lines as English text (what the tests check) */
+function applyTexts(...args) {
+  const res = applyTextsRaw(...args);
+  const text = (list) =>
+    list.map((m) => {
+      checkKeys(m);
+      return importMessageText(m, tEn);
+    });
+  return {
+    ...res,
+    errors: text(res.errors),
+    skipped: text(res.skipped),
+    warnings: text(res.warnings),
+  };
+}
 
 describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', () => {
   const load = () => new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
@@ -153,5 +188,32 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     expect(res.warnings.some((w) => w.includes('#'))).toBe(true);
     expect(stripAccents('técnico “ótimo” – já')).toBe('tecnico "otimo" - ja');
     expect(validateTextsFile({ _format: 'iss-forge-team' }).valid).toBe(false);
+  });
+});
+
+describe('import report messages', () => {
+  it('are i18n keys, translated with the path kept as is', () => {
+    const res = applyTextsRaw(null, { _format: 'other' });
+    expect(res.ok).toBe(false);
+    expect(res.errors[0]).toEqual({
+      path: null,
+      key: 'txWrongFormat',
+      params: { format: 'iss-forge-texts' },
+    });
+    checkKeys(res.errors[0]);
+    const tPt = (key, params) =>
+      ptBR[key].replace(/\{(\w+)\}/g, (m, k) => (params?.[k] !== undefined ? params[k] : m));
+    expect(importMessageText(res.errors[0], tPt)).toContain('Nao e um arquivo de textos');
+    const area = {
+      path: 'training.intros[0]',
+      key: 'txAreaFull',
+      params: { area: { key: 'txArea_instructions' } },
+    };
+    expect(importMessageText(area, tPt)).toBe(
+      'training.intros[0]: sem espaco na area de instrucoes (encurte os textos deste grupo)',
+    );
+    expect(importMessageText(area, tEn)).toBe(
+      'training.intros[0]: no room left in the instructions area (shorten the texts of this group)',
+    );
   });
 });

@@ -46,6 +46,21 @@ export function writeDraw(rom, index, teams) {
   rom.writeBytes(drawAddress(index), new Uint8Array(bytes));
 }
 
+/**
+ * Only the draws of `changes` ({ index: 24 TEAMS indexes }) that differ from the ROM,
+ * so saving an unchanged draw does not create an empty undo step.
+ */
+export function changedDraws(rom, changes) {
+  return Object.fromEntries(
+    Object.entries(changes || {}).filter(
+      ([index, draw]) =>
+        !Array.isArray(draw) ||
+        readDraw(rom, Number(index)).some((team, i) => team !== draw[i]) ||
+        draw.length !== D.TEAMS,
+    ),
+  );
+}
+
 /** Split a draw into its 6 groups. */
 export const drawGroups = (draw) =>
   Array.from({ length: D.GROUPS }, (_, g) => draw.slice(g * D.GROUP_SIZE, (g + 1) * D.GROUP_SIZE));

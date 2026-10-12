@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
 import { buildSystemPrompt, parseLLMResponse, streamLLMWeb } from '../services/aiService';
+import { aiErrorKey, aiErrorDetail } from '../services/aiProviders';
 import { applyImportedTeam } from '../utils/teamExport';
 import { IconSparkle } from './Icons';
 import '../styles/AIGeneratorPanel.css';
@@ -71,7 +72,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedTeam, setGeneratedTeam] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null); // { code, detail } (see aiErrorKey)
   const [showTips, setShowTips] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -139,12 +140,12 @@ export default function AIGeneratorPanel({ teamIndex }) {
   const handleGenerate = useCallback(() => {
     if (!prompt.trim()) return;
     if (!romParser) {
-      setError(t('aiNoRom'));
+      setError({ code: 'noRom' });
       return;
     }
 
     setGenerating(true);
-    setError('');
+    setError(null);
     setGeneratedTeam(null);
     setStreamText('');
     setStreamDone(false);
@@ -312,22 +313,14 @@ export default function AIGeneratorPanel({ teamIndex }) {
           {
             error && (
               <div className="ai-error">
-                <div className="ai-error-friendly">
-                  {error.includes('Connection refused') || error.includes('fetch failed')
-                    ? t('aiErrorConnection')
-                    : error.includes('timed out')
-                      ? t('aiErrorTimeout')
-                      : error.includes('JSON parse')
-                        ? t('aiErrorParse')
-                        : error.includes('API error')
-                          ? t('aiErrorApi')
-                          : t('aiErrorGeneric')}
-                </div>
-                <details className="ai-error-details">
-                  <summary>{t('aiErrorDetails')}</summary>
-                  <code>{error}</code>
-                </details>
-                <button className="ai-btn ai-btn-small" onClick={() => setError('')}>
+                <div className="ai-error-friendly">{t(aiErrorKey(error))}</div>
+                {aiErrorDetail(error) && (
+                  <details className="ai-error-details">
+                    <summary>{t('aiErrorDetails')}</summary>
+                    <code>{aiErrorDetail(error)}</code>
+                  </details>
+                )}
+                <button className="ai-btn ai-btn-small" onClick={() => setError(null)}>
                   {t('aiClose')}
                 </button>
               </div>

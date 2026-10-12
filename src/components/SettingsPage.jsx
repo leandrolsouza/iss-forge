@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
-import { getProvider, getProviderIds, buildBedrockEndpoint } from '../services/aiProviders';
+import {
+  getProvider,
+  getProviderIds,
+  buildBedrockEndpoint,
+  aiErrorKey,
+  aiErrorDetail,
+  fetchErrorToAi,
+  responseErrorToAi,
+} from '../services/aiProviders';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
 import '../styles/settings.css';
@@ -12,7 +20,7 @@ export default function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false);
   const [activeSection, setActiveSection] = useState('editor');
   const [testStatus, setTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
-  const [testError, setTestError] = useState('');
+  const [testError, setTestError] = useState(null); // { code, detail } (see aiErrorKey)
 
   const tabs = [
     { id: 'editor', label: t('settingsEditor') },
@@ -314,7 +322,7 @@ export default function SettingsPage() {
                   disabled={testStatus === 'testing'}
                   onClick={async () => {
                     setTestStatus('testing');
-                    setTestError('');
+                    setTestError(null);
                     try {
                       const payload = {
                         settings: {
@@ -363,11 +371,7 @@ export default function SettingsPage() {
                           body: JSON.stringify(body),
                         });
                         if (!resp.ok) {
-                          const errText = await resp.text().catch(() => '');
-                          result = {
-                            success: false,
-                            error: `API error ${resp.status}: ${errText || resp.statusText}`,
-                          };
+                          result = { success: false, error: await responseErrorToAi(resp) };
                         } else {
                           result = { success: true };
                         }
@@ -376,11 +380,11 @@ export default function SettingsPage() {
                         setTestStatus('success');
                       } else {
                         setTestStatus('error');
-                        setTestError(result.error || t('unknownError'));
+                        setTestError(result.error || { code: 'generic' });
                       }
                     } catch (err) {
                       setTestStatus('error');
-                      setTestError(err.message || t('connectionFailed'));
+                      setTestError(fetchErrorToAi(err, settings.aiEndpoint));
                     }
                   }}
                 >
@@ -404,7 +408,13 @@ export default function SettingsPage() {
               )}
               {testStatus === 'error' && (
                 <p className="settings-hint settings-hint-warning">
-                  {t('settingsAiTestFailed')} {testError}
+                  {t('settingsAiTestFailed')} {t(aiErrorKey(testError))}
+                  {aiErrorDetail(testError) && (
+                    <>
+                      <br />
+                      <code>{aiErrorDetail(testError)}</code>
+                    </>
+                  )}
                 </p>
               )}
             </div>

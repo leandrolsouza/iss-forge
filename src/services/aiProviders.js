@@ -201,9 +201,7 @@ export function buildRequestBody({
   if (format === 'bedrock') {
     return {
       system: [{ text: systemPrompt }],
-      messages: [
-        { role: 'user', content: [{ text: userPrompt }] },
-      ],
+      messages: [{ role: 'user', content: [{ text: userPrompt }] }],
       inferenceConfig: {
         temperature: temperature || 0.7,
         maxTokens: maxTokens || 4096,
@@ -230,19 +228,86 @@ export function buildRequestBody({
 }
 
 /**
+ * AI errors are { code, detail }: `code` is translated by aiErrorKey
+ * (connection, timeout, api, invalidResponse, parse, empty, generic) and `detail`
+ * is the technical text shown under "Technical details". Same shape as electron/aiProviders.mjs.
+ */
+export function aiError(code, detail = '') {
+  return { code, detail: String(detail || '') };
+}
+
+/** Error of a fetch() that threw (timeout, refused connection...) */
+export function fetchErrorToAi(err, endpoint) {
+  if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+    return aiError('timeout', `${err.message} (${endpoint})`);
+  }
+  const code = err?.code || err?.cause?.code;
+  // Browsers throw a TypeError ("Failed to fetch") for refused connections and CORS
+  if (
+    ['ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(code) ||
+    err?.message === 'fetch failed' ||
+    err?.name === 'TypeError'
+  ) {
+    return aiError('connection', `${code || err.message} (${endpoint})`);
+  }
+  return aiError('generic', err?.message || String(err));
+}
+
+/** Error of an HTTP response that is not ok */
+export async function responseErrorToAi(response) {
+  const errorText = await response.text().catch(() => '');
+  return aiError('api', `HTTP ${response.status}: ${errorText || response.statusText}`);
+}
+
+const AI_ERROR_KEYS = {
+  connection: 'aiErrorConnection',
+  timeout: 'aiErrorTimeout',
+  api: 'aiErrorApi',
+  invalidResponse: 'aiErrorInvalidResponse',
+  parse: 'aiErrorParse',
+  empty: 'aiErrorEmpty',
+  noRom: 'aiNoRom',
+};
+
+/** i18n key of an AI error ({ code } or, from older builds, a plain message) */
+export function aiErrorKey(error) {
+  if (error && typeof error === 'object') return AI_ERROR_KEYS[error.code] || 'aiErrorGeneric';
+  const s = String(error || '');
+  if (/Connection refused|fetch failed|Failed to fetch/i.test(s)) return 'aiErrorConnection';
+  if (/timed out/i.test(s)) return 'aiErrorTimeout';
+  if (/JSON parse/i.test(s)) return 'aiErrorParse';
+  if (/API error/i.test(s)) return 'aiErrorApi';
+  return 'aiErrorGeneric';
+}
+
+/** Technical text of an AI error (not translated) */
+export function aiErrorDetail(error) {
+  if (error && typeof error === 'object') return error.detail || error.code || '';
+  return String(error || '');
+}
+
+/**
  * Parse a non-streaming response based on provider format
  * @param {object} data - Parsed JSON response
  * @param {string} format - 'openai' or 'anthropic'
- * @returns {{ content: string|null, usage: object|null, error: string|null }}
+ * @returns {{ content: string|null, usage: object|null, error: {code: string, detail: string}|null }}
  */
 export function parseResponse(data, format) {
   if (format === 'anthropic') {
     if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
-      return { content: null, usage: null, error: 'Invalid response format from Claude' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Claude: no content'),
+      };
     }
     const textBlock = data.content.find((b) => b.type === 'text');
     if (!textBlock) {
-      return { content: null, usage: null, error: 'No text content in Claude response' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Claude: no text block'),
+      };
     }
     return {
       content: textBlock.text,
@@ -255,11 +320,19 @@ export function parseResponse(data, format) {
     // Bedrock Converse response: { output: { message: { content: [{text: "..."}] } }, usage: {...} }
     const message = data.output?.message;
     if (!message || !message.content || message.content.length === 0) {
-      return { content: null, usage: null, error: 'Invalid response format from Bedrock' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Bedrock: no content'),
+      };
     }
     const textBlock = message.content.find((b) => b.text);
     if (!textBlock) {
-      return { content: null, usage: null, error: 'No text content in Bedrock response' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Bedrock: no text block'),
+      };
     }
     return {
       content: textBlock.text,
@@ -270,7 +343,11 @@ export function parseResponse(data, format) {
 
   // OpenAI format
   if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-    return { content: null, usage: null, error: 'Invalid response format from LLM' };
+    return {
+      content: null,
+      usage: null,
+      error: aiError('invalidResponse', 'no choices[0].message'),
+    };
   }
 
   return {

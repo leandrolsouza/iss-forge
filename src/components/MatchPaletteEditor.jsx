@@ -78,6 +78,8 @@ export default function MatchPaletteEditor() {
   const [weather, setWeather] = useState('sunny');
   const [adjust, setAdjust] = useState({ hue: 0, saturation: 1, lightness: 1 });
   const [allConditions, setAllConditions] = useState(false);
+  // sliders: recolour the current palette (keeps manual edits) or start from the original
+  const [fromCurrent, setFromCurrent] = useState(true);
 
   const originals = useMemo(
     () => (romParser ? new RomParser(romParser.getOriginalData()).readMatchPalettes() : null),
@@ -104,7 +106,11 @@ export default function MatchPaletteEditor() {
       ? TYPES.flatMap((ty) => WEATHERS.map((w) => [grassId(ty, w), detailId(ty, w)]))
       : [[gId, dId]];
 
-  const applyGrassAdjust = (adj) => {
+  /**
+   * @param {object|null} adj - hue/saturation/lightness, null = original colours
+   * @param {boolean} [relative] - recolour the current colours instead of the original ones
+   */
+  const applyGrassAdjust = (adj, relative = false) => {
     const updates = {};
     // Grass rows and the pitch-detail row are recoloured together (detail palettes
     // can be shared, so each id is processed once)
@@ -112,9 +118,16 @@ export default function MatchPaletteEditor() {
       .flat()
       .forEach((id) => {
         if (updates[id]) return;
-        updates[id] = adj ? adjustPalette(originals[id], adj) : [...originals[id]];
+        const base = relative ? matchPalettes[id] : originals[id];
+        updates[id] = adj ? adjustPalette(base, adj) : [...originals[id]];
       });
     handleMatchPaletteChange(updates);
+  };
+
+  const applySliders = () => {
+    applyGrassAdjust(adjust, fromCurrent);
+    // a relative adjustment is applied once: back to neutral so the next one starts from here
+    if (fromCurrent) setAdjust({ hue: 0, saturation: 1, lightness: 1 });
   };
 
   const applyBall = (preset) => {
@@ -246,10 +259,18 @@ export default function MatchPaletteEditor() {
                 />
               </label>
             ))}
-            <button className="kit-btn active" onClick={() => applyGrassAdjust(adjust)}>
+            <button className="kit-btn active" onClick={applySliders}>
               {t('mpApplyAdjust')}
             </button>
           </div>
+          <label className="mp-check">
+            <input
+              type="checkbox"
+              checked={fromCurrent}
+              onChange={(e) => setFromCurrent(e.target.checked)}
+            />
+            {t('mpAdjustFromCurrent')}
+          </label>
           <label className="mp-check">
             <input
               type="checkbox"

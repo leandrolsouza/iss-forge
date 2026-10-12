@@ -45,7 +45,7 @@ export const MENU_SPRITE_ALL = (() => {
   return all;
 })();
 
-/** Letters available (plus space) */
+/** Letters available (space is also accepted) */
 export const MENU_SPRITE_CHARS = Object.keys(MENU_SPRITE_ALL).sort().join('');
 
 /**

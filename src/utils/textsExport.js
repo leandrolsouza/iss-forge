@@ -93,13 +93,30 @@ export function screenFieldLimit(f) {
   return `${f.columns} letters`;
 }
 
+/**
+ * One line of the import report: `path` is the place in the file (not translated),
+ * `key`/`params` the i18n message. Params that are `{ key }` are translated too.
+ * @typedef {{ path?: string, key: string, params?: object }} ImportMessage
+ */
+const msg = (path, key, params) => ({ path, key, ...(params ? { params } : {}) });
+
+/** Text of an import report line; `t` is the i18n function */
+export function importMessageText(m, t) {
+  if (typeof m === 'string') return m;
+  const params = Object.fromEntries(
+    Object.entries(m.params || {}).map(([k, v]) => [k, v && typeof v === 'object' ? t(v.key) : v]),
+  );
+  const text = t(m.key, params);
+  return m.path ? `${m.path}: ${text}` : text;
+}
+
+/** Report line for an error code the report has no own message for */
+const errorMsg = (path, error) => msg(path, 'txError', { error: error || '?' });
+
 export function validateTextsFile(data) {
-  if (!data || typeof data !== 'object') return { valid: false, error: 'Invalid JSON data' };
+  if (!data || typeof data !== 'object') return { valid: false, error: msg(null, 'txInvalidJson') };
   if (data._format !== TEXTS_FORMAT) {
-    return {
-      valid: false,
-      error: `Not an ISS Forge texts file (_format must be "${TEXTS_FORMAT}")`,
-    };
+    return { valid: false, error: msg(null, 'txWrongFormat', { format: TEXTS_FORMAT }) };
   }
   return { valid: true };
 }
@@ -164,13 +181,13 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
   if (!check.valid) return { ok: false, errors: [check.error], skipped, warnings, moved, changed };
   const counter = { n: 0 };
   const data = normalizeStrings(input, counter);
-  if (counter.n) warnings.push(`${counter.n} text(s): accents removed (the game fonts have none)`);
+  if (counter.n) warnings.push(msg(null, 'txAccentsRemoved', { count: counter.n }));
 
   // Work on a copy; capacities are measured against the ROM as loaded
   const work = new RomParser(romParser.getRomData());
   work.originalData = romParser.getOriginalData();
   const invalidChars = (path, chars) =>
-    chars.length && warnings.push(`${path}: no glyph for ${chars.join(' ')} (shown as space)`);
+    chars.length && warnings.push(msg(path, 'txNoGlyph', { chars: chars.join(' ') }));
 
   // --- Training ---
   if (data.training && typeof data.training === 'object') {
@@ -252,14 +269,19 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         ? wrapFixed(it.get(next), it.box.columns)
         : wrapScenarioText(it.get(next), it.box.columns);
       skipped.push(
-        `${it.path}: ${lines.length} lines, max ${it.box.lines} (${it.box.columns} columns): ${showLines(lines)}`,
+        msg(it.path, 'txLinesColumns', {
+          count: lines.length,
+          max: it.box.lines,
+          columns: it.box.columns,
+          lines: showLines(lines),
+        }),
       );
       it.set(next, it.get(cur));
     }
     // Total space of the packed areas: drop the longest new texts until it fits
     for (const [kind, full, label] of [
-      ['intro', 'introFull', 'instructions'],
-      ['result', 'resultFull', 'result comments'],
+      ['intro', 'introFull', 'txArea_instructions'],
+      ['result', 'resultFull', 'txArea_results'],
     ]) {
       const area = items.filter(
         (x) =>
@@ -269,16 +291,14 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       area.sort((a, b) => b.get(next).length - a.get(next).length);
       while (validateTrainingTexts(next).some((x) => x.kind === full) && area.length) {
         const it = area.shift();
-        skipped.push(
-          `${it.path}: no room left in the ${label} area (shorten the texts of this group)`,
-        );
+        skipped.push(msg(it.path, 'txAreaFull', { area: { key: label } }));
         it.set(next, it.get(cur));
       }
     }
     if (JSON.stringify(next) !== JSON.stringify(cur)) {
       const res = work.writeTrainingTexts(next);
       if (res.ok) changed.training = items.filter((it) => it.get(next) !== it.get(cur)).length;
-      else skipped.push('training: could not be written');
+      else skipped.push(msg('training', 'txNotWritten'));
     }
   }
 
@@ -289,7 +309,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     for (const [id, entries] of Object.entries(data.menus)) {
       const screen = screens.find((s) => s.id === id);
       if (!screen) {
-        warnings.push(`menus.${id}: unknown screen (ignored)`);
+        warnings.push(msg(`menus.${id}`, 'txUnknownScreen'));
         continue;
       }
       if (!Array.isArray(entries)) continue;
@@ -309,20 +329,25 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
               ? text.slice(4)
               : text.replace(/^\S+\s+/, '');
             warnings.push(
-              `menus.${id} "${e.original}": the game draws "${ord[1]}" by itself, imported only "${rest}"`,
+              msg(`menus.${id} "${e.original}"`, 'txOrdinalPrefix', { prefix: ord[1], rest }),
             );
             text = rest;
           }
         }
         if (k < 0) {
-          warnings.push(`menus.${id}[${n}]: text "${e.original ?? e.at}" not found on the screen`);
+          warnings.push(
+            msg(`menus.${id}[${n}]`, 'txMenuTextNotFound', { text: e.original ?? e.at }),
+          );
           return;
         }
         const run = screen.runs[k];
         if (text === run.text) return;
         if (menuTextLength(text) > run.maxLength) {
           skipped.push(
-            `menus.${id} "${run.text}" -> "${text}": ${menuTextLength(text)} letters, max ${run.maxLength}`,
+            msg(`menus.${id} "${run.text}" -> "${text}"`, 'txLettersMax', {
+              count: menuTextLength(text),
+              max: run.maxLength,
+            }),
           );
           return;
         }
@@ -343,9 +368,13 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         if (res.moved) moved.push(screen.id);
       } else if (res?.error === 'menuScreenFull') {
         skipped.push(
-          `menus.${screen.id}: ${n} text(s) not imported — the screen packs to ${res.size} bytes and the largest free room is ${res.capacity} (shorten a text by a few letters)`,
+          msg(`menus.${screen.id}`, 'txMenuScreenFull', {
+            count: n,
+            size: res.size,
+            capacity: res.capacity,
+          }),
         );
-      } else skipped.push(`menus.${screen.id}: ${res?.error || 'not written'}`);
+      } else skipped.push(errorMsg(`menus.${screen.id}`, res?.error));
     }
   }
 
@@ -357,7 +386,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     for (const [id, entries] of Object.entries(data.screens)) {
       const screen = SCREEN_TEXTS.find((s) => s.id === id);
       if (!screen) {
-        warnings.push(`screens.${id}: unknown screen (ignored)`);
+        warnings.push(msg(`screens.${id}`, 'txUnknownScreen'));
         continue;
       }
       if (!Array.isArray(entries)) continue;
@@ -365,14 +394,14 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         if (!e || !isStr(e.text)) continue;
         const f = screen.fields.find((x) => x.id === e.id);
         if (!f) {
-          warnings.push(`screens.${id}: unknown text "${e.id}" (ignored)`);
+          warnings.push(msg(`screens.${id}`, 'txUnknownField', { id: e.id }));
           continue;
         }
         if (e.text === cur[id][f.id]) continue;
         const path = `screens.${id}.${f.id}`;
         const res = encodeScreenField(f, e.text);
         if (res.error) {
-          skipped.push(`${path} "${e.text}": ${screenFieldError(f, e.text, res)}`);
+          skipped.push(screenFieldError(`${path} "${e.text}"`, f, e.text, res));
           continue;
         }
         invalidChars(path, res.invalid);
@@ -388,9 +417,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         .sort((a, b) => next[b.id][b.f.id].length - next[a.id][a.f.id].length);
       while (measureScreenPacks(next)[pack].used > m.capacity && items.length) {
         const it = items.shift();
-        skipped.push(
-          `${it.path}: no room left in the ${pack} area (shorten the texts of this group)`,
-        );
+        skipped.push(msg(it.path, 'txAreaFull', { area: { key: `txArea_${pack}` } }));
         next[it.id][it.f.id] = cur[it.id][it.f.id];
         touched.splice(touched.indexOf(it), 1);
       }
@@ -405,7 +432,9 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       const text = next.mainMenu[it.f.id].toUpperCase();
       if (!missing.some((ch) => text.includes(ch))) continue;
       skipped.push(
-        `${it.path} "${next.mainMenu[it.f.id]}": no room in the menu font for ${missing.join(' ')} (each drawn letter takes the place of a big letter no item uses)`,
+        msg(`${it.path} "${next.mainMenu[it.f.id]}"`, 'txMenuFontFull', {
+          letters: missing.join(' '),
+        }),
       );
       next.mainMenu[it.f.id] = cur.mainMenu[it.f.id];
       touched.splice(touched.indexOf(it), 1);
@@ -419,9 +448,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
           .reverse()
           .find((t) => t.id === 'titles' && drawnTitle(next.titles[t.f.id]));
         if (!it) break;
-        skipped.push(
-          `${it.path}: no room in the title font for more drawn letters (${res.issues[0].letters.join(' ')}); use fewer of K Q V X Y Z`,
-        );
+        skipped.push(msg(it.path, 'txTitleFontFull', { letters: res.issues[0].letters.join(' ') }));
         next.titles[it.f.id] = cur.titles[it.f.id];
         touched.splice(touched.indexOf(it), 1);
         res = work.writeScreenTexts(next);
@@ -431,7 +458,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
         for (const is of res.issues) {
           const it = touched.find((t) => t.id === is.screen && t.f.id === is.field);
           skipped.push(
-            `screens.${is.screen}.${is.field}: no room left in the ROM for this title (${is.size ?? '?'} bytes)`,
+            msg(`screens.${is.screen}.${is.field}`, 'txTitleNoRoom', { size: is.size ?? '?' }),
           );
           next[is.screen][is.field] = cur[is.screen][is.field];
           if (it) touched.splice(touched.indexOf(it), 1);
@@ -441,7 +468,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       if (res.ok) {
         changed.screens = touched.length;
         for (const id of res.moved || []) if (!moved.includes(id)) moved.push(id);
-      } else skipped.push('screens: could not be written');
+      } else skipped.push(msg('screens', 'txNotWritten'));
     }
   }
 
@@ -456,14 +483,17 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       if (res.ok) changed.scenarios++;
       else {
         const lines = wrapScenarioText(e.text);
+        const path = `scenarios[${i + 1}]`;
         skipped.push(
-          `scenarios[${i + 1}]: ${
-            res.error === 'scenarioTooManyLines'
-              ? `${lines.length} lines, max ${SCENARIO_DATA.TEXT_LINES}: ${showLines(lines)}`
-              : res.error === 'scenarioTextFull'
-                ? `no room left in the scenario text area (${res.used} of ${res.capacity} bytes)`
-                : res.error || 'does not fit'
-          }`,
+          res.error === 'scenarioTooManyLines'
+            ? msg(path, 'txLines', {
+                count: lines.length,
+                max: SCENARIO_DATA.TEXT_LINES,
+                lines: showLines(lines),
+              })
+            : res.error === 'scenarioTextFull'
+              ? msg(path, 'txScenarioFull', { used: res.used, capacity: res.capacity })
+              : errorMsg(path, res.error),
         );
       }
     });
@@ -477,7 +507,7 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     data.teamDescriptions.forEach((e, n) => {
       const i = isStr(e?.team) ? TEAMS.findIndex((t) => t.id === e.team) : n;
       if (i < 0 || !next[i]) {
-        warnings.push(`teamDescriptions[${n}]: unknown team "${e?.team}"`);
+        warnings.push(msg(`teamDescriptions[${n}]`, 'txUnknownTeam', { team: e?.team }));
         return;
       }
       const cand = { ...next[i] };
@@ -488,13 +518,22 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       const lines = wrapDescriptionBody(cand.body);
       if (cand.title.length > TEAM_DESC.COLUMNS) {
         skipped.push(
-          `${path}: title "${cand.title}" has ${cand.title.length} letters, max ${TEAM_DESC.COLUMNS}`,
+          msg(path, 'txDescTitleLong', {
+            title: cand.title,
+            count: cand.title.length,
+            max: TEAM_DESC.COLUMNS,
+          }),
         );
         return;
       }
       if (lines.length > TEAM_DESC.BODY_LINES) {
         skipped.push(
-          `${path}: body has ${lines.length} lines, max ${TEAM_DESC.BODY_LINES} (${TEAM_DESC.COLUMNS} columns): ${showLines(lines)}`,
+          msg(path, 'txDescBodyLines', {
+            count: lines.length,
+            max: TEAM_DESC.BODY_LINES,
+            columns: TEAM_DESC.COLUMNS,
+            lines: showLines(lines),
+          }),
         );
         return;
       }
@@ -507,7 +546,11 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
     let res = touched.length ? writeTeamDescriptions(work, next) : { ok: true };
     while (!res.ok && touched.length) {
       const i = touched.shift();
-      skipped.push(`teamDescriptions.${teamId(i)}: no room left in the descriptions area`);
+      skipped.push(
+        msg(`teamDescriptions.${teamId(i)}`, 'txAreaFull', {
+          area: { key: 'txArea_descriptions' },
+        }),
+      );
       next[i] = cur[i];
       res = writeTeamDescriptions(work, next);
     }
@@ -522,12 +565,18 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       if (!isStr(v) || v.toUpperCase().trim() === cur[key]) continue;
       const res = work.writeTitleTexts({ [key]: v });
       if (res.ok) changed.titleScreen++;
-      else
+      else {
+        const path = `titleScreen.${key}`;
         skipped.push(
-          `titleScreen.${key}: ${
-            res.error === 'noGlyph' ? `no letter for ${res.invalid.join(' ')}` : res.error
-          }`,
+          res.error === 'noGlyph'
+            ? msg(path, 'txNoLetter', { chars: res.invalid.join(' ') })
+            : res.error === 'tooManyLines'
+              ? msg(path, 'txTitleTextLines')
+              : res.error === 'tooWide'
+                ? msg(path, 'txTitleTextWide')
+                : errorMsg(path, res.error),
         );
+      }
     }
   }
 
@@ -539,21 +588,32 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
 }
 
 /** Why a screen text does not fit, for the import report */
-function screenFieldError(f, text, res) {
+function screenFieldError(path, f, text, res) {
   if (f.kind === 'title') {
-    if (res.error === 'noGlyph') return `no glyph in the title font for ${res.invalid.join(' ')}`;
-    if (res.error === 'tooManyLines') return `${res.widths.length} lines, max 3`;
-    return `line widths ${res.widths.join(', ')} columns, max 32`;
+    if (res.error === 'noGlyph')
+      return msg(path, 'txNoGlyphTitleFont', { chars: res.invalid.join(' ') });
+    if (res.error === 'tooManyLines') return msg(path, 'txLines3', { count: res.widths.length });
+    return msg(path, 'txTitleWidths', { widths: res.widths.join(', ') });
   }
   if (res.error === 'tooManyLines') {
     const lines = f.kind === 'box' ? wrapScenarioText(text, f.columns) : wrapFixed(text, f.columns);
-    return `${lines.length} lines, max ${f.lines} (${f.columns} columns): ${showLines(lines)}`;
+    return msg(path, 'txLinesColumns', {
+      count: lines.length,
+      max: f.lines,
+      columns: f.columns,
+      lines: showLines(lines),
+    });
   }
-  if (res.error === 'tooLong') return `${res.cells} letters, max ${f.columns}`;
-  if (res.error === 'noGlyph') return `no glyph in the menu font for ${res.invalid.join(' ')}`;
-  if (res.error === 'tooWide') return `too wide (ends at x=${128 + res.right}, max 252)`;
-  if (res.error === 'tooManySprites') return 'too many sprites on one line (shorten the text)';
-  return `${res.bytes?.length ?? '?'} bytes, max ${f.room ?? f.columns}`;
+  if (res.error === 'tooLong')
+    return msg(path, 'txLettersMax', { count: res.cells, max: f.columns });
+  if (res.error === 'noGlyph')
+    return msg(path, 'txNoGlyphMenuFont', { chars: res.invalid.join(' ') });
+  if (res.error === 'tooWide') return msg(path, 'txTooWide', { right: 128 + res.right });
+  if (res.error === 'tooManySprites') return msg(path, 'txTooManySprites');
+  return msg(path, 'txBytesMax', {
+    count: res.bytes?.length ?? '?',
+    max: f.room ?? f.columns,
+  });
 }
 
 /** Lines of a fixed-length text as layoutFixed breaks them */

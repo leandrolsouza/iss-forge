@@ -20,6 +20,8 @@ import { restoreTeamPart } from '../rom/restoreOriginal';
 import { buildPatch, getPatchFilename } from '../rom/patches';
 import { withDerivedStats } from '../rom/playerStats';
 import { exportTexts, applyTexts } from '../utils/textsExport';
+import { changedPaletteUpdates } from '../rom/palettes';
+import { changedDraws } from '../rom/tournament';
 
 export default function useRomHandlers({
   toast,
@@ -547,7 +549,11 @@ export default function useRomHandlers({
   const handleMatchPaletteChange = useCallback(
     (idOrMap, colors) => {
       if (!romParser) return;
-      const updates = typeof idOrMap === 'string' ? { [idOrMap]: colors } : idOrMap;
+      const updates = changedPaletteUpdates(
+        romParser,
+        typeof idOrMap === 'string' ? { [idOrMap]: colors } : idOrMap,
+      );
+      if (!Object.keys(updates).length) return; // nothing changes: no empty undo step
       pushSnapshot(teams);
       romParser.applyPaletteUpdates(updates);
       setMatchPalettes(romParser.readMatchPalettes());
@@ -723,8 +729,10 @@ export default function useRomHandlers({
   const handleTournamentDrawsChange = useCallback(
     (changes) => {
       if (!romParser || !changes) return;
+      const changed = changedDraws(romParser, changes);
+      if (!Object.keys(changed).length) return; // nothing changes: no empty undo step
       pushSnapshot(teams);
-      Object.entries(changes).forEach(([index, draw]) =>
+      Object.entries(changed).forEach(([index, draw]) =>
         romParser.writeTournamentDraw(Number(index), draw),
       );
       setTournamentDraws(romParser.readTournamentDraws());

@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
-import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/formation';
+import {
+  getPositionLabel as slotPositionLabel,
+  getLineCategory,
+  positionText,
+} from '../rom/formation';
 import { NIBBLE_STATS, INDEX_STATS, clampStat, clampIndex } from '../rom/playerStats';
 import { useI18n } from '../i18n';
 import { IconPlayers } from './Icons';
@@ -92,10 +96,9 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
   const formationName = team.formation?.name || '-';
 
   const getPositionLabel = (idx) => {
-    if (idx >= 11) return 'SUB';
     const slot = formationSlots[idx];
-    if (slot) return slotPositionLabel(slot);
-    return idx === 0 ? 'GK' : '?';
+    const code = idx >= 11 ? 'SUB' : slot ? slotPositionLabel(slot) : idx === 0 ? 'GK' : '?';
+    return positionText(code, t);
   };
 
   const getPositionCategory = (idx) => {

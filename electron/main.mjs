@@ -7,6 +7,8 @@ import fs from 'fs';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import {
+  fetchErrorToAi,
+  responseErrorToAi,
   getProvider,
   getEffectiveEndpoint,
   buildHeaders,
@@ -728,11 +730,7 @@ ipcMain.handle('ai:testConnection', async (event, { settings }) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      return {
-        success: false,
-        error: `API error ${response.status}: ${errorText || response.statusText}`,
-      };
+      return { success: false, error: await responseErrorToAi(response) };
     }
 
     const data = await response.json();
@@ -744,13 +742,7 @@ ipcMain.handle('ai:testConnection', async (event, { settings }) => {
 
     return { success: true, content: result.content };
   } catch (err) {
-    if (err.name === 'TimeoutError') {
-      return { success: false, error: `Connection timed out (30s). Is ${endpoint} reachable?` };
-    }
-    if (err.code === 'ECONNREFUSED') {
-      return { success: false, error: `Connection refused at ${endpoint}.` };
-    }
-    return { success: false, error: err.message };
+    return { success: false, error: fetchErrorToAi(err, endpoint) };
   }
 });
 
@@ -780,11 +772,7 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      return {
-        success: false,
-        error: `API error ${response.status}: ${errorText || response.statusText}`,
-      };
+      return { success: false, error: await responseErrorToAi(response) };
     }
 
     const data = await response.json();
@@ -800,19 +788,7 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
       usage: result.usage,
     };
   } catch (err) {
-    if (err.name === 'TimeoutError') {
-      return {
-        success: false,
-        error: `Request timed out (2 min). Is the ${provider.id} API reachable?`,
-      };
-    }
-    if (err.code === 'ECONNREFUSED') {
-      return {
-        success: false,
-        error: `Connection refused at ${endpoint}. Check your settings.`,
-      };
-    }
-    return { success: false, error: err.message };
+    return { success: false, error: fetchErrorToAi(err, endpoint) };
   }
 });
 
@@ -849,12 +825,9 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
       console.log('[Bedrock Stream] Response status:', response.status);
 
       if (!response.ok) {
-        const errorText = await response.text().catch(() => '');
-        console.log('[Bedrock Stream] Error:', errorText);
-        sender.send(
-          'ai:stream-error',
-          `API error ${response.status}: ${errorText || response.statusText}`,
-        );
+        const error = await responseErrorToAi(response);
+        console.log('[Bedrock Stream] Error:', error.detail);
+        sender.send('ai:stream-error', error);
         return { success: false };
       }
 
@@ -955,7 +928,7 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
       sender.send('ai:stream-done');
       return { success: true };
     } catch (err) {
-      sender.send('ai:stream-error', err.message || 'Bedrock stream failed');
+      sender.send('ai:stream-error', fetchErrorToAi(err, endpoint));
       return { success: false };
     }
   }
@@ -982,11 +955,7 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
     });
 
     if (!response.ok) {
-      const errorText = await response.text().catch(() => '');
-      sender.send(
-        'ai:stream-error',
-        `API error ${response.status}: ${errorText || response.statusText}`,
-      );
+      sender.send('ai:stream-error', await responseErrorToAi(response));
       return { success: false };
     }
 
@@ -1039,13 +1008,7 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
     sender.send('ai:stream-done');
     return { success: true };
   } catch (err) {
-    let errorMsg = err.message;
-    if (err.name === 'TimeoutError') {
-      errorMsg = `Request timed out (3 min). Is the ${provider.id} API reachable?`;
-    } else if (err.code === 'ECONNREFUSED') {
-      errorMsg = `Connection refused at ${endpoint}. Check your settings.`;
-    }
-    sender.send('ai:stream-error', errorMsg);
+    sender.send('ai:stream-error', fetchErrorToAi(err, endpoint));
     return { success: false };
   }
 });

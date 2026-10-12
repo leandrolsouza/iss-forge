@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { getPositionLabel } from '../rom/formation';
+import { getPositionLabel, positionText } from '../rom/formation';
 import { useI18n } from '../i18n';
 import { IconCompare } from './Icons';
 
@@ -31,11 +31,14 @@ export default function TeamCompare({ teams }) {
 
   // Players are paired by squad slot: slot N plays formation position N (12-15 = bench)
   const posOf = (team, idx) =>
-    idx >= 11
-      ? 'SUB'
-      : team?.formation?.slots?.[idx]
-        ? getPositionLabel(team.formation.slots[idx])
-        : '';
+    positionText(
+      idx >= 11
+        ? 'SUB'
+        : team?.formation?.slots?.[idx]
+          ? getPositionLabel(team.formation.slots[idx])
+          : '',
+      t,
+    );
 
   return (
     <div className="editor-panel team-compare-panel">

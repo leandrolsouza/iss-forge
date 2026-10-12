@@ -57,7 +57,6 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **Overview** — Visualize the full team squad
 - **Compare** — Compare attributes between two teams
 - **AI Generator** — Generate complete teams (players, uniforms, flag) via prompt with local or cloud LLM
-- **Tile Explorer** — Browse and visualize SNES tile graphics stored in the ROM (raw + Konami LZ)
 - **Import/Export** — Export and import team configurations as JSON
 - **Patch Export** — Export your hack as a BPS (recommended, CRC32-validated) or IPS patch, against the opened ROM or any clean base ROM
 - **Auto Checksum** — SNES internal checksum/complement is recalculated automatically on save and patch export
@@ -132,10 +131,10 @@ npm run format:check
 
 | Technology | Usage |
 |------------|-------|
-| Electron 43 | Cross-platform desktop app |
+| Electron 44 | Cross-platform desktop app |
 | React 19 | User interface |
 | Vite 8 | Build tooling |
-| Vitest 4 | Unit testing |
+| Vitest 5 | Unit testing |
 | ESLint 9 | Linter (flat config) |
 | Prettier 3 | Code formatting |
 | electron-builder | Packaging |
@@ -147,7 +146,7 @@ npm run format:check
 
 ```
 iss-forge/
-├── electron/          # Electron main process (CommonJS)
+├── electron/          # Electron main process (ES modules)
 ├── src/
 │   ├── components/    # React components (editors and panels)
 │   ├── context/       # RomContext — central ROM state
@@ -161,8 +160,8 @@ iss-forge/
 │   ├── i18n/          # Locale files (en, pt-BR)
 │   ├── theme/         # Theme provider (light/dark)
 │   └── styles/        # CSS (one file per component)
-├── issparser-main/    # Reference Java project (read-only)
-└── docs/              # Documentation
+├── research/          # Technical documentation (ROM maps, findings, backlog)
+└── game-translations/ # Exported texts (EN) and the PT-BR translation
 ```
 
 - Electron ↔ React communication via IPC with context bridge
@@ -216,7 +215,7 @@ Based on the work of:
 - [x] Title screen: colours, teams, texts and logo import
 - [ ] Other menu graphics (see `research/BACKLOG.md`)
 - [x] AI team generator
-- [x] Tile Explorer
+- [ ] Screen viewer (any game screen drawn from the ROM, to check translations and find graphics)
 - [x] Undo/Redo
 - [x] Auto-update
 - [x] Auto-backup

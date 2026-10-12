@@ -72,10 +72,14 @@ export function readTitleTexts(rom) {
 
 // --- Check ---
 
-const linesOf = (text) =>
-  norm(text)
+/** Lines of the copyright, trimmed; empty lines at the end are dropped (an Enter after the last line) */
+const linesOf = (text) => {
+  const lines = norm(text)
     .split('\n')
     .map((l) => l.trim());
+  while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
+  return lines;
+};
 
 /**
  * @returns {{ error?: string, invalid: string[] }} error: noGlyph, tooManyLines, tooWide, empty

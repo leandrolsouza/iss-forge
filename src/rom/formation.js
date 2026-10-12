@@ -124,6 +124,14 @@ export function getPositionLabel(slot) {
   return 'ST';
 }
 
+/** Translated abbreviation of a position code (getPositionLabel, SUB or a role `short`) */
+export function positionText(code, t) {
+  if (!code || code === '?') return code;
+  const key = `pos_${code}`;
+  const text = t(key);
+  return text === key ? code : text;
+}
+
 /** 'gk' | 'def' | 'mid' | 'fwd' */
 export function getLineCategory(line) {
   return ['gk', 'def', 'mid', 'fwd'][line] || 'mid';

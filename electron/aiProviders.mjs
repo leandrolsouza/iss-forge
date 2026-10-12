@@ -90,7 +90,15 @@ function buildHeaders(provider, apiKey) {
 /**
  * Build request body based on provider format
  */
-function buildRequestBody({ format, systemPrompt, userPrompt, model, temperature, maxTokens, stream }) {
+function buildRequestBody({
+  format,
+  systemPrompt,
+  userPrompt,
+  model,
+  temperature,
+  maxTokens,
+  stream,
+}) {
   if (format === 'anthropic') {
     return {
       model: model || 'claude-sonnet-4-6',
@@ -105,9 +113,7 @@ function buildRequestBody({ format, systemPrompt, userPrompt, model, temperature
   if (format === 'bedrock') {
     return {
       system: [{ text: systemPrompt }],
-      messages: [
-        { role: 'user', content: [{ text: userPrompt }] },
-      ],
+      messages: [{ role: 'user', content: [{ text: userPrompt }] }],
       inferenceConfig: {
         temperature: temperature || 0.7,
         maxTokens: maxTokens || 4096,
@@ -134,16 +140,54 @@ function buildRequestBody({ format, systemPrompt, userPrompt, model, temperature
 }
 
 /**
+ * AI errors are { code, detail }: the renderer translates `code`
+ * (connection, timeout, api, invalidResponse, parse, empty, generic) and shows
+ * `detail` (technical text, not translated) under "Technical details".
+ */
+function aiError(code, detail = '') {
+  return { code, detail: String(detail || '') };
+}
+
+/** Error of a fetch() that threw (timeout, refused connection...) */
+function fetchErrorToAi(err, endpoint) {
+  if (err?.name === 'TimeoutError' || err?.name === 'AbortError') {
+    return aiError('timeout', `${err.message} (${endpoint})`);
+  }
+  const code = err?.code || err?.cause?.code;
+  if (
+    ['ECONNREFUSED', 'ENOTFOUND', 'ECONNRESET', 'EAI_AGAIN'].includes(code) ||
+    err?.message === 'fetch failed'
+  ) {
+    return aiError('connection', `${code || err.message} (${endpoint})`);
+  }
+  return aiError('generic', err?.message || String(err));
+}
+
+/** Error of an HTTP response that is not ok */
+async function responseErrorToAi(response) {
+  const errorText = await response.text().catch(() => '');
+  return aiError('api', `HTTP ${response.status}: ${errorText || response.statusText}`);
+}
+
+/**
  * Parse a non-streaming response based on format
  */
 function parseResponse(data, format) {
   if (format === 'anthropic') {
     if (!data.content || !Array.isArray(data.content) || data.content.length === 0) {
-      return { content: null, usage: null, error: 'Invalid response format from Claude' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Claude: no content'),
+      };
     }
     const textBlock = data.content.find((b) => b.type === 'text');
     if (!textBlock) {
-      return { content: null, usage: null, error: 'No text content in Claude response' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Claude: no text block'),
+      };
     }
     return {
       content: textBlock.text,
@@ -155,11 +199,19 @@ function parseResponse(data, format) {
   if (format === 'bedrock') {
     const message = data.output?.message;
     if (!message || !message.content || message.content.length === 0) {
-      return { content: null, usage: null, error: 'Invalid response format from Bedrock' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Bedrock: no content'),
+      };
     }
     const textBlock = message.content.find((b) => b.text);
     if (!textBlock) {
-      return { content: null, usage: null, error: 'No text content in Bedrock response' };
+      return {
+        content: null,
+        usage: null,
+        error: aiError('invalidResponse', 'Bedrock: no text block'),
+      };
     }
     return {
       content: textBlock.text,
@@ -170,7 +222,11 @@ function parseResponse(data, format) {
 
   // OpenAI format
   if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-    return { content: null, usage: null, error: 'Invalid response format from LLM' };
+    return {
+      content: null,
+      usage: null,
+      error: aiError('invalidResponse', 'no choices[0].message'),
+    };
   }
 
   return {
@@ -224,6 +280,9 @@ function parseStreamChunk(line, format) {
 
 export {
   AI_PROVIDERS,
+  aiError,
+  fetchErrorToAi,
+  responseErrorToAi,
   getProvider,
   getEffectiveEndpoint,
   buildHeaders,

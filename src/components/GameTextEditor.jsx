@@ -13,6 +13,7 @@ import {
   decodeIss,
 } from '../rom/gameTexts';
 import { wrapScenarioText } from '../rom/scenario';
+import { importMessageText } from '../utils/textsExport';
 import { IconTeamName } from './Icons';
 import MenuTextPanel from './MenuTextPanel';
 import ScreenTextPanel from './ScreenTextPanel';
@@ -258,7 +259,7 @@ export default function GameTextEditor() {
           </div>
           {importResult.errors.map((m, i) => (
             <div key={`e${i}`} className="gt-import-line">
-              {m}
+              {importMessageText(m, t)}
             </div>
           ))}
           {importResult.skipped?.length > 0 && (
@@ -268,7 +269,7 @@ export default function GameTextEditor() {
           )}
           {importResult.skipped?.map((m, i) => (
             <div key={`s${i}`} className="gt-import-line">
-              {m}
+              {importMessageText(m, t)}
             </div>
           ))}
           {importResult.moved?.length > 0 && (
@@ -283,7 +284,7 @@ export default function GameTextEditor() {
           )}
           {importResult.warnings.map((m, i) => (
             <div key={`w${i}`} className="gt-import-line gt-import-warn">
-              {m}
+              {importMessageText(m, t)}
             </div>
           ))}
         </div>

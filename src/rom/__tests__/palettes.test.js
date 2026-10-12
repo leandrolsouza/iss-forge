@@ -10,6 +10,7 @@ import {
   adjustPalette,
   shadeRamp,
   GRASS_PRESETS,
+  changedPaletteUpdates,
 } from '../palettes';
 import { MATCH_PALETTES, CROWD_DATA, TEAMS } from '../constants';
 import { rgbToSnesBytes } from '../writers/UniformWriter';
@@ -29,6 +30,20 @@ describe('palette helpers', () => {
     expect(rawToHex(c(31, 0, 0))).toBe('#f80000');
     expect(hexToRaw('#ffffff')).toBe(0x7fff); // 255 must clamp to 31, not wrap to 0
     expect(hexToRaw('nope')).toBeNull();
+  });
+
+  it('adjustPalette with neutral values gives the same colours (relative adjust does not drift)', () => {
+    const all = Array.from({ length: 0x8000 }, (_, raw) => raw);
+    expect(adjustPalette(all, { hue: 0, saturation: 1, lightness: 1 })).toEqual(all);
+    // two relative steps land on the same colours as one combined step (within 1 level)
+    const grass = [c(15, 19, 10), c(14, 17, 9), c(18, 21, 11), c(3, 8, 2)];
+    const twice = adjustPalette(adjustPalette(grass, { hue: 20 }), { hue: 20 });
+    const once = adjustPalette(grass, { hue: 40 });
+    twice.forEach((raw, i) => {
+      const a = rawToRgb(raw);
+      const b = rawToRgb(once[i]);
+      for (const k of ['r', 'g', 'b']) expect(Math.abs(a[k] - b[k])).toBeLessThanOrEqual(8);
+    });
   });
 
   it('adjustPalette keeps greys and shifts hues', () => {
@@ -157,5 +172,28 @@ describe.skipIf(!hasRealRom)('match palettes on the real ROM', () => {
 
     rom.restoreMatchPalettes(original);
     expect(rom.readMatchPalettes()).toEqual(original);
+  });
+
+  it('changedPaletteUpdates keeps only the entries that change the ROM', () => {
+    const rom = load();
+    const p = rom.readMatchPalettes();
+    const brazil = TEAMS.findIndex((t) => t.id === 'BRAZIL');
+    const same = {
+      ball: [...p.ball],
+      'crowd:0': [...p.crowds[0]],
+      [`crowdMap:${brazil}`]: p.crowdMap[brazil],
+      // bit 15 is ignored when writing
+      referee: p.referee.map((v) => v | 0x8000),
+    };
+    expect(changedPaletteUpdates(rom, same)).toEqual({});
+    const other = (p.crowdMap[brazil] + 1) % CROWD_DATA.COUNT;
+    const edit = {
+      ...same,
+      ball: p.ball.map((v, i) => (i === 0 ? c(31, 0, 0) : v)),
+      [`crowdMap:${brazil}`]: other,
+    };
+    expect(Object.keys(changedPaletteUpdates(rom, edit)).sort()).toEqual(
+      ['ball', `crowdMap:${brazil}`].sort(),
+    );
   });
 });

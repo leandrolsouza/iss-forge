@@ -22,7 +22,7 @@ const FLIP_TILE = 0xc3ff;
 /** Every letter: the original ones and the ones drawn by ISS Forge */
 const TITLE_ALL = { ...TITLE_FONT, ...TITLE_FONT_DRAWN };
 
-/** Letters of the title font (plus space) */
+/** Letters of the title font (space is also accepted) */
 export const TITLE_CHARS = Object.keys(TITLE_ALL).sort().join('');
 
 const glyphWidth = (ch) => (ch === ' ' ? 1 : (TITLE_ALL[ch]?.length ?? 0));
@@ -34,12 +34,15 @@ export function findInvalidTitleChars(text) {
   return [...bad];
 }
 
-/** Lines of a title (upper case, trailing spaces removed, at most one blank line kept) */
-const titleLines = (text) =>
-  String(text ?? '')
+/** Lines of a title (upper case, trailing spaces removed; empty lines at the end are dropped) */
+const titleLines = (text) => {
+  const lines = String(text ?? '')
     .toUpperCase()
     .split('\n')
     .map((l) => l.replace(/\s+$/, ''));
+  while (lines.length > 1 && !lines[lines.length - 1]) lines.pop();
+  return lines;
+};
 
 /** Width of each line in tile columns */
 export const titleLineWidths = (text) =>

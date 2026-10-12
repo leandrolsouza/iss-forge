@@ -6,6 +6,7 @@ import { FORMATION_PRESETS, FORMATION_ROLES, FORMATION_DATA } from '../rom/const
 import {
   getFormationName,
   getPositionLabel,
+  positionText,
   getLineCategory,
   getPresetSlots,
   withRole,
@@ -144,7 +145,7 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
   };
 
   const presetLabel = (p) => (lang === 'en' && p.nameEn ? p.nameEn : p.name);
-  const roleLabel = (r) => `${r.short} — ${t(r.key)}`;
+  const roleLabel = (r) => `${positionText(r.short, t)} — ${t(r.key)}`;
 
   return (
     <div className="editor-panel formation-editor">
@@ -213,7 +214,7 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
                     {player?.name || '---'}
                   </text>
                   <text className="formation-marker-pos" y={-18}>
-                    {getPositionLabel(s)}
+                    {positionText(getPositionLabel(s), t)}
                   </text>
                 </g>
               );
@@ -236,7 +237,7 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
               <div className="detail-section-title">
                 {t('formationSlot')} {selected + 1} ·{' '}
                 <span className={`pos-badge pos-${getLineCategory(slot.line)}`}>
-                  {getPositionLabel(slot)}
+                  {positionText(getPositionLabel(slot), t)}
                 </span>
               </div>
 

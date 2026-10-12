@@ -248,7 +248,7 @@ export function aiSaveSettings(settings) {
 /**
  * Call the LLM API to generate team data
  * @param {object} payload - { prompt, systemPrompt, settings? }
- * @returns {Promise<{success: boolean, content?: string, error?: string, usage?: object}>}
+ * @returns {Promise<{success: boolean, content?: string, error?: {code: string, detail: string}, usage?: object}>}
  */
 export function aiGenerate(payload) {
   return window.electronAPI.aiGenerate(payload);
@@ -257,7 +257,7 @@ export function aiGenerate(payload) {
 /**
  * Test the AI connection with a simple request
  * @param {object} payload - { settings }
- * @returns {Promise<{success: boolean, content?: string, error?: string}>}
+ * @returns {Promise<{success: boolean, content?: string, error?: {code: string, detail: string}}>}
  */
 export function aiTestConnection(payload) {
   return window.electronAPI.aiTestConnection(payload);
@@ -290,7 +290,7 @@ export function onAiStreamDone(callback) {
 
 /**
  * Listen for stream errors
- * @param {function} callback - receives error message string
+ * @param {function} callback - receives { code, detail } (see aiErrorKey in aiProviders.js)
  */
 export function onAiStreamError(callback) {
   window.electronAPI.onAiStreamError(callback);

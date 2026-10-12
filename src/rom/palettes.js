@@ -134,6 +134,26 @@ export function applyPaletteUpdates(rom, updates) {
   });
 }
 
+/**
+ * Only the entries of a batch (see applyPaletteUpdates) that change the ROM,
+ * so re-applying the current colours does not create an empty undo step.
+ */
+export function changedPaletteUpdates(rom, updates) {
+  const cur = readMatchPalettes(rom);
+  const sameColors = (a, b) =>
+    Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((v, i) => (v & 0x7fff) === b[i]);
+  return Object.fromEntries(
+    Object.entries(updates || {}).filter(([key, value]) => {
+      if (key.startsWith('crowd:')) return !sameColors(value, cur.crowds[Number(key.slice(6))]);
+      if (key.startsWith('crowdMap:')) return value !== cur.crowdMap[Number(key.slice(9))];
+      return !sameColors(value, cur[key]);
+    }),
+  );
+}
+
 /** Turn a full palette state into update entries (used by undo/redo) */
 export function paletteStateToUpdates(state, current) {
   const updates = {};

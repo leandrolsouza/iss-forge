@@ -68,7 +68,8 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
   DMA para a linha de tiles OBJ do objeto (esquerda `0x40`/`0x50`, direita `0x20`/`0x30`).
 - Os registros ficam entre `$82:BC00` e `$82:F2E0` (`0x13C00`-`0x172E0`), misturados com outros dados: o
   editor procura os que passam nas validações (ponteiros nos bancos `$88`-`$9F`, tamanhos múltiplos de 32,
-  tiles dentro das 2 linhas, posições razoáveis): 866 quadros. Escolher outro quadro só muda o `LDY`; a
+  tiles dentro das 2 linhas, posições razoáveis): 866 registros; descartando os que dependem de tiles de
+  outro quadro (abaixo), sobram 864. Escolher outro quadro só muda o `LDY`; a
   partida não muda.
 - Objetos: esquerda x = `0x72`, paleta 0; direita x = `0x90`, paleta 1, espelhada (x = origem − dx −
   tamanho). Pés em y = `0xB0`. A bola e as sombras são objetos à parte (seção "Bola, sombras e posições").

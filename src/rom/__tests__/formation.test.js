@@ -11,8 +11,11 @@ import {
   withRole,
   validateFormation,
   getFormationAddress,
+  positionText,
 } from '../formation';
 import { FORMATION_PRESETS, FORMATION_ROLES, TEAMS } from '../constants';
+import en from '../../i18n/en';
+import ptBR from '../../i18n/pt-BR';
 
 const REAL_ROM = fileURLToPath(
   new URL('../../../rom/original/International Superstar Soccer (Europe).sfc', import.meta.url),
@@ -58,6 +61,26 @@ describe('formation encoding', () => {
     expect(diamond.slice(5, 9)).toEqual(['DM', 'LM', 'RM', 'AM']);
     expect(getPresetSlots('532').map(getPositionLabel)[3]).toBe('SW');
     expect(getPresetSlots('433').map(getPositionLabel).slice(8)).toEqual(['LW', 'RW', 'ST']);
+  });
+
+  it('every position code has a translated abbreviation', () => {
+    const codes = new Set(['SUB', ...FORMATION_ROLES.map((r) => r.short)]);
+    for (const p of FORMATION_PRESETS)
+      getPresetSlots(p.id).forEach((s) => codes.add(getPositionLabel(s)));
+    for (const lateral of [0, 7, 14])
+      for (const line of [1, 2, 3])
+        for (const role of [1, 2, 3, 4, 5, 6, 7])
+          codes.add(getPositionLabel({ line, role, lateral }));
+    for (const dict of [en, ptBR]) {
+      const t = (k) => dict[k] ?? k;
+      for (const code of codes) {
+        expect(dict[`pos_${code}`], `pos_${code}`).toBeTypeOf('string');
+        expect(positionText(code, t)).toBe(dict[`pos_${code}`]);
+      }
+    }
+    expect(positionText('GK', (k) => ptBR[k])).toBe('GOL');
+    expect(positionText('?', (k) => k)).toBe('?');
+    expect(positionText('XX', (k) => k)).toBe('XX');
   });
 
   it('withRole keeps line and behaviour coherent', () => {

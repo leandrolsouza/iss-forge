@@ -91,7 +91,7 @@ Sugestão de ordem:
 - **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
   "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
 - **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
-  posições da partida, "Referee" e árbitros. Exigem editar tiles (Tile Explorer). A técnica de
+  posições da partida, "Referee" e árbitros. Exigem editar tiles (visualizador de telas, seção 4). A técnica de
   corromper fatias da ROM e ver o que estraga (`game-texts.md`, seção 5) acha rápido de onde vêm.
 - **Ponteiros extras** que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
 - **Acentos:** não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16 e mapear
@@ -116,10 +116,10 @@ Sugestão de ordem:
   atributos, bandeiras etc. usam o ordinal).
 
 ### 4. Gráficos e espaço (ideias novas, out/2026)
-- **Visualizador de telas** (o "Tile Explorer" que o README anuncia não existe no código): generalizar a
-  prévia da tela inicial (`renderTitleScreen`: listas de carga `$82` → VRAM, paletas, BG/OBJ) para montar
-  qualquer tela do jogo. Serve para conferir traduções sem emulador e para achar os gráficos da seção 2.
-  Alternativa mínima: tirar a menção do README.
+- **Visualizador de telas** (o README anunciava um "Tile Explorer" que não existe; a menção foi trocada por
+  este item no roadmap): generalizar a prévia da tela inicial (`renderTitleScreen`: listas de carga `$82` →
+  VRAM, paletas, BG/OBJ) para montar qualquer tela do jogo. Serve para conferir traduções sem emulador e
+  para achar os gráficos da seção 2.
 - **Fundos das outras telas:** o fundo azul do menu ("SUPER STAR SOCCER" repetido) e o da seleção de times
   têm a mesma estrutura do BG1 da tela inicial; reaproveitar `titleBackground.js` (importar imagem/textura,
   cores) e `quantize.js`.
@@ -177,8 +177,9 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
 - **Testes:** `useHistory.test.js` e `snapshotRestore.test.js` (ROM real: desfazer troca de times e
   importação no Super Star byte a byte, desfazer sem relação não relê nada, cenário). `useRomHandlers`
   continua sem teste direto (o projeto não tem renderizador de hooks).
-- **Sobrou:** sorteios e paletas ainda criam passo quando a "mudança" é igual ao que já está gravado
-  (inofensivo, mas é um passo vazio).
+- **Sobrou:** ~~sorteios e paletas ainda criam passo quando a "mudança" é igual ao que já está gravado~~.
+  Feito: `changedDraws` (`tournament.js`) e `changedPaletteUpdates` (`palettes.js`) filtram o que não muda;
+  sem nada a gravar, não há passo de desfazer nem "modificado".
 
 ### 5.3 Prévias aproximadas → desenho real
 - Hoje são SVG/aproximações: gramado e bola (`MatchPaletteEditor.jsx`), camisa (`UniformEditor.jsx`),
@@ -219,9 +220,13 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
   `fileNotFound`) são códigos traduzidos; modos do treino, painel Sobre, região das notificações e botões
   de fechar traduzidos; menus e diálogos nativos do Electron seguem o idioma (`MAIN_I18N`, guardado em
   `settingsStore.language`); `console.log` do `TeamNameWriter` removidos. As abas já eram rotuladas pela
-  chave (`TabBar` usa `editors.js`). **Falta:** relatório da importação de textos (`textsExport.js`, em
-  inglês), erros da IA (o painel compara o texto em inglês: passar para códigos antes) e siglas de posição
-  (GK, CB...).
+  chave (`TabBar` usa `editors.js`). ~~Falta: relatório da importação de textos, erros da IA e siglas de
+  posição.~~ Feito: o relatório de `applyTexts` é `{ path, key, params }` (chaves `tx*`, traduzidas por
+  `importMessageText`; o caminho no arquivo, como `menus.rules`, não é traduzido). Erros da IA são
+  `{ code, detail }` (`aiError`/`fetchErrorToAi`/`responseErrorToAi` em `src/services/aiProviders.js` e no
+  espelho `electron/aiProviders.mjs`); o painel e o teste de conexão mostram `t(aiErrorKey(e))` e o
+  detalhe técnico à parte. Siglas de posição: `positionText(code, t)` (`formation.js`, chaves `pos_*`:
+  GOL, ZAG, LE, LD, VOL, MEI, ATA, RES...).
 - **Validação e configurações:** feito: o editor de jogadores marca número repetido e nome vazio (borda e
   dica); o aviso de validação aparece depois de salvar (antes dizia "salva" mesmo se falhasse).
   `confirmBeforeSave` pergunta antes de gravar por cima do arquivo (não no "Salvar" do aviso de sair),
@@ -236,15 +241,24 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
   vão para o rascunho). `src/rom/restoreOriginal.js` + `RestoreOriginalButton.jsx`. **Cor predominante**
   editável na aba Uniformes (`readPredominantColor`, vai no JSON e na cópia de time; nomes das cores
   deduzidos dos uniformes originais). "Aplicar" da descrição desabilitado com caracteres inválidos.
-  **Falta:** modelos e ajustes do gramado continuam partindo da paleta original (descartam edições
-  manuais) — é o comportamento esperado de "modelo", mas um ajuste relativo à paleta atual seria útil.
+  ~~Falta: modelos e ajustes do gramado partem sempre da paleta original.~~ Feito: os controles de
+  matiz/saturação/brilho ajustam as cores atuais (opção "Ajustar as cores atuais", ligada por padrão; volta
+  ao neutro depois de aplicar). Os modelos continuam partindo da paleta original.
 - **Listas e navegação:** o seletor de times já tinha busca e setas e a barra lateral já usava botões com
   destaque. Feito: busca nos textos do treino (nome e texto, sem acentos); Comparar Times mostra também
   ataque e defesa, posição e número (os jogadores já eram casados pela vaga da formação).
 - **Testes:** feito: `helpers.test.js` (quantize, playerStats, modelos de bandeira e cabelo/pele,
   fileHelpers, imageToFlag, imageToLogo), `restoreOriginal.test.js`, mover blocos e "não cabe" em
-  `FlagDesignReadWrite.test.js`. Faltam `menuSprites.js`, `titleScreens.js`, `titleScreenText.js` e
-  `titlePlayers.js` diretos (cobertos de forma indireta).
+  `FlagDesignReadWrite.test.js`. ~~Faltam `menuSprites.js`, `titleScreens.js`, `titleScreenText.js` e
+  `titlePlayers.js` diretos.~~ Feito: testes diretos dos quatro (142 testes). Correções que saíram deles:
+  `writePose`/`playerSprites` recusam lado inválido (antes `'toString'` passava e `playerSprites` quebrava
+  com TypeError); `readFrame` não lê além do banco `$82` (registro tem 10 bytes); títulos e copyright
+  ignoram linhas vazias no fim (um Enter depois da 3ª linha dava "linhas demais").
+- **Observações dos testes (não corrigidas):** sem `getOriginalData`, `writeTitleFont`/`writeMenuFont`
+  partem do bloco atual (letras desenhadas antes não são limpas; o `RomParser` sempre tem o original);
+  `titleLineWidths` conta 0 colunas para caractere sem desenho e `buildTitleWords` conta 1 (só sem
+  `checkTitleText`); `listPoseFrames` guarda cache por buffer (editar os registros no lugar não atualiza);
+  PRESS START curto preenche `0xFFDD-0xFFFF` com `FF` sem conferir, o longo confere (`noSpace`).
 
 ## Descartado
 
@@ -259,4 +273,5 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
   `eslint-plugin-react`; `console.log` nos writers de nome/bandeira).
 - Bundle > 500 kB (aviso do Vite): considerar code-splitting das abas.
 - `docs/` está no `.gitignore`; a documentação técnica foi para `research/`.
-- O README anuncia um "Tile Explorer" que não existe (ver seção 4).
+- ~~O README anuncia um "Tile Explorer" que não existe.~~ Feito: tirado (o roadmap lista o visualizador de
+  telas como pendente); o README também passou a citar `research/` e `game-translations/` na estrutura.

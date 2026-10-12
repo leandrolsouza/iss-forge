@@ -9,6 +9,7 @@ import {
   drawGroups,
   validateDraws,
   drawCoverage,
+  changedDraws,
   SELECTABLE_TEAMS,
 } from '../tournament';
 
@@ -49,6 +50,17 @@ describe('tournament draws (mock ROM)', () => {
     const groups = drawGroups([...Array(24).keys()]);
     expect(groups).toHaveLength(6);
     expect(groups[1]).toEqual([4, 5, 6, 7]);
+  });
+
+  it('changedDraws keeps only the draws that differ from the ROM', () => {
+    const rom = new RomParser(new Uint8Array(0x100000));
+    const draw = SELECTABLE_TEAMS.slice(0, 24);
+    writeDraw(rom, 2, draw);
+    writeDraw(rom, 4, draw);
+    const swapped = [draw[1], draw[0], ...draw.slice(2)];
+    expect(changedDraws(rom, { 2: [...draw], 4: [...draw] })).toEqual({});
+    expect(changedDraws(rom, { 2: [...draw], 4: swapped })).toEqual({ 4: swapped });
+    expect(changedDraws(rom, null)).toEqual({});
   });
 });
 

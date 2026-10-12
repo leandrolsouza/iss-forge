@@ -14,6 +14,11 @@ import { TITLE_SCREEN } from './constants';
 
 const P = TITLE_SCREEN.PLAYERS;
 const SIDES = { left: P.LEFT, right: P.RIGHT };
+/** Config of a side ('left' | 'right'); throws on anything else (inherited names included) */
+const sideOf = (side) => {
+  if (!Object.hasOwn(SIDES, side)) throw new Error('Invalid side');
+  return SIDES[side];
+};
 const s8 = (b) => (b > 127 ? b - 256 : b);
 const word = (rom, a) => rom.readByte(a) | (rom.readByte(a + 1) << 8);
 const long = (rom, a) => word(rom, a) | (rom.readByte(a + 2) << 16);
@@ -50,7 +55,8 @@ function extraTile(rom, extra, side, ordinal) {
  */
 export function readFrame(rom, y) {
   const a = recordFile(y);
-  if (a < 0x10000 || a + 8 > 0x18000) return null;
+  // a record is 10 bytes: list word, two long pointers, extra word
+  if (a < 0x10000 || a + 10 > 0x18000) return null;
   const list = word(rom, a);
   if (list < 0x8000) return null;
   const rows = [];
@@ -117,10 +123,10 @@ export function readPoses(rom) {
 }
 
 export function writePose(rom, side, y) {
-  if (!SIDES[side]) throw new Error('Invalid side');
+  const s = sideOf(side);
   if (!readFrame(rom, y)) throw new Error('Not an animation frame');
-  rom.writeByte(SIDES[side].pose, y & 0xff);
-  rom.writeByte(SIDES[side].pose + 1, (y >> 8) & 0xff);
+  rom.writeByte(s.pose, y & 0xff);
+  rom.writeByte(s.pose + 1, (y >> 8) & 0xff);
 }
 
 /**
@@ -131,7 +137,7 @@ export function writePose(rom, side, y) {
  * @param {number} [ordinal] - ROM ordinal of the player's team (picks the extra tile)
  */
 export function playerSprites(rom, side, y, origin = null, ordinal = 0) {
-  const s = SIDES[side];
+  const s = sideOf(side);
   const frame = readFrame(rom, y);
   if (!frame) return null;
   const [ox, oy] = origin || [s.x, P.Y];

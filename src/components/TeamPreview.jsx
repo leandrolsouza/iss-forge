@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
-import { getPositionLabel as slotPositionLabel, getLineCategory } from '../rom/formation';
+import {
+  getPositionLabel as slotPositionLabel,
+  getLineCategory,
+  positionText,
+} from '../rom/formation';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useConfirm } from '../context/ConfirmContext';
@@ -56,10 +60,9 @@ export default function TeamPreview({ team, teamIndex }) {
   // Positions come from the team's formation (same as the Players tab), not the list order
   const formationSlots = team.formation?.slots || [];
   const getPositionLabel = (idx) => {
-    if (idx >= 11) return 'SUB';
     const slot = formationSlots[idx];
-    if (slot) return slotPositionLabel(slot);
-    return idx === 0 ? 'GK' : '?';
+    const code = idx >= 11 ? 'SUB' : slot ? slotPositionLabel(slot) : idx === 0 ? 'GK' : '?';
+    return positionText(code, t);
   };
   const getPositionCategory = (idx) => {
     if (idx >= 11) return 'sub';

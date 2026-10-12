@@ -12,6 +12,7 @@ import {
   validateFormation,
 } from '../rom/formation';
 import { IconFormation } from './Icons';
+import DraftInput from './DraftInput';
 import TeamDescriptionPanel from './TeamDescriptionPanel';
 import '../styles/formation.css';
 
@@ -64,7 +65,16 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
 
   const updateSlot = (index, patch) => {
     const slots = draft.map((s, i) => (i === index ? { ...s, ...patch } : s));
+    // nothing changed (e.g. a value clamped back to the stored one): no write, no undo step
+    if (slots.every((s, i) => JSON.stringify(s) === JSON.stringify(draft[i]))) return;
     commit(slots);
+  };
+
+  // Number fields (DraftInput) commit on Enter/blur; an emptied field keeps the stored value
+  const commitNumber = (min, max, toPatch) => (value) => {
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed)) return;
+    updateSlot(selected, toPatch(clamp(parsed, min, max)));
   };
 
   // --- Drag & drop on the pitch ---
@@ -77,6 +87,9 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
   };
 
   const handlePointerDown = (e, index) => {
+    // Commit a number being typed into the current slot before selecting another one
+    // (the input would only blur after the selection changed)
+    if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
     setSelected(index);
     if (index === 0) return; // goalkeeper stays on the goal line
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -271,34 +284,26 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
               <div className="formation-grid">
                 <label className="formation-field">
                   <span>{t('formationLateral')}</span>
-                  <input
+                  <DraftInput
                     type="number"
                     className="input-mini"
                     min={0}
                     max={15}
                     value={slot.lateral}
                     disabled={selected === 0}
-                    onChange={(e) =>
-                      updateSlot(selected, {
-                        lateral: clamp(parseInt(e.target.value, 10) || 0, 0, 15),
-                      })
-                    }
+                    onCommit={commitNumber(0, 15, (v) => ({ lateral: v }))}
                   />
                 </label>
                 <label className="formation-field">
                   <span>{t('formationDepth')}</span>
-                  <input
+                  <DraftInput
                     type="number"
                     className="input-mini"
                     min={0}
                     max={MAX_DEPTH}
                     value={slot.depth}
                     disabled={selected === 0}
-                    onChange={(e) =>
-                      updateSlot(selected, {
-                        depth: clamp(parseInt(e.target.value, 10) || 0, 0, MAX_DEPTH),
-                      })
-                    }
+                    onCommit={commitNumber(0, MAX_DEPTH, (v) => ({ depth: v }))}
                   />
                 </label>
               </div>
@@ -309,36 +314,28 @@ export default function FormationEditor({ team, teamIndex, onFormationChange, on
                 <div className="formation-grid">
                   <label className="formation-field">
                     <span>{t('formationBehaviorA')}</span>
-                    <input
+                    <DraftInput
                       type="number"
                       className="input-mini"
                       min={0}
                       max={15}
                       value={slot.behavior & 0x0f}
-                      onChange={(e) =>
-                        updateSlot(selected, {
-                          behavior:
-                            (slot.behavior & 0xf0) |
-                            clamp(parseInt(e.target.value, 10) || 0, 0, 15),
-                        })
-                      }
+                      onCommit={commitNumber(0, 15, (v) => ({
+                        behavior: (slot.behavior & 0xf0) | v,
+                      }))}
                     />
                   </label>
                   <label className="formation-field">
                     <span>{t('formationBehaviorB')}</span>
-                    <input
+                    <DraftInput
                       type="number"
                       className="input-mini"
                       min={0}
                       max={15}
                       value={slot.behavior >> 4}
-                      onChange={(e) =>
-                        updateSlot(selected, {
-                          behavior:
-                            (clamp(parseInt(e.target.value, 10) || 0, 0, 15) << 4) |
-                            (slot.behavior & 0x0f),
-                        })
-                      }
+                      onCommit={commitNumber(0, 15, (v) => ({
+                        behavior: (v << 4) | (slot.behavior & 0x0f),
+                      }))}
                     />
                   </label>
                 </div>

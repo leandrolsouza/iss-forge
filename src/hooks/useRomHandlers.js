@@ -483,11 +483,15 @@ export default function useRomHandlers({
       const result = built
         ? romParser.importTitleLogo(built, options)
         : romParser.restoreTitleLogo();
+      if (!result.ok) {
+        cancelSnapshot(); // puts back anything the failed import touched
+        return result;
+      }
       setTitleScreen(romParser.readTitleScreen());
-      if (result.ok) markModified();
+      markModified();
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setTitleScreen],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setTitleScreen],
   );
 
   /**
@@ -499,13 +503,17 @@ export default function useRomHandlers({
       if (!romParser || !built) return { ok: false };
       pushSnapshot(teams);
       const result = romParser.importTitleBackground(built, modes);
+      if (!result.ok) {
+        cancelSnapshot();
+        return result;
+      }
       setTitleScreen(romParser.readTitleScreen());
       // the blocks are placed like menu screens and may move them
       setMenuScreens(romParser.readMenuScreens());
-      if (result.ok) markModified();
+      markModified();
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setTitleScreen, setMenuScreens],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setTitleScreen, setMenuScreens],
   );
 
   /**
@@ -518,13 +526,17 @@ export default function useRomHandlers({
       if (!romParser) return { ok: false };
       pushSnapshot(teams);
       const result = romParser.writeTitleTexts(texts);
-      // a failed write may still have moved blocks around: always re-read
+      // a failed write may have moved blocks around: cancelSnapshot puts them back
+      if (!result.ok) {
+        cancelSnapshot();
+        return result;
+      }
       setTitleScreen(romParser.readTitleScreen());
       setMenuScreens(romParser.readMenuScreens());
-      if (result.ok) markModified();
+      markModified();
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setTitleScreen, setMenuScreens],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setTitleScreen, setMenuScreens],
   );
 
   /**
@@ -544,10 +556,12 @@ export default function useRomHandlers({
           return next;
         });
         markModified();
+      } else {
+        cancelSnapshot();
       }
       return res;
     },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
+    [romParser, teams, markModified, setTeams, pushSnapshot, cancelSnapshot],
   );
 
   /**
@@ -596,10 +610,12 @@ export default function useRomHandlers({
       if (result.ok) {
         setScenarios(romParser.readScenarios());
         markModified();
+      } else {
+        cancelSnapshot();
       }
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setScenarios],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setScenarios],
   );
 
   /**
@@ -630,10 +646,12 @@ export default function useRomHandlers({
       if (result.ok) {
         setGameTexts(romParser.readTrainingTexts());
         markModified();
+      } else {
+        cancelSnapshot();
       }
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setGameTexts],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setGameTexts],
   );
 
   /**
@@ -648,10 +666,12 @@ export default function useRomHandlers({
       if (result.ok) {
         setMenuScreens(romParser.readMenuScreens());
         markModified();
+      } else {
+        cancelSnapshot();
       }
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setMenuScreens],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setMenuScreens],
   );
 
   /**
@@ -668,10 +688,12 @@ export default function useRomHandlers({
         // titles are placed like the menu screens and may move them
         setMenuScreens(romParser.readMenuScreens());
         markModified();
+      } else {
+        cancelSnapshot();
       }
       return result;
     },
-    [romParser, teams, markModified, pushSnapshot, setScreenTexts, setMenuScreens],
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setScreenTexts, setMenuScreens],
   );
 
   /** Export every translatable text as one JSON file */

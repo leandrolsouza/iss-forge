@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restoring the auto-save backup keeps the unedited ROM as the "original" (patch base and restore
   buttons) and marks the session as modified. Undo/redo follow the saved point: undoing back to the last
   save clears "modified", redoing past it sets it again
+- Formation tab: the number fields commit on Enter/blur (one undo step per edit, an emptied field keeps
+  its value) instead of on every keystroke
+- Undo/redo only re-read the data that changed, so an unapplied draft (scenario, texts, menus, draws,
+  description, title screen) survives undoing an edit made in another tab
+- A rejected write (scenario, texts, menu, description, title screen logo/background/texts) no longer
+  leaves an empty undo step, and anything it moved in the ROM is put back
 
 ---
 

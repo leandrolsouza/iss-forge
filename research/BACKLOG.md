@@ -133,7 +133,7 @@ Sugestão de ordem:
 ## Melhorias nas abas existentes (revisão de código, out/2026)
 
 Achados de leitura do código (não reproduzidos no app; confirmar cada bug antes de corrigir). Ordem
-sugerida: ~~5.1~~ → 5.2 (o que falta) → prévia real do jogador (5.3) → resto.
+sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
 
 ### 5.1 Bugs que podem perder ou estragar dados (feito, out/2026)
 - **Bandeiras:** cada traço (e Preencher/Limpar/modelo/imagem) é comprimido na ROM ao soltar o mouse, como
@@ -160,24 +160,25 @@ sugerida: ~~5.1~~ → 5.2 (o que falta) → prévia real do jogador (5.3) → re
 - **Ainda a conferir no emulador:** onde o desenho do nome do placar aparece na partida e se um nome de 7
   letras gerado pelo editor aparece inteiro lá.
 
-### 5.2 Desfazer e padrão de edição
-Estado conferido no código (out/2026): seletores de cor e Design da Bandeira **feitos**; o resto parcial.
-- ~~**Seletores de cor**~~ (feito: `ColorEditorCard.jsx` grava ao fechar/blur/Enter, Cabelo e Pele em lote).
-- ~~**Design da Bandeira:** um passo por pixel~~ (feito: um passo por traço, gravado no mouseup).
-- **Jogadores e Formação:** Jogadores feito (`DraftInput`, número vazio é ignorado). Falta a **Formação**,
-  que ainda grava a cada tecla (`FormationEditor.jsx` ~60-68, 274-341) e transforma campo vazio em 0.
-  `TeamPreview` rotula posições pelo índice da lista e o PlayerEditor pela formação.
-- **Ctrl+Z dentro de caixas de texto:** feito (vai para o desfazer nativo) e trocar de item/aba pergunta
-  antes de descartar. Falta: qualquer desfazer global (botão ou foco fora do campo) relê cenários, textos,
-  menus, telas e sorteios em `applySnapshot` e os rascunhos são refeitos a partir do estado, perdendo o
-  texto não aplicado. Passar o desfazer pelo `guardDrafts` ou só reler o que mudou.
-- **Passos de desfazer vazios:** importar time e textos, nomes e bandeira feitos. Falta usar
-  `cancelSnapshot` nas gravações recusadas de descrição, cenário, treino, menu, outras telas e tela
-  inicial (`useRomHandlers.js`): conferir antes se cada writer deixa a ROM intacta quando falha (o da tela
-  inicial pode mover blocos).
-- **Testes:** `useHistory` tem testes (`src/hooks/__tests__`). Faltam `useRomState.applySnapshot` e
-  `useRomHandlers` (precisariam de um renderizador de hooks, que o projeto não tem). Casos: goleiro Super
-  Star/Bélgica, IA aplicar + desfazer, `reloadTeams` além da formação.
+### 5.2 Desfazer e padrão de edição (feito, out/2026)
+- **Seletores de cor:** `ColorEditorCard.jsx` grava ao fechar/blur/Enter; Cabelo e Pele em lote.
+- **Design da Bandeira:** um passo por traço, gravado no mouseup.
+- **Jogadores e Formação:** os campos numéricos da Formação (lateral, profundidade, comportamento A/B) usam
+  `DraftInput` como os Jogadores: gravam no Enter/blur, campo vazio mantém o valor, valor igual não cria
+  passo. Clicar outro jogador no campo confirma antes o número que está sendo digitado (senão ia para o
+  slot novo). `TeamPreview` já rotulava pela formação.
+- **Desfazer e rascunhos:** `restoreSnapshot` (`src/hooks/snapshotRestore.js`) grava e relê só as partes
+  que mudaram, e os times (e campos) iguais mantêm o mesmo objeto. Desfazer uma edição de outra aba não
+  refaz mais os rascunhos de Cenários, Textos, Menus, Outras telas, Sorteios, Descrição e Tela Inicial.
+  O Ctrl+Z dentro de um campo já ia para o desfazer nativo.
+- **Passos de desfazer vazios:** `cancelSnapshot` descarta o passo e restaura da própria snapshot o que a
+  gravação recusada tenha mexido (blocos movidos). Usado em descrição, cenário, treino, menu, outras
+  telas, logo, fundo e textos da tela inicial, além de nomes e bandeira.
+- **Testes:** `useHistory.test.js` e `snapshotRestore.test.js` (ROM real: desfazer troca de times e
+  importação no Super Star byte a byte, desfazer sem relação não relê nada, cenário). `useRomHandlers`
+  continua sem teste direto (o projeto não tem renderizador de hooks).
+- **Sobrou:** sorteios e paletas ainda criam passo quando a "mudança" é igual ao que já está gravado
+  (inofensivo, mas é um passo vazio).
 
 ### 5.3 Prévias aproximadas → desenho real
 - Hoje são SVG/aproximações: gramado e bola (`MatchPaletteEditor.jsx`), camisa (`UniformEditor.jsx`),

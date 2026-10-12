@@ -5,6 +5,7 @@
 import { useState, useCallback, useRef } from 'react';
 import RomParser from '../rom/RomParser';
 import useHistory from './useHistory';
+import { restoreSnapshot, snapshotGlobals } from './snapshotRestore';
 import { isElectron } from '../utils/fileHelpers';
 import * as electronBridge from '../services/electronBridge';
 
@@ -157,26 +158,14 @@ export default function useRomState({ toast, t } = {}) {
   );
 
   // Undo/Redo operations
-  // Snapshots hold { teams, scenarios, matchPalettes }. Callers keep passing
-  // `teams`; the global data is added here so every edit is undoable as one unit.
-  const currentGlobals = () => ({
-    scenarios: scenariosRef.current,
-    matchPalettes: matchPalettesRef.current,
-    // Raw bytes of the team-name regions: name writes shift data around and are not
-    // reversible by re-encoding, so undo restores the exact bytes
-    teamNameBytes: romParserRef.current ? romParserRef.current.readTeamNameBytes() : null,
-    // Same for the selection-screen descriptions (re-packed on every edit)
-    teamDescBytes: romParserRef.current ? romParserRef.current.readTeamDescriptionBytes() : null,
-    // ...and the flag designs (recompression is not byte-identical either)
-    flagBytes: romParserRef.current ? romParserRef.current.readFlagDesignBytes() : null,
-    // Tournament draws (768 bytes, restored as-is)
-    drawBytes: romParserRef.current ? romParserRef.current.readTournamentDrawBytes() : null,
-    // Training texts (re-packed on every edit)
-    gameTextBytes: romParserRef.current ? romParserRef.current.readTrainingTextBytes() : null,
-    menuBytes: romParserRef.current ? romParserRef.current.readMenuScreenBytes() : null,
-    screenTextBytes: romParserRef.current ? romParserRef.current.readScreenTextBytes() : null,
-    titleScreenBytes: romParserRef.current ? romParserRef.current.readTitleScreenBytes() : null,
-  });
+  // Snapshots hold { teams, scenarios, matchPalettes, ...raw ROM byte sections }.
+  // Callers keep passing `teams`; the global data is added here so every edit is
+  // undoable as one unit (see snapshotRestore.js).
+  const currentGlobals = () =>
+    snapshotGlobals(romParserRef.current, {
+      scenarios: scenariosRef.current,
+      matchPalettes: matchPalettesRef.current,
+    });
 
   const pushSnapshot = useCallback(
     (teamsSnapshot) => {
@@ -185,63 +174,36 @@ export default function useRomState({ toast, t } = {}) {
     [history],
   );
 
-  /**
-   * Drop the snapshot taken by the last pushSnapshot, when the edit it guarded was
-   * rejected or changed nothing (no empty undo steps). The caller is responsible for
-   * leaving the ROM bytes as they were before the edit.
-   */
-  const cancelSnapshot = useCallback(() => {
-    if (history.cancelLast()) syncModified();
-  }, [history, syncModified]);
-
   const applySnapshot = useCallback(
     (restored) => {
-      const restoredTeams = Array.isArray(restored) ? restored : restored.teams;
-      setTeams(restoredTeams);
-      // Re-sync ROM buffer from restored state (only what changed)
-      if (romParser) {
-        romParser.reloadTeams(restoredTeams, teams);
-        if (!Array.isArray(restored) && restored.scenarios) {
-          romParser.restoreScenarios(restored.scenarios);
-          setScenarios(romParser.readScenarios());
-        }
-        if (!Array.isArray(restored) && restored.teamNameBytes) {
-          romParser.restoreTeamNameBytes(restored.teamNameBytes);
-        }
-        if (!Array.isArray(restored) && restored.flagBytes) {
-          romParser.restoreFlagDesignBytes(restored.flagBytes);
-        }
-        if (!Array.isArray(restored) && restored.teamDescBytes) {
-          romParser.restoreTeamDescriptionBytes(restored.teamDescBytes);
-        }
-        if (!Array.isArray(restored) && restored.matchPalettes) {
-          romParser.restoreMatchPalettes(restored.matchPalettes);
-          setMatchPalettes(romParser.readMatchPalettes());
-        }
-        if (!Array.isArray(restored) && restored.drawBytes) {
-          romParser.restoreTournamentDrawBytes(restored.drawBytes);
-          setTournamentDraws(romParser.readTournamentDraws());
-        }
-        if (!Array.isArray(restored) && restored.gameTextBytes) {
-          romParser.restoreTrainingTextBytes(restored.gameTextBytes);
-          setGameTexts(romParser.readTrainingTexts());
-        }
-        if (!Array.isArray(restored) && restored.menuBytes) {
-          romParser.restoreMenuScreenBytes(restored.menuBytes);
-          setMenuScreens(romParser.readMenuScreens());
-        }
-        if (!Array.isArray(restored) && restored.screenTextBytes) {
-          romParser.restoreScreenTextBytes(restored.screenTextBytes);
-          setScreenTexts(romParser.readScreenTexts());
-        }
-        if (!Array.isArray(restored) && restored.titleScreenBytes) {
-          romParser.restoreTitleScreenBytes(restored.titleScreenBytes);
-          setTitleScreen(romParser.readTitleScreen());
-        }
-      }
+      if (!romParser) return;
+      // Only what differs is written and re-read: editors holding an unapplied draft
+      // keep it when the undo is about something else
+      const { teams: nextTeams, changed } = restoreSnapshot(romParser, restored, teams);
+      setTeams(nextTeams);
+      if (changed.has('scenarios')) setScenarios(romParser.readScenarios());
+      if (changed.has('matchPalettes')) setMatchPalettes(romParser.readMatchPalettes());
+      if (changed.has('tournamentDraws')) setTournamentDraws(romParser.readTournamentDraws());
+      if (changed.has('gameTexts')) setGameTexts(romParser.readTrainingTexts());
+      if (changed.has('menuScreens')) setMenuScreens(romParser.readMenuScreens());
+      if (changed.has('screenTexts')) setScreenTexts(romParser.readScreenTexts());
+      if (changed.has('titleScreen')) setTitleScreen(romParser.readTitleScreen());
     },
     [romParser, teams, setScenarios, setMatchPalettes],
   );
+
+  /**
+   * Drop the snapshot taken by the last pushSnapshot, when the edit it guarded was
+   * rejected or changed nothing (no empty undo steps). Whatever a failed write may
+   * have touched in the ROM (moved blocks, partial data) is put back from that
+   * snapshot; only the sections that really differ are re-read.
+   */
+  const cancelSnapshot = useCallback(() => {
+    const dropped = history.cancelLast();
+    if (!dropped) return;
+    applySnapshot(dropped);
+    syncModified();
+  }, [history, applySnapshot, syncModified]);
 
   const performUndo = useCallback(() => {
     const restored = history.undo({ teams, ...currentGlobals() });

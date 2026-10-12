@@ -4,7 +4,8 @@ import { useRom } from '../context/RomContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, TITLE_SCREEN } from '../rom/constants';
 import { adjustPalette, GRASS_PRESETS } from '../rom/palettes';
-import { renderTitleScreen } from '../rom/titleScreen';
+import { renderTitleScreen, renderPoseSheet } from '../rom/titleScreen';
+import { buildBackground, buildBackgroundFitting } from '../rom/titleBackground';
 import { checkTitleTexts } from '../rom/titleScreenText';
 import {
   buildLogo,
@@ -13,7 +14,7 @@ import {
   originalTmTiles,
   LOGO_CAPACITY,
 } from '../rom/titleLogo';
-import { loadImageFile, prepareLogoImage } from '../utils/imageToLogo';
+import { loadImageFile, prepareLogoImage, prepareImage } from '../utils/imageToLogo';
 import { IconTitleScreen } from './Icons';
 import { ColorSwatch, SwatchRow } from './ColorSwatch';
 import '../styles/match-palettes.css';
@@ -60,16 +61,17 @@ const LOGO_PRESETS = [
 ];
 const PRESET_PARTS = ['logoTop', 'logoBottom', 'stroke'];
 
-function TitlePreview({ romParser, titleScreen, teams, pressStart, draft }) {
+function TitlePreview({ romParser, titleScreen, teams, pressStart, drafts }) {
   const ref = useRef(null);
-  // an imported logo not applied yet is drawn from a copy of the ROM
+  // imports not applied yet (logo, background) are drawn from a copy of the ROM
+  const active = drafts.filter(Boolean);
   const view = useMemo(() => {
-    if (!draft || !romParser) return null;
+    if (!active.length || !romParser) return null;
     const work = new RomParser(romParser.getRomData());
     work.originalData = romParser.getOriginalData();
-    const res = work.importTitleLogo(draft.built, draft.options);
-    return res.ok ? work : null;
-  }, [draft, romParser, titleScreen]); // eslint-disable-line react-hooks/exhaustive-deps
+    return active.every((d) => d.apply(work).ok) ? work : null;
+    // drafts always has the same length (one slot per kind of import)
+  }, [...drafts, romParser, titleScreen]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas || !romParser || !titleScreen) return;
@@ -141,7 +143,12 @@ function LogoImport({ t, romParser, logo, draft, setDraft, onApply }) {
           })();
     const fits = built.ok && built.size <= LOGO_CAPACITY;
     setResult(fits ? built : { ...built, ok: false, error: built.error || 'logoNoSpace' });
-    setDraft(fits ? { built, options: { hideStroke: opts.hideStroke } } : null);
+    const options2 = { hideStroke: opts.hideStroke };
+    setDraft(
+      fits
+        ? { built, options: options2, apply: (work) => work.importTitleLogo(built, options2) }
+        : null,
+    );
   }, [img, opts, romParser, setDraft]);
 
   const cancel = () => {
@@ -365,6 +372,292 @@ function TitleTexts({ t, texts, original, onApply }) {
   );
 }
 
+const TOP_MODES = ['current', 'original', 'none', 'image'];
+const GRASS_MODES = ['current', 'original', 'none', 'full', 'texture'];
+
+/** Image file picker (button + hidden input) that hands back an HTMLImageElement */
+function ImagePicker({ t, onImage, fileName }) {
+  const ref = useRef(null);
+  const [error, setError] = useState(false);
+  return (
+    <span className="ts-picker">
+      <button className="kit-btn" onClick={() => ref.current?.click()}>
+        {t('tsChooseImage')}
+      </button>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            onImage(await loadImageFile(file), file.name);
+            setError(false);
+          } catch {
+            setError(true);
+          }
+          e.target.value = '';
+        }}
+      />
+      {fileName && <span className="mp-hint">{fileName}</span>}
+      {error && <span className="mp-warning">{t('tsErr_logoLoad')}</span>}
+    </span>
+  );
+}
+
+/** Brush stroke area and grass: keep, original, remove or image */
+function BackgroundImport({ t, romParser, state, setDraft, onApply }) {
+  const [top, setTop] = useState({ mode: 'current', img: null, name: '', scale: 1, bg: false });
+  const [grass, setGrass] = useState({ mode: 'current', img: null, name: '', size: 32 });
+  const [result, setResult] = useState(null);
+
+  const needsImage = (p, modes) => modes.includes(p.mode) && !p.img;
+  const pending =
+    (top.mode !== 'current' || grass.mode !== 'current') &&
+    !needsImage(top, ['image']) &&
+    !needsImage(grass, ['full', 'texture']);
+
+  useEffect(() => {
+    if (!romParser || !pending) {
+      setResult(null);
+      setDraft(null);
+      return;
+    }
+    const spec = {
+      top:
+        top.mode === 'image'
+          ? {
+              mode: 'image',
+              image: prepareImage(top.img, {
+                maxWidth: 256,
+                maxHeight: 112,
+                scale: top.scale,
+                removeBackground: top.bg,
+              }),
+            }
+          : { mode: top.mode },
+      grass:
+        grass.mode === 'full'
+          ? {
+              mode: 'image',
+              image: prepareImage(grass.img, { width: 256, height: 112, cover: true }),
+            }
+          : grass.mode === 'texture'
+            ? {
+                mode: 'image',
+                repeat: true,
+                image: prepareImage(grass.img, {
+                  width: grass.size,
+                  height: grass.size,
+                  cover: true,
+                }),
+              }
+            : { mode: grass.mode },
+    };
+    const copy = () => {
+      const work = new RomParser(romParser.getRomData());
+      work.originalData = romParser.getOriginalData();
+      return work;
+    };
+    const built = buildBackgroundFitting(romParser, spec, copy);
+    const modes = { top: spec.top.mode, grass: spec.grass.mode };
+    setResult(built);
+    setDraft(
+      built.ok ? { built, modes, apply: (work) => work.importTitleBackground(built, modes) } : null,
+    );
+  }, [romParser, top, grass, pending, setDraft]);
+
+  const cancel = () => {
+    setTop((p) => ({ ...p, mode: 'current', img: null, name: '' }));
+    setGrass((p) => ({ ...p, mode: 'current', img: null, name: '' }));
+  };
+  const apply = () => {
+    if (!result?.ok) return;
+    const res = onApply(result, {
+      top: top.mode === 'image' ? 'image' : top.mode,
+      grass: ['full', 'texture'].includes(grass.mode) ? 'image' : grass.mode,
+    });
+    if (res.ok) cancel();
+    else setResult({ ...res, ok: false });
+  };
+
+  return (
+    <div className="ts-logo-import">
+      <div className="detail-section-title ts-subtitle">{t('tsBgImport')}</div>
+      <p className="mp-hint">
+        {t('tsBgState', { top: t(`tsBgNow_${state.top}`), grass: t(`tsBgNow_${state.grass}`) })}
+      </p>
+      <div className="mp-presets">
+        <label className="mp-field">
+          <span>{t('tsBgTop')}</span>
+          <select
+            className="input-stat"
+            value={top.mode}
+            onChange={(e) => setTop((p) => ({ ...p, mode: e.target.value }))}
+          >
+            {TOP_MODES.map((m) => (
+              <option key={m} value={m}>
+                {t(`tsBgMode_${m}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {top.mode === 'image' && (
+          <ImagePicker
+            t={t}
+            fileName={top.name}
+            onImage={(img, name) => setTop((p) => ({ ...p, img, name }))}
+          />
+        )}
+      </div>
+      {top.mode === 'image' && top.img && (
+        <div className="mp-sliders">
+          <label className="mp-slider">
+            <span>
+              {t('tsLogoScale')}: {Math.round(top.scale * 100)}%
+            </span>
+            <input
+              type="range"
+              min={0.3}
+              max={1}
+              step={0.05}
+              value={top.scale}
+              onChange={(e) => setTop((p) => ({ ...p, scale: Number(e.target.value) }))}
+            />
+          </label>
+          <label className="mp-check">
+            <input
+              type="checkbox"
+              checked={top.bg}
+              onChange={(e) => setTop((p) => ({ ...p, bg: e.target.checked }))}
+            />
+            {t('tsRemoveBg')}
+          </label>
+        </div>
+      )}
+      <div className="mp-presets">
+        <label className="mp-field">
+          <span>{t('tsBgGrass')}</span>
+          <select
+            className="input-stat"
+            value={grass.mode}
+            onChange={(e) => setGrass((p) => ({ ...p, mode: e.target.value }))}
+          >
+            {GRASS_MODES.map((m) => (
+              <option key={m} value={m}>
+                {t(`tsBgGrassMode_${m}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        {['full', 'texture'].includes(grass.mode) && (
+          <ImagePicker
+            t={t}
+            fileName={grass.name}
+            onImage={(img, name) => setGrass((p) => ({ ...p, img, name }))}
+          />
+        )}
+        {grass.mode === 'texture' && (
+          <label className="mp-field ts-small-field">
+            <span>{t('tsBgTextureSize')}</span>
+            <select
+              className="input-stat"
+              value={grass.size}
+              onChange={(e) => setGrass((p) => ({ ...p, size: Number(e.target.value) }))}
+            >
+              {[16, 32, 64].map((n) => (
+                <option key={n} value={n}>
+                  {n} x {n}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+      <p className="mp-hint">{t('tsBgHelp')}</p>
+      {result?.ok && (
+        <p className="mp-hint">
+          {t('tsBgInfo', { tiles: result.tileCount, size: result.size, colors: result.colorCount })}
+        </p>
+      )}
+      {result && !result.ok && (
+        <p className="mp-warning">{t(`tsErr_${result.error}`) || result.error}</p>
+      )}
+      {pending && (
+        <div className="mp-presets">
+          <button className="kit-btn active" disabled={!result?.ok} onClick={apply}>
+            {t('tsApplyBg')}
+          </button>
+          <button className="kit-btn" onClick={cancel}>
+            {t('tsCancel')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Grid of every pose of the game for one player; click to choose */
+function PosePicker({ t, romParser, titleScreen, side, original, onPick, onClose }) {
+  const ref = useRef(null);
+  const sheet = useMemo(
+    () => renderPoseSheet(romParser, titleScreen, side),
+    [romParser, titleScreen, side],
+  );
+  const current = sheet.frames.indexOf(titleScreen.poses[side]);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    canvas.width = sheet.width;
+    canvas.height = sheet.height;
+    const ctx = canvas.getContext('2d');
+    ctx.putImageData(new ImageData(sheet.data, sheet.width, sheet.height), 0, 0);
+    const [cw, ch] = sheet.cell;
+    const mark = (k, color) => {
+      if (k < 0) return;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(
+        (k % sheet.columns) * cw + 0.5,
+        Math.floor(k / sheet.columns) * ch + 0.5,
+        cw - 1,
+        ch - 1,
+      );
+    };
+    mark(sheet.frames.indexOf(original), '#888');
+    mark(current, '#4fc3f7');
+  }, [sheet, current, original]);
+
+  const pick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const scale = sheet.width / rect.width;
+    const [cw, ch] = sheet.cell;
+    const col = Math.floor(((e.clientX - rect.left) * scale) / cw);
+    const row = Math.floor(((e.clientY - rect.top) * scale) / ch);
+    const k = row * sheet.columns + col;
+    if (sheet.frames[k] !== undefined) onPick(sheet.frames[k]);
+  };
+
+  return (
+    <div className="ts-pose-picker">
+      <div className="mp-presets">
+        <span>{t(`tsPoseOf_${side}`, { n: sheet.frames.length })}</span>
+        <button className="kit-btn" onClick={() => onPick(original)}>
+          {t('tsPoseOriginal')}
+        </button>
+        <button className="kit-btn" onClick={onClose}>
+          {t('tsClose')}
+        </button>
+      </div>
+      <div className="ts-pose-scroll">
+        <canvas ref={ref} className="ts-pose-canvas" onClick={pick} />
+      </div>
+    </div>
+  );
+}
+
 export default function TitleScreenEditor() {
   const { t } = useI18n();
   const {
@@ -374,8 +667,11 @@ export default function TitleScreenEditor() {
     handleTitleScreenChange,
     handleTitleTextsChange,
     handleTitleLogoChange,
+    handleTitleBackgroundChange,
   } = useRom();
   const [logoDraft, setLogoDraft] = useState(null);
+  const [bgDraft, setBgDraft] = useState(null);
+  const [poseSide, setPoseSide] = useState(null);
   const [pressStart, setPressStart] = useState(true);
   const [adjust, setAdjust] = useState({ hue: 0, saturation: 1, lightness: 1 });
   const [target, setTarget] = useState('logo');
@@ -425,6 +721,16 @@ export default function TitleScreenEditor() {
     const imported = titleScreen.logo?.original === false;
     // the logo (blocks + its colours) first, then everything else
     if (imported) handleTitleLogoChange(null);
+    const bg = titleScreen.background;
+    const bgCustom = bg && (bg.top !== 'original' || bg.grass !== 'original');
+    if (bgCustom) {
+      const modes = { top: 'original', grass: 'original' };
+      const built = buildBackground(romParser, {
+        top: { mode: 'original' },
+        grass: { mode: 'original' },
+      });
+      if (built.ok) handleTitleBackgroundChange(built, modes);
+    }
     const updates = {};
     Object.keys(colors).forEach((id) => {
       if (imported && logoParts.includes(id)) return;
@@ -433,12 +739,18 @@ export default function TitleScreenEditor() {
     ['left', 'right'].forEach((side) => {
       const orig = originals.teams[side];
       if (orig !== null && orig !== titleScreen.teams[side]) updates[`team:${side}`] = orig;
+      if (titleScreen.poses[side] !== originals.poses[side]) {
+        updates[`pose:${side}`] = originals.poses[side];
+      }
     });
     handleTitleScreenChange(updates);
   };
   const allOriginal =
     Object.keys(colors).every(isOriginal) &&
     same(titleScreen.teams, originals.teams) &&
+    same(titleScreen.poses, originals.poses) &&
+    titleScreen.background?.top === 'original' &&
+    titleScreen.background?.grass === 'original' &&
     titleScreen.logo?.original !== false;
 
   const teamName = (i) => teams[i]?.name || TEAMS[i]?.name || '?';
@@ -475,9 +787,9 @@ export default function TitleScreenEditor() {
             titleScreen={titleScreen}
             teams={teams}
             pressStart={pressStart}
-            draft={logoDraft}
+            drafts={[logoDraft, bgDraft]}
           />
-          {logoDraft && <p className="mp-warning">{t('tsLogoPreviewing')}</p>}
+          {(logoDraft || bgDraft) && <p className="mp-warning">{t('tsLogoPreviewing')}</p>}
           <label className="mp-check">
             <input
               type="checkbox"
@@ -606,6 +918,13 @@ export default function TitleScreenEditor() {
               ))}
             </div>
             <p className="mp-hint">{t('tsGrassHelp')}</p>
+            <BackgroundImport
+              t={t}
+              romParser={romParser}
+              state={titleScreen.background}
+              setDraft={setBgDraft}
+              onApply={handleTitleBackgroundChange}
+            />
           </section>
 
           {/* ---------------- Texts ---------------- */}
@@ -661,7 +980,34 @@ export default function TitleScreenEditor() {
                 </label>
               ))}
             </div>
+            <div className="mp-presets">
+              {['left', 'right'].map((side) => (
+                <button
+                  key={side}
+                  className={`kit-btn ${poseSide === side ? 'active' : ''}`}
+                  onClick={() => setPoseSide(poseSide === side ? null : side)}
+                >
+                  {t(`tsChoosePose_${side}`)}
+                  {titleScreen.poses[side] !== originals.poses[side] ? ' *' : ''}
+                </button>
+              ))}
+            </div>
+            {poseSide && (
+              <PosePicker
+                t={t}
+                romParser={romParser}
+                titleScreen={titleScreen}
+                side={poseSide}
+                original={originals.poses[poseSide]}
+                onPick={(y) =>
+                  y !== titleScreen.poses[poseSide] &&
+                  handleTitleScreenChange({ [`pose:${poseSide}`]: y })
+                }
+                onClose={() => setPoseSide(null)}
+              />
+            )}
             <p className="mp-hint">{t('tsPlayersHelp')}</p>
+            <p className="mp-hint">{t('tsPoseHelp')}</p>
           </section>
         </div>
       </div>

@@ -11,9 +11,11 @@
 import { TITLE_SCREEN, TEAMS, FLAG_DESIGN_ORDINALS } from './constants';
 import { getHairSkinOffset } from './readers/UniformReader';
 import { konamiDecompress } from './KonamiCodec';
-import { TITLE_PLAYER_SPRITES, TITLE_RAW_TILES } from './titleScreenLayout';
+import { TITLE_SHADOW_SPRITES, TITLE_BALL_SPRITES, TITLE_RAW_TILES } from './titleScreenLayout';
+import { readPoses, writePose, playerSprites, listPoseFrames } from './titlePlayers';
 import { readLogoSprites, writeLogo, restoreOriginalLogo, isOriginalLogo } from './titleLogo';
 import { pressStartAt, readTitleTexts } from './titleScreenText';
+import { backgroundState, writeBackground } from './titleBackground';
 
 const T = TITLE_SCREEN;
 const byId = Object.fromEntries(T.COLORS.map((c) => [c.id, c]));
@@ -57,6 +59,8 @@ export function readTitleScreen(rom) {
     },
     texts: readTitleTexts(rom),
     logo: { original: isOriginalLogo(rom), sprites: readLogoSprites(rom).length },
+    background: backgroundState(rom),
+    poses: readPoses(rom),
   };
 }
 
@@ -123,6 +127,7 @@ export function writeTitleTeam(rom, side, teamIndex) {
 export function applyTitleScreenUpdates(rom, updates) {
   Object.entries(updates).forEach(([key, value]) => {
     if (key.startsWith('team:')) writeTitleTeam(rom, key.slice(5), value);
+    else if (key.startsWith('pose:')) writePose(rom, key.slice(5), value);
     else writeTitleColors(rom, key, value);
   });
 }
@@ -163,6 +168,34 @@ export function restoreTitleLogo(rom) {
   if (stroke.every((v) => v === sky)) copy(...span('stroke'));
   return res;
 }
+// --- Background (BG1) ---
+
+/**
+ * Put a background built by buildBackground in the ROM. New images bring their
+ * colours (stroke: BG palette 7, grass: palettes 2-3); a part that goes back
+ * to the original gets its original colours back.
+ * @param {{ top: string, grass: string }} modes - the modes the background was built with
+ */
+export function importTitleBackground(rom, built, modes) {
+  const before = backgroundState(rom);
+  const res = writeBackground(rom, built);
+  if (!res.ok) return res;
+  const orig = rom.getOriginalData?.();
+  const h = rom.headerOffset || 0;
+  const copy = (id) => {
+    if (!orig) return;
+    const { offset, count } = byId[id];
+    rom.writeBytes(offset, orig.slice(offset + h, offset + h + count * 2));
+  };
+  const updates = {};
+  if (built.colors.stroke) updates.stroke = built.colors.stroke;
+  else if (modes.top === 'original' && before.top === 'custom') copy('stroke');
+  if (built.colors.grass) updates.grass = built.colors.grass;
+  else if (modes.grass === 'original' && before.grass === 'custom') copy('grass');
+  applyTitleScreenUpdates(rom, updates);
+  return res;
+}
+
 // --- Undo snapshots (exact bytes) ---
 
 export function readTitleScreenBytes(rom) {
@@ -260,6 +293,15 @@ function buildCgram(rom, state) {
   };
   team('left', 8);
   team('right', 9);
+  // goalkeeper frames use rows 12-13: the keeper hair/skin + kit of the team (11 colours)
+  const keeper = (side, row) => {
+    const index = state.teams[side];
+    const off = index === null ? null : getHairSkinOffset(TEAMS[index].id, 'goalkeeper');
+    put(row, 1, Array(15).fill(0x739c));
+    if (off !== null) put(row, 1, readColors(rom, off, 11));
+  };
+  keeper('left', 12);
+  keeper('right', 13);
   const B = T.BALL_PALETTE;
   put(B.row, B.first, readColors(rom, B.offset, B.count));
   return cg;
@@ -336,13 +378,15 @@ function drawSprites(img, cg, vram, sprites) {
   });
 }
 
+/** img: { data, width, height, clip?: [x0, y0, x1, y1] } */
 function setPixel(img, x, y, raw) {
-  if (x < 0 || y < 0 || x >= WIDTH || y >= HEIGHT) return;
-  const i = (y * WIDTH + x) * 4;
-  img[i] = (raw & 31) << 3;
-  img[i + 1] = ((raw >> 5) & 31) << 3;
-  img[i + 2] = ((raw >> 10) & 31) << 3;
-  img[i + 3] = 255;
+  const [x0, y0, x1, y1] = img.clip || [0, 0, img.width, img.height];
+  if (x < x0 || y < y0 || x >= x1 || y >= y1) return;
+  const i = (y * img.width + x) * 4;
+  img.data[i] = (raw & 31) << 3;
+  img.data[i + 1] = ((raw >> 5) & 31) << 3;
+  img.data[i + 2] = ((raw >> 10) & 31) << 3;
+  img.data[i + 3] = 255;
 }
 
 /**
@@ -353,14 +397,50 @@ function setPixel(img, x, y, raw) {
  * @returns {{ width: number, height: number, data: Uint8ClampedArray }}
  */
 export function renderTitleScreen(rom, state = readTitleScreen(rom), { pressStart = true } = {}) {
-  const vram = buildVram(rom);
+  const vram = Uint8Array.from(buildVram(rom));
   const cg = buildCgram(rom, state);
-  const img = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
+  const img = { data: new Uint8ClampedArray(WIDTH * HEIGHT * 4), width: WIDTH, height: HEIGHT };
   for (let i = 0; i < WIDTH * HEIGHT; i++) setPixel(img, i % WIDTH, Math.floor(i / WIDTH), cg[0]);
   drawBg(img, cg, vram, null, BG1, 16, true);
   drawBg(img, cg, vram, bg3Words(rom, vram, pressStart), BG3, 4);
-  drawSprites(img, cg, vram, TITLE_PLAYER_SPRITES.slice(0, -1));
+  drawSprites(img, cg, vram, TITLE_SHADOW_SPRITES);
+  const poses = state.poses || readPoses(rom);
+  for (const side of ['left', 'right']) {
+    const p = playerSprites(rom, side, poses[side]);
+    if (!p) continue;
+    p.tiles.forEach(([tile, bytes]) => vram.set(bytes, (OBJ_BASE + tile * 32) & 0xffff));
+    drawSprites(img, cg, vram, p.sprites);
+  }
   drawSprites(img, cg, vram, readLogoSprites(rom));
-  drawSprites(img, cg, vram, TITLE_PLAYER_SPRITES.slice(-1));
-  return { width: WIDTH, height: HEIGHT, data: img };
+  drawSprites(img, cg, vram, TITLE_BALL_SPRITES);
+  return { width: WIDTH, height: HEIGHT, data: img.data };
+}
+
+/**
+ * Every pose the game has, drawn for one player (with the colours of its team
+ * and mirrored like on the screen), in a grid.
+ * @returns {{ width: number, height: number, data: Uint8ClampedArray,
+ *   frames: number[], columns: number, cell: [number, number] }}
+ */
+export function renderPoseSheet(rom, state, side, { columns = 12, cell = [40, 64] } = {}) {
+  const frames = listPoseFrames(rom);
+  const [cw, ch] = cell;
+  const rows = Math.ceil(frames.length / columns);
+  const img = {
+    data: new Uint8ClampedArray(columns * cw * rows * ch * 4),
+    width: columns * cw,
+    height: rows * ch,
+  };
+  const cg = buildCgram(rom, state);
+  const vram = new Uint8Array(0x10000);
+  frames.forEach((y, k) => {
+    const x0 = (k % columns) * cw;
+    const y0 = Math.floor(k / columns) * ch;
+    const p = playerSprites(rom, side, y, [x0 + cw / 2, y0 + ch - 6]);
+    if (!p) return;
+    p.tiles.forEach(([tile, bytes]) => vram.set(bytes, (OBJ_BASE + tile * 32) & 0xffff));
+    img.clip = [x0, y0, x0 + cw, y0 + ch];
+    drawSprites(img, cg, vram, p.sprites);
+  });
+  return { width: img.width, height: img.height, data: img.data, frames, columns, cell };
 }

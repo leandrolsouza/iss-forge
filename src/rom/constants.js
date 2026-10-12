@@ -367,6 +367,21 @@ export const MENU_SCREENS = [
     pointers: [0x10050],
     title: true,
   },
+  // Title screen background (TITLE_SCREEN.BACKGROUND): BG1 map and tiles
+  {
+    offset: 0x67e6e,
+    id: 'titleBgMap',
+    label: 'Title screen: BG1 map',
+    pointers: [0x1019a],
+    title: true,
+  },
+  {
+    offset: 0xbe106,
+    id: 'titleBgTiles',
+    label: 'Title screen: BG1 tiles',
+    pointers: [0x1017c],
+    title: true,
+  },
 ];
 
 // ============================================================
@@ -1357,10 +1372,47 @@ export const TITLE_SCREEN = {
     /** "TM" sprites of the original logo (OBJ palette 7) */
     TM_TILES: [0xe9, 0xea],
   },
+  /**
+   * Background (BG1 4bpp, map $1000, tiles $2000). Rows 0-13: brush stroke
+   * (tiles 1-0x54, BG palette 7, revealed by a window wipe). Rows 14-27: grass,
+   * an 8x4 pattern of tiles 0xDC-0xEA (palettes 2-3) from a block that other
+   * screens also load (loaded after TILES, so imported images never use those
+   * tile numbers). Tile 0 is blank. MAP and TILES are MENU_SCREENS entries.
+   */
+  BACKGROUND: {
+    MAP: 0x67e6e,
+    TILES: 0xbe106,
+    TOP_ROWS: [0, 14],
+    GRASS_ROWS: [14, 28],
+    RESERVED_TILES: [0xdc, 0xeb],
+    LAST_TILE: 0x2ff,
+    TOP_PALETTE: 7,
+    GRASS_PALETTES: [2, 3],
+    /** Where an imported top image is centred (8-pixel grid) */
+    TOP_CENTER: [128, 56],
+    /** Largest repeated grass texture (pixels) */
+    PATTERN_MAX: 64,
+  },
+  /**
+   * Players: LDY #frame before JSL $83:D536 (frame records in bank $82: sprite
+   * list word in bank $88 + 2 pointers to raw tile rows, DMA'd to the object's
+   * OBJ tiles). Left = object $0E80 (x 0x72, tiles 0x40, palette 0), right =
+   * object $0DE0 (x 0x90, tiles 0x20, palette 1, mirrored). Feet at y 0xB0.
+   */
+  PLAYERS: {
+    LEFT: { pose: 0x0d9b, x: 0x72, tile: 0x40, palette: 0, flip: false },
+    RIGHT: { pose: 0x0d5b, x: 0x90, tile: 0x20, palette: 1, flip: true },
+    Y: 0xb0,
+    /** Frame records live in $82:BC00-$82:F2E0 (file 0x13C00-0x172E0) */
+    FRAMES: [0x13c00, 0x172e0],
+  },
   /** Byte ranges written by this editor (undo snapshots) */
   RANGES: [
     [0x0d19, 0x0d1a],
     [0x0d1f, 0x0d20],
+    // player poses (LDY #frame)
+    [0x0d5b, 0x0d5d],
+    [0x0d9b, 0x0d9d],
     [0x2d49e, 0x2d4ae],
     [0x2d4c0, 0x2d4fc],
     [0x2d4fe, 0x2d51c],

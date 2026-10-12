@@ -49,7 +49,8 @@ export const TITLE_LOGO_SPRITES = [
 
 /**
  * The two players (palette 0 = left team, 1 = right team), their shadows, the
- * ball (palette 6) and a hidden piece (palette 4).
+ * ball (palette 6) and a hidden piece (palette 4), as captured from the OAM.
+ * The players themselves are drawn from their pose (reference for the tests).
  */
 // prettier-ignore
 export const TITLE_PLAYER_SPRITES = [
@@ -60,15 +61,16 @@ export const TITLE_PLAYER_SPRITES = [
   [129, 148, 0x22, 1, 1, 1, 0], [135, 164, 0x24, 1, 1, 1, 0], [128, 125, 0x1a0, 0, 6, 0, 0],
 ];
 
+/** Shadows under the players and under the ball (drawn first) */
+export const TITLE_SHADOW_SPRITES = TITLE_PLAYER_SPRITES.slice(0, 5);
+/** The ball (drawn last, on top of everything) */
+export const TITLE_BALL_SPRITES = TITLE_PLAYER_SPRITES.slice(-1);
+
 /**
- * Player / ball tiles that the game streams from uncompressed graphics:
- * [first OBJ tile, file offset, tile count] (each tile is 32 bytes).
+ * Ball tiles, uncompressed in the ROM: [first OBJ tile, file offset, tile count]
+ * (each tile is 32 bytes). The players' tiles come from their pose (titlePlayers.js).
  */
 export const TITLE_RAW_TILES = [
-  [0x20, 0x5e846, 6],
-  [0x30, 0x5e908, 6],
-  [0x40, 0x5edf6, 6],
-  [0x50, 0x5eeb8, 5],
   [0x1a0, 0xbf4eb, 1],
   [0x1b0, 0xbed4b, 1],
 ];

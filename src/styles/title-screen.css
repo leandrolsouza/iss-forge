@@ -100,3 +100,37 @@
 .ts-subtitle {
   margin: 0;
 }
+
+.ts-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ts-small-field {
+  min-width: 120px;
+}
+
+.ts-pose-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+}
+
+.ts-pose-scroll {
+  max-height: 420px;
+  overflow: auto;
+  border-radius: 4px;
+  background: #284018;
+}
+
+.ts-pose-canvas {
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+  cursor: pointer;
+}

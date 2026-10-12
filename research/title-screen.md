@@ -58,8 +58,22 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
   2 (Itália = 1, Brasil = 19). Bytes `0x0D19` e `0x0D1F`.
 - Usam o primeiro uniforme, cabelo e pele do time (OBJ 8-9 = bloco de cabelo/pele + uniforme). A
   partida de demonstração não muda.
-- Os tiles dos jogadores vêm sem compressão (`0x5E846`...); a prévia usa a posição deles capturada da OAM
-  (`titleScreenLayout.js`).
+- **Pose:** `LDY #quadro` antes de `JSL $83:D536` (`$83:D3DC` guarda Y em `$3C,X`, com DB = `$82`):
+  `$80:8D9A` (`0x0D9B`, esquerda, objeto `$0E80`) e `$80:8D5A` (`0x0D5B`, direita, objeto `$0DE0`).
+  Original: `$82:C1DC` (cabeceio, esquerda) e `$82:C1A8` (direita).
+- **Quadro de animação** (banco `$82`, os mesmos da partida): `[lista word] [ponteiro A 24 bits]
+  [ponteiro B 24 bits]`. A lista fica no banco `$88` (`n`, depois `n` × `[dy, dx, tile, attr]`; attr:
+  bit 4 = 16x16, bit 5 = paleta + 4, bit 6 = espelho horizontal, bit 7 = vertical; o bit 3 é comum e não
+  muda a paleta). Cada ponteiro aponta para `[tamanho word] + tiles 4bpp sem compressão`, copiados por
+  DMA para a linha de tiles OBJ do objeto (esquerda `0x40`/`0x50`, direita `0x20`/`0x30`).
+- Os registros ficam entre `$82:BC00` e `$82:F2E0` (`0x13C00`-`0x172E0`), misturados com outros dados: o
+  editor procura os que passam nas validações (ponteiros nos bancos `$88`-`$9F`, tamanhos múltiplos de 32,
+  tiles dentro das 2 linhas, posições razoáveis): 866 quadros. Escolher outro quadro só muda o `LDY`; a
+  partida não muda.
+- Objetos: esquerda x = `0x72`, paleta 0; direita x = `0x90`, paleta 1, espelhada (x = origem − dx −
+  tamanho). Pés em y = `0xB0`. A bola (`$0480`) e as sombras são objetos à parte e não mudam.
+- Linhas OBJ 12-13: cores de goleiro dos dois times (11 cores do bloco de goleiro), usadas pelas peças
+  com o bit 5.
 
 ## Textos
 
@@ -94,8 +108,26 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
 - Limite prático: um logo do tamanho e detalhe do original cabe com ~10 cores por paleta; imagens
   grandes e cheias precisam de menos cores ou de um tamanho menor (até 72 sprites 16x16 de tiles).
 
-## Ideias / pendências
+## Fundo (BG1)
 
-- Editar os desenhos da pincelada e do gramado (BG1).
+- Mapa `0x67E6E` (ponteiro `0x1019A`, 380 bytes + 22 de `FF`) e tiles `0xBE106` (ponteiro `0x1017C`,
+  1533 bytes, 85 tiles): só esta tela usa. Os dois entram em `MENU_SCREENS` (podem mudar de lugar).
+- Linhas 0-13: pincelada (tiles 1-`0x54`, paleta BG 7), revelada por uma janela que abre da esquerda para a
+  direita (`$1944` sobe de `0x14` até `0xFE`, `$80:8E3E`). Qualquer imagem nessa área aparece com a mesma
+  cortina.
+- Linhas 14-27: gramado, um padrão de 8 × 4 células com os tiles `0xDC`-`0xEA` (paletas 2-3) do bloco
+  `0x49CE1`, que outras 2 listas também carregam (`0x10075`, `0x10639`). Ele é carregado depois do bloco
+  da tela, então os tiles `0xDC`-`0xEA` nunca são usados por imagens novas.
+- VRAM livre para BG1 nesta tela: tiles `0x55`-`0x2FF` (até `$5000`, onde começa a BG3).
+- Tile 0 = vazio (o céu aparece). Sem gramado, a névoa do colour math não aparece no céu.
+- **Editor:** cada parte pode ficar como está, voltar ao original, ser removida ou receber uma imagem. A
+  área da pincelada usa 1 paleta de 15 cores (paleta 7); o gramado, imagem inteira (256 × 112) ou textura
+  repetida (16, 32 ou 64 px), com 2 paletas de 15 cores (uma por célula). Tiles iguais, inclusive
+  espelhados, são reaproveitados. As cores baixam sozinhas até os blocos caberem (no lugar ou no espaço
+  livre dos menus).
+
+## Ideias / pendências
 - Liberar mais espaço para logos grandes (expandir a ROM ou mover blocos de outras telas).
-- Sprites dos jogadores (quadros de animação em `0x5E846`...).
+- Desenhar quadros novos para os jogadores (precisa de espaço para tiles e de um registro novo no banco
+  ``; os quadros existentes são compartilhados com a partida).
+- Mover/esconder a bola e as sombras (objetos ``, ``, ``).

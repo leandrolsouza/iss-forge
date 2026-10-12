@@ -78,6 +78,7 @@ import {
   restoreTitleScreenBytes,
   importTitleLogo,
   restoreTitleLogo,
+  importTitleBackground,
 } from './titleScreen';
 import { isOriginalLogo } from './titleLogo';
 import { writeTitleTexts } from './titleScreenText';
@@ -236,6 +237,10 @@ export default class RomParser {
   }
   restoreTitleLogo() {
     return restoreTitleLogo(this);
+  }
+  /** Background built by buildBackground (titleBackground.js); modes = { top, grass } */
+  importTitleBackground(built, modes) {
+    return importTitleBackground(this, built, modes);
   }
   isOriginalTitleLogo() {
     return isOriginalLogo(this);

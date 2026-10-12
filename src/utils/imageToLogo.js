@@ -1,7 +1,7 @@
 /**
- * Image -> title screen logo: scale an image to the logo room and make the
- * background transparent (see src/rom/titleLogo.js for the conversion to
- * sprites, tiles and palettes).
+ * Image -> title screen graphics: scale an image to the room of the logo or of
+ * a background part and make the background colour transparent (see
+ * src/rom/titleLogo.js and titleBackground.js for the conversion to tiles).
  */
 import { TITLE_SCREEN } from '../rom/constants';
 
@@ -9,15 +9,19 @@ export { loadImageFile } from './imageToFlag';
 
 const L = TITLE_SCREEN.LOGO;
 
-/** Size of the image fitted in the logo room at `scale` (0-1] of the largest fit */
-export function fitLogoSize(width, height, scale = 1) {
-  const fit = Math.min(L.MAX_WIDTH / width, L.MAX_HEIGHT / height);
+/** Size of a `width` x `height` image fitted in maxW x maxH at `scale` (0-1] of the largest fit */
+export function fitSize(width, height, maxW, maxH, scale = 1) {
+  const fit = Math.min(maxW / width, maxH / height);
   const k = fit * Math.max(0.05, Math.min(1, scale));
   return {
-    width: Math.max(1, Math.min(L.MAX_WIDTH, Math.round(width * k))),
-    height: Math.max(1, Math.min(L.MAX_HEIGHT, Math.round(height * k))),
+    width: Math.max(1, Math.min(maxW, Math.round(width * k))),
+    height: Math.max(1, Math.min(maxH, Math.round(height * k))),
   };
 }
+
+/** Size of the image fitted in the logo room */
+export const fitLogoSize = (width, height, scale = 1) =>
+  fitSize(width, height, L.MAX_WIDTH, L.MAX_HEIGHT, scale);
 
 /**
  * Make pixels close to the given colour transparent (the whole image, not only
@@ -36,17 +40,32 @@ export function keyOutColor(data, [r, g, b], tolerance = 24) {
 }
 
 /**
- * Scaled RGBA image for buildLogo.
+ * Scaled RGBA image.
  * @param {HTMLImageElement|HTMLCanvasElement} img
- * @param {{ scale?: number, removeBackground?: boolean, tolerance?: number }} [options] -
- *   removeBackground: the colour of the top-left pixel becomes transparent
+ * @param {{ width?: number, height?: number, maxWidth?: number, maxHeight?: number,
+ *   scale?: number, cover?: boolean, removeBackground?: boolean, tolerance?: number }} [options] -
+ *   width/height: exact size (with `cover`, the image fills it and the excess is cut);
+ *   otherwise fitted in maxWidth x maxHeight at `scale`. removeBackground: the colour of the
+ *   top-left pixel becomes transparent.
  * @returns {{ width: number, height: number, data: Uint8ClampedArray }}
  */
-export function prepareLogoImage(
+export function prepareImage(
   img,
-  { scale = 1, removeBackground = false, tolerance = 24 } = {},
+  {
+    width: exactW,
+    height: exactH,
+    maxWidth = L.MAX_WIDTH,
+    maxHeight = L.MAX_HEIGHT,
+    scale = 1,
+    cover = false,
+    removeBackground = false,
+    tolerance = 24,
+  } = {},
 ) {
-  const { width, height } = fitLogoSize(img.width, img.height, scale);
+  const { width, height } =
+    exactW && exactH
+      ? { width: exactW, height: exactH }
+      : fitSize(img.width, img.height, maxWidth, maxHeight, scale);
   let source = img;
   if (removeBackground) {
     // key out on the full-size image, so the scaled edges blend into transparency
@@ -65,6 +84,17 @@ export function prepareLogoImage(
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(source, 0, 0, width, height);
+  if (cover) {
+    // fill the box keeping the aspect ratio, centred
+    const k = Math.max(width / img.width, height / img.height);
+    const sw = width / k;
+    const sh = height / k;
+    ctx.drawImage(source, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, width, height);
+  } else {
+    ctx.drawImage(source, 0, 0, width, height);
+  }
   return { width, height, data: ctx.getImageData(0, 0, width, height).data };
 }
+
+/** Scaled RGBA image for buildLogo */
+export const prepareLogoImage = (img, options = {}) => prepareImage(img, options);

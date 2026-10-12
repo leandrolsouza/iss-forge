@@ -477,6 +477,24 @@ export default function useRomHandlers({
   );
 
   /**
+   * Replace the title screen background (brush stroke area / grass), one undo step.
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  const handleTitleBackgroundChange = useCallback(
+    (built, modes) => {
+      if (!romParser || !built) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.importTitleBackground(built, modes);
+      setTitleScreen(romParser.readTitleScreen());
+      // the blocks are placed like menu screens and may move them
+      setMenuScreens(romParser.readMenuScreens());
+      if (result.ok) markModified();
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setTitleScreen, setMenuScreens],
+  );
+
+  /**
    * Replace the title screen copyright lines and/or PRESS START (one undo step).
    * @param {{ copyright?: string, pressStart?: string }} texts
    * @returns {{ ok: boolean, error?: string, invalid?: string[] }}
@@ -924,6 +942,7 @@ export default function useRomHandlers({
     handleTitleScreenChange,
     handleTitleTextsChange,
     handleTitleLogoChange,
+    handleTitleBackgroundChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

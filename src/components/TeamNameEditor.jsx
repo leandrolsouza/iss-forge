@@ -1,6 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useI18n } from '../i18n';
 import { IconTeamName } from './Icons';
+
+const sanitizeMenu = (s) =>
+  s
+    .toUpperCase()
+    .replace(/[^A-Z0-9. ]/g, ' ')
+    .trim();
 
 export default function TeamNameEditor({
   team,
@@ -8,28 +14,25 @@ export default function TeamNameEditor({
   onTeamNameMenuSave,
   onTeamNameInGameGenerate,
 }) {
-  const [menuText, setMenuText] = useState('');
-  const [inGameText, setInGameText] = useState('');
+  const { t } = useI18n();
+  const teamNameText = team ? team.teamNameText || team.name.toUpperCase() : '';
+
+  const [menuText, setMenuText] = useState(teamNameText);
+  const [inGameText, setInGameText] = useState(teamNameText.substring(0, 3));
   const [inGameGenerated, setInGameGenerated] = useState(false);
   const [menuSaved, setMenuSaved] = useState(false);
-  const menuInitRef = useRef(false);
-  const inGameInitRef = useRef(false);
-  const { t } = useI18n();
+
+  // Reset the drafts whenever the team (or its stored name, e.g. after undo) changes,
+  // so a blur never writes the previous team's text into the current one
+  useEffect(() => {
+    setMenuText(teamNameText);
+    setInGameText(teamNameText.substring(0, 3));
+    setMenuSaved(false);
+    setInGameGenerated(false);
+  }, [teamIndex, teamNameText]);
 
   if (!team) {
     return <div className="editor-panel empty">{t('openRomToSee')}</div>;
-  }
-
-  const teamNameText = team.teamNameText || team.name.toUpperCase();
-
-  // Initialize inputs on first render or team change
-  if (!menuInitRef.current && teamNameText) {
-    setMenuText(teamNameText);
-    menuInitRef.current = true;
-  }
-  if (!inGameInitRef.current && teamNameText) {
-    setInGameText(teamNameText.substring(0, 3));
-    inGameInitRef.current = true;
   }
 
   const handleInGameGenerate = () => {
@@ -45,11 +48,12 @@ export default function TeamNameEditor({
   };
 
   const handleMenuSave = () => {
-    const sanitized = menuText
-      .toUpperCase()
-      .replace(/[^A-Z0-9. ]/g, ' ')
-      .trim();
-    if (!sanitized) return;
+    const sanitized = sanitizeMenu(menuText);
+    // Empty or unchanged: nothing to write (avoids an undo step / ROM repack per blur)
+    if (!sanitized || sanitized === sanitizeMenu(teamNameText)) {
+      setMenuText(teamNameText);
+      return;
+    }
 
     onTeamNameMenuSave(teamIndex, sanitized);
     setMenuSaved(true);
@@ -119,6 +123,15 @@ export default function TeamNameEditor({
               value={menuText}
               onChange={handleMenuChange}
               onBlur={handleMenuSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur();
+                if (e.key === 'Escape') {
+                  setMenuText(teamNameText);
+                  // blur after the reset renders, so handleMenuSave sees the original text
+                  const el = e.currentTarget;
+                  setTimeout(() => el.blur(), 0);
+                }
+              }}
               maxLength={10}
               placeholder={t('nameInMenuPlaceholder')}
               className="teamname-input"

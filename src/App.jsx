@@ -55,7 +55,11 @@ export default function App() {
     setLoading,
     sidebarCollapsed,
     setSidebarCollapsed,
-    loadRomData,
+    requestLoadRom,
+    pendingLoad,
+    confirmPendingLoad,
+    cancelPendingLoad,
+    setStatusMessage,
     selectTeam,
     openTab,
     closeTab,
@@ -110,7 +114,9 @@ export default function App() {
   // IPC listeners and keyboard shortcuts
   useEffect(() => {
     if (isElectron()) {
-      window.electronAPI.onRomLoaded((data) => loadRomData(new Uint8Array(data.data), data.name));
+      window.electronAPI.onRomLoaded((data) =>
+        requestLoadRom(new Uint8Array(data.data), data.name, data.path || null),
+      );
       window.electronAPI.onMenuSave(() => handleSave());
       window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
       window.electronAPI.onMenuUndo(() => performUndo());
@@ -150,8 +156,21 @@ export default function App() {
       window.addEventListener('keydown', handleKeyDown);
       return () => window.removeEventListener('keydown', handleKeyDown);
     }
+
+    // Electron: drop the listeners registered above before the next run, otherwise
+    // every re-render with new handlers stacks another copy (one Ctrl+S = N saves)
+    return () => {
+      [
+        'rom:loaded',
+        'menu:save',
+        'rom:save-as-path',
+        'menu:undo',
+        'menu:redo',
+        'rom:loadCancelled',
+      ].forEach((channel) => window.electronAPI.removeAllListeners(channel));
+    };
   }, [
-    loadRomData,
+    requestLoadRom,
     handleSave,
     handleSaveToPath,
     handleOpenRom,
@@ -214,6 +233,18 @@ export default function App() {
     window.electronAPI.sendCloseResponse('cancel');
   }, []);
 
+  // Opening another ROM while the current one has unsaved changes
+  const handleOpenModalSave = useCallback(async () => {
+    const saved = await handleSave();
+    if (saved) {
+      confirmPendingLoad();
+    } else {
+      // Save needs a "Save As" dialog (or failed): keep the current ROM untouched
+      cancelPendingLoad();
+      setStatusMessage('unsavedSaveNeedsPath');
+    }
+  }, [handleSave, confirmPendingLoad, cancelPendingLoad, setStatusMessage]);
+
   // Editor renderer
   const renderEditor = () => {
     if (activeTab === 'about') return <AboutPanel />;
@@ -224,6 +255,19 @@ export default function App() {
     if (activeTab === 'gameTexts' && romParser) return <GameTextEditor />;
     if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
     if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
+
+    // ROM loaded but every tab was closed: don't fall back to the "Open ROM" screen
+    if (romParser && !openTabs.some((tab) => tab.id === activeTab)) {
+      return (
+        <div className="editor-panel empty editor-empty-state">
+          <h2>{t('noEditorOpenTitle')}</h2>
+          <p>{t('noEditorOpenHint')}</p>
+          <button className="welcome-btn" onClick={() => openTab('players', t('editorPlayers'))}>
+            {t('noEditorOpenPlayers')}
+          </button>
+        </div>
+      );
+    }
 
     if (!romParser || selectedTeamIndex === null) {
       return (
@@ -393,6 +437,16 @@ export default function App() {
         onSave={handleCloseModalSave}
         onDiscard={handleCloseModalDiscard}
         onCancel={handleCloseModalCancel}
+      />
+
+      <UnsavedModal
+        visible={!!pendingLoad && !showUnsavedModal}
+        message={t('unsavedOpenMessage', { file: pendingLoad?.fileName || '' })}
+        saveLabel={t('unsavedSaveAndOpen')}
+        discardLabel={t('unsavedOpenWithoutSaving')}
+        onSave={handleOpenModalSave}
+        onDiscard={confirmPendingLoad}
+        onCancel={cancelPendingLoad}
       />
 
       <ExportPatchModal visible={showPatchModal} onClose={closePatchModal} />

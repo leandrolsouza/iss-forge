@@ -48,6 +48,24 @@ export function getCurrentPath() {
 }
 
 /**
+ * Tell the main process which file the editor is now working on
+ * (target of "Save", added to recents). Called only after a ROM is accepted.
+ * @param {string|null} filePath
+ */
+export function setCurrentRomPath(filePath) {
+  window.electronAPI.setCurrentRomPath?.(filePath);
+}
+
+/**
+ * Absolute path of a dropped File (null when unavailable)
+ * @param {File} file
+ * @returns {string|null}
+ */
+export function getPathForFile(file) {
+  return window.electronAPI.getPathForFile?.(file) || null;
+}
+
+/**
  * Show a "Save patch" dialog and write the patch file
  * @param {number[]} data - patch bytes
  * @param {string} defaultName - suggested file name (e.g. "ISS.bps")

@@ -17,6 +17,25 @@
   font-size: var(--font-size-lg);
 }
 
+/* ROM loaded, no editor tab open */
+.editor-empty-state {
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+
+.editor-empty-state h2 {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.editor-empty-state p {
+  font-size: var(--font-size);
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
 .editor-header {
   padding: 12px 20px;
   background: var(--bg-secondary);

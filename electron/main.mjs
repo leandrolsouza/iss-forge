@@ -264,9 +264,11 @@ async function handleOpenRom() {
 function loadAndSendRom(filePath) {
   try {
     const buffer = fs.readFileSync(filePath);
-    currentRomPath = filePath;
     lastOpenDialogPath = path.dirname(filePath);
-    addRecentRom(filePath);
+    // currentRomPath / recents are only updated once the renderer accepts and
+    // parses the ROM (see 'rom:setCurrentPath'). Otherwise cancelling the
+    // "unsaved changes" prompt, or an invalid file, would redirect the next
+    // save to a file the user never actually opened.
     mainWindow.webContents.send('rom:loaded', {
       path: filePath,
       name: path.basename(filePath),
@@ -313,6 +315,15 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
 });
 
 ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+
+// Renderer confirms a ROM was accepted and parsed (dialog, recents or drag-and-drop)
+ipcMain.on('rom:setCurrentPath', (event, filePath) => {
+  currentRomPath = filePath || null;
+  if (filePath) {
+    lastOpenDialogPath = path.dirname(filePath);
+    addRecentRom(filePath);
+  }
+});
 
 // --- Test in emulator ---
 

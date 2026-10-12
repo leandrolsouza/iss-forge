@@ -3,6 +3,7 @@ import { useI18n } from '../i18n';
 import { HAIR_SKIN_TEMPLATES } from '../rom/hairSkinTemplates';
 import { SPECIAL_HAIR, SPECIAL_SKIN } from '../rom/constants';
 import { IconHairSkin } from './Icons';
+import ColorEditorCard from './ColorEditorCard';
 
 const TEMPLATE_I18N_KEYS = {
   european_light: 'templateEuropeanLight',
@@ -65,131 +66,32 @@ export default function HairSkinEditor({
     return '#' + [r, g, b].map((c) => Math.min(255, c).toString(16).padStart(2, '0')).join('');
   };
 
-  const hexToRgb = (hex) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? { r: parseInt(result[1], 16), g: parseInt(result[2], 16), b: parseInt(result[3], 16) }
-      : { r: 0, g: 0, b: 0 };
-  };
+  // Normal players share the colours of both outfield kits: write them as one undo step
+  const handleNormalChange = (part, colorIndex, rgb) =>
+    onHairSkinChange(teamIndex, ['first', 'second'], part, colorIndex, rgb);
 
-  // For normal players, write to both first and second kits
-  const handleNormalColorChange = (part, colorIndex, hexColor) => {
-    const rgb = hexToRgb(hexColor);
-    onHairSkinChange(teamIndex, 'first', part, colorIndex, rgb);
-    onHairSkinChange(teamIndex, 'second', part, colorIndex, rgb);
-  };
-
-  const handleNormalRgbChange = (part, colorIndex, color) => {
-    onHairSkinChange(teamIndex, 'first', part, colorIndex, color);
-    onHairSkinChange(teamIndex, 'second', part, colorIndex, color);
-  };
-
-  const handleKeeperColorChange = (part, colorIndex, hexColor) => {
-    const rgb = hexToRgb(hexColor);
+  const handleKeeperChange = (part, colorIndex, rgb) =>
     onHairSkinChange(teamIndex, 'goalkeeper', part, colorIndex, rgb);
-  };
-
-  const handleKeeperRgbChange = (part, colorIndex, color) => {
-    onHairSkinChange(teamIndex, 'goalkeeper', part, colorIndex, color);
-  };
 
   const handleTemplateSelect = (template) => {
     onHairSkinTemplateApply(teamIndex, template);
     setTemplateOpen(false);
   };
 
-  const renderColorRow = (label, part, colors, onHexChange, onRgbChange) => (
+  const renderColorRow = (label, part, colors, onChange) => (
     <div className="uniform-part-section" key={part}>
       <div className="detail-section-title">
         {label} ({colors.length} {t('colors')})
       </div>
       <div className="uniform-colors-grid">
-        {colors.map((color, idx) => {
-          const hexValue = rgbToHex(color.r, color.g, color.b);
-          return (
-            <div key={idx} className="color-editor-card">
-              <div className="color-card-header">
-                <span className="color-card-label">
-                  {label} {colors.length > 1 ? idx + 1 : ''}
-                </span>
-                <span className="color-card-5bit">
-                  ({color.r5 !== undefined ? `${color.r5}, ${color.g5}, ${color.b5}` : ''})
-                </span>
-              </div>
-              <div className="color-card-body">
-                <div className="color-preview-large" style={{ backgroundColor: hexValue }} />
-                <div className="color-controls">
-                  <div className="color-input-row">
-                    <input
-                      type="color"
-                      value={hexValue}
-                      onChange={(e) => onHexChange(part, idx, e.target.value)}
-                      className="color-picker"
-                    />
-                    <input
-                      type="text"
-                      value={hexValue.toUpperCase()}
-                      onChange={(e) => {
-                        if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
-                          onHexChange(part, idx, e.target.value);
-                        }
-                      }}
-                      className="color-hex-input"
-                      maxLength={7}
-                    />
-                  </div>
-                  <div className="color-rgb-row">
-                    <div className="rgb-field">
-                      <label>R:</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={248}
-                        step={8}
-                        value={color.r}
-                        onChange={(e) => {
-                          const r = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                          onRgbChange(part, idx, { ...color, r });
-                        }}
-                        className="input-rgb"
-                      />
-                    </div>
-                    <div className="rgb-field">
-                      <label>G:</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={248}
-                        step={8}
-                        value={color.g}
-                        onChange={(e) => {
-                          const g = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                          onRgbChange(part, idx, { ...color, g });
-                        }}
-                        className="input-rgb"
-                      />
-                    </div>
-                    <div className="rgb-field">
-                      <label>B:</label>
-                      <input
-                        type="number"
-                        min={0}
-                        max={248}
-                        step={8}
-                        value={color.b}
-                        onChange={(e) => {
-                          const b = Math.max(0, Math.min(248, parseInt(e.target.value) || 0));
-                          onRgbChange(part, idx, { ...color, b });
-                        }}
-                        className="input-rgb"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {colors.map((color, idx) => (
+          <ColorEditorCard
+            key={idx}
+            label={colors.length > 1 ? `${label} ${idx + 1}` : label}
+            color={color}
+            onCommit={(rgb) => onChange(part, idx, rgb)}
+          />
+        ))}
       </div>
     </div>
   );
@@ -288,46 +190,20 @@ export default function HairSkinEditor({
         <div className="hair-skin-columns">
           <div className="hair-skin-column">
             <h3 className="hair-skin-section-title">{t('hairSkinNormalPlayers')}</h3>
-            {renderColorRow(
-              t('hairColor'),
-              'hair',
-              normalData.hair,
-              handleNormalColorChange,
-              handleNormalRgbChange,
-            )}
-            {renderColorRow(
-              t('skinColor'),
-              'skin',
-              normalData.skin,
-              handleNormalColorChange,
-              handleNormalRgbChange,
-            )}
+            {renderColorRow(t('hairColor'), 'hair', normalData.hair, handleNormalChange)}
+            {renderColorRow(t('skinColor'), 'skin', normalData.skin, handleNormalChange)}
           </div>
 
           {keeperData && (
             <div className="hair-skin-column">
               <h3 className="hair-skin-section-title">{t('hairSkinGoalkeeper')}</h3>
-              {renderColorRow(
-                t('hairColor'),
-                'hair',
-                keeperData.hair,
-                handleKeeperColorChange,
-                handleKeeperRgbChange,
-              )}
-              {renderColorRow(
-                t('skinColor'),
-                'skin',
-                keeperData.skin,
-                handleKeeperColorChange,
-                handleKeeperRgbChange,
-              )}
+              {renderColorRow(t('hairColor'), 'hair', keeperData.hair, handleKeeperChange)}
+              {renderColorRow(t('skinColor'), 'skin', keeperData.skin, handleKeeperChange)}
             </div>
           )}
         </div>
 
-        <div className="kit-preview-section">
-          <div className="detail-section-title">{t('hairSkinInfo')}</div>
-        </div>
+        <p className="special-info-text">{t('hairSkinInfo')}</p>
       </div>
     </div>
   );

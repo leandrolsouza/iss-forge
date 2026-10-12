@@ -14,22 +14,28 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
   const [mode, setMode] = useState('palette'); // 'palette' or 'extract'
   const [preview, setPreview] = useState(null); // { grid, palette? }
   const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFile = useCallback(
     async (file) => {
-      if (!file || !file.type.startsWith('image/')) return;
+      setError(null);
+      if (!file || !file.type.startsWith('image/')) {
+        setError(t('flagImportNotImage'));
+        return;
+      }
 
       try {
         const result = await convertImageToFlag(file, flagColors, {
           extractColors: mode === 'extract',
         });
         setPreview(result);
-      } catch (_err) {
+      } catch (err) {
         setPreview(null);
+        setError(t('flagImportFailed', { error: err?.message || '' }));
       }
     },
-    [flagColors, mode],
+    [flagColors, mode, t],
   );
 
   const handleFileInput = (e) => {
@@ -39,8 +45,11 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
     e.target.value = '';
   };
 
+  // stopPropagation: the app root also listens for drops (to open ROMs) and
+  // would otherwise try to load the image as a ROM
   const handleDrop = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
@@ -48,6 +57,7 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragOver(true);
   };
 
@@ -128,6 +138,12 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
               </span>
               <span className="drop-text">{t('flagImportDropText')}</span>
               <span className="drop-hint">{t('flagImportDropHint')}</span>
+            </div>
+          )}
+
+          {error && !preview && (
+            <div className="flag-import-error" role="alert">
+              {error}
             </div>
           )}
 

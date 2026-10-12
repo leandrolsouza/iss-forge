@@ -101,7 +101,8 @@ Sugestão de ordem:
 - Comparar duas ROMs (diff por time/campo).
 - Importar planilha CSV de elencos.
 - Gerador aleatório de times (com seed).
-- Exportar "projeto" completo (JSON com cenários, paletas e torcidas, além dos times).
+- Exportar "projeto" completo (JSON com cenários, paletas, torcidas, torneios, textos e tela inicial, além
+  dos times).
 - Regras (duração, árbitro), nomes > 8 letras, áudio: exigem patch de código 65816.
 - Separar uma paleta de torcida compartilhada (precisa de espaço livre para um blob novo).
 - Condição dos jogadores (rostinhos): é sorteada antes da partida (`$1870`, `$05:A7CB`). Fixar exige patch de
@@ -113,6 +114,114 @@ Sugestão de ordem:
     precisaria estar em algum sorteio, senão o jogo trava.
 - Auditar outras tabelas por time que o editor indexa pela ordem `TEAMS` (só os nomes usam essa ordem;
   atributos, bandeiras etc. usam o ordinal).
+
+### 4. Gráficos e espaço (ideias novas, out/2026)
+- **Visualizador de telas** (o "Tile Explorer" que o README anuncia não existe no código): generalizar a
+  prévia da tela inicial (`renderTitleScreen`: listas de carga `$82` → VRAM, paletas, BG/OBJ) para montar
+  qualquer tela do jogo. Serve para conferir traduções sem emulador e para achar os gráficos da seção 2.
+  Alternativa mínima: tirar a menção do README.
+- **Fundos das outras telas:** o fundo azul do menu ("SUPER STAR SOCCER" repetido) e o da seleção de times
+  têm a mesma estrutura do BG1 da tela inicial; reaproveitar `titleBackground.js` (importar imagem/textura,
+  cores) e `quantize.js`.
+- **Expandir a ROM para 2 MB:** resolveria a falta de espaço (logo importado maior/com mais cores, gramado
+  em imagem inteira, telas traduzidas longas). Mexe no cabeçalho, checksum, validação e patches; só fazer
+  quando o espaço virar problema.
+- **Tela inicial, o que ficou de fora** (`title-screen.md`): desenhar quadros novos para os jogadores
+  (exige espaço e um registro novo no banco `$82`; os quadros atuais são da partida); usar as poses que
+  dependem de tiles deixados por outro quadro (hoje descartadas).
+
+## Melhorias nas abas existentes (revisão de código, out/2026)
+
+Achados de leitura do código (não reproduzidos no app; confirmar cada bug antes de corrigir). Ordem
+sugerida: 5.1 → 5.2 (com testes do desfazer) → prévia real do jogador (5.3) → resto.
+
+### 5.1 Bugs que podem perder ou estragar dados (prioridade máxima)
+- **Bandeiras gravadas só ao salvar** (`dirty`, `useRomHandlers.js` ~268-310):
+  - copiar/trocar time recarrega todos os times da ROM (`handleCopyTeam`) e perde desenhos pendentes de
+    qualquer time; `copyTeam` lê a bandeira de origem da ROM (`teamExport.js` ~238), sem o desenho novo;
+  - o backup automático grava a ROM sem as bandeiras pendentes (`useAutoSave.js` ~24);
+  - `prepareRomForWrite` ignora o `false` de `writeFlagDesign` quando a bandeira não cabe (só
+    `console.error` em `FlagDesignWriter.js` ~176-182) e muda `dirty` direto no estado do React.
+  - Correção: gravar ao terminar cada traço (o undo já restaura os bytes exatos via `flagBytes`) e avisar
+    quando não couber.
+- **Nome do Time grava no time errado:** os refs dos campos não são reiniciados ao trocar de time
+  (`TeamNameEditor.jsx` ~15-33, editor sem `key` por time em `App.jsx`); o `onBlur` grava mesmo sem
+  mudança. Também: o campo aceita sempre 10 letras, mas `getSlotMaxChars` existe e não é usado; quando o
+  nome é cortado, a barra de status mostra o texto pedido, não o gravado.
+- **Nome do placar (3 letras) nunca é lido da ROM:** `readTeam` não lê `teamNameInGame`; `exportTeam` usa
+  as 3 primeiras letras do nome do menu, e copiar/trocar/exportar JSON sobrescreve os tiles reais do placar.
+  Correção: ler os tiles 2bpp de volta (inverso de `TeamNameTileFont`) ou exportar/copiar os bytes crus.
+- **Gerador IA cria 2 passos de desfazer** (`AIGeneratorPanel.jsx` ~201-205: snapshot + 
+  `handleFlagDesignBulkChange`, que faz outro): um Ctrl+Z deixa o time pela metade. `applyImportedTeam`
+  já grava a bandeira; tirar a chamada extra.
+- **Restaurar o backup automático vira o "original":** `BackupBanner.jsx` carrega o backup como ROM nova
+  (`originalData` = backup), então "Restaurar original" e a base do patch usam dados editados, e
+  `modified=false` desliga o aviso ao fechar. Também: `performUndo` usa `canUndo` desatualizado para
+  `modified`, sem ponto de "salvo"; a troca modified→false limpa o backup (`RomContext.jsx`). Correção:
+  guardar os bytes/caminho originais no backup, marcar como modificado, controlar uma revisão salva.
+
+### 5.2 Desfazer e padrão de edição
+- **Seletores de cor** (Uniformes, Cabelo e Pele, Cores da Bandeira) gravam e criam um passo de desfazer a
+  cada movimento (`onChange`); Cabelo e Pele grava 2 vezes por movimento (1º e 2º uniforme). O campo hex
+  não aceita digitação parcial. Usar `ColorSwatch.jsx` (grava ao fechar o seletor / blur / Enter), um
+  handler em lote para os dois uniformes e mostrar a cor arredondada para 15 bits.
+- **Design da Bandeira:** um passo por pixel; Preencher/Limpar fazem 384 passos e o histórico (50,
+  `useHistory.js`) perde tudo o que havia antes. Juntar o traço num grid local e gravar no mouseup com
+  `onFlagDesignBulkChange`.
+- **Jogadores e Formação** gravam a cada tecla (`PlayerEditor.jsx` ~165-206, `FormationEditor.jsx`
+  ~267-327); o número da camisa não pode ficar vazio (vazio vira 1). Gravar no blur/Enter ou juntar
+  edições do mesmo campo em ~500 ms. `TeamPreview` rotula posições pelo índice da lista e o PlayerEditor
+  pela formação.
+- **Ctrl+Z dentro de caixas de texto** vai para o desfazer global (`electron/main.mjs`, `App.jsx`) e os
+  rascunhos são refeitos quando o estado muda (Cenários, Textos do Jogo, Outras telas, Menus): perde o
+  texto não aplicado. Trocar de cenário/sorteio/tela também descarta o rascunho sem aviso. Deixar o Ctrl+Z
+  nativo quando um input tem foco e guardar rascunhos por item (ou perguntar).
+- **Passos de desfazer vazios:** importar time tira o snapshot antes de abrir o arquivo (cancelar deixa um
+  passo); gravações recusadas (nomes, cenário, menu, descrição, treino) também. Tirar o snapshot depois de
+  validar ou descartar quando falhar.
+- **Testes:** `useHistory`, `useRomState.applySnapshot`/`performUndo` e `useRomHandlers` não têm testes
+  (onde estão quase todos os bugs acima). Casos: copiar time com bandeira pendente, goleiro Super
+  Star/Bélgica, IA aplicar + desfazer, `reloadTeams` além da formação.
+
+### 5.3 Prévias aproximadas → desenho real
+- Hoje são SVG/aproximações: gramado e bola (`MatchPaletteEditor.jsx`), camisa (`UniformEditor.jsx`),
+  mini-uniformes (`TeamPreview.jsx`), cores da bandeira em 4 listras (`FlagColorEditor.jsx`), cores
+  aproximadas na descrição (`TeamDescriptionPanel.jsx`); Cabelo e Pele não tem prévia; textos de
+  cenário/treino/outras telas em texto monoespaçado; menus sem prévia.
+- Plano: separar as partes genéricas de `titleScreen.js` (`buildVram`, `tilePixel`, `drawBg`,
+  `drawSprites`, `setPixel`, CGRAM) num módulo `snesRender` compartilhado.
+  - Uniformes e Cabelo/Pele: jogador real com `playerSprites`/`renderPoseSheet` e a paleta do time (M).
+  - Cores da Bandeira: desenhar a bandeira real (`team.flagDesign` já está carregado) (S).
+  - Textos e menus: fonte do jogo + tilemaps dos menus descomprimidos (M).
+  - Gramado da partida real: precisa pesquisar as listas de carga da tela da partida (L).
+
+### 5.4 Acabamento
+- **Textos fora do i18n:** "Camisa 1/Calcao/Meiao" (`UniformEditor.jsx`), "Fechar" (`TabBar.jsx`),
+  "Recolher" (`Sidebar.jsx`), mensagens de `validation.js`, menus do Electron (em português);
+  "Export JSON"/"Import JSON" (`TeamPreview.jsx`), rótulos de `MODES` (`GameTextEditor.jsx`), títulos de
+  botões (`App.jsx`), mensagens de status em `useRomHandlers.js` (em inglês); letras C/V/S/T
+  (`TeamPreview.jsx`). Nomes das abas são guardados ao abrir (`'Players'` fixo em `useRomState.js`) e não
+  mudam com o idioma: guardar a chave i18n. 13 `console.log` em `TeamNameWriter.js`.
+- **Validação e configurações:** `validateRom` roda ao salvar mas só vai para o console; o editor de
+  jogadores não marca número repetido nem nome vazio. `confirmBeforeSave`, `autoBackupBeforeSave` e
+  `defaultExportPath` (`SettingsPage.jsx`) não são usados: ligar ou remover.
+- **Dados compartilhados sem aviso:** uniforme e cabelo/pele do goleiro do Super Star usam os endereços da
+  Bélgica (`UniformReader.js`); blocos de bandeira podem ser compartilhados (`FlagDesignWriter.js`, não
+  confirmado na ROM original). Copiar o aviso da torcida (`MatchPaletteEditor.jsx`).
+- **Dados não editáveis / restaurar:** cor predominante do time (`0x8DB2`, decide o 2º uniforme quando os
+  dois times têm a mesma cor) não aparece na aba Uniformes. Modelos e ajustes do gramado partem sempre da
+  paleta original e descartam edições manuais. Falta "Restaurar original" em Uniformes, Cabelo e Pele,
+  Cores e Design da Bandeira, Nome do Time, Jogador, textos de menu e descrição (um helper comum lendo de
+  `new RomParser(getOriginalData())`, como em Cenários). "Aplicar" da descrição não é desabilitado com
+  caracteres inválidos.
+- **Listas e navegação:** seletor de times sem busca nem setas (`TeamSelector.jsx`, opções são `div`);
+  barra lateral com `div` clicável (sem foco), lista escrita duas vezes (recolhida/expandida) e sem
+  destaque da aba aberta; sem busca nos textos; Comparar Times só compara as 4 médias e casa jogadores pela
+  posição na lista.
+- **Testes faltando:** `quantize.js`, `playerStats.js`, `flagTemplates.js`, `hairSkinTemplates.js`,
+  `imageToFlag.js`, `imageToLogo.js`, `fileHelpers.js`; testados só de forma indireta: `menuSprites.js`,
+  `titleScreens.js`, `titleScreenText.js`, `titlePlayers.js`. Conferir se `FlagDesignReadWrite.test.js`
+  cobre os caminhos de mover blocos e "não cabe".
 
 ## Descartado
 
@@ -127,3 +236,4 @@ Sugestão de ordem:
   `eslint-plugin-react`; `console.log` nos writers de nome/bandeira).
 - Bundle > 500 kB (aviso do Vite): considerar code-splitting das abas.
 - `docs/` está no `.gitignore`; a documentação técnica foi para `research/`.
+- O README anuncia um "Tile Explorer" que não existe (ver seção 4).

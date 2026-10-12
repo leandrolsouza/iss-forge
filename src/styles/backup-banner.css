@@ -1,0 +1,55 @@
+/* ============================================================
+   BACKUP BANNER — shown on startup when an unsaved auto-backup exists
+   ============================================================ */
+
+.backup-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  background: var(--bg-statusbar);
+  color: var(--text-white);
+  font-size: var(--font-size);
+  flex-shrink: 0;
+}
+
+.backup-banner-message {
+  flex: 1;
+}
+
+.backup-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.backup-banner-btn {
+  padding: 3px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: var(--input-border-radius);
+  background: transparent;
+  color: var(--text-white);
+  font-family: var(--font-family);
+  font-size: var(--font-size);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.backup-banner-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.backup-banner-btn:focus-visible {
+  outline: 2px solid var(--text-white);
+  outline-offset: 1px;
+}
+
+.backup-banner-btn--restore {
+  background: var(--text-white);
+  border-color: var(--text-white);
+  color: var(--bg-statusbar);
+  font-weight: 600;
+}
+
+.backup-banner-btn--restore:hover {
+  background: rgba(255, 255, 255, 0.88);
+}

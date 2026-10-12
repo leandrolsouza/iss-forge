@@ -27,7 +27,7 @@ export default function useRomHandlers({
   markModified,
   markSaved,
   setStatusMessage,
-  loadRomData,
+  requestLoadRom,
   setLoading,
   pushSnapshot,
   setScenarios,
@@ -97,26 +97,30 @@ export default function useRomHandlers({
     [romParser, teams, markModified, setTeams, pushSnapshot],
   );
 
+  /** `kit` may be an array (e.g. ['first', 'second']) to write several kits as one undo step */
   const handleHairSkinChange = useCallback(
     (teamIndex, kit, part, colorIndex, color) => {
       if (!romParser) return;
+      const kits = Array.isArray(kit) ? kit : [kit];
       pushSnapshot(teams);
-      romParser.writeHairSkinColor(teamIndex, kit, part, colorIndex, color);
+      kits.forEach((k) => romParser.writeHairSkinColor(teamIndex, k, part, colorIndex, color));
 
       setTeams((prev) => {
         const newTeams = [...prev];
         const team = { ...newTeams[teamIndex] };
         const hairSkin = { ...team.hairSkin };
-        const kitData = { ...hairSkin[kit] };
-        const partColors = [...(kitData[part] || [])];
-        partColors[colorIndex] = {
-          ...color,
-          r5: Math.min(31, Math.round(color.r / 8)),
-          g5: Math.min(31, Math.round(color.g / 8)),
-          b5: Math.min(31, Math.round(color.b / 8)),
-        };
-        kitData[part] = partColors;
-        hairSkin[kit] = kitData;
+        kits.forEach((k) => {
+          const kitData = { ...hairSkin[k] };
+          const partColors = [...(kitData[part] || [])];
+          partColors[colorIndex] = {
+            ...color,
+            r5: Math.min(31, Math.round(color.r / 8)),
+            g5: Math.min(31, Math.round(color.g / 8)),
+            b5: Math.min(31, Math.round(color.b / 8)),
+          };
+          kitData[part] = partColors;
+          hairSkin[k] = kitData;
+        });
         team.hairSkin = hairSkin;
         newTeams[teamIndex] = team;
         return newTeams;
@@ -714,8 +718,9 @@ export default function useRomHandlers({
     }
   }, [romParser, teams]);
 
+  /** @returns {Promise<boolean>} true when the ROM was written */
   const handleSave = useCallback(async () => {
-    if (!romParser) return;
+    if (!romParser) return false;
 
     // Validate
     const warnings = validateRom(teams);
@@ -724,23 +729,32 @@ export default function useRomHandlers({
       console.warn('[Validation] Errors:', warnings.filter((w) => w.type === 'error').slice(0, 5));
     }
 
-    prepareRomForWrite();
-
     if (isElectron()) {
+      // No file on disk yet (restored backup, dropped file without a path): ask where to save.
+      // The dialog answers through 'rom:save-as-path' -> handleSaveToPath.
+      const currentPath = await electronBridge.getCurrentPath();
+      if (!currentPath) {
+        electronBridge.saveRomAs();
+        return false;
+      }
+      prepareRomForWrite();
       const data = Array.from(romParser.getRomData());
       const result = await electronBridge.saveRom(data);
       if (result.success) {
         markSaved(result.path);
         electronBridge.notifySaveComplete();
-      } else {
-        setStatusMessage(result.error);
+        return true;
       }
-    } else {
-      const data = romParser.getRomData();
-      const fileName = getModifiedFilename(romInfo?.fileName);
-      saveRomWeb(data, fileName);
-      markSaved(fileName);
+      setStatusMessage(result.error);
+      return false;
     }
+
+    prepareRomForWrite();
+    const data = romParser.getRomData();
+    const fileName = getModifiedFilename(romInfo?.fileName);
+    saveRomWeb(data, fileName);
+    markSaved(fileName);
+    return true;
   }, [romParser, romInfo, teams, markSaved, setStatusMessage, prepareRomForWrite]);
 
   const handleSaveToPath = useCallback(
@@ -830,26 +844,34 @@ export default function useRomHandlers({
     } else {
       const result = await openRomWeb();
       if (result) {
-        loadRomData(result.data, result.name);
+        requestLoadRom(result.data, result.name);
       }
     }
-  }, [loadRomData, setLoading]);
+  }, [requestLoadRom, setLoading]);
 
   const handleDrop = useCallback(
     (e) => {
       e.preventDefault();
       const file = e.dataTransfer?.files[0];
-      if (file) {
-        setLoading(true);
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const data = new Uint8Array(ev.target.result);
-          loadRomData(data, file.name);
-        };
-        reader.readAsArrayBuffer(file);
+      if (!file) return;
+      if (!/\.(smc|sfc|bin)$/i.test(file.name)) {
+        setStatusMessage('welcomeDropInvalid');
+        return;
       }
+      const filePath = isElectron() ? electronBridge.getPathForFile(file) : null;
+      setLoading(true);
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const data = new Uint8Array(ev.target.result);
+        requestLoadRom(data, file.name, filePath);
+      };
+      reader.onerror = () => {
+        setLoading(false);
+        setStatusMessage(`Error: ${reader.error?.message || file.name}`);
+      };
+      reader.readAsArrayBuffer(file);
     },
-    [loadRomData, setLoading],
+    [requestLoadRom, setLoading, setStatusMessage],
   );
 
   const handleDragOver = useCallback((e) => {

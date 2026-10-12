@@ -1,8 +1,17 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, webUtils } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   // ROM operations
   openRom: () => ipcRenderer.invoke('dialog:openRom'),
+  setCurrentRomPath: (filePath) => ipcRenderer.send('rom:setCurrentPath', filePath),
+  // Absolute path of a File from a drag-and-drop (File.path was removed in Electron 32)
+  getPathForFile: (file) => {
+    try {
+      return webUtils?.getPathForFile(file) || null;
+    } catch {
+      return null;
+    }
+  },
   saveRom: (data, filePath) => ipcRenderer.invoke('rom:save', { data, filePath }),
   saveRomAs: () => ipcRenderer.invoke('dialog:saveRomAs'),
   getCurrentPath: () => ipcRenderer.invoke('rom:getCurrentPath'),

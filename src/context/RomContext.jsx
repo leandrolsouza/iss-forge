@@ -21,7 +21,7 @@ export function RomProvider({ children }) {
     markModified: state.markModified,
     markSaved: state.markSaved,
     setStatusMessage: state.setStatusMessage,
-    loadRomData: state.loadRomData,
+    requestLoadRom: state.requestLoadRom,
     setLoading: state.setLoading,
     pushSnapshot: state.pushSnapshot,
     setScenarios: state.setScenarios,

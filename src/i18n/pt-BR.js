@@ -262,6 +262,8 @@ export default {
   socks: 'Meiao',
   shirtAndSocks: 'Camisa e Meiao',
   color: 'Cor',
+  colorPicker: 'seletor de cor',
+  colorSnesValue: 'Valor SNES (0-31 por canal)',
   colors: 'cores',
   preview: 'Pre-visualizacao',
   snesInfo: 'SNES: 5 bits/canal (32 niveis por cor)',
@@ -342,6 +344,8 @@ export default {
   flagImportDropHint: 'PNG, JPG, GIF — qualquer tamanho',
   flagImportApply: 'Aplicar',
   flagImportRetry: 'Tentar outra',
+  flagImportNotImage: 'Arquivo nao e uma imagem (use PNG, JPG, GIF...).',
+  flagImportFailed: 'Nao foi possivel converter a imagem. {error}',
   'flagTemplate.horizontal3': '3 Faixas Horizontais',
   'flagTemplate.vertical3': '3 Faixas Verticais',
   'flagTemplate.horizontal2': '2 Metades Horizontais',
@@ -453,6 +457,16 @@ export default {
   unsavedSave: 'Salvar',
   unsavedDontSave: 'Nao Salvar',
   unsavedCancel: 'Cancelar',
+  unsavedOpenMessage:
+    'A ROM atual possui alteracoes nao salvas. Abrir "{file}" vai descarta-las. Deseja salvar antes?',
+  unsavedSaveAndOpen: 'Salvar e abrir',
+  unsavedOpenWithoutSaving: 'Abrir sem salvar',
+  unsavedSaveNeedsPath: 'Escolha onde salvar a ROM atual e abra o novo arquivo de novo.',
+
+  // Empty editor area (ROM loaded, no tab open)
+  noEditorOpenTitle: 'Nenhum editor aberto',
+  noEditorOpenHint: 'Escolha um editor no painel Explorer a esquerda.',
+  noEditorOpenPlayers: 'Abrir Jogadores',
 
   // Export Patch
   toolbarExportPatch: 'Exportar Patch BPS/IPS (Ctrl+E)',

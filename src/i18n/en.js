@@ -261,6 +261,8 @@ export default {
   socks: 'Socks',
   shirtAndSocks: 'Shirt & Socks',
   color: 'Color',
+  colorPicker: 'color picker',
+  colorSnesValue: 'SNES value (0-31 per channel)',
   colors: 'colors',
   preview: 'Preview',
   snesInfo: 'SNES: 5 bits/channel (32 levels per color)',
@@ -341,6 +343,8 @@ export default {
   flagImportDropHint: 'PNG, JPG, GIF — any size',
   flagImportApply: 'Apply',
   flagImportRetry: 'Try another',
+  flagImportNotImage: 'File is not an image (use PNG, JPG, GIF...).',
+  flagImportFailed: 'Could not convert the image. {error}',
   'flagTemplate.horizontal3': '3 Horizontal Stripes',
   'flagTemplate.vertical3': '3 Vertical Stripes',
   'flagTemplate.horizontal2': '2 Horizontal Halves',
@@ -452,6 +456,16 @@ export default {
   unsavedSave: 'Save',
   unsavedDontSave: "Don't Save",
   unsavedCancel: 'Cancel',
+  unsavedOpenMessage:
+    'The current ROM has unsaved changes. Opening "{file}" will discard them. Save first?',
+  unsavedSaveAndOpen: 'Save and open',
+  unsavedOpenWithoutSaving: 'Open without saving',
+  unsavedSaveNeedsPath: 'Choose where to save the current ROM, then open the new file again.',
+
+  // Empty editor area (ROM loaded, no tab open)
+  noEditorOpenTitle: 'No editor open',
+  noEditorOpenHint: 'Pick an editor from the Explorer panel on the left.',
+  noEditorOpenPlayers: 'Open Players',
 
   // Export Patch
   toolbarExportPatch: 'Export BPS/IPS Patch (Ctrl+E)',

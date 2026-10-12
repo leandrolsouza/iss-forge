@@ -154,3 +154,9 @@
 .flag-import-cancel-btn:hover {
   color: var(--text-color, #ccc);
 }
+
+.flag-import-error {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-error);
+}

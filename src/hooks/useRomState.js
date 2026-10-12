@@ -5,6 +5,8 @@
 import { useState, useCallback, useRef } from 'react';
 import RomParser from '../rom/RomParser';
 import useHistory from './useHistory';
+import { isElectron } from '../utils/fileHelpers';
+import * as electronBridge from '../services/electronBridge';
 
 export default function useRomState() {
   const [romParser, setRomParser] = useState(null);
@@ -41,8 +43,21 @@ export default function useRomState() {
   const [statusMessage, setStatusMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Mirror of `modified` for callbacks registered once (IPC listeners, drop handlers)
+  const modifiedRef = useRef(false);
+  modifiedRef.current = modified;
+
+  // ROM waiting for the user to confirm discarding unsaved changes
+  const [pendingLoad, setPendingLoad] = useState(null);
+
+  /**
+   * Parse and load a ROM, replacing the current session.
+   * @param {Uint8Array} data
+   * @param {string} fileName
+   * @param {string|null} [filePath] - absolute path on disk (Electron); becomes the "Save" target
+   */
   const loadRomData = useCallback(
-    (data, fileName) => {
+    (data, fileName, filePath = null) => {
       setLoading(true);
 
       // Use setTimeout to allow the loading UI to render before synchronous parsing
@@ -56,6 +71,8 @@ export default function useRomState() {
             setLoading(false);
             return;
           }
+
+          if (isElectron()) electronBridge.setCurrentRomPath(filePath);
 
           setRomParser(parser);
           romParserRef.current = parser;
@@ -79,6 +96,9 @@ export default function useRomState() {
             setOpenTabs([{ id: 'players', label: 'Players' }]);
             setActiveTab('players');
           }
+        } catch (err) {
+          console.error('[ROM] Failed to load:', err);
+          setStatusMessage(`Error: ${err.message}`);
         } finally {
           setLoading(false);
         }
@@ -86,6 +106,29 @@ export default function useRomState() {
     },
     [history, setScenarios, setMatchPalettes],
   );
+
+  /**
+   * Load a ROM, but ask first when the current one has unsaved changes.
+   * Every "open" path (dialog, recents, drag-and-drop) should go through here.
+   */
+  const requestLoadRom = useCallback(
+    (data, fileName, filePath = null) => {
+      if (modifiedRef.current) {
+        setLoading(false);
+        setPendingLoad({ data, fileName, filePath });
+        return;
+      }
+      loadRomData(data, fileName, filePath);
+    },
+    [loadRomData],
+  );
+
+  const confirmPendingLoad = useCallback(() => {
+    if (pendingLoad) loadRomData(pendingLoad.data, pendingLoad.fileName, pendingLoad.filePath);
+    setPendingLoad(null);
+  }, [pendingLoad, loadRomData]);
+
+  const cancelPendingLoad = useCallback(() => setPendingLoad(null), []);
 
   const markModified = useCallback(() => {
     setModified(true);
@@ -259,6 +302,10 @@ export default function useRomState() {
 
     // Actions
     loadRomData,
+    requestLoadRom,
+    pendingLoad,
+    confirmPendingLoad,
+    cancelPendingLoad,
     markModified,
     markSaved,
     selectTeam,

@@ -320,6 +320,72 @@ export const IconUpload = ({ size }) => (
   </Icon>
 );
 
+// --- Projects ---
+
+const strokeProps = {
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.2,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+};
+
+export const IconProject = ({ size }) => (
+  <Icon size={size}>
+    <path
+      {...strokeProps}
+      d="M1.5 3.5v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-7a1 1 0 0 0-1-1H8L6.5 3h-4a1 1 0 0 0-1 .5z"
+    />
+    <path
+      {...strokeProps}
+      d="M8 7l.9 1.8 2 .3-1.45 1.4.35 2L8 11.55 6.2 12.5l.35-2L5.1 9.1l2-.3L8 7z"
+    />
+  </Icon>
+);
+
+export const IconPlus = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} strokeWidth={1.4} d="M8 3v10M3 8h10" />
+  </Icon>
+);
+
+export const IconEdit = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} d="M10.5 2.5l3 3L6 13H3v-3l7.5-7.5zM9 4l3 3" />
+  </Icon>
+);
+
+export const IconDuplicate = ({ size }) => (
+  <Icon size={size}>
+    <rect {...strokeProps} x="5.5" y="5.5" width="8" height="8" rx="1" />
+    <path {...strokeProps} d="M10.5 3.5v-.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h.5" />
+  </Icon>
+);
+
+export const IconTrash = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4M6.5 6.5v4.5M9.5 6.5v4.5" />
+  </Icon>
+);
+
+export const IconExport = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} d="M8 10V2M5 5l3-3 3 3M3 9v4.5h10V9" />
+  </Icon>
+);
+
+export const IconImport = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} d="M8 2v8M5 7l3 3 3-3M3 9v4.5h10V9" />
+  </Icon>
+);
+
+export const IconClose = ({ size }) => (
+  <Icon size={size}>
+    <path {...strokeProps} strokeWidth={1.4} d="M4 4l8 8M12 4l-8 8" />
+  </Icon>
+);
+
 export const IconController = ({ size = 40, className = '' }) => (
   <svg
     width={size}

@@ -5,6 +5,8 @@
  * - A ROM is loaded (romParser exists)
  * - The ROM has been modified since last save
  *
+ * A loose ROM file uses the single global backup (offered by BackupBanner on startup);
+ * a project keeps its own auto-save inside its folder (offered when the project is opened).
  * Clears the backup when the user explicitly saves the ROM.
  */
 import { useEffect, useRef, useCallback } from 'react';
@@ -13,17 +15,24 @@ import * as electronBridge from '../services/electronBridge';
 
 const AUTO_SAVE_INTERVAL = 60_000; // 1 minute
 
-export default function useAutoSave({ romParser, romInfo, modified, teams }) {
+export default function useAutoSave({ romParser, romInfo, modified, teams, currentProject }) {
   const lastSavedRef = useRef(0);
   const intervalRef = useRef(null);
   // Parser whose unedited ROM is already in the backup folder (sent once per session)
   const originalSentForRef = useRef(null);
+  const projectId = currentProject?.id || null;
 
   const performBackup = useCallback(async () => {
     if (!romParser || !modified || !isElectron()) return;
 
     try {
       // Every edit is written to the buffer right away, so it is the full state
+      if (projectId) {
+        // the project folder already holds the unedited ROM
+        const result = await electronBridge.projectAutosaveSave(projectId, romParser.getRomData());
+        if (result.success) lastSavedRef.current = result.timestamp;
+        return;
+      }
       const data = Array.from(romParser.getRomData());
       const sendOriginal = originalSentForRef.current !== romParser;
       const meta = {
@@ -44,7 +53,7 @@ export default function useAutoSave({ romParser, romInfo, modified, teams }) {
     } catch (_err) {
       // Silently fail — backup is best-effort
     }
-  }, [romParser, romInfo, modified, teams]);
+  }, [romParser, romInfo, modified, teams, projectId]);
 
   // Start/stop interval based on ROM state
   useEffect(() => {
@@ -80,6 +89,16 @@ export default function useAutoSave({ romParser, romInfo, modified, teams }) {
     }
   }, []);
 
+  /** Drop the auto-save of a project (its edits were saved or discarded) */
+  const clearProjectAutosave = useCallback(async (id) => {
+    if (!isElectron() || !id) return;
+    try {
+      await electronBridge.projectAutosaveClear(id);
+    } catch (_err) {
+      // Silently fail (the project may have been deleted)
+    }
+  }, []);
+
   // Check for existing backup on startup
   const checkBackup = useCallback(async () => {
     if (!isElectron()) return null;
@@ -94,5 +113,11 @@ export default function useAutoSave({ romParser, romInfo, modified, teams }) {
     return null;
   }, []);
 
-  return { performBackup, clearBackup, checkBackup, lastSaved: lastSavedRef.current };
+  return {
+    performBackup,
+    clearBackup,
+    clearProjectAutosave,
+    checkBackup,
+    lastSaved: lastSavedRef.current,
+  };
 }

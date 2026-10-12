@@ -55,17 +55,30 @@ export default function useRomState({ toast, t } = {}) {
   // ROM waiting for the user to confirm discarding unsaved changes
   const [pendingLoad, setPendingLoad] = useState(null);
 
+  // Project of the session (metadata from electron/projects.mjs), null for a loose ROM file.
+  // While a project is open, "Save" writes to the project instead of a file.
+  const [currentProject, setCurrentProject] = useState(null);
+  // File on disk of a loose ROM session ("Save" target, shown in the sidebar); null for a
+  // project, a restored backup or a file dropped without a path
+  const [romFilePath, setRomFilePath] = useState(null);
+
   /**
    * Parse and load a ROM, replacing the current session.
    * @param {Uint8Array} data
    * @param {string} fileName
    * @param {string|null} [filePath] - absolute path on disk (Electron); becomes the "Save" target
-   * @param {{ originalData?: Uint8Array, restored?: boolean }} [options]
+   * @param {{ originalData?: Uint8Array, restored?: boolean, project?: object|null }} [options]
    *   restored: `data` is an auto-save backup (unsaved edits): the session starts as
-   *   modified and `originalData` (the unedited ROM) stays the base for patches/restores
+   *   modified and `originalData` (the unedited ROM) stays the base for patches/restores.
+   *   project: the session is this project (no file on disk: `filePath` is ignored)
    */
   const loadRomData = useCallback(
-    (data, fileName, filePath = null, { originalData = null, restored = false } = {}) => {
+    (
+      data,
+      fileName,
+      filePath = null,
+      { originalData = null, restored = false, project = null } = {},
+    ) => {
       setLoading(true);
 
       // Use setTimeout to allow the loading UI to render before synchronous parsing
@@ -83,16 +96,19 @@ export default function useRomState({ toast, t } = {}) {
             return;
           }
 
-          if (isElectron()) electronBridge.setCurrentRomPath(filePath);
+          if (isElectron()) electronBridge.setCurrentRomPath(project ? null : filePath);
 
           setRomParser(parser);
           romParserRef.current = parser;
           setRomInfo({ fileName, ...validation, restored });
+          setCurrentProject(project);
+          setRomFilePath(project ? null : filePath);
+          if (project && isElectron()) electronBridge.projectMarkOpened(project.id);
           setStatusMessage({
             key: 'statusRomLoaded',
             params: {
               status: { key: validation.messageKey, params: validation.messageParams },
-              file: fileName,
+              file: project ? project.name : fileName,
             },
           });
           // a restored backup holds unsaved edits: it matches no file on disk
@@ -128,26 +144,67 @@ export default function useRomState({ toast, t } = {}) {
 
   /**
    * Load a ROM, but ask first when the current one has unsaved changes.
-   * Every "open" path (dialog, recents, drag-and-drop) should go through here.
+   * Every "open" path (dialog, recents, drag-and-drop, projects) should go through here.
+   * @param {object} [options] - same as loadRomData
    */
   const requestLoadRom = useCallback(
-    (data, fileName, filePath = null) => {
+    (data, fileName, filePath = null, options = {}) => {
       if (modifiedRef.current) {
         setLoading(false);
-        setPendingLoad({ data, fileName, filePath });
+        setPendingLoad({ data, fileName, filePath, options });
         return;
       }
-      loadRomData(data, fileName, filePath);
+      loadRomData(data, fileName, filePath, options);
     },
     [loadRomData],
   );
 
   const confirmPendingLoad = useCallback(() => {
-    if (pendingLoad) loadRomData(pendingLoad.data, pendingLoad.fileName, pendingLoad.filePath);
+    if (pendingLoad) {
+      loadRomData(
+        pendingLoad.data,
+        pendingLoad.fileName,
+        pendingLoad.filePath,
+        pendingLoad.options,
+      );
+    }
     setPendingLoad(null);
   }, [pendingLoad, loadRomData]);
 
   const cancelPendingLoad = useCallback(() => setPendingLoad(null), []);
+
+  /** A loose ROM was written to `filePath` (Save / Save As): it is the session's file now */
+  const setRomFile = useCallback((filePath) => {
+    if (!filePath) return;
+    setRomFilePath(filePath);
+    const fileName = filePath.split(/[\\/]/).pop();
+    setRomInfo((info) => (info ? { ...info, fileName, restored: false } : info));
+  }, []);
+
+  /** Close the session (ROM or project) and go back to the start screen. Does not ask. */
+  const unloadRom = useCallback(() => {
+    if (isElectron()) electronBridge.setCurrentRomPath(null);
+    setRomParser(null);
+    romParserRef.current = null;
+    setRomInfo(null);
+    setCurrentProject(null);
+    setRomFilePath(null);
+    setTeams([]);
+    setScenarios([]);
+    setMatchPalettes(null);
+    setTournamentDraws([]);
+    setGameTexts(null);
+    setMenuScreens([]);
+    setScreenTexts(null);
+    setTitleScreen(null);
+    setSelectedTeamIndex(null);
+    setOpenTabs([]);
+    setActiveTab('players');
+    history.clearHistory({ saved: true });
+    setModified(false);
+    setPendingLoad(null);
+    setStatusMessage('');
+  }, [history, setScenarios, setMatchPalettes]);
 
   const markModified = useCallback(() => {
     // Edits normally get a new state from pushSnapshot; this covers any that don't
@@ -296,10 +353,15 @@ export default function useRomState({ toast, t } = {}) {
     setStatusMessage,
     loading,
     setLoading,
+    currentProject,
+    setCurrentProject,
+    romFilePath,
+    setRomFile,
 
     // Actions
     loadRomData,
     requestLoadRom,
+    unloadRom,
     pendingLoad,
     confirmPendingLoad,
     cancelPendingLoad,

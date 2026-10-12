@@ -81,6 +81,33 @@ contextBridge.exposeInMainWorld('electronAPI', {
   backupLoad: () => ipcRenderer.invoke('backup:load'),
   backupClear: () => ipcRenderer.invoke('backup:clear'),
 
+  // Projects (ROM bytes as Uint8Array)
+  projectsList: () => ipcRenderer.invoke('projects:list'),
+  projectCreate: (params) => ipcRenderer.invoke('projects:create', params),
+  projectLoad: (id) => ipcRenderer.invoke('projects:load', id),
+  projectSave: (id, data) => ipcRenderer.invoke('projects:save', { id, data }),
+  projectMarkOpened: (id) => ipcRenderer.invoke('projects:markOpened', id),
+  projectUpdate: (id, changes) => ipcRenderer.invoke('projects:update', { id, changes }),
+  projectDuplicate: (id, changes) => ipcRenderer.invoke('projects:duplicate', { id, changes }),
+  projectDelete: (id) => ipcRenderer.invoke('projects:delete', id),
+  projectAutosaveSave: (id, data) => ipcRenderer.invoke('projects:autosaveSave', { id, data }),
+  projectAutosaveClear: (id) => ipcRenderer.invoke('projects:autosaveClear', id),
+  projectFindOriginal: (crc) => ipcRenderer.invoke('projects:findOriginal', crc),
+  projectSaveArchive: (data, defaultName) =>
+    ipcRenderer.invoke('projects:saveArchive', { data, defaultName }),
+  onMenuNewProject: (callback) => {
+    ipcRenderer.on('menu:newProject', () => callback());
+  },
+  onMenuOpenProject: (callback) => {
+    ipcRenderer.on('menu:openProject', () => callback());
+  },
+  onMenuCloseSession: (callback) => {
+    ipcRenderer.on('menu:closeSession', () => callback());
+  },
+  // { kind: 'project' | 'rom' | null, name, ext }
+  setSession: (info) => ipcRenderer.send('app:setSession', info),
+  showInFolder: (target) => ipcRenderer.invoke('shell:showInFolder', target),
+
   // AI Team Generator
   aiGetSettings: () => ipcRenderer.invoke('ai:getSettings'),
   aiSaveSettings: (settings) => ipcRenderer.invoke('ai:saveSettings', settings),

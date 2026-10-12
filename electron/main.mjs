@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron';
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
 import Store from 'electron-store';
@@ -16,6 +16,7 @@ import {
   parseResponse,
   parseStreamChunk,
 } from './aiProviders.mjs';
+import * as projects from './projects.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,6 +46,9 @@ let currentRomPath = null;
 let lastOpenDialogPath = null;
 let isRomModified = false;
 let forceQuit = false;
+// What the editor has open, sent by the renderer ('app:setSession'):
+// { kind: 'project' | 'rom' | null, name?: string, ext?: string }. Menu labels follow it.
+let session = { kind: null };
 // UI language, sent by the renderer ('app:setLocale') and kept for the next start
 let currentLocale = settingsStore.get('language') || 'pt-BR';
 
@@ -52,6 +56,13 @@ let currentLocale = settingsStore.get('language') || 'pt-BR';
 const MAIN_I18N = {
   'pt-BR': {
     file: 'Arquivo',
+    newProject: 'Novo Projeto...',
+    openProject: 'Abrir Projeto...',
+    closeProject: 'Fechar Projeto',
+    closeRom: 'Fechar ROM',
+    saveProject: 'Salvar Projeto',
+    exportRom: 'Exportar ROM (.sfc/.smc)...',
+    exportRomTitle: 'Exportar ROM do projeto',
     openRom: 'Abrir ROM...',
     saveRom: 'Salvar ROM',
     saveRomAs: 'Salvar ROM Como...',
@@ -80,9 +91,18 @@ const MAIN_I18N = {
     patchFiles: 'Patch {format}',
     openRomError: 'Erro ao abrir ROM',
     chooseFolder: 'Escolher pasta',
+    exportProjectTitle: 'Exportar projeto',
+    projectFiles: 'Projeto do ISS Forge',
   },
   en: {
     file: 'File',
+    newProject: 'New Project...',
+    openProject: 'Open Project...',
+    closeProject: 'Close Project',
+    closeRom: 'Close ROM',
+    saveProject: 'Save Project',
+    exportRom: 'Export ROM (.sfc/.smc)...',
+    exportRomTitle: 'Export the project ROM',
     openRom: 'Open ROM...',
     saveRom: 'Save ROM',
     saveRomAs: 'Save ROM As...',
@@ -111,6 +131,8 @@ const MAIN_I18N = {
     patchFiles: '{format} Patch',
     openRomError: 'Could not open the ROM',
     chooseFolder: 'Choose folder',
+    exportProjectTitle: 'Export project',
+    projectFiles: 'ISS Forge project',
   },
 };
 
@@ -227,34 +249,54 @@ function createWindow() {
 }
 
 function createMenu() {
+  const isProject = session.kind === 'project';
+  const send = (channel) => () => mainWindow?.webContents.send(channel);
   const template = [
     {
       label: tr('file'),
       submenu: [
+        { label: tr('newProject'), click: send('menu:newProject') },
+        {
+          label: tr('openProject'),
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: send('menu:openProject'),
+        },
         {
           label: tr('openRom'),
           accelerator: 'CmdOrCtrl+O',
           click: () => handleOpenRom(),
         },
+        { type: 'separator' },
         {
-          label: tr('saveRom'),
+          label: isProject ? tr('saveProject') : tr('saveRom'),
           accelerator: 'CmdOrCtrl+S',
+          enabled: !!session.kind,
           click: () => mainWindow.webContents.send('menu:save'),
         },
         {
-          label: tr('saveRomAs'),
+          // in a project "Save As" writes a ROM file and the session stays in the project
+          label: isProject ? tr('exportRom') : tr('saveRomAs'),
           accelerator: 'CmdOrCtrl+Shift+S',
+          enabled: !!session.kind,
           click: () => handleSaveRomAs(),
         },
         {
           label: tr('exportPatch'),
           accelerator: 'CmdOrCtrl+E',
+          enabled: !!session.kind,
           click: () => mainWindow.webContents.send('menu:exportPatch'),
         },
         {
           label: tr('testEmulator'),
           accelerator: 'F5',
+          enabled: !!session.kind,
           click: () => mainWindow.webContents.send('menu:testEmulator'),
+        },
+        { type: 'separator' },
+        {
+          label: isProject ? tr('closeProject') : tr('closeRom'),
+          enabled: !!session.kind,
+          click: send('menu:closeSession'),
         },
         { type: 'separator' },
         {
@@ -351,9 +393,17 @@ function loadAndSendRom(filePath) {
 }
 
 async function handleSaveRomAs() {
+  // A project has no file of its own: suggest "<project name>.sfc" in the export folder
+  let defaultPath = currentRomPath || 'ISS_Modified.smc';
+  if (session.kind === 'project') {
+    const exportDir = settingsStore.get('defaultExportPath');
+    const dir = exportDir && fs.existsSync(exportDir) ? exportDir : app.getPath('documents');
+    const stem = (session.name || 'ISS').replace(/[<>:"/\\|?*]/g, '').trim() || 'ISS';
+    defaultPath = path.join(dir, `${stem}${session.ext === '.smc' ? '.smc' : '.sfc'}`);
+  }
   const result = await dialog.showSaveDialog(mainWindow, {
-    title: tr('saveRomAsTitle'),
-    defaultPath: currentRomPath || 'ISS_Modified.smc',
+    title: session.kind === 'project' ? tr('exportRomTitle') : tr('saveRomAsTitle'),
+    defaultPath,
     filters: [
       { name: tr('snesRom'), extensions: ['smc', 'sfc'] },
       { name: tr('allFiles'), extensions: ['*'] },
@@ -494,6 +544,35 @@ ipcMain.on('app:setLocale', (event, locale) => {
   createMenu();
 });
 
+// What is open in the editor (menu labels / "Save As" suggestion)
+ipcMain.on('app:setSession', (event, next) => {
+  const value = {
+    kind: next?.kind === 'project' || next?.kind === 'rom' ? next.kind : null,
+    name: typeof next?.name === 'string' ? next.name : '',
+    ext: typeof next?.ext === 'string' ? next.ext : '',
+  };
+  const relabel = value.kind !== session.kind;
+  session = value;
+  if (relabel) createMenu();
+});
+
+// "Show in folder": a project folder is opened, a file is selected in its folder
+ipcMain.handle('shell:showInFolder', async (event, target) => {
+  try {
+    if (typeof target !== 'string' || !target || !fs.existsSync(target)) {
+      return { success: false, error: 'fileNotFound' };
+    }
+    if (fs.statSync(target).isDirectory()) {
+      const error = await shell.openPath(target);
+      return error ? { success: false, error } : { success: true };
+    }
+    shell.showItemInFolder(target);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
 // Keep the native window controls in the theme colours
 ipcMain.on('app:setTheme', (event, theme) => {
   const colors = TITLEBAR_COLORS[theme] || TITLEBAR_COLORS.dark;
@@ -610,6 +689,101 @@ ipcMain.handle('backup:clear', () => {
     return { success: true };
   } catch (err) {
     console.error('Failed to clear backup:', err.message);
+    return { success: false, error: err.message };
+  }
+});
+
+// --- Projects ---
+// One managed folder per project under userData/projects (see projects.mjs).
+// ROM bytes travel as Uint8Array (structured clone), not as number arrays.
+
+function getProjectsRoot() {
+  return path.join(app.getPath('userData'), 'projects');
+}
+
+/** Run a projects.mjs call; errors become { success: false, error: <i18n key | message> } */
+function projectCall(fn) {
+  try {
+    return { success: true, ...fn(getProjectsRoot()) };
+  } catch (err) {
+    if (!err.code?.startsWith('project')) console.error('[Projects]', err);
+    return { success: false, error: err.code?.startsWith('project') ? err.code : err.message };
+  }
+}
+
+ipcMain.handle('projects:list', () =>
+  projectCall((root) => ({ projects: projects.listProjects(root) })),
+);
+
+ipcMain.handle('projects:create', (event, params) =>
+  projectCall((root) => ({ project: projects.createProject(root, params) })),
+);
+
+ipcMain.handle('projects:load', (event, id) =>
+  projectCall((root) => {
+    const res = projects.loadProject(root, id);
+    return { project: res.meta, data: res.data, original: res.original, autosave: res.autosave };
+  }),
+);
+
+ipcMain.handle('projects:save', (event, { id, data }) =>
+  projectCall((root) => ({ project: projects.saveProjectRom(root, id, data) })),
+);
+
+ipcMain.handle('projects:markOpened', (event, id) =>
+  projectCall((root) => ({ project: projects.markProjectOpened(root, id) })),
+);
+
+ipcMain.handle('projects:update', (event, { id, changes }) =>
+  projectCall((root) => ({ project: projects.updateProject(root, id, changes) })),
+);
+
+ipcMain.handle('projects:duplicate', (event, { id, changes }) =>
+  projectCall((root) => ({ project: projects.duplicateProject(root, id, changes) })),
+);
+
+ipcMain.handle('projects:delete', (event, id) =>
+  projectCall((root) => {
+    projects.deleteProject(root, id);
+    return {};
+  }),
+);
+
+ipcMain.handle('projects:autosaveSave', (event, { id, data }) =>
+  projectCall((root) => {
+    projects.saveProjectAutosave(root, id, data);
+    return { timestamp: Date.now() };
+  }),
+);
+
+ipcMain.handle('projects:autosaveClear', (event, id) =>
+  projectCall((root) => {
+    projects.clearProjectAutosave(root, id);
+    return {};
+  }),
+);
+
+ipcMain.handle('projects:findOriginal', (event, crc) =>
+  projectCall((root) => ({ original: projects.findOriginalByCrc(root, crc) })),
+);
+
+// Write an exported project (.issproj) where the user chooses
+ipcMain.handle('projects:saveArchive', async (event, { data, defaultName }) => {
+  try {
+    const exportDir = settingsStore.get('defaultExportPath');
+    const defaultDir = exportDir && fs.existsSync(exportDir) ? exportDir : app.getPath('documents');
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: tr('exportProjectTitle'),
+      defaultPath: path.join(defaultDir, defaultName || 'projeto.issproj'),
+      filters: [
+        { name: tr('projectFiles'), extensions: ['issproj'] },
+        { name: tr('allFiles'), extensions: ['*'] },
+      ],
+    });
+    if (result.canceled || !result.filePath) return { success: false, canceled: true };
+    fs.writeFileSync(result.filePath, Buffer.from(data));
+    return { success: true, path: result.filePath };
+  } catch (err) {
     return { success: false, error: err.message };
   }
 });

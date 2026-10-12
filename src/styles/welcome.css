@@ -24,7 +24,8 @@
 
 .welcome-panel {
   display: flex;
-  align-items: center;
+  /* safe: when the content is taller (long project list) it scrolls instead of being cut */
+  align-items: safe center;
   justify-content: center;
   height: 100%;
   padding: 40px 24px;

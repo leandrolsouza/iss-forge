@@ -10,6 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Projects** (desktop) — keep several mods side by side ("Campeonato Brasileiro", "Premier League"...).
+  Each project is a folder managed by the app (`<userData>/projects/<id>/`) with its own copy of the
+  original ROM, the edited ROM and metadata. The start screen lists the projects (open, new, import, and
+  per project rename/description, duplicate, export, delete); the sidebar shows what is open and closes it.
+  While a project is open Ctrl+S saves into the project, "Save As" exports a ROM file and patches keep
+  using the project's original ROM. A ROM file opened without a project can be turned into one, and
+  opening loose ROM files keeps working as before
+- Per-project auto-save: unsaved edits are kept in the project folder and offered when it is opened again
+- **Project switcher** (File > Open Project, Ctrl+Shift+O, the Projects button of the title bar, or the
+  project name in the sidebar): search, switch to another project (asks to save the current one first),
+  new project, import, open a ROM file, back to the start screen
+- The sidebar card shows where the session is saved: project folder, source ROM and last save (or the
+  path of a loose ROM file), with "Open folder", "Export ROM" and "Create a project from this ROM"
+- File menu: New / Open / Close Project; "Save Project" and "Export ROM" labels while a project is open
+  ("Save As" suggests `<project name>.sfc`); Save, Patch and Emulator are disabled with nothing open
+- Projects are listed by last use (opened or saved), with a search field from 6 projects on and the
+  per-project actions always visible
+- **Project files (.issproj)** — JSON with the name, description and a BPS patch from the original ROM:
+  the ROM itself is not inside. Importing finds the original among the user's projects by CRC32, or asks
+  for the ROM file
 - **Player attributes** — every bit of the 6-byte player block is now editable: start speed, top speed
   without/with the ball, attacking/defensive duel strength and goalkeeper kick power
   (see `research/hidden-player-attributes.md`)

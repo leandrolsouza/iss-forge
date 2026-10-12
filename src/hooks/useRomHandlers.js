@@ -30,6 +30,9 @@ export default function useRomHandlers({
   confirm = null,
   romParser,
   romInfo,
+  currentProject = null,
+  setCurrentProject,
+  setRomFile,
   teams,
   setTeams,
   markModified,
@@ -886,6 +889,23 @@ export default function useRomHandlers({
     async (options = {}) => {
       if (!romParser) return false;
 
+      // Project session: the ROM is saved inside the project (no file to overwrite)
+      if (isElectron() && currentProject) {
+        prepareRomForWrite();
+        const result = await electronBridge.projectSave(currentProject.id, romParser.getRomData());
+        if (result.success) {
+          setCurrentProject?.(result.project);
+          markSaved(result.project.name);
+          electronBridge.notifySaveComplete();
+          toast.success(t('toastProjectSaved', { name: result.project.name }));
+          reportValidation();
+          return true;
+        }
+        setStatusMessage(result.error);
+        toast.error(t('toastSaveFailed'), { detail: t(result.error) });
+        return false;
+      }
+
       if (isElectron()) {
         // No file on disk yet (restored backup, dropped file without a path): ask where to save.
         // The dialog answers through 'rom:save-as-path' -> handleSaveToPath.
@@ -907,6 +927,7 @@ export default function useRomHandlers({
         const result = await electronBridge.saveRom(data);
         if (result.success) {
           markSaved(result.path);
+          setRomFile?.(result.path);
           electronBridge.notifySaveComplete();
           toast.success(t('toastSaved', { file: fileNameOf(result.path) }), {
             detail: result.path,
@@ -931,7 +952,10 @@ export default function useRomHandlers({
     [
       romParser,
       romInfo,
+      currentProject,
+      setCurrentProject,
       markSaved,
+      setRomFile,
       setStatusMessage,
       prepareRomForWrite,
       reportValidation,
@@ -948,8 +972,15 @@ export default function useRomHandlers({
       prepareRomForWrite();
       const data = Array.from(romParser.getRomData());
       const result = await electronBridge.saveRom(data, filePath);
-      if (result.success) {
+      if (result.success && currentProject) {
+        // "Save As" in a project exports a ROM file: the project itself is not saved
+        toast.success(t('toastRomExported', { file: fileNameOf(result.path) }), {
+          detail: result.path,
+        });
+        setStatusMessage({ key: 'toastRomExported', params: { file: result.path } });
+      } else if (result.success) {
         markSaved(result.path);
+        setRomFile?.(result.path);
         electronBridge.notifySaveComplete();
         toast.success(t('toastSaved', { file: fileNameOf(result.path) }), { detail: result.path });
         reportValidation();
@@ -958,7 +989,17 @@ export default function useRomHandlers({
         toast.error(t('toastSaveFailed'), { detail: t(result.error) });
       }
     },
-    [romParser, markSaved, setStatusMessage, prepareRomForWrite, reportValidation, toast, t],
+    [
+      romParser,
+      currentProject,
+      markSaved,
+      setRomFile,
+      setStatusMessage,
+      prepareRomForWrite,
+      reportValidation,
+      toast,
+      t,
+    ],
   );
 
   /**

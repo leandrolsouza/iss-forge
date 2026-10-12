@@ -6,9 +6,10 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import useRomState from '../hooks/useRomState';
 import useRomHandlers from '../hooks/useRomHandlers';
 import useAutoSave from '../hooks/useAutoSave';
+import useProjects from '../hooks/useProjects';
 import { useToast } from './ToastContext';
 import { useSettings } from './SettingsContext';
-import { useConfirm } from './ConfirmContext';
+import { useConfirm, useGuardDrafts } from './ConfirmContext';
 import { useI18n } from '../i18n';
 
 const RomContext = createContext(null);
@@ -19,6 +20,7 @@ export function RomProvider({ children }) {
   const { t } = useI18n();
   const { settings } = useSettings();
   const confirm = useConfirm();
+  const guardDrafts = useGuardDrafts();
 
   const state = useRomState({ toast, t });
   const handlers = useRomHandlers({
@@ -28,6 +30,9 @@ export function RomProvider({ children }) {
     confirm,
     romParser: state.romParser,
     romInfo: state.romInfo,
+    currentProject: state.currentProject,
+    setCurrentProject: state.setCurrentProject,
+    setRomFile: state.setRomFile,
     teams: state.teams,
     setTeams: state.setTeams,
     markModified: state.markModified,
@@ -51,17 +56,41 @@ export function RomProvider({ children }) {
     romInfo: state.romInfo,
     modified: state.modified,
     teams: state.teams,
+    currentProject: state.currentProject,
   });
 
-  // Clear the backup once the session matches the file on disk again (saved, or undone
-  // back to the last save). A restored backup never matches until it is saved.
-  const prevModifiedRef = useRef(state.modified);
+  const projects = useProjects({
+    toast,
+    t,
+    confirm,
+    guardDrafts,
+    romParser: state.romParser,
+    romInfo: state.romInfo,
+    modified: state.modified,
+    currentProject: state.currentProject,
+    setCurrentProject: state.setCurrentProject,
+    requestLoadRom: state.requestLoadRom,
+    unloadRom: state.unloadRom,
+    markSaved: state.markSaved,
+    setLoading: state.setLoading,
+    clearBackup: autoSave.clearBackup,
+    clearProjectAutosave: autoSave.clearProjectAutosave,
+  });
+
+  // Clear the backup once a session matches what is saved again (saved, or undone back
+  // to the last save, or its edits discarded to open something else). A restored backup
+  // never matches until it is saved. The backup cleared is the one of the session that
+  // had the edits: the global one for a ROM file, the project's own for a project.
+  const projectId = state.currentProject?.id || null;
+  const prevRef = useRef({ modified: state.modified, projectId });
   useEffect(() => {
-    if (prevModifiedRef.current && !state.modified && state.romParser) {
-      autoSave.clearBackup();
+    const prev = prevRef.current;
+    if (prev.modified && !state.modified && state.romParser) {
+      if (prev.projectId) autoSave.clearProjectAutosave(prev.projectId);
+      else autoSave.clearBackup();
     }
-    prevModifiedRef.current = state.modified;
-  }, [state.modified, state.romParser, autoSave]);
+    prevRef.current = { modified: state.modified, projectId };
+  }, [state.modified, state.romParser, projectId, autoSave]);
 
   const value = {
     // State
@@ -74,6 +103,9 @@ export function RomProvider({ children }) {
 
     // Auto-save
     ...autoSave,
+
+    // Projects
+    ...projects,
   };
 
   return <RomContext.Provider value={value}>{children}</RomContext.Provider>;

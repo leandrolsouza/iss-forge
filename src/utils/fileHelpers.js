@@ -8,10 +8,19 @@
  * @returns {Promise<{name: string, data: Uint8Array}|null>}
  */
 export function openRomWeb() {
+  return openBinaryFile('.smc,.sfc,.bin');
+}
+
+/**
+ * Pick a file with a native file input and read its bytes
+ * @param {string} accept - e.g. ".issproj"
+ * @returns {Promise<{name: string, data: Uint8Array}|null>} null when cancelled or unreadable
+ */
+export function openBinaryFile(accept) {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.smc,.sfc,.bin';
+    input.accept = accept;
 
     input.onchange = (e) => {
       const file = e.target.files[0];

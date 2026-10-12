@@ -226,6 +226,109 @@ export function backupClear() {
   return window.electronAPI.backupClear();
 }
 
+// ─── Projects ────────────────────────────────────────────────────────────────
+// Every call resolves to { success, error?, ... }; `error` is an i18n key for the
+// project errors (projectNotFound, projectNameRequired...) or an OS message.
+// ROM bytes go and come back as Uint8Array.
+
+/** @returns {Promise<{success: boolean, projects?: object[], error?: string}>} */
+export function projectsList() {
+  return window.electronAPI.projectsList();
+}
+
+/**
+ * @param {{ name: string, description?: string, romFileName?: string, baseCrc?: string,
+ *   original: Uint8Array, data?: Uint8Array }} params
+ * @returns {Promise<{success: boolean, project?: object, error?: string}>}
+ */
+export function projectCreate(params) {
+  return window.electronAPI.projectCreate(params);
+}
+
+/**
+ * @param {string} id
+ * @returns {Promise<{success: boolean, project?: object, data?: Uint8Array,
+ *   original?: Uint8Array, autosave?: Uint8Array|null, error?: string}>}
+ */
+export function projectLoad(id) {
+  return window.electronAPI.projectLoad(id);
+}
+
+/** Save the project's ROM. @returns {Promise<{success: boolean, project?: object, error?: string}>} */
+export function projectSave(id, data) {
+  return window.electronAPI.projectSave(id, data);
+}
+
+/** The project was opened in the editor (list order: most recently used first) */
+export function projectMarkOpened(id) {
+  return window.electronAPI.projectMarkOpened?.(id);
+}
+
+/**
+ * Tell the main process what is open (native menu labels, "Save As" suggestion)
+ * @param {{ kind: 'project'|'rom'|null, name?: string, ext?: string }} info
+ */
+export function setSession(info) {
+  window.electronAPI.setSession?.(info);
+}
+
+/**
+ * Open a folder, or select a file in its folder, in the system file manager
+ * @returns {Promise<{success: boolean, error?: string}>}
+ */
+export function showInFolder(target) {
+  return window.electronAPI.showInFolder(target);
+}
+
+/** @param {{ newProject?: function, openProject?: function, closeSession?: function }} handlers */
+export function onProjectMenus({ newProject, openProject, closeSession }) {
+  window.electronAPI.onMenuNewProject?.(newProject);
+  window.electronAPI.onMenuOpenProject?.(openProject);
+  window.electronAPI.onMenuCloseSession?.(closeSession);
+  return () =>
+    ['menu:newProject', 'menu:openProject', 'menu:closeSession'].forEach((channel) =>
+      window.electronAPI.removeAllListeners(channel),
+    );
+}
+
+/** @param {{ name?: string, description?: string }} changes */
+export function projectUpdate(id, changes) {
+  return window.electronAPI.projectUpdate(id, changes);
+}
+
+/** @param {{ name?: string, description?: string }} changes - of the copy */
+export function projectDuplicate(id, changes) {
+  return window.electronAPI.projectDuplicate(id, changes);
+}
+
+export function projectDelete(id) {
+  return window.electronAPI.projectDelete(id);
+}
+
+export function projectAutosaveSave(id, data) {
+  return window.electronAPI.projectAutosaveSave(id, data);
+}
+
+export function projectAutosaveClear(id) {
+  return window.electronAPI.projectAutosaveClear(id);
+}
+
+/**
+ * Unedited ROM of an existing project with this base CRC (hex)
+ * @returns {Promise<{success: boolean, original?: Uint8Array|null}>}
+ */
+export function projectFindOriginal(crc) {
+  return window.electronAPI.projectFindOriginal(crc);
+}
+
+/**
+ * "Save" dialog for an exported project file (.issproj)
+ * @returns {Promise<{success: boolean, canceled?: boolean, path?: string, error?: string}>}
+ */
+export function projectSaveArchive(data, defaultName) {
+  return window.electronAPI.projectSaveArchive(data, defaultName);
+}
+
 // ─── AI Team Generator ───────────────────────────────────────────────────────
 
 /**

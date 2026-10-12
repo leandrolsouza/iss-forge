@@ -27,6 +27,7 @@ import UnsavedModal from './components/UnsavedModal';
 import BackupBanner from './components/BackupBanner';
 import TeamSelector from './components/TeamSelector';
 import ExportPatchModal from './components/ExportPatchModal';
+import ProjectDialogs from './components/ProjectDialogs';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
 import {
@@ -37,6 +38,7 @@ import {
   IconUndo,
   IconRedo,
   IconSettings,
+  IconProject,
 } from './components/Icons';
 import { useRom } from './context/RomContext';
 import { useGuardDrafts } from './context/ConfirmContext';
@@ -63,6 +65,9 @@ export default function App() {
   const {
     romParser,
     romInfo,
+    currentProject,
+    projectsAvailable,
+    openProjectSwitcher,
     teams,
     selectedTeamIndex,
     activeTab,
@@ -444,19 +449,29 @@ export default function App() {
     <div className="app" onDrop={handleDrop} onDragOver={handleDragOver}>
       <div className="app-titlebar">
         <div className="app-titlebar-actions">
+          {projectsAvailable && (
+            <button
+              className="titlebar-btn"
+              onClick={openProjectSwitcher}
+              title={t('toolbarProjects')}
+              aria-label={t('toolbarProjects')}
+            >
+              <IconProject size={16} />
+            </button>
+          )}
           <button
             className="titlebar-btn"
             onClick={handleOpenRom}
-            title={t('toolbarOpen')}
-            aria-label={t('toolbarOpen')}
+            title={projectsAvailable ? t('toolbarOpenLoose') : t('toolbarOpen')}
+            aria-label={projectsAvailable ? t('toolbarOpenLoose') : t('toolbarOpen')}
           >
             <IconOpen size={16} />
           </button>
           <button
             className="titlebar-btn"
             onClick={handleSave}
-            title={t('toolbarSave')}
-            aria-label={t('toolbarSave')}
+            title={currentProject ? t('toolbarSaveProject') : t('toolbarSave')}
+            aria-label={currentProject ? t('toolbarSaveProject') : t('toolbarSave')}
             disabled={!romParser}
           >
             <IconSave size={16} />
@@ -508,7 +523,9 @@ export default function App() {
         </div>
         <span className="app-titlebar-title">
           ISS Forge <span className="beta-badge">BETA</span>{' '}
-          {romInfo ? `- ${romInfo.fileName}${modified ? ' *' : ''}` : ''}
+          {romInfo
+            ? `- ${currentProject ? currentProject.name : romInfo.fileName}${modified ? ' *' : ''}`
+            : ''}
         </span>
         <div className="app-titlebar-spacer"></div>
       </div>
@@ -565,7 +582,10 @@ export default function App() {
 
       <UnsavedModal
         visible={!!pendingLoad && !showUnsavedModal}
-        message={t('unsavedOpenMessage', { file: pendingLoad?.fileName || '' })}
+        message={t(currentProject ? 'unsavedOpenMessageProject' : 'unsavedOpenMessage', {
+          current: currentProject?.name || '',
+          file: pendingLoad?.options?.project?.name || pendingLoad?.fileName || '',
+        })}
         saveLabel={t('unsavedSaveAndOpen')}
         discardLabel={t('unsavedOpenWithoutSaving')}
         onSave={handleOpenModalSave}
@@ -574,6 +594,7 @@ export default function App() {
       />
 
       <ExportPatchModal visible={showPatchModal} onClose={closePatchModal} />
+      <ProjectDialogs />
     </div>
   );
 }

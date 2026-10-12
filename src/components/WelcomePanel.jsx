@@ -3,6 +3,7 @@ import { useI18n } from '../i18n';
 import { useConfirm } from '../context/ConfirmContext';
 import { isElectron } from '../utils/fileHelpers';
 import { IconOpen, IconCartridge, IconUpload } from './Icons';
+import ProjectsPanel from './ProjectsPanel';
 
 const VALID_ROM_EXTENSIONS = ['.smc', '.sfc', '.bin'];
 
@@ -145,6 +146,11 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
           </h1>
           <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
         </div>
+
+        {/* Projects (desktop): one per mod, e.g. Campeonato Brasileiro, Premier League */}
+        {isElectron() && <ProjectsPanel />}
+
+        {isElectron() && <p className="welcome-or">{t('welcomeOrLooseRom')}</p>}
 
         {/* Primary Action */}
         <div className="welcome-actions">

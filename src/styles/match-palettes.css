@@ -50,6 +50,23 @@
   align-items: flex-start;
 }
 
+.mp-pitch-wrap {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-radius: 4px;
+  border: 1px solid var(--border-primary);
+  overflow: hidden;
+}
+
+.mp-pitch-wrap .pixel-canvas {
+  border-radius: 0;
+}
+
+.mp-pitch-detail {
+  height: 6px;
+}
+
 .mp-pitch {
   width: 260px;
   height: auto;

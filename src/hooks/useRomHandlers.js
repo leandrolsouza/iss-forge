@@ -4,7 +4,7 @@
  */
 import { useCallback } from 'react';
 import { openRomWeb, saveRomWeb, isElectron, getModifiedFilename } from '../utils/fileHelpers';
-import { validateRom, getValidationSummary } from '../utils/validation';
+import { validateRom, getValidationSummary, validationText } from '../utils/validation';
 import {
   exportTeam,
   exportAllTeams,
@@ -15,6 +15,8 @@ import {
   copyTeam,
 } from '../utils/teamExport';
 import * as electronBridge from '../services/electronBridge';
+import { sharedKeeperTeams } from '../rom/readers/UniformReader';
+import { restoreTeamPart } from '../rom/restoreOriginal';
 import { buildPatch, getPatchFilename } from '../rom/patches';
 import { withDerivedStats } from '../rom/playerStats';
 import { exportTexts, applyTexts } from '../utils/textsExport';
@@ -22,6 +24,8 @@ import { exportTexts, applyTexts } from '../utils/textsExport';
 export default function useRomHandlers({
   toast,
   t,
+  settings = {},
+  confirm = null,
   romParser,
   romInfo,
   teams,
@@ -41,6 +45,29 @@ export default function useRomHandlers({
   setScreenTexts,
   setTitleScreen,
 }) {
+  /**
+   * After a goalkeeper colour write: re-read the teams that store their goalkeeper at
+   * the same place (Super Star uses Belgium's), so their tabs show the new colours.
+   */
+  const syncSharedKeepers = useCallback(
+    (teamIndex) => {
+      const partners = sharedKeeperTeams(teamIndex);
+      if (!partners.length) return;
+      setTeams((prev) =>
+        prev.map((tm, i) =>
+          partners.includes(i)
+            ? {
+                ...tm,
+                uniforms: romParser.readUniformColors(i),
+                hairSkin: romParser.readHairSkinColors(i),
+              }
+            : tm,
+        ),
+      );
+    },
+    [romParser, setTeams],
+  );
+
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
       if (!romParser) return;
@@ -94,10 +121,11 @@ export default function useRomHandlers({
         newTeams[teamIndex] = team;
         return newTeams;
       });
+      if (kit === 'goalkeeper') syncSharedKeepers(teamIndex);
 
       markModified();
     },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
+    [romParser, teams, markModified, setTeams, pushSnapshot, syncSharedKeepers],
   );
 
   /** `kit` may be an array (e.g. ['first', 'second']) to write several kits as one undo step */
@@ -128,10 +156,77 @@ export default function useRomHandlers({
         newTeams[teamIndex] = team;
         return newTeams;
       });
+      if (kits.includes('goalkeeper')) syncSharedKeepers(teamIndex);
 
       markModified();
     },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
+    [romParser, teams, markModified, setTeams, pushSnapshot, syncSharedKeepers],
+  );
+
+  /**
+   * Put one part of a team back to the ROM as loaded (one undo step).
+   * @param {string} part - see RESTORE_PARTS in rom/restoreOriginal.js, or `player:N`
+   * @returns {boolean}
+   */
+  const handleRestoreOriginal = useCallback(
+    (teamIndex, part) => {
+      if (!romParser) return false;
+      pushSnapshot(teams);
+      const res = restoreTeamPart(romParser, teamIndex, part);
+      if (!res.ok) {
+        cancelSnapshot();
+        toast.error(t(res.error || 'toastRestoreFailed'));
+        return false;
+      }
+      const fresh = romParser.readTeam(teamIndex);
+      setTeams((prev) => {
+        const next = [...prev];
+        next[teamIndex] = fresh;
+        return next;
+      });
+      // flags and goalkeepers can be shared: refresh the teams that use them too
+      if (part === 'flagDesign') {
+        setTeams((prev) =>
+          prev.map((tm, i) =>
+            tm.flagDesign
+              ? { ...tm, flagDesign: { ...tm.flagDesign, grid: romParser.readFlagDesign(i).grid } }
+              : tm,
+          ),
+        );
+      }
+      if (part === 'uniform:goalkeeper' || part === 'hairSkin') syncSharedKeepers(teamIndex);
+      markModified();
+      setStatusMessage('toastRestored');
+      return true;
+    },
+    [
+      romParser,
+      teams,
+      pushSnapshot,
+      cancelSnapshot,
+      setTeams,
+      syncSharedKeepers,
+      markModified,
+      setStatusMessage,
+      toast,
+      t,
+    ],
+  );
+
+  /** Predominant colour (0-4): decides which team changes kit when both have the same */
+  const handlePredominantColorChange = useCallback(
+    (teamIndex, value) => {
+      if (!romParser || teams[teamIndex]?.predominantColor === value) return;
+      pushSnapshot(teams);
+      romParser.writePredominantColor(teamIndex, value);
+      setTeams((prev) => {
+        const next = [...prev];
+        next[teamIndex] = { ...next[teamIndex], predominantColor: value };
+        return next;
+      });
+      markModified();
+    },
+    [romParser, teams, pushSnapshot, setTeams, markModified],
   );
 
   const handleSpecialHairSkinChange = useCallback(
@@ -205,10 +300,11 @@ export default function useRomHandlers({
         newTeams[teamIndex] = team;
         return newTeams;
       });
+      syncSharedKeepers(teamIndex);
 
       markModified();
     },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
+    [romParser, teams, markModified, setTeams, pushSnapshot, syncSharedKeepers],
   );
 
   const handleFlagColorChange = useCallback(
@@ -362,7 +458,10 @@ export default function useRomHandlers({
       markModified();
 
       const written = kind === 'inGame' ? inGame.text || text : teamNameText;
-      setStatusMessage(`${kind === 'inGame' ? t('nameInGame') : t('nameInMenu')}: ${written}`);
+      setStatusMessage({
+        key: 'statusNameWritten',
+        params: { field: { key: kind === 'inGame' ? 'nameInGame' : 'nameInMenu' }, name: written },
+      });
       if (kind !== 'inGame' && teamNameText !== text) {
         toast.warning(t('toastTeamNameTruncated', { name: teamNameText }), { detail: text });
       }
@@ -703,7 +802,7 @@ export default function useRomHandlers({
       .replace(/\.[^.]+$/, '')
       .replace(/[^a-zA-Z0-9]+/g, '_');
     downloadJson(exportTexts(romParser), `${base}_texts.json`);
-    setStatusMessage(`Exported: ${base}_texts.json`);
+    setStatusMessage({ key: 'toastExported', params: { file: `${base}_texts.json` } });
     toast.success(t('toastExported', { file: `${base}_texts.json` }));
   }, [romParser, romInfo, setStatusMessage, toast, t]);
 
@@ -754,15 +853,12 @@ export default function useRomHandlers({
     }
   }, [romParser]);
 
-  /** Save-time checks are advisory: report them, but never block the save */
+  /** Save-time checks are advisory: report them after the save, never block it */
   const reportValidation = useCallback(() => {
     const warnings = validateRom(teams);
     const summary = getValidationSummary(warnings);
     if (summary.total === 0) return;
-    if (summary.errors > 0) {
-      console.warn('[Validation] Errors:', warnings.filter((w) => w.type === 'error').slice(0, 5));
-    }
-    const shown = warnings.slice(0, 3).map((w) => `${w.teamName}: ${w.message}`);
+    const shown = warnings.slice(0, 3).map((w) => `${w.teamName}: ${validationText(w, t)}`);
     if (warnings.length > 3) shown.push(t('toastValidationMore', { count: warnings.length - 3 }));
     toast[summary.errors > 0 ? 'error' : 'warning'](
       t('toastValidation', { errors: summary.errors, warnings: summary.warnings }),
@@ -772,56 +868,75 @@ export default function useRomHandlers({
 
   const fileNameOf = (p) => (p || '').split(/[\\/]/).pop();
 
-  /** @returns {Promise<boolean>} true when the ROM was written */
-  const handleSave = useCallback(async () => {
-    if (!romParser) return false;
+  /**
+   * Save over the ROM file (Electron) or download it (web).
+   * @param {{ confirm?: boolean }} [options] - confirm: false skips the "overwrite?" question
+   *   (the save was already chosen in another prompt)
+   * @returns {Promise<boolean>} true when the ROM was written
+   */
+  const handleSave = useCallback(
+    async (options = {}) => {
+      if (!romParser) return false;
 
-    if (isElectron()) {
-      // No file on disk yet (restored backup, dropped file without a path): ask where to save.
-      // The dialog answers through 'rom:save-as-path' -> handleSaveToPath.
-      const currentPath = await electronBridge.getCurrentPath();
-      if (!currentPath) {
-        electronBridge.saveRomAs();
+      if (isElectron()) {
+        // No file on disk yet (restored backup, dropped file without a path): ask where to save.
+        // The dialog answers through 'rom:save-as-path' -> handleSaveToPath.
+        const currentPath = await electronBridge.getCurrentPath();
+        if (!currentPath) {
+          electronBridge.saveRomAs();
+          return false;
+        }
+        // Settings > Editor: ask before overwriting the file
+        if (options?.confirm !== false && settings.confirmBeforeSave && confirm) {
+          const ok = await confirm({
+            message: t('confirmOverwriteRom', { file: fileNameOf(currentPath) }),
+            confirmLabel: t('unsavedSave'),
+          });
+          if (!ok) return false;
+        }
+        prepareRomForWrite();
+        const data = Array.from(romParser.getRomData());
+        const result = await electronBridge.saveRom(data);
+        if (result.success) {
+          markSaved(result.path);
+          electronBridge.notifySaveComplete();
+          toast.success(t('toastSaved', { file: fileNameOf(result.path) }), {
+            detail: result.path,
+          });
+          reportValidation();
+          return true;
+        }
+        setStatusMessage(result.error);
+        toast.error(t('toastSaveFailed'), { detail: t(result.error) });
         return false;
       }
-      reportValidation();
-      prepareRomForWrite();
-      const data = Array.from(romParser.getRomData());
-      const result = await electronBridge.saveRom(data);
-      if (result.success) {
-        markSaved(result.path);
-        electronBridge.notifySaveComplete();
-        toast.success(t('toastSaved', { file: fileNameOf(result.path) }), { detail: result.path });
-        return true;
-      }
-      setStatusMessage(result.error);
-      toast.error(t('toastSaveFailed'), { detail: result.error });
-      return false;
-    }
 
-    reportValidation();
-    prepareRomForWrite();
-    const data = romParser.getRomData();
-    const fileName = getModifiedFilename(romInfo?.fileName);
-    saveRomWeb(data, fileName);
-    markSaved(fileName);
-    toast.success(t('toastDownloaded', { file: fileName }));
-    return true;
-  }, [
-    romParser,
-    romInfo,
-    markSaved,
-    setStatusMessage,
-    prepareRomForWrite,
-    reportValidation,
-    toast,
-    t,
-  ]);
+      prepareRomForWrite();
+      const data = romParser.getRomData();
+      const fileName = getModifiedFilename(romInfo?.fileName);
+      saveRomWeb(data, fileName);
+      markSaved(fileName);
+      toast.success(t('toastDownloaded', { file: fileName }));
+      reportValidation();
+      return true;
+    },
+    [
+      romParser,
+      romInfo,
+      markSaved,
+      setStatusMessage,
+      prepareRomForWrite,
+      reportValidation,
+      settings.confirmBeforeSave,
+      confirm,
+      toast,
+      t,
+    ],
+  );
 
   const handleSaveToPath = useCallback(
     async (filePath) => {
       if (!romParser || !isElectron()) return;
-      reportValidation();
       prepareRomForWrite();
       const data = Array.from(romParser.getRomData());
       const result = await electronBridge.saveRom(data, filePath);
@@ -829,9 +944,10 @@ export default function useRomHandlers({
         markSaved(result.path);
         electronBridge.notifySaveComplete();
         toast.success(t('toastSaved', { file: fileNameOf(result.path) }), { detail: result.path });
+        reportValidation();
       } else {
         setStatusMessage(result.error);
-        toast.error(t('toastSaveFailed'), { detail: result.error });
+        toast.error(t('toastSaveFailed'), { detail: t(result.error) });
       }
     },
     [romParser, markSaved, setStatusMessage, prepareRomForWrite, reportValidation, toast, t],
@@ -868,7 +984,7 @@ export default function useRomHandlers({
    */
   const handleExportPatch = useCallback(
     async ({ format, baseData, metadata = '' }) => {
-      if (!romParser) return { success: false, error: 'No ROM loaded' };
+      if (!romParser) return { success: false, error: 'noRomLoaded' };
 
       try {
         prepareRomForWrite();
@@ -889,7 +1005,10 @@ export default function useRomHandlers({
           saved = { success: true, path: fileName };
         }
 
-        setStatusMessage(`Patch ${format.toUpperCase()}: ${saved.path}`);
+        setStatusMessage({
+          key: 'statusPatchSaved',
+          params: { format: format.toUpperCase(), path: saved.path },
+        });
         return {
           ...saved,
           changedBytes: result.changedBytes,
@@ -935,7 +1054,10 @@ export default function useRomHandlers({
       };
       reader.onerror = () => {
         setLoading(false);
-        setStatusMessage(`Error: ${reader.error?.message || file.name}`);
+        setStatusMessage({
+          key: 'statusError',
+          params: { error: reader.error?.message || file.name },
+        });
         toast.error(t('toastRomLoadFailed', { file: file.name }), {
           detail: reader.error?.message,
         });
@@ -957,7 +1079,7 @@ export default function useRomHandlers({
       const data = exportTeam(teams[teamIndex]);
       const filename = `${teams[teamIndex].name.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
       downloadJson(data, filename);
-      setStatusMessage(`Exported: ${filename}`);
+      setStatusMessage({ key: 'toastExported', params: { file: filename } });
       toast.success(t('toastExported', { file: filename }));
     },
     [teams, setStatusMessage, toast, t],
@@ -967,7 +1089,7 @@ export default function useRomHandlers({
     if (teams.length === 0) return;
     const data = exportAllTeams(teams);
     downloadJson(data, 'iss-forge-all-teams.json');
-    setStatusMessage('Exported all teams');
+    setStatusMessage({ key: 'toastExported', params: { file: 'iss-forge-all-teams.json' } });
     toast.success(t('toastExported', { file: 'iss-forge-all-teams.json' }));
   }, [teams, setStatusMessage, toast, t]);
 
@@ -980,14 +1102,20 @@ export default function useRomHandlers({
 
       const validation = validateImport(data);
       if (!validation.valid) {
-        setStatusMessage(`Import error: ${validation.error}`);
-        toast.error(t('toastImportFailed'), { detail: validation.error });
+        setStatusMessage({
+          key: 'statusImportError',
+          params: { error: { key: validation.error } },
+        });
+        toast.error(t('toastImportFailed'), { detail: t(validation.error) });
         return;
       }
 
       const teamData = validation.type === 'single' ? data : null;
       if (!teamData) {
-        setStatusMessage('Import error: select a single team file');
+        setStatusMessage({
+          key: 'statusImportError',
+          params: { error: { key: 'toastImportSingleTeam' } },
+        });
         toast.error(t('toastImportFailed'), { detail: t('toastImportSingleTeam') });
         return;
       }
@@ -1005,8 +1133,8 @@ export default function useRomHandlers({
       });
 
       markModified();
-      const name = teamData.name || teamData.teamNameText || 'team';
-      setStatusMessage(`Imported: ${name} → slot ${teamIndex + 1}`);
+      const name = teamData.name || teamData.teamNameText || t('team');
+      setStatusMessage({ key: 'toastTeamImported', params: { name, slot: teamIndex + 1 } });
       toast.success(t('toastTeamImported', { name, slot: teamIndex + 1 }));
       warnings.forEach((w) => toast.warning(t(w)));
     },
@@ -1019,6 +1147,8 @@ export default function useRomHandlers({
     handleHairSkinChange,
     handleHairSkinTemplateApply,
     handleSpecialHairSkinChange,
+    handleRestoreOriginal,
+    handlePredominantColorChange,
     handleFlagColorChange,
     handleFlagColorBulkChange,
     handleFlagDesignBulkChange,

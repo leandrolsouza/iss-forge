@@ -30,6 +30,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Translation strings accept `{name}` parameters
 
 ### Changed
+- **Real previews** — Uniforms, Hair & Skin, Flag Colors and the Overview draw the team's player and
+  goalkeeper with the game's own sprites (front and back), coloured with the team's kit, hair/skin and
+  flag colours, updated on every edit; the flags are drawn from the real 24x16 design instead of 4
+  stripes. The crest on the shirt uses the flag colours, as in a match (checked in the emulator)
+- **Text previews in the game's fonts** — training texts, scenario texts, "Other screens", team
+  descriptions (with their real colours) and the text layer of the menu screens are drawn with the
+  game's 8x8 / 8x16 fonts and palettes instead of monospaced text
+- **Pitch preview** — the grass is drawn with the match's own tiles and mowing pattern, in the edited
+  colours (the lines are a plan view)
+- **Restore original** buttons for each kit, hair & skin, flag colours, flag design, team names, each
+  player, the team description and the menu texts
+- **Predominant colour** of each team (decides which team changes kit) on the Uniforms tab, also in the
+  team JSON and team copy
+- Player editor marks repeated shirt numbers and empty names; search box in the training texts; Compare
+  Teams also shows attack, defence, positions and numbers
+- Settings that did nothing now work: confirm before overwriting the ROM, `.bak` copy of the previous
+  file before saving, default folder for patches
+- Status bar, save warnings, import errors, the About panel and the native Electron menus and dialogs
+  follow the selected language
 - `konamiCompress` now uses an optimal parse. It matches the size of Konami's own data, so edited menu
   screens fit back in place. The previous greedy encoder produced 2-5× larger tilemaps
 
@@ -67,6 +86,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   description, title screen) survives undoing an edit made in another tab
 - A rejected write (scenario, texts, menu, description, title screen logo/background/texts) no longer
   leaves an empty undo step, and anything it moved in the ROM is put back
+- Editing any team description no longer drops the colours inside the body of the 4 originals that
+  colour player names; the "Defensive" title colour is labelled green (it was called yellow)
+- The original ROM draws 12 flags from 4 shared designs (e.g. Germany, Holland, Austria and Russia):
+  editing one silently changed the others. The edited team now gets its own copy, and the tab says so
+- Super Star's goalkeeper uses Belgium's colours: both tabs warn and stay in sync after an edit
+- The save warnings were shown before writing (and said "saved" even when the save failed)
 
 ---
 

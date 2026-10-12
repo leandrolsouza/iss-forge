@@ -154,8 +154,16 @@
 .col-idx {
   width: 28px;
   text-align: center;
-  color: var(--text-muted);
 }
+
+/* Value that breaks a rule (repeated shirt number, empty name...): tooltip says why */
+.input-name.input-invalid,
+.input-mini.input-invalid,
+.player-table .input-invalid {
+  border-color: var(--text-warning) !important;
+  box-shadow: inset 0 0 0 1px var(--text-warning);
+}
+
 
 .col-pos {
   width: 44px;

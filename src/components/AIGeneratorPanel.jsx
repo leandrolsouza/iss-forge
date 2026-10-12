@@ -458,6 +458,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
               <button
                 className="ai-modal-close"
                 onClick={() => setShowTemplates(false)}
+                aria-label={t('close')}
               >
                 &times;
               </button>

@@ -97,6 +97,25 @@ para 32, e `32 & 0x1F = 0`: **branco puro (#FFFFFF) virava preto**. Agora o valo
 - Times que compartilham paleta no original: ROM+COL, WAL+BEL, GER+SST, FRA+USA, SUI+BUL, DEN+NOR+KOR.
 - Trocar a entrada da tabela (2 bytes) faz um time usar outra paleta sem gastar espaço.
 
+## Gráficos do gramado (out/2026)
+
+Lidos do bloco PPU/VRAM dos savestates da partida (`match.st`, `prematch.st`, `m5.st`, `gkball.st`; todos
+tipo B):
+
+- **Modo 1.** BG2 = gramado: tilemap em `$1000` (64×64), tiles 4bpp em `$2000`. BG1 = rede do gol e
+  fotógrafos (tilemap `$0000`, mesmos tiles). BG3 = placar (tilemap `$5C00`, tiles `$5000`, 2bpp, com
+  prioridade).
+- **Tiles:** lista de carga `$82:806C` (arquivo `0x1006C`): `$2000` ← `0x49CDE` (1 tile), `$2010` ←
+  `0x49CE1` (15 tiles de grama), `$2100` ← `0x49E65`, `$3000` ← `0x4B52C`, `$4000` ← `0x4CDAD`. Os blocos
+  descomprimidos batem 100% com a VRAM dos dumps (durante o jogo só os tiles `0xC0`-`0x12B`, `0x200`-
+  `0x220` e `0x2A0`-`0x2B6` são trocados).
+- **Tilemap:** não está na ROM; o código monta enquanto a câmera anda (buffers `$7E:3B2C` / `$7E:3E2C`).
+  A grama é um padrão de 8×8 células dos tiles `0x01`-`0x17` nas paletas 2 e 3 (deslocado 4 colunas a
+  cada 4 linhas; `GRASS_PATTERN` em `src/rom/pitchPreview.js`), com as linhas em perspectiva por cima.
+  Os pixels das linhas usam as cores 6-8 da paleta do gramado.
+- **Tipos A e C:** sem dump; usam outros tiles de corte (origem não localizada).
+- A prévia da aba Campo e Bola desenha a grama com esses tiles e o padrão, e as linhas como esquema.
+
 ## Pendências / ideias
 
 - Backdrop (variante "+3", `$85:F7B5`).

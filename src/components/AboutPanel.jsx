@@ -70,22 +70,18 @@ export default function AboutPanel() {
           <h1 className="about-title">
             ISS Forge <span className="beta-badge">BETA</span>
           </h1>
-          <p className="about-version">v0.1.0-beta</p>
+          <p className="about-version">v{__APP_VERSION__}</p>
           <p className="about-description">
-            ROM Editor for International Superstar Soccer
+            {t('aboutDescription')}
             <br />
             Super Nintendo Entertainment System (1995)
           </p>
-          <p className="about-beta-notice">
-            Esta é uma versão beta. Algumas funcionalidades ainda estão sendo refinadas.
-            <br />
-            This is a beta version. Some features are still being refined.
-          </p>
+          <p className="about-beta-notice">{t('aboutBetaNotice')}</p>
         </div>
 
         {/* Author */}
         <div className="about-section">
-          <h3 className="about-section-title">Autor / Author</h3>
+          <h3 className="about-section-title">{t('aboutAuthor')}</h3>
           <div className="about-author-card">
             <div className="about-author-avatar">LS</div>
             <div className="about-author-info">
@@ -116,9 +112,9 @@ export default function AboutPanel() {
 
         {/* Credits */}
         <div className="about-section">
-          <h3 className="about-section-title">Creditos / Credits</h3>
+          <h3 className="about-section-title">{t('aboutCredits')}</h3>
           <div className="about-credits">
-            <p>Baseado nos trabalhos de / Based on the work of:</p>
+            <p>{t('aboutBasedOn')}</p>
             <ul>
               <li>
                 <strong>Rodrigo Mallmann Guerra</strong> — ISS Studio (Java)
@@ -130,10 +126,10 @@ export default function AboutPanel() {
                 <strong>ProtonNoir</strong> — Konami SNES Compressor/Decompressor
               </li>
               <li>
-                <strong>Equipe Puma</strong> — ROM offset maps & research
+                <strong>Equipe Puma</strong> — {t('aboutCreditPuma')}
               </li>
               <li>
-                <strong>Equipe Falcon Brasil</strong> — Testing & documentation
+                <strong>Equipe Falcon Brasil</strong> — {t('aboutCreditFalcon')}
               </li>
             </ul>
           </div>
@@ -141,7 +137,7 @@ export default function AboutPanel() {
 
         {/* Tech */}
         <div className="about-section">
-          <h3 className="about-section-title">Tecnologia / Technology</h3>
+          <h3 className="about-section-title">{t('aboutTechnology')}</h3>
           <div className="about-tech-badges">
             <span className="about-badge">Electron</span>
             <span className="about-badge">React</span>
@@ -153,8 +149,8 @@ export default function AboutPanel() {
 
         {/* Footer */}
         <div className="about-footer">
-          <p>ISS Forge is not affiliated with Konami.</p>
-          <p>International Superstar Soccer is a trademark of Konami.</p>
+          <p>{t('aboutNotAffiliated')}</p>
+          <p>{t('aboutTrademark')}</p>
         </div>
       </div>
     </div>

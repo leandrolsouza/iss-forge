@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validateRom, getValidationSummary } from '../validation';
+import { validateRom, getValidationSummary, duplicateNumbers, validationText } from '../validation';
 
 function makePlayer(overrides = {}) {
   return {
@@ -40,27 +40,25 @@ describe('validateRom', () => {
     it('should detect empty player name', () => {
       const teams = [makeTeam({ players: [makePlayer({ name: '' })] })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'error' && w.message.includes('sem nome'))).toBe(true);
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valNoName')).toBe(true);
     });
 
     it('should detect whitespace-only player name', () => {
       const teams = [makeTeam({ players: [makePlayer({ name: '   ' })] })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'error' && w.message.includes('sem nome'))).toBe(true);
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valNoName')).toBe(true);
     });
 
     it('should detect name exceeding 8 characters', () => {
       const teams = [makeTeam({ players: [makePlayer({ name: 'ABCDEFGHI' })] })];
       const warnings = validateRom(teams);
-      expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('excede 8 caracteres')),
-      ).toBe(true);
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valNameTooLong')).toBe(true);
     });
 
     it('should accept name with exactly 8 characters', () => {
       const teams = [makeTeam({ players: [makePlayer({ name: 'ABCDEFGH' })] })];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('excede'))).toHaveLength(0);
+      expect(warnings.filter((w) => w.key === 'valNameTooLong')).toHaveLength(0);
     });
   });
 
@@ -72,7 +70,7 @@ describe('validateRom', () => {
       ];
       const teams = [makeTeam({ players })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'warning' && w.message.includes('duplicado'))).toBe(
+      expect(warnings.some((w) => w.type === 'warning' && w.key === 'valDuplicateNumber')).toBe(
         true,
       );
     });
@@ -84,7 +82,7 @@ describe('validateRom', () => {
       ];
       const teams = [makeTeam({ players })];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('duplicado'))).toHaveLength(0);
+      expect(warnings.filter((w) => w.key === 'valDuplicateNumber')).toHaveLength(0);
     });
   });
 
@@ -92,31 +90,32 @@ describe('validateRom', () => {
     it('should detect shooting below 1', () => {
       const teams = [makeTeam({ players: [makePlayer({ shooting: 0 })] })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'error' && w.message.includes('chute invalido'))).toBe(
-        true,
-      );
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valShooting')).toBe(true);
     });
 
     it('should detect shooting above 15', () => {
       const teams = [makeTeam({ players: [makePlayer({ shooting: 16 })] })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'error' && w.message.includes('chute invalido'))).toBe(
-        true,
-      );
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valShooting')).toBe(true);
     });
 
     it('should accept shooting at boundaries (1 and 15)', () => {
       const players = [makePlayer({ shooting: 1 }), makePlayer({ shooting: 15, number: 2 })];
       const teams = [makeTeam({ players })];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('chute'))).toHaveLength(0);
+      expect(warnings.filter((w) => ['valShooting', 'valGkKick'].includes(w.key))).toHaveLength(0);
     });
 
     it('should detect top speed below 1', () => {
       const teams = [makeTeam({ players: [makePlayer({ topSpeed: 0 })] })];
       const warnings = validateRom(teams);
       expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('velocidade fora de 1-16')),
+        warnings.some(
+          (w) =>
+            w.type === 'error' &&
+            w.key === 'valStatRange' &&
+            w.params.stat.key === 'statTopSpeedLong',
+        ),
       ).toBe(true);
     });
 
@@ -124,9 +123,7 @@ describe('validateRom', () => {
       for (const key of ['acceleration', 'topSpeed', 'dribbleSpeed', 'attack', 'defense']) {
         const teams = [makeTeam({ players: [makePlayer({ [key]: 17 })] })];
         const warnings = validateRom(teams);
-        expect(warnings.some((w) => w.type === 'error' && w.message.includes('fora de 1-16'))).toBe(
-          true,
-        );
+        expect(warnings.some((w) => w.type === 'error' && w.key === 'valStatRange')).toBe(true);
       }
     });
 
@@ -137,29 +134,25 @@ describe('validateRom', () => {
       ];
       const teams = [makeTeam({ players })];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('fora de'))).toHaveLength(0);
+      expect(warnings.filter((w) => w.key === 'valStatRange')).toHaveLength(0);
     });
 
     it('should detect goalkeeper kick index out of 0-7', () => {
       const teams = [makeTeam({ players: [makePlayer({ gkKickIndex: 8 })] })];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.message.includes('chute do goleiro'))).toBe(true);
+      expect(warnings.some((w) => w.key === 'valGkKick')).toBe(true);
     });
 
     it('should detect stamina below 1', () => {
       const teams = [makeTeam({ players: [makePlayer({ stamina: 0 })] })];
       const warnings = validateRom(teams);
-      expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('stamina invalida')),
-      ).toBe(true);
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valStamina')).toBe(true);
     });
 
     it('should detect stamina above 16', () => {
       const teams = [makeTeam({ players: [makePlayer({ stamina: 17 })] })];
       const warnings = validateRom(teams);
-      expect(
-        warnings.some((w) => w.type === 'error' && w.message.includes('stamina invalida')),
-      ).toBe(true);
+      expect(warnings.some((w) => w.type === 'error' && w.key === 'valStamina')).toBe(true);
     });
   });
 
@@ -179,7 +172,7 @@ describe('validateRom', () => {
         }),
       ];
       const warnings = validateRom(teams);
-      expect(warnings.some((w) => w.type === 'warning' && w.message.includes('pretas'))).toBe(true);
+      expect(warnings.some((w) => w.type === 'warning' && w.key === 'valBlackShirt')).toBe(true);
     });
 
     it('should not warn when at least one shirt color is not black', () => {
@@ -197,7 +190,7 @@ describe('validateRom', () => {
         }),
       ];
       const warnings = validateRom(teams);
-      expect(warnings.filter((w) => w.message.includes('pretas'))).toHaveLength(0);
+      expect(warnings.filter((w) => w.key === 'valBlackShirt')).toHaveLength(0);
     });
 
     it('should not crash if uniforms are missing', () => {
@@ -268,5 +261,29 @@ describe('getValidationSummary', () => {
     const summary = getValidationSummary(warnings);
     expect(summary.errors).toBe(3);
     expect(summary.isValid).toBe(false);
+  });
+});
+
+describe('duplicateNumbers / validationText', () => {
+  it('lists every player of a repeated number', () => {
+    const players = [{ number: 3 }, { number: 3 }, { number: 5 }, { number: 3 }];
+    expect([...duplicateNumbers(players)]).toEqual([[3, [0, 1, 3]]]);
+    const teams = [
+      { name: 'T', players: players.map((p) => ({ ...p, name: 'A', shooting: 7, stamina: 8 })) },
+    ];
+    const dup = validateRom(teams).filter((w) => w.key === 'valDuplicateNumber');
+    expect(dup).toHaveLength(1);
+    expect(dup[0].params.players).toBe('1, 2, 4');
+  });
+
+  it('translates nested param keys', () => {
+    const t = (key, params) =>
+      key === 'valStatRange'
+        ? `${params.stat} ${params.value}`
+        : key === 'statAttack'
+          ? 'Ataque'
+          : key;
+    const w = { key: 'valStatRange', params: { stat: { key: 'statAttack' }, value: 17 } };
+    expect(validationText(w, t)).toBe('Ataque 17');
   });
 });

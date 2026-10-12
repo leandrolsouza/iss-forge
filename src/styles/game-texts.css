@@ -129,3 +129,9 @@
 .scenario-textarea.over {
   border-color: var(--text-error);
 }
+
+/* Search box above the list of texts */
+.gt-search {
+  width: 100%;
+  margin-bottom: 8px;
+}

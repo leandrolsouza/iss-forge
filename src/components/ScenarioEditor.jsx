@@ -16,6 +16,7 @@ import {
   TEXT_CAPACITY,
 } from '../rom/scenario';
 import { IconScenario } from './Icons';
+import GameTextPreview from './GameTextPreview';
 import '../styles/scenario.css';
 
 const DEFAULT_GAP = 10; // seconds between the displayed clock and the final whistle in the originals
@@ -262,11 +263,12 @@ export default function ScenarioEditor() {
                 spellCheck={false}
               />
               <div className="scenario-preview" aria-label={t('scenarioPreview')}>
-                {Array.from({ length: SCENARIO_DATA.TEXT_LINES }).map((_, i) => (
-                  <div key={i} className="scenario-preview-line">
-                    {(previewLines[i] || '').padEnd(SCENARIO_DATA.TEXT_COLUMNS, ' ')}
-                  </div>
-                ))}
+                <GameTextPreview
+                  kind="box"
+                  text={draft.text}
+                  box={{ lines: SCENARIO_DATA.TEXT_LINES, columns: SCENARIO_DATA.TEXT_COLUMNS }}
+                  label={t('scenarioPreview')}
+                />
                 {previewLines.length > SCENARIO_DATA.TEXT_LINES && (
                   <div className="scenario-preview-overflow">{t('scenarioTooManyLines')}</div>
                 )}

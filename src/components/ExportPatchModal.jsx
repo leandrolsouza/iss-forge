@@ -88,7 +88,8 @@ export default function ExportPatchModal({ visible, onClose }) {
   const currentTitle = romInfo?.internalTitle;
   const titleMismatch = customBase && currentTitle && customBase.title !== currentTitle;
 
-  const errorText = (err) => (err === 'noChanges' ? t('patchNoChanges') : err);
+  // error codes are i18n keys; anything else (OS errors) is shown as is
+  const errorText = (err) => (err === 'noChanges' ? t('patchNoChanges') : t(err));
 
   return (
     <div className="unsaved-overlay" role="dialog" aria-modal="true" aria-labelledby="patch-title">

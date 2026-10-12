@@ -242,13 +242,18 @@ export function quickValidate(data) {
   const { info, errors, warnings, isValid } = validation;
 
   let message;
+  let messageKey;
+  const sizeKb = (info.size / 1024).toFixed(0);
   if (!isValid) {
     const errorKey = errors[0] || 'unknown';
     message = `validation.${errorKey}`;
+    messageKey = `validation${errorKey[0].toUpperCase()}${errorKey.slice(1)}`;
   } else if (warnings.length > 0) {
-    message = `ROM OK (${(info.size / 1024).toFixed(0)} KB, ${info.hasHeader ? 'header' : 'no header'}) — ${warnings.length} warning(s)`;
+    message = `ROM OK (${sizeKb} KB, ${info.hasHeader ? 'header' : 'no header'}) — ${warnings.length} warning(s)`;
+    messageKey = info.hasHeader ? 'romOkHeaderWarnings' : 'romOkWarnings';
   } else {
-    message = `ROM OK (${(info.size / 1024).toFixed(0)} KB, ${info.hasHeader ? 'header' : 'no header'})`;
+    message = `ROM OK (${sizeKb} KB, ${info.hasHeader ? 'header' : 'no header'})`;
+    messageKey = info.hasHeader ? 'romOkHeader' : 'romOk';
   }
 
   return {
@@ -257,6 +262,9 @@ export function quickValidate(data) {
     hasHeader: info.hasHeader,
     headerOffset: info.headerOffset,
     message,
+    // i18n key + params of `message` (the UI translates these)
+    messageKey,
+    messageParams: { size: sizeKb, warnings: warnings.length },
     warnings,
     internalTitle: info.internalTitle,
     checksumValid: info.checksumValid,

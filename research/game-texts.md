@@ -279,6 +279,36 @@ sobre os mesmos 105 tiles (bloco `0x97B09` → VRAM `0x2000`, 4bpp, paleta 3). C
 Código: `src/rom/menuSprites.js` (`MENU_SPRITE_FONT`, `MENU_SPRITE_LAYOUT`) e `src/rom/titleScreens.js`
 (`TITLE_FONT`, `TITLE_LAYOUT`); campos `kind: 'sprite'` e `kind: 'title'` em `SCREEN_TEXTS`.
 
+## 6. Como o jogo desenha os textos (prévias, out/2026)
+
+Achados de disassembly (`$80:E1C3`-`$80:E580`) e dos dumps de VRAM/WRAM (`pm`, `joy`, `intro`, `sel0`);
+as prévias do editor (`src/rom/textRender.js`) batem com as capturas do emulador (pré-jogo, cenários,
+treino e seleção de times).
+
+- **Uma camada só (BG3, modo 1, 2bpp):** as três rotinas de texto (`$80:E1C3`, `$80:E1FF`, `$80:E2AC`)
+  escrevem words de tilemap no buffer `$7E:4390 + célula*2` (célula = linha × 32 + coluna), copiado por DMA
+  para a VRAM em `$1800`. As telas de menu usam o mesmo buffer (descritor `01 00 90 43 7E`). Tiles em
+  `$4000` (`STA $210C` com `#$44`/`#$45`). Cores: 1 = preenchimento, 2 = sombra, 3 = contorno.
+- **Fontes:** lista de carga `$82:8300` (arquivo `0x10300`; formato `00 00` + `[destino word][ponteiro 24]`
+  + `FF`), 6 blocos Konami: `$4380` A-Z e pontuação (`0x6A48C`), `$4480` dígitos (`0x6A5CF`), `$44D0` a-z
+  (`0x6A652`), `$45A0` fonte 8x16 parte 1 (`0x69FFA`, inclui `.` = `0xB7` e `?` = `0xC8` da 8x8), `$4880`
+  minúsculas 8x16 (`0x6A30C`), `$4A20` outros (`0x87B9E`).
+- **8x8 (quadros):** tabela ASCII → tile `$82:8C80` (arquivo `0x10C80`). Word = tile | atributo; o atributo
+  começa em `$2000`; `FE xx` = `(xx << 8) | $2000` (paleta `(xx >> 2) & 7`, não ocupa célula); `FD` limpa o
+  resto da linha; `FF` termina; a linha cheia quebra sozinha (`$80:E31F`-`$E388`).
+- **Posição dos quadros** (X → linha,coluna; A → linhas × colunas): instruções do treino `$187`/`$0812`
+  (12,7; 8×18); resultado/recorde `$268`/`$0510` (19,8; 5×16); cenário `$265`/`$0817` (19,5; 8×23);
+  descrição do time `$246` (P1, 18,6) / `$24B` (P2, 18,11), `$080F` (8×15); ajuda do joypad `$283`/`$071A`.
+- **8x16:** par de tiles = `tabela[code*2..+1]` + `0x30` (ou `0x110` quando code×2 ≥ `0x10C`), linha r e
+  r+1; código 0 = célula vazia; `FE xx` troca a paleta.
+- **Paletas (blobs do banco `$85`, `word tamanho` + cores):** pré-jogo e treino `0x2E2DD` (241 cores; linha 0
+  = `3060 7FDD 7690 7940`); seleção de times e joypad `0x2F3DB` (61 cores): paleta 0 branco/azul, 1 verde
+  (`73FC 4F8C 05A0`, títulos "Defensive"), 2 amarelo, 3 rosa (`7F9F 665F 3016`, "Offensive"), 4 violeta.
+  Cenário e resultados do treino: sem dump; a prévia usa a do treino (na captura do cenário o texto é
+  igual: branco com contorno azul).
+- **Não conhecido:** a configuração de BG1/BG2 dos menus (molduras e fundos), por isso a prévia dos menus
+  mostra só a camada de texto.
+
 ## Arquivo de tradução (JSON)
 
 Os botões **Exportar JSON / Importar JSON** da aba Textos do Jogo (`src/utils/textsExport.js`) salvam e

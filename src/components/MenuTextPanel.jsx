@@ -1,19 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
-import { menuTextLength, findInvalidMenuChars } from '../rom/menuScreens';
+import {
+  menuTextLength,
+  findInvalidMenuChars,
+  buildScreenWords,
+  readScreenWords,
+} from '../rom/menuScreens';
+import { renderMenuText } from '../rom/textRender';
+import RomParser from '../rom/RomParser';
+import PixelCanvas from './PixelCanvas';
+
+/** The text layer of a menu screen with the draft texts, drawn with the game's font */
+function MenuScreenPreview({ rom, screen, draft, label }) {
+  const image = useMemo(() => {
+    if (!rom) return null;
+    const texts = Object.fromEntries(
+      draft.map((v, i) => [i, v]).filter(([i, v]) => v !== screen.runs[i]?.text),
+    );
+    let words;
+    try {
+      words = buildScreenWords(rom, screen.offset, texts);
+    } catch {
+      // a text too long for its run: show the screen as it is
+      words = readScreenWords(rom, screen.offset);
+    }
+    return renderMenuText(rom, words);
+    // screen changes after an apply (moved / new bytes): `screen` covers it
+  }, [rom, screen, draft]);
+  return <PixelCanvas image={image} scale={2} label={label} className="menu-screen-canvas" />;
+}
 
 /** Menu screens: edit the text runs of the compressed tilemaps */
 export default function MenuTextPanel() {
   const { t } = useI18n();
   const guardDrafts = useGuardDrafts();
-  const { menuScreens, handleMenuScreenChange } = useRom();
+  const { romParser, menuScreens, handleMenuScreenChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState([]);
   const [message, setMessage] = useState(null);
 
   const screen = menuScreens[selected];
+  const originals = useMemo(
+    () => (romParser ? new RomParser(romParser.getOriginalData()).readMenuScreens() : []),
+    [romParser],
+  );
+  // texts of the screen in the ROM as loaded (same runs: the editor keeps the layout)
+  const originalScreen = originals.find((s) => s.id === screen?.id);
+  const originalRuns =
+    originalScreen && originalScreen.runs.length === screen?.runs.length
+      ? originalScreen.runs.map((r) => r.text)
+      : null;
 
   useEffect(() => {
     if (screen) setDraft(screen.runs.map((r) => r.text));
@@ -99,6 +137,17 @@ export default function MenuTextPanel() {
           <p className="scenario-hint">{t('gtMenuHelp')}</p>
         </div>
 
+        <div className="detail-section">
+          <div className="detail-section-title">{t('scenarioPreview')}</div>
+          <MenuScreenPreview
+            rom={romParser}
+            screen={screen}
+            draft={draft}
+            label={t(`gtScreen_${screen.id}`)}
+          />
+          <p className="scenario-hint">{t('gtMenuPreviewHint')}</p>
+        </div>
+
         {message && (
           <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>
             {message.text}
@@ -115,6 +164,14 @@ export default function MenuTextPanel() {
             disabled={!dirty}
           >
             {t('scenarioDiscard')}
+          </button>
+          <button
+            className="kit-btn"
+            onClick={() => setDraft(originalRuns)}
+            disabled={!originalRuns || draft.every((v, i) => v === originalRuns[i])}
+            title={t('gtMenuRestoreHint')}
+          >
+            {t('restoreOriginal')}
           </button>
         </div>
         <p className="scenario-hint">{t('gtMenuNotCovered')}</p>

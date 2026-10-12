@@ -10,6 +10,7 @@ import {
   wrapDescriptionBody,
   measureTeamDescriptions,
   withFormationInTitle,
+  readTeamDescriptionRaw,
   TEAM_DESC,
   TEAM_DESC_CAPACITY,
 } from '../teamDescription';
@@ -104,5 +105,28 @@ describe.skipIf(!existsSync(REAL_ROM))('team descriptions on the real ROM', () =
     const huge = { title: 'X', titleColor: 0x2c, body: 'word '.repeat(80) };
     const all = readTeamDescriptions(rom).map(() => huge);
     expect(writeTeamDescriptions(rom, all).ok).toBe(false);
+  });
+
+  it('keeps the colours inside other bodies when one description is edited', () => {
+    const rom = load();
+    // 4 originals colour player names in the body (e.g. FE 30 ... FE 20)
+    const coloured = TEAMS.map((_, i) => i).filter((i) => {
+      const raw = readTeamDescriptionRaw(rom, i);
+      return raw.filter((b) => b === TEAM_DESC.ATTR).length > 2;
+    });
+    expect(coloured.length).toBeGreaterThanOrEqual(4);
+    const before = coloured.map((i) => readTeamDescriptionRaw(rom, i));
+    const target = TEAMS.map((_, i) => i).find((i) => !coloured.includes(i));
+    expect(
+      writeTeamDescription(rom, target, {
+        title: 'Offensive 4-3-3',
+        titleColor: 0x2c,
+        body: 'New.',
+      }).ok,
+    ).toBe(true);
+    coloured.forEach((i, k) => expect(readTeamDescriptionRaw(rom, i)).toEqual(before[k]));
+    expect(measureTeamDescriptions(readTeamDescriptions(rom), rom)).toBeLessThanOrEqual(
+      TEAM_DESC_CAPACITY,
+    );
   });
 });

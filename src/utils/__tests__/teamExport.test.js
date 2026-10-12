@@ -397,7 +397,7 @@ describe('Team Import/Export Integration', () => {
       const bad = { ...WAKANDA, players: WAKANDA.players.slice(0, 5) };
       const result = validateImport(bad);
       expect(result.valid).toBe(false);
-      expect(result.error).toContain('15 players');
+      expect(result.error).toBe('importErrPlayerCount');
     });
 
     it('should validate all-teams format', () => {

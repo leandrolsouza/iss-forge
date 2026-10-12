@@ -75,6 +75,8 @@ export function exportTeam(team) {
     flagDesign: team.flagDesign ? { grid: team.flagDesign.grid } : null,
     specialHair: team.specialHair,
     specialSkin: team.specialSkin,
+    // decides which team changes kit when both have the same (0-4)
+    predominantColor: team.predominantColor,
     formation: team.formation ? { slots: team.formation.slots } : null,
     description: team.description || null,
   };
@@ -101,19 +103,19 @@ export function exportAllTeams(teams) {
  */
 export function validateImport(data) {
   if (!data || typeof data !== 'object') {
-    return { valid: false, error: 'Invalid JSON data' };
+    return { valid: false, error: 'importErrInvalidJson' };
   }
 
   if (data._format === 'iss-forge-team') {
     if (!data.players || !Array.isArray(data.players) || data.players.length !== 15) {
-      return { valid: false, error: 'Team must have exactly 15 players' };
+      return { valid: false, error: 'importErrPlayerCount' };
     }
     return { valid: true, type: 'single' };
   }
 
   if (data._format === 'iss-forge-all-teams') {
     if (!data.teams || !Array.isArray(data.teams)) {
-      return { valid: false, error: 'Missing teams array' };
+      return { valid: false, error: 'importErrNoTeams' };
     }
     return { valid: true, type: 'all' };
   }
@@ -123,7 +125,7 @@ export function validateImport(data) {
     return { valid: true, type: 'single' };
   }
 
-  return { valid: false, error: 'Unrecognized format. Expected ISS Forge export file.' };
+  return { valid: false, error: 'importErrFormat' };
 }
 
 /**
@@ -249,6 +251,8 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
     romParser.writeSpecialHair(teamIndex, teamData.specialHair);
   if (Number.isInteger(teamData.specialSkin))
     romParser.writeSpecialSkin(teamIndex, teamData.specialSkin);
+  if (Number.isInteger(teamData.predominantColor))
+    romParser.writePredominantColor(teamIndex, teamData.predominantColor);
 
   // Flag design (optional; 2D grid of palette indexes)
   const grid = teamData.flagDesign?.grid;

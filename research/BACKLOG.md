@@ -187,38 +187,64 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
   cenário/treino/outras telas em texto monoespaçado; menus sem prévia.
 - Plano: separar as partes genéricas de `titleScreen.js` (`buildVram`, `tilePixel`, `drawBg`,
   `drawSprites`, `setPixel`, CGRAM) num módulo `snesRender` compartilhado.
-  - Uniformes e Cabelo/Pele: jogador real com `playerSprites`/`renderPoseSheet` e a paleta do time (M).
-  - Cores da Bandeira: desenhar a bandeira real (`team.flagDesign` já está carregado) (S).
-  - Textos e menus: fonte do jogo + tilemaps dos menus descomprimidos (M).
-  - Gramado da partida real: precisa pesquisar as listas de carga da tela da partida (L).
+  - ~~Uniformes e Cabelo/Pele: jogador real com `playerSprites`/`renderPoseSheet` e a paleta do time (M).~~
+    Feito (out/2026): `src/rom/snesRender.js` (tilePixel, setPixel, drawSprites, renderIndexed,
+    colorToRaw) e `src/rom/playerPreview.js` (paletas do time + `renderTeamKit`, quadros de frente/costas
+    e goleiro). `PlayerKitPreview.jsx` em Uniformes (kit da aba), Cabelo e Pele (titular + goleiro),
+    Cores da Bandeira e Visão Geral (os 3 kits). As cores vêm do estado, então a prévia segue cada edição.
+    Achado: o escudo no peito usa as 4 cores da bandeira (`title-screen.md`, "Escudo no peito").
+  - ~~Cores da Bandeira: desenhar a bandeira real (S).~~ Feito: `FlagCanvas.jsx` (também na Visão Geral e
+    na miniatura do Design da Bandeira).
+  - Mini-uniformes dos cartões de jogador na Visão Geral continuam em SVG (cada jogador tem cabelo/número
+    próprios: daria para desenhar o quadro com o cabelo dele, falta saber como o jogo troca o cabelo).
+  - ~~Cores aproximadas na descrição.~~ Feito: a prévia usa a fonte 8x8 e as paletas da seleção de times
+    (`textRender.js`). Correções junto: o título "Defensive" é **verde**, não amarelo (screenshot); editar
+    uma descrição apagava as cores dentro do corpo de 4 originais (nomes de jogadores): agora as não
+    editadas mantêm os bytes exatos; "Aplicar" fica desabilitado com caracteres inválidos.
+  - ~~Textos e menus: fonte do jogo.~~ Feito: `src/rom/textRender.js` (lista de fontes `0x10300`, tabela
+    8x8 `0x10C80`, pares 8x16, paletas `0x2E2DD`/`0x2F3DB`), `GameTextPreview.jsx` em Treino, Cenários,
+    Outras telas e descrição; prévia da camada de texto da tela inteira em Menus. Falta: molduras/fundos dos
+    menus (configuração de BG1/BG2 desconhecida), títulos dos modos (fonte 4bpp + textura) e paletas do
+    cenário e do resultado do treino (sem dump; usam a do treino). Detalhes em `game-texts.md`, seção 6.
+  - ~~Gramado da partida real.~~ Feito em parte: `src/rom/pitchPreview.js` desenha a grama com os tiles
+    da partida (lista `0x1006C`) e o padrão de corte lido da VRAM; as linhas são um esquema (o jogo monta o
+    tilemap em perspectiva por código). Falta: tiles dos tipos A/C (sem dump), linhas reais, bola e árbitro
+    com sprites. Detalhes em `match-palettes.md`, "Gráficos do gramado".
+  - ~~Conferir no emulador que editar as cores da bandeira muda o escudo da camisa.~~ Conferido.
 
-### 5.4 Acabamento
-- **Textos fora do i18n:** "Camisa 1/Calcao/Meiao" (`UniformEditor.jsx`), "Fechar" (`TabBar.jsx`),
-  "Recolher" (`Sidebar.jsx`), mensagens de `validation.js`, menus do Electron (em português);
-  "Export JSON"/"Import JSON" (`TeamPreview.jsx`), rótulos de `MODES` (`GameTextEditor.jsx`), títulos de
-  botões (`App.jsx`), mensagens de status em `useRomHandlers.js` (em inglês); letras C/V/S/T
-  (`TeamPreview.jsx`). Nomes das abas são guardados ao abrir (`'Players'` fixo em `useRomState.js`) e não
-  mudam com o idioma: guardar a chave i18n. 13 `console.log` em `TeamNameWriter.js`.
-- **Validação e configurações:** `validateRom` roda ao salvar mas só vai para o console; o editor de
-  jogadores não marca número repetido nem nome vazio. `confirmBeforeSave`, `autoBackupBeforeSave` e
-  `defaultExportPath` (`SettingsPage.jsx`) não são usados: ligar ou remover.
-- **Dados compartilhados sem aviso:** uniforme e cabelo/pele do goleiro do Super Star usam os endereços da
-  Bélgica (`UniformReader.js`); blocos de bandeira podem ser compartilhados (`FlagDesignWriter.js`, não
-  confirmado na ROM original). Copiar o aviso da torcida (`MatchPaletteEditor.jsx`).
-- **Dados não editáveis / restaurar:** cor predominante do time (`0x8DB2`, decide o 2º uniforme quando os
-  dois times têm a mesma cor) não aparece na aba Uniformes. Modelos e ajustes do gramado partem sempre da
-  paleta original e descartam edições manuais. Falta "Restaurar original" em Uniformes, Cabelo e Pele,
-  Cores e Design da Bandeira, Nome do Time, Jogador, textos de menu e descrição (um helper comum lendo de
-  `new RomParser(getOriginalData())`, como em Cenários). "Aplicar" da descrição não é desabilitado com
-  caracteres inválidos.
-- **Listas e navegação:** seletor de times sem busca nem setas (`TeamSelector.jsx`, opções são `div`);
-  barra lateral com `div` clicável (sem foco), lista escrita duas vezes (recolhida/expandida) e sem
-  destaque da aba aberta; sem busca nos textos; Comparar Times só compara as 4 médias e casa jogadores pela
-  posição na lista.
-- **Testes faltando:** `quantize.js`, `playerStats.js`, `flagTemplates.js`, `hairSkinTemplates.js`,
-  `imageToFlag.js`, `imageToLogo.js`, `fileHelpers.js`; testados só de forma indireta: `menuSprites.js`,
-  `titleScreens.js`, `titleScreenText.js`, `titlePlayers.js`. Conferir se `FlagDesignReadWrite.test.js`
-  cobre os caminhos de mover blocos e "não cabe".
+### 5.4 Acabamento (feito em grande parte, out/2026)
+- **Textos fora do i18n:** feito: a barra de status aceita `{ key, params }` (segue a troca de idioma,
+  inclusive o "ROM OK" do `romValidator`, que agora tem `messageKey`); avisos de `validation.js` viraram
+  chaves + parâmetros (`validationText`); erros de importação de time e do Electron (`noSavePath`,
+  `fileNotFound`) são códigos traduzidos; modos do treino, painel Sobre, região das notificações e botões
+  de fechar traduzidos; menus e diálogos nativos do Electron seguem o idioma (`MAIN_I18N`, guardado em
+  `settingsStore.language`); `console.log` do `TeamNameWriter` removidos. As abas já eram rotuladas pela
+  chave (`TabBar` usa `editors.js`). **Falta:** relatório da importação de textos (`textsExport.js`, em
+  inglês), erros da IA (o painel compara o texto em inglês: passar para códigos antes) e siglas de posição
+  (GK, CB...).
+- **Validação e configurações:** feito: o editor de jogadores marca número repetido e nome vazio (borda e
+  dica); o aviso de validação aparece depois de salvar (antes dizia "salva" mesmo se falhasse).
+  `confirmBeforeSave` pergunta antes de gravar por cima do arquivo (não no "Salvar" do aviso de sair),
+  `autoBackupBeforeSave` guarda `<arquivo>.bak` com a versão anterior, `defaultExportPath` é a pasta
+  sugerida dos patches (os JSON são baixados pelo navegador interno, sem diálogo).
+- **Dados compartilhados:** feito: aviso do goleiro do Super Star/Bélgica (Uniformes e Cabelo e Pele, e o
+  outro time é atualizado junto); a ROM original **compartilha os desenhos de bandeira** em 4 grupos (ITA+BEL,
+  GER+HOL+AUT+RUS, FRA+IRL, ENG+DEN+SWE+NOR): editar um mudava os outros sem aviso. Agora o time editado
+  ganha uma cópia própria no fim da área (`flagSharedWith`), e a aba avisa.
+- **Restaurar original:** feito para Uniformes (por kit), Cabelo e Pele, Cores e Design da Bandeira, Nome
+  do Time (menu + desenho do placar), jogador (painel de detalhes), descrição e textos de menu (estes dois
+  vão para o rascunho). `src/rom/restoreOriginal.js` + `RestoreOriginalButton.jsx`. **Cor predominante**
+  editável na aba Uniformes (`readPredominantColor`, vai no JSON e na cópia de time; nomes das cores
+  deduzidos dos uniformes originais). "Aplicar" da descrição desabilitado com caracteres inválidos.
+  **Falta:** modelos e ajustes do gramado continuam partindo da paleta original (descartam edições
+  manuais) — é o comportamento esperado de "modelo", mas um ajuste relativo à paleta atual seria útil.
+- **Listas e navegação:** o seletor de times já tinha busca e setas e a barra lateral já usava botões com
+  destaque. Feito: busca nos textos do treino (nome e texto, sem acentos); Comparar Times mostra também
+  ataque e defesa, posição e número (os jogadores já eram casados pela vaga da formação).
+- **Testes:** feito: `helpers.test.js` (quantize, playerStats, modelos de bandeira e cabelo/pele,
+  fileHelpers, imageToFlag, imageToLogo), `restoreOriginal.test.js`, mover blocos e "não cabe" em
+  `FlagDesignReadWrite.test.js`. Faltam `menuSprites.js`, `titleScreens.js`, `titleScreenText.js` e
+  `titlePlayers.js` diretos (cobertos de forma indireta).
 
 ## Descartado
 

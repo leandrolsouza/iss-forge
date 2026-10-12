@@ -218,7 +218,8 @@ export default function App() {
       window.electronAPI.onRomLoaded((data) =>
         requestLoadRom(new Uint8Array(data.data), data.name, data.path || null),
       );
-      window.electronAPI.onMenuSave(() => handleSave());
+      // Saving from the quit prompt was already confirmed there
+      window.electronAPI.onMenuSave((opts) => handleSave({ confirm: !opts.fromClose }));
       window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
       window.electronAPI.onMenuUndo(undo);
       window.electronAPI.onMenuRedo(redo);
@@ -341,7 +342,7 @@ export default function App() {
 
   // Opening another ROM while the current one has unsaved changes
   const handleOpenModalSave = useCallback(async () => {
-    const saved = await handleSave();
+    const saved = await handleSave({ confirm: false });
     if (saved) {
       confirmPendingLoad();
     } else {

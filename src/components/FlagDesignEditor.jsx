@@ -1,8 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n';
 import { useConfirm } from '../context/ConfirmContext';
 import FlagTemplateSelector from './FlagTemplateSelector';
 import FlagImageImport from './FlagImageImport';
+import FlagCanvas from './FlagCanvas';
+import RestoreOriginalButton from './RestoreOriginalButton';
+import { useRom } from '../context/RomContext';
 import { IconFlagDesign } from './Icons';
 
 const GRID_WIDTH = 24;
@@ -24,6 +27,15 @@ export default function FlagDesignEditor({
   const canvasRef = useRef(null);
   const confirm = useConfirm();
   const { t } = useI18n();
+  const { romParser, teams } = useRom();
+  // The original ROM draws some flags from the same blocks (e.g. GER, HOL, AUT, RUS):
+  // editing one gives this team its own copy
+  const sharedWith = useMemo(
+    () => (romParser ? romParser.flagSharedWith(teamIndex).map((i) => teams[i]?.name) : []),
+    // re-check after every edit of any flag
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [romParser, teamIndex, team?.flagDesign],
+  );
 
   // A stroke never carries over to another team
   useEffect(() => {
@@ -151,8 +163,13 @@ export default function FlagDesignEditor({
             <button className="kit-btn danger" onClick={handleClear} title={t('clear')}>
               {t('clear')}
             </button>
+            <RestoreOriginalButton teamIndex={teamIndex} part="flagDesign" />
           </div>
         </div>
+
+        {sharedWith.length > 0 && (
+          <p className="shared-data-warning">{t('flagShared', { teams: sharedWith.join(', ') })}</p>
+        )}
 
         {/* Flag Templates */}
         <FlagTemplateSelector
@@ -197,22 +214,12 @@ export default function FlagDesignEditor({
           <div className="detail-section-title">{t('flagPreviewRealSize')}</div>
           <div className="kit-preview">
             <div className="flag-mini-wrap">
-              <div
-                className="flag-mini-grid"
-                style={{
-                  gridTemplateColumns: `repeat(${GRID_WIDTH}, 4px)`,
-                  gridTemplateRows: `repeat(${GRID_HEIGHT}, 4px)`,
-                }}
-              >
-                {grid.map((row, r) =>
-                  row.map((pixel, c) => (
-                    <div
-                      key={`mini-${r}-${c}`}
-                      style={{ backgroundColor: getDisplayColor(pixel) }}
-                    />
-                  )),
-                )}
-              </div>
+              <FlagCanvas
+                grid={grid}
+                colors={flagColors}
+                scale={4}
+                label={t('flagPreviewRealSize')}
+              />
               <span className="flag-mini-caption">{t('flagPreviewScale')}</span>
             </div>
           </div>

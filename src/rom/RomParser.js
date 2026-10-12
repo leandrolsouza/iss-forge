@@ -2,7 +2,7 @@
  * RomParser - Thin facade for ISS ROM operations
  * Low-level byte access + delegates to specialized reader/writer modules
  */
-import { TEAMS, TEAM_COUNT, PLAYER_NAMES } from './constants';
+import { TEAMS, TEAM_COUNT, PLAYER_NAMES, UNIFORM_COLORS, FLAG_DESIGN_ORDINALS } from './constants';
 import { readPlayerNames, readPlayerData, bytesToIssText } from './readers/PlayerReader';
 import {
   readUniformColors,
@@ -23,6 +23,7 @@ import {
 } from './writers/UniformWriter';
 import {
   writeFlagDesign,
+  flagSharedWith,
   readFlagDesignBytes,
   writeFlagDesignBytes,
 } from './writers/FlagDesignWriter';
@@ -172,6 +173,20 @@ export default class RomParser {
   }
   readSpecialHair(teamIndex) {
     return readSpecialHair(this, teamIndex);
+  }
+  /**
+   * Predominant colour of the team ($81:8DB2[ordinal], 0-4): when both teams of a match
+   * have the same, team 2 wears its second kit ($80:ADB3). Observed values:
+   * 0 white, 1 blue, 2 red/orange, 3 yellow, 4 green.
+   */
+  readPredominantColor(teamIndex) {
+    return this.readByte(UNIFORM_COLORS.PREDOMINANT_COLOR_OFFSET + FLAG_DESIGN_ORDINALS[teamIndex]);
+  }
+  writePredominantColor(teamIndex, value) {
+    this.writeByte(
+      UNIFORM_COLORS.PREDOMINANT_COLOR_OFFSET + FLAG_DESIGN_ORDINALS[teamIndex],
+      Math.max(0, Math.min(255, value | 0)),
+    );
   }
   readSpecialSkin(teamIndex) {
     return readSpecialSkin(this, teamIndex);
@@ -372,6 +387,10 @@ export default class RomParser {
   writeFlagDesign(teamIndex, grid) {
     return writeFlagDesign(this, teamIndex, grid);
   }
+  /** Other teams drawing the same flag blocks (an edit gives this team its own copy) */
+  flagSharedWith(teamIndex) {
+    return flagSharedWith(this, teamIndex);
+  }
   writeTeamNameText(teamIndex, text) {
     return writeTeamNameText(this, teamIndex, text);
   }
@@ -467,6 +486,7 @@ export default class RomParser {
       hairSkin,
       specialHair,
       specialSkin,
+      predominantColor: this.readPredominantColor(teamIndex),
       flagColors,
       flagDesign: {
         grid: flagDesignData.grid,
@@ -592,6 +612,9 @@ export default class RomParser {
       }
       if (team.specialSkin !== undefined && changed('specialSkin')) {
         writeSpecialSkin(this, teamIndex, team.specialSkin);
+      }
+      if (Number.isInteger(team.predominantColor) && changed('predominantColor')) {
+        this.writePredominantColor(teamIndex, team.predominantColor);
       }
 
       // Flag Design (only the pixel grid matters; recompression is not lossless)

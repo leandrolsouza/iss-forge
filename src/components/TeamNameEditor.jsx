@@ -8,6 +8,7 @@ import {
   IN_GAME_NAME_WIDTH,
 } from '../rom/TeamNameTileFont';
 import { IconTeamName } from './Icons';
+import RestoreOriginalButton from './RestoreOriginalButton';
 
 const sanitizeMenu = (s) =>
   s
@@ -155,6 +156,7 @@ export default function TeamNameEditor({
           <div className="detail-section-title">{t('currentName')}</div>
           <div className="teamname-display">
             <div className="teamname-current">{teamNameText}</div>
+            <RestoreOriginalButton teamIndex={teamIndex} part="teamName" />
           </div>
         </div>
 

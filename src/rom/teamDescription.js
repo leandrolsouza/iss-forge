@@ -121,11 +121,66 @@ export function encodeTeamDescription({ title, titleColor, body }) {
 }
 
 /**
+ * The bytes the game draws for a team's description (up to FF or the 8th line),
+ * ending with FF. Keeps what the editor's text form drops: colour changes inside the
+ * body (some originals colour player names, e.g. "FE 30 Van Riet FE 20").
+ */
+export function readTeamDescriptionRaw(rom, teamIndex) {
+  let p = textAddress(rom, teamIndex);
+  const out = [];
+  let line = 0;
+  let col = 0;
+  while (line < D.LINES && out.length < 512) {
+    const c = rom.readByte(p);
+    if (c === D.END) break;
+    if (c === D.ATTR) {
+      out.push(c, rom.readByte(p + 1));
+      p += 2;
+      continue;
+    }
+    out.push(c);
+    p++;
+    if (c === D.NEWLINE || ++col >= D.COLUMNS) {
+      line++;
+      col = 0;
+    }
+  }
+  out.push(D.END);
+  return out;
+}
+
+const sameDescription = (a, b) =>
+  !!a &&
+  !!b &&
+  a.title === b.title &&
+  (a.titleColor & 0xff) === (b.titleColor & 0xff) &&
+  a.body === b.body;
+
+/**
+ * Bytes of every description. Re-encoding draws the same text, except for colour
+ * changes inside the body: unchanged descriptions that have them keep their exact
+ * bytes, the rest are encoded.
+ */
+function packDescriptions(rom, descriptions) {
+  return descriptions.map((d, i) => {
+    if (!sameDescription(d, readTeamDescription(rom, i))) return encodeTeamDescription(d);
+    const raw = readTeamDescriptionRaw(rom, i);
+    const colours = raw.filter((b, k) => b === D.ATTR && raw[k - 1] !== D.ATTR).length;
+    return colours > 2 ? raw : encodeTeamDescription(d);
+  });
+}
+
+/**
  * Re-pack all descriptions into the original area and rewrite the pointers.
+ * Unchanged descriptions with colours inside the body keep their exact bytes when
+ * everything still fits; otherwise all are encoded again, as before.
  * @param {object[]} descriptions - one per team (TEAMS order)
  */
 export function writeTeamDescriptions(rom, descriptions) {
-  const encoded = descriptions.map(encodeTeamDescription);
+  let encoded = packDescriptions(rom, descriptions);
+  if (encoded.reduce((n, b) => n + b.length, 0) > TEAM_DESC_CAPACITY) {
+    encoded = descriptions.map(encodeTeamDescription);
+  }
   const used = encoded.reduce((n, b) => n + b.length, 0);
   if (used > TEAM_DESC_CAPACITY) return { ok: false, used, capacity: TEAM_DESC_CAPACITY };
   let p = D.AREA_START;
@@ -148,8 +203,15 @@ export function writeTeamDescription(rom, teamIndex, desc) {
   return writeTeamDescriptions(rom, all);
 }
 
-export function measureTeamDescriptions(descriptions) {
-  return descriptions.reduce((n, d) => n + encodeTeamDescription(d).length, 0);
+/**
+ * Bytes the descriptions take; with `rom`, unchanged ones count with their exact
+ * bytes (like writeTeamDescriptions, falling back to re-encoding everything).
+ */
+export function measureTeamDescriptions(descriptions, rom = null) {
+  const encodedAll = descriptions.reduce((n, d) => n + encodeTeamDescription(d).length, 0);
+  if (!rom) return encodedAll;
+  const kept = packDescriptions(rom, descriptions).reduce((n, b) => n + b.length, 0);
+  return kept <= TEAM_DESC_CAPACITY ? kept : encodedAll;
 }
 
 /** Raw bytes of the description area + pointer table (exact undo/redo) */

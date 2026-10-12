@@ -43,21 +43,80 @@ let currentRomPath = null;
 let lastOpenDialogPath = null;
 let isRomModified = false;
 let forceQuit = false;
-let currentLocale = 'pt-BR';
+// UI language, sent by the renderer ('app:setLocale') and kept for the next start
+let currentLocale = settingsStore.get('language') || 'pt-BR';
 
-// Translations for native dialogs (main process has no access to React i18n)
-const dialogI18n = {
+// Strings of the native menus and dialogs (the main process has no access to React i18n)
+const MAIN_I18N = {
   'pt-BR': {
-    title: 'Alteracoes nao salvas',
-    message: 'A ROM possui alteracoes nao salvas. Deseja salvar antes de sair?',
-    buttons: ['Salvar', 'Nao Salvar', 'Cancelar'],
+    file: 'Arquivo',
+    openRom: 'Abrir ROM...',
+    saveRom: 'Salvar ROM',
+    saveRomAs: 'Salvar ROM Como...',
+    exportPatch: 'Exportar Patch (BPS/IPS)...',
+    testEmulator: 'Testar no Emulador',
+    quit: 'Sair',
+    edit: 'Editar',
+    undo: 'Desfazer',
+    redo: 'Refazer',
+    cut: 'Recortar',
+    copy: 'Copiar',
+    paste: 'Colar',
+    selectAll: 'Selecionar tudo',
+    view: 'Visualizar',
+    reload: 'Recarregar',
+    zoomReset: 'Zoom normal',
+    help: 'Ajuda',
+    about: 'Sobre o ISS Forge',
+    openRomTitle: 'Abrir ROM do ISS',
+    saveRomAsTitle: 'Salvar ROM Como',
+    snesRom: 'ROM SNES',
+    allFiles: 'Todos os Arquivos',
+    programs: 'Programas',
+    chooseEmulator: 'Escolher emulador',
+    exportPatchTitle: 'Exportar Patch {format}',
+    patchFiles: 'Patch {format}',
+    openRomError: 'Erro ao abrir ROM',
+    chooseFolder: 'Escolher pasta',
   },
   en: {
-    title: 'Unsaved Changes',
-    message: 'The ROM has unsaved changes. Do you want to save before quitting?',
-    buttons: ['Save', "Don't Save", 'Cancel'],
+    file: 'File',
+    openRom: 'Open ROM...',
+    saveRom: 'Save ROM',
+    saveRomAs: 'Save ROM As...',
+    exportPatch: 'Export Patch (BPS/IPS)...',
+    testEmulator: 'Test in Emulator',
+    quit: 'Quit',
+    edit: 'Edit',
+    undo: 'Undo',
+    redo: 'Redo',
+    cut: 'Cut',
+    copy: 'Copy',
+    paste: 'Paste',
+    selectAll: 'Select All',
+    view: 'View',
+    reload: 'Reload',
+    zoomReset: 'Reset Zoom',
+    help: 'Help',
+    about: 'About ISS Forge',
+    openRomTitle: 'Open ISS ROM',
+    saveRomAsTitle: 'Save ROM As',
+    snesRom: 'SNES ROM',
+    allFiles: 'All Files',
+    programs: 'Programs',
+    chooseEmulator: 'Choose emulator',
+    exportPatchTitle: 'Export {format} Patch',
+    patchFiles: '{format} Patch',
+    openRomError: 'Could not open the ROM',
+    chooseFolder: 'Choose folder',
   },
 };
+
+/** Native UI string in the current language */
+function tr(key, params = {}) {
+  const s = (MAIN_I18N[currentLocale] || MAIN_I18N['pt-BR'])[key] || MAIN_I18N['pt-BR'][key] || key;
+  return s.replace(/\{(\w+)\}/g, (m, k) => (params[k] !== undefined ? params[k] : m));
+}
 
 // --- Recent ROMs ---
 const MAX_RECENT_ROMS = 10;
@@ -168,77 +227,77 @@ function createWindow() {
 function createMenu() {
   const template = [
     {
-      label: 'Arquivo',
+      label: tr('file'),
       submenu: [
         {
-          label: 'Abrir ROM...',
+          label: tr('openRom'),
           accelerator: 'CmdOrCtrl+O',
           click: () => handleOpenRom(),
         },
         {
-          label: 'Salvar ROM',
+          label: tr('saveRom'),
           accelerator: 'CmdOrCtrl+S',
           click: () => mainWindow.webContents.send('menu:save'),
         },
         {
-          label: 'Salvar ROM Como...',
+          label: tr('saveRomAs'),
           accelerator: 'CmdOrCtrl+Shift+S',
           click: () => handleSaveRomAs(),
         },
         {
-          label: 'Exportar Patch (BPS/IPS)...',
+          label: tr('exportPatch'),
           accelerator: 'CmdOrCtrl+E',
           click: () => mainWindow.webContents.send('menu:exportPatch'),
         },
         {
-          label: 'Testar no Emulador',
+          label: tr('testEmulator'),
           accelerator: 'F5',
           click: () => mainWindow.webContents.send('menu:testEmulator'),
         },
         { type: 'separator' },
         {
-          label: 'Sair',
+          label: tr('quit'),
           accelerator: 'CmdOrCtrl+Q',
           click: () => app.quit(),
         },
       ],
     },
     {
-      label: 'Editar',
+      label: tr('edit'),
       submenu: [
         {
-          label: 'Desfazer',
+          label: tr('undo'),
           accelerator: 'CmdOrCtrl+Z',
           click: () => mainWindow.webContents.send('menu:undo'),
         },
         {
-          label: 'Refazer',
+          label: tr('redo'),
           accelerator: 'CmdOrCtrl+Y',
           click: () => mainWindow.webContents.send('menu:redo'),
         },
         { type: 'separator' },
-        { label: 'Recortar', accelerator: 'CmdOrCtrl+X', role: 'cut' },
-        { label: 'Copiar', accelerator: 'CmdOrCtrl+C', role: 'copy' },
-        { label: 'Colar', accelerator: 'CmdOrCtrl+V', role: 'paste' },
-        { label: 'Selecionar tudo', accelerator: 'CmdOrCtrl+A', role: 'selectAll' },
+        { label: tr('cut'), accelerator: 'CmdOrCtrl+X', role: 'cut' },
+        { label: tr('copy'), accelerator: 'CmdOrCtrl+C', role: 'copy' },
+        { label: tr('paste'), accelerator: 'CmdOrCtrl+V', role: 'paste' },
+        { label: tr('selectAll'), accelerator: 'CmdOrCtrl+A', role: 'selectAll' },
       ],
     },
     {
-      label: 'Visualizar',
+      label: tr('view'),
       submenu: [
-        { label: 'Recarregar', accelerator: 'CmdOrCtrl+R', role: 'reload' },
+        { label: tr('reload'), accelerator: 'CmdOrCtrl+R', role: 'reload' },
         { label: 'DevTools', accelerator: 'F12', role: 'toggleDevTools' },
         { type: 'separator' },
         { label: 'Zoom +', accelerator: 'CmdOrCtrl+=', role: 'zoomIn' },
         { label: 'Zoom -', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
-        { label: 'Zoom Reset', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
+        { label: tr('zoomReset'), accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
       ],
     },
     {
-      label: 'Ajuda',
+      label: tr('help'),
       submenu: [
         {
-          label: 'Sobre ISS Forge',
+          label: tr('about'),
           click: () => {
             mainWindow.webContents.send('menu:about');
           },
@@ -253,11 +312,11 @@ function createMenu() {
 
 async function handleOpenRom() {
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Abrir ROM do ISS',
+    title: tr('openRomTitle'),
     defaultPath: lastOpenDialogPath || app.getPath('home'),
     filters: [
-      { name: 'ROM SNES', extensions: ['smc', 'sfc', 'bin'] },
-      { name: 'Todos os Arquivos', extensions: ['*'] },
+      { name: tr('snesRom'), extensions: ['smc', 'sfc', 'bin'] },
+      { name: tr('allFiles'), extensions: ['*'] },
     ],
     properties: ['openFile'],
   });
@@ -285,17 +344,17 @@ function loadAndSendRom(filePath) {
       data: Array.from(buffer),
     });
   } catch (err) {
-    dialog.showErrorBox('Erro ao abrir ROM', err.message);
+    dialog.showErrorBox(tr('openRomError'), err.message);
   }
 }
 
 async function handleSaveRomAs() {
   const result = await dialog.showSaveDialog(mainWindow, {
-    title: 'Salvar ROM Como',
+    title: tr('saveRomAsTitle'),
     defaultPath: currentRomPath || 'ISS_Modified.smc',
     filters: [
-      { name: 'ROM SNES', extensions: ['smc', 'sfc'] },
-      { name: 'Todos os Arquivos', extensions: ['*'] },
+      { name: tr('snesRom'), extensions: ['smc', 'sfc'] },
+      { name: tr('allFiles'), extensions: ['*'] },
     ],
   });
 
@@ -313,9 +372,13 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
   try {
     const savePath = filePath || currentRomPath;
     if (!savePath) {
-      return { success: false, error: 'Nenhum caminho definido para salvar.' };
+      return { success: false, error: 'noSavePath' };
     }
     const buffer = Buffer.from(data);
+    // Settings > Editor: keep the previous version of the file as <name>.bak
+    if (settingsStore.get('autoBackupBeforeSave') && fs.existsSync(savePath)) {
+      fs.copyFileSync(savePath, `${savePath}.bak`);
+    }
     fs.writeFileSync(savePath, buffer);
     currentRomPath = savePath;
     return { success: true, path: savePath };
@@ -372,15 +435,15 @@ ipcMain.handle('emulator:test', async (event, { data, extension }) => {
 
 ipcMain.handle('emulator:select', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Escolher emulador',
+    title: tr('chooseEmulator'),
     properties: ['openFile'],
     filters:
       process.platform === 'win32'
         ? [
-            { name: 'Programas', extensions: ['exe'] },
-            { name: 'Todos os Arquivos', extensions: ['*'] },
+            { name: tr('programs'), extensions: ['exe'] },
+            { name: tr('allFiles'), extensions: ['*'] },
           ]
-        : [{ name: 'Todos os Arquivos', extensions: ['*'] }],
+        : [{ name: tr('allFiles'), extensions: ['*'] }],
   });
   if (result.canceled || !result.filePaths.length) return { success: false };
   settingsStore.set('emulatorPath', result.filePaths[0]);
@@ -390,13 +453,20 @@ ipcMain.handle('emulator:select', async () => {
 ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
   try {
     const ext = format === 'ips' ? 'ips' : 'bps';
-    const defaultDir = currentRomPath ? path.dirname(currentRomPath) : app.getPath('documents');
+    // Settings > Editor: default export folder, else next to the ROM
+    const exportDir = settingsStore.get('defaultExportPath');
+    const defaultDir =
+      exportDir && fs.existsSync(exportDir)
+        ? exportDir
+        : currentRomPath
+          ? path.dirname(currentRomPath)
+          : app.getPath('documents');
     const result = await dialog.showSaveDialog(mainWindow, {
-      title: ext === 'ips' ? 'Exportar Patch IPS' : 'Exportar Patch BPS',
+      title: tr('exportPatchTitle', { format: ext.toUpperCase() }),
       defaultPath: path.join(defaultDir, defaultName || `ISS_Forge.${ext}`),
       filters: [
-        { name: `Patch ${ext.toUpperCase()}`, extensions: [ext] },
-        { name: 'Todos os Arquivos', extensions: ['*'] },
+        { name: tr('patchFiles', { format: ext.toUpperCase() }), extensions: [ext] },
+        { name: tr('allFiles'), extensions: ['*'] },
       ],
     });
     if (result.canceled || !result.filePath) {
@@ -416,7 +486,10 @@ ipcMain.on('rom:modifiedState', (event, isModified) => {
 
 // Track locale from renderer (for native dialog i18n)
 ipcMain.on('app:setLocale', (event, locale) => {
+  if (!MAIN_I18N[locale] || locale === currentLocale) return;
   currentLocale = locale;
+  settingsStore.set('language', locale);
+  createMenu();
 });
 
 // Keep the native window controls in the theme colours
@@ -434,7 +507,7 @@ ipcMain.on('app:setTheme', (event, theme) => {
 // choice: 'save' | 'discard' | 'cancel'
 ipcMain.on('app:closeResponse', (event, choice) => {
   if (choice === 'save') {
-    mainWindow.webContents.send('menu:save');
+    mainWindow.webContents.send('menu:save', { fromClose: true });
     ipcMain.once('rom:saveComplete', () => {
       forceQuit = true;
       mainWindow.close();
@@ -469,7 +542,7 @@ ipcMain.handle('recent:open', (event, filePath) => {
   // File no longer exists — remove from recents
   const recents = loadRecentRoms().filter((r) => r.path !== filePath);
   saveRecentRoms(recents);
-  return { success: false, error: 'Arquivo nao encontrado.' };
+  return { success: false, error: 'fileNotFound' };
 });
 
 // --- Auto-Save / Backup ---
@@ -570,6 +643,7 @@ ipcMain.handle('settings:setAll', (event, settings) => {
 
 ipcMain.handle('settings:selectExportPath', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
+    title: tr('chooseFolder'),
     properties: ['openDirectory'],
   });
   if (!result.canceled && result.filePaths.length > 0) {
@@ -604,7 +678,8 @@ function saveAiSettings(settings) {
     if (settings.endpoint !== undefined) settingsStore.set('aiEndpoint', settings.endpoint);
     if (settings.model !== undefined) settingsStore.set('aiModel', settings.model);
     if (settings.apiKey !== undefined) settingsStore.set('aiApiKey', settings.apiKey);
-    if (settings.temperature !== undefined) settingsStore.set('aiTemperature', settings.temperature);
+    if (settings.temperature !== undefined)
+      settingsStore.set('aiTemperature', settings.temperature);
     if (settings.maxTokens !== undefined) settingsStore.set('aiMaxTokens', settings.maxTokens);
     return { success: true };
   } catch (err) {
@@ -726,7 +801,10 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
     };
   } catch (err) {
     if (err.name === 'TimeoutError') {
-      return { success: false, error: `Request timed out (2 min). Is the ${provider.id} API reachable?` };
+      return {
+        success: false,
+        error: `Request timed out (2 min). Is the ${provider.id} API reachable?`,
+      };
     }
     if (err.code === 'ECONNREFUSED') {
       return {
@@ -773,7 +851,10 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
       if (!response.ok) {
         const errorText = await response.text().catch(() => '');
         console.log('[Bedrock Stream] Error:', errorText);
-        sender.send('ai:stream-error', `API error ${response.status}: ${errorText || response.statusText}`);
+        sender.send(
+          'ai:stream-error',
+          `API error ${response.status}: ${errorText || response.statusText}`,
+        );
         return { success: false };
       }
 
@@ -788,7 +869,16 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
-          console.log('[Bedrock Stream] Done. chunks:', chunkCount, 'parsed:', parsedCount, 'errors:', errorCount, 'sent:', sentChunks);
+          console.log(
+            '[Bedrock Stream] Done. chunks:',
+            chunkCount,
+            'parsed:',
+            parsedCount,
+            'errors:',
+            errorCount,
+            'sent:',
+            sentChunks,
+          );
           break;
         }
 
@@ -828,7 +918,12 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
             const evt = JSON.parse(jsonStr);
             parsedCount++;
             if (parsedCount <= 3) {
-              console.log('[Bedrock Stream] Event keys:', Object.keys(evt), 'sample:', JSON.stringify(evt).substring(0, 150));
+              console.log(
+                '[Bedrock Stream] Event keys:',
+                Object.keys(evt),
+                'sample:',
+                JSON.stringify(evt).substring(0, 150),
+              );
             }
 
             // Bedrock HTTP stream: flat structure {delta:{text}, contentBlockIndex} or {stopReason}
@@ -836,14 +931,22 @@ ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, setti
               sentChunks++;
               sender.send('ai:stream-chunk', evt.delta.text);
             } else if (evt.stopReason || evt.messageStop) {
-              console.log('[Bedrock Stream] messageStop. parsed:', parsedCount, 'sent:', sentChunks);
+              console.log(
+                '[Bedrock Stream] messageStop. parsed:',
+                parsedCount,
+                'sent:',
+                sentChunks,
+              );
               sender.send('ai:stream-done');
               return { success: true };
             }
           } catch (_e) {
             errorCount++;
             if (errorCount <= 3) {
-              console.log('[Bedrock Stream] Parse error on frame, payload preview:', jsonStr.substring(0, 80));
+              console.log(
+                '[Bedrock Stream] Parse error on frame, payload preview:',
+                jsonStr.substring(0, 80),
+              );
             }
           }
         }

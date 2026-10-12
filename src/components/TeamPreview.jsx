@@ -5,6 +5,8 @@ import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { IconOverview } from './Icons';
+import FlagCanvas from './FlagCanvas';
+import PlayerKitPreview from './PlayerKitPreview';
 
 export default function TeamPreview({ team, teamIndex }) {
   const { t, lang } = useI18n();
@@ -151,6 +153,23 @@ export default function TeamPreview({ team, teamIndex }) {
               {team.teamNameText || team.name}
             </div>
           </div>
+        </div>
+
+        {/* Flag and kits drawn with the game's graphics */}
+        <div className="preview-kits">
+          <FlagCanvas
+            grid={team.flagDesign?.grid}
+            colors={team.flagColors}
+            scale={4}
+            label={t('flagPreview')}
+          />
+          <PlayerKitPreview
+            team={team}
+            teamIndex={teamIndex}
+            kits={['home', 'away', 'goalkeeper']}
+            views={['front']}
+            scale={2}
+          />
         </div>
 
         {/* Player Cards Grid */}

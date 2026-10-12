@@ -1,0 +1,95 @@
+/* ============================================================
+   PLAYER / FLAG PREVIEWS (drawn from the ROM graphics)
+   ============================================================ */
+
+.player-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.player-preview-kit {
+  display: flex;
+  gap: 6px;
+}
+
+.player-preview-item {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.player-preview-item figcaption {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.pixel-canvas {
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 4px;
+}
+
+.player-preview-canvas,
+.flag-preview-canvas {
+  image-rendering: pixelated;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+}
+
+.flag-preview-canvas {
+  background: #1a1a2e;
+}
+
+/* Overview tab: flag + the three kits */
+.preview-kits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.preview-kits .player-preview {
+  margin-top: 0;
+}
+
+.kit-preview:has(.flag-preview-canvas) {
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.kit-preview .player-preview {
+  margin-top: 0;
+}
+
+.kit-preview-section > .teamname-hint {
+  margin-bottom: 12px;
+}
+
+/* Data the game shares with other teams (goalkeeper of Super Star, flag blocks...) */
+.shared-data-warning {
+  margin: 6px 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-warning);
+}
+
+.kit-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.kit-toolbar > .kit-selector {
+  margin: 0;
+}
+
+.predominant-field select {
+  max-width: 260px;
+}

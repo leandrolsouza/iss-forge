@@ -92,6 +92,21 @@ function getUniqueBlocks(entries) {
   return blocks;
 }
 
+/**
+ * Teams that draw their flag from the same compressed blocks as `teamIndex` (the
+ * original ROM shares 4 groups: ITA+BEL, GER+HOL+AUT+RUS, FRA+IRL, ENG+DEN+SWE+NOR).
+ * @returns {number[]} the other teams (TEAMS indexes)
+ */
+export function flagSharedWith(rom, teamIndex) {
+  const entries = readAllFlagAddresses(rom);
+  const me = entries[teamIndex];
+  if (!me) return [];
+  const mine = new Set([me.topAddr, me.bottomAddr]);
+  return entries
+    .filter((e) => e.teamIndex !== teamIndex && (mine.has(e.topAddr) || mine.has(e.bottomAddr)))
+    .map((e) => e.teamIndex);
+}
+
 export function writeFlagDesign(rom, teamIndex, grid) {
   try {
     const ordinal = FLAG_DESIGN_ORDINALS[teamIndex];
@@ -114,6 +129,19 @@ export function writeFlagDesign(rom, teamIndex, grid) {
     // Compress with full LZ algorithm
     const topCompressed = konamiCompress(topTiles, 1);
     const bottomCompressed = konamiCompress(bottomTiles, 1);
+
+    // Blocks shared with other teams: give this team its own copy at the end of the
+    // used area instead of changing the other flags too
+    if (flagSharedWith(rom, teamIndex).length) {
+      const blocks = getUniqueBlocks(readAllFlagAddresses(rom));
+      const end = Math.max(...blocks.map((b) => b.address + b.size));
+      if (end + topCompressed.length + bottomCompressed.length - 1 > MAXIMUM_ADDRESS) return false;
+      rom.writeBytes(end, topCompressed);
+      rom.writeBytes(end + topCompressed.length, bottomCompressed);
+      writeFlagPointer(rom, ptrOffset, end);
+      writeFlagPointer(rom, ptrOffset + 2, end + topCompressed.length);
+      return true;
+    }
 
     const newTopSize = topCompressed.length;
     const newBottomSize = bottomCompressed.length;

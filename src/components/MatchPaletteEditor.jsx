@@ -13,6 +13,8 @@ import {
 } from '../rom/palettes';
 import { IconPitch } from './Icons';
 import { ColorSwatch, SwatchRow } from './ColorSwatch';
+import PixelCanvas from './PixelCanvas';
+import { renderPitch } from '../rom/pitchPreview';
 import '../styles/match-palettes.css';
 
 const WEATHERS = ['sunny', 'rain', 'snow'];
@@ -39,24 +41,17 @@ const REFEREE_PRESETS = [
   { id: 'pink', kit: { shirt: '#f070c0', shorts: '#202020', socks: '#202020' } },
 ];
 
-function PitchPreview({ grass, detail }) {
-  // Approximation: alternating mowing stripes (first colour of each grass row) + white lines
-  const a = rawToHex(grass[0]);
-  const b = rawToHex(grass[15]);
-  const line = rawToHex(grass[7]);
-  const extra = rawToHex(detail[0]);
+/** The grass with the game's own tiles and the edited colours (lines drawn as a plan) */
+function PitchPreview({ rom, grass, detail, label }) {
+  const image = useMemo(
+    () => (rom ? renderPitch(rom, grass, { width: 256, height: 160 }) : null),
+    [rom, grass],
+  );
   return (
-    <svg className="mp-pitch" viewBox="0 0 200 130" aria-hidden="true">
-      {Array.from({ length: 10 }).map((_, i) => (
-        <rect key={i} x={i * 20} y={0} width={20} height={130} fill={i % 2 ? a : b} />
-      ))}
-      <rect x={6} y={6} width={188} height={118} fill="none" stroke={line} strokeWidth={1.5} />
-      <line x1={100} y1={6} x2={100} y2={124} stroke={line} strokeWidth={1.5} />
-      <circle cx={100} cy={65} r={18} fill="none" stroke={line} strokeWidth={1.5} />
-      <rect x={6} y={38} width={26} height={54} fill="none" stroke={line} strokeWidth={1.5} />
-      <rect x={168} y={38} width={26} height={54} fill="none" stroke={line} strokeWidth={1.5} />
-      <rect x={0} y={124} width={200} height={6} fill={extra} />
-    </svg>
+    <div className="mp-pitch-wrap">
+      <PixelCanvas image={image} scale={1} label={label} className="mp-pitch-canvas" />
+      <div className="mp-pitch-detail" style={{ background: rawToHex(detail[0]) }} />
+    </div>
   );
 }
 
@@ -194,9 +189,15 @@ export default function MatchPaletteEditor() {
             </div>
           </div>
           <p className="mp-hint">{t('mpPitchHelp')}</p>
+          <p className="mp-hint">{t('mpPitchPreviewHint')}</p>
 
           <div className="mp-pitch-row">
-            <PitchPreview grass={grass} detail={detail} />
+            <PitchPreview
+              rom={romParser}
+              grass={grass}
+              detail={detail}
+              label={t('mpPitchPreview')}
+            />
             <div className="mp-pitch-colors">
               <SwatchRow
                 label={t('mpGrassRow1')}

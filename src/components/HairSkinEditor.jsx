@@ -4,6 +4,10 @@ import { HAIR_SKIN_TEMPLATES } from '../rom/hairSkinTemplates';
 import { SPECIAL_HAIR, SPECIAL_SKIN } from '../rom/constants';
 import { IconHairSkin } from './Icons';
 import ColorEditorCard from './ColorEditorCard';
+import PlayerKitPreview from './PlayerKitPreview';
+import RestoreOriginalButton from './RestoreOriginalButton';
+import { useRom } from '../context/RomContext';
+import { sharedKeeperTeams } from '../rom/readers/UniformReader';
 
 const TEMPLATE_I18N_KEYS = {
   european_light: 'templateEuropeanLight',
@@ -37,6 +41,9 @@ export default function HairSkinEditor({
   onSpecialHairSkinChange,
 }) {
   const { t } = useI18n();
+  const { teams } = useRom();
+  // Super Star has no goalkeeper of its own: it uses Belgium's
+  const keeperPartners = sharedKeeperTeams(teamIndex).map((i) => teams[i]?.name);
   const [templateOpen, setTemplateOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -100,10 +107,13 @@ export default function HairSkinEditor({
     <div className="editor-panel uniform-editor">
       <div className="editor-header">
         <div className="editor-header-title">
-          <span className="editor-icon"><IconHairSkin size={18} /></span>
+          <span className="editor-icon">
+            <IconHairSkin size={18} />
+          </span>
           <h2>{team.name}</h2>
           <span className="editor-subtitle">- {t('hairAndSkin')}</span>
         </div>
+        <RestoreOriginalButton teamIndex={teamIndex} part="hairSkin" />
         <div className="template-dropdown-container" ref={dropdownRef}>
           <button
             className="template-btn"
@@ -146,6 +156,12 @@ export default function HairSkinEditor({
       </div>
 
       <div className="uniform-editor-body">
+        {/* Player and goalkeeper drawn with the game's sprites */}
+        <div className="kit-preview-section">
+          <div className="detail-section-title">{t('preview')}</div>
+          <PlayerKitPreview team={team} teamIndex={teamIndex} kits={['home', 'goalkeeper']} />
+        </div>
+
         <div className="hair-skin-special-bar">
           <h3 className="hair-skin-section-title">{t('hairSkinSpecialPlayers')}</h3>
           <div className="special-bar-content">
@@ -197,6 +213,11 @@ export default function HairSkinEditor({
           {keeperData && (
             <div className="hair-skin-column">
               <h3 className="hair-skin-section-title">{t('hairSkinGoalkeeper')}</h3>
+              {keeperPartners.length > 0 && (
+                <p className="shared-data-warning">
+                  {t('keeperShared', { teams: keeperPartners.join(', ') })}
+                </p>
+              )}
               {renderColorRow(t('hairColor'), 'hair', keeperData.hair, handleKeeperChange)}
               {renderColorRow(t('skinColor'), 'skin', keeperData.skin, handleKeeperChange)}
             </div>

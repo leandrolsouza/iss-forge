@@ -77,10 +77,25 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
 
 - **Tile extra do quadro** (`$83:D472`): depois dos 2 DMAs, a word seguinte do registro escolhe 1 tile
   (32 bytes) carregado no tile 7 da segunda linha (`0x37` / `0x57`): 0 = tile vazio (`$82:AB27`);
-  positivo = tabela + 3 × ordinal do time (detalhe por time, ex.: cabelo do Brasil); negativo = tabela +
+  positivo = tabela + 3 × ordinal do time (detalhe por time); negativo = tabela +
   deslocamento do jogador (0 à esquerda, `0x2D` à direita, com `$56,X` = 0). Peças que usam tiles além do
   que o quadro carrega mostram o que outro quadro deixou na VRAM: o editor descarta esses quadros (864
   sobram).
+- **Escudo no peito (out/2026):** nos quadros de frente o detalhe por time é o escudo da camisa (águia da
+  Alemanha, distintivo do Brasil, listras da Argentina). A peça tem o bit 5 (linhas 12-13) e usa as cores
+  12-15. Na partida essas 4 cores são as **cores da bandeira** do time: o CGRAM de 3 dumps
+  (`emu-out/match.wram`, `walesmatch.wram`, `scotmatch.wram`) bate com as entradas de `0x2DD91`, e a
+  tabela `0x9486` (logo depois dos ponteiros das bandeiras; words do banco `$85` por ordinal) aponta para
+  `[0x0007] [4 cores]` de cada time. A tela inicial não carrega essas cores (preenche `0x739C`), então lá
+  o escudo sai cinza. **Conferido no emulador (out/2026):** com as 4 cores da Alemanha trocadas por rosa
+  (`0x2DD91`), o escudo da camisa ficou rosa na demonstração (cor 12 só no peito; as cores 13-15 também
+  pintam a bandeira do placar). A prévia do editor (`playerPreview.js`) usa as cores da bandeira.
+- **Goleiros:** os registros `$82:E3EA`-`$82:F02A` são quadros de goleiro (8 bytes, sem a word do tile
+  extra; o editor lê a word seguinte mesmo assim, mas nenhum dos quadros usados nas prévias usa o tile
+  `0x17`). Os pixels usam as cores 1-11 da paleta de goleiro (1 cabelo, 2-4 pele, 5-9 camisa e meião,
+  10 calção, 11 sombra).
+- **Quadros das prévias** (`PREVIEW_POSES` em `playerPreview.js`): `$82:C203` (de pé, de frente),
+  `$82:C22A` (de costas), `$82:E41A` e `$82:E3EA` (goleiro de frente e de costas).
 - **Uniforme:** `$80:ADB3` compara a cor predominante dos dois times (`$81:8DB2[ordinal]`); se for igual, o
   jogador da direita (time 2) usa o segundo uniforme (Itália x França, Alemanha x Inglaterra, Brasil x
   Brasil...).

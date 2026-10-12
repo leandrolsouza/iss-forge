@@ -54,6 +54,19 @@ export function getKitOffset(teamId, kitType) {
   return null;
 }
 
+/**
+ * Other teams whose goalkeeper kit (and goalkeeper hair/skin) is stored at the same
+ * place: Super Star has none of its own and uses Belgium's.
+ * @returns {number[]} TEAMS indexes
+ */
+export function sharedKeeperTeams(teamIndex) {
+  const off = getKitOffset(TEAMS[teamIndex]?.id, 'goalkeeper');
+  if (off === null) return [];
+  return TEAMS.map((t, i) => i).filter(
+    (i) => i !== teamIndex && getKitOffset(TEAMS[i].id, 'goalkeeper') === off,
+  );
+}
+
 export function getHairSkinOffset(teamId, kitType) {
   const HS = HAIR_SKIN_COLORS;
   const pos1 = UNIFORM_RANGE1_TEAMS.indexOf(teamId);

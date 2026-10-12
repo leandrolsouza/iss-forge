@@ -23,6 +23,7 @@ import { readPoses, writePose, playerSprites, listPoseFrames } from './titlePlay
 import { readLogoSprites, writeLogo, restoreOriginalLogo, isOriginalLogo } from './titleLogo';
 import { pressStartAt, readTitleTexts } from './titleScreenText';
 import { backgroundState, writeBackground } from './titleBackground';
+import { OBJ_BASE, tilePixel, setPixel, drawSprites as drawObj } from './snesRender';
 
 const T = TITLE_SCREEN;
 const byId = Object.fromEntries(T.COLORS.map((c) => [c.id, c]));
@@ -220,7 +221,6 @@ export function restoreTitleScreenBytes(rom, snapshot) {
 
 const BG1 = { map: 0x1000 * 2, chars: 0x2000 * 2, bpp: 4 };
 const BG3 = { map: 0x5c00 * 2, chars: 0x5000 * 2, bpp: 2 };
-const OBJ_BASE = 0x6000 * 2;
 const WIDTH = 256;
 const HEIGHT = 224;
 
@@ -269,18 +269,6 @@ function buildVram(rom) {
   });
   gfxCache = { key, rawKey, vram };
   return vram;
-}
-
-/** Pixel (colour index) of a tile row */
-function tilePixel(vram, base, bpp, x, y) {
-  let c = 0;
-  for (let p = 0; p < bpp; p += 2) {
-    const lo = vram[(base + y * 2 + p * 8) & 0xffff];
-    const hi = vram[(base + y * 2 + p * 8 + 1) & 0xffff];
-    c |= ((lo >> (7 - x)) & 1) << p;
-    c |= ((hi >> (7 - x)) & 1) << (p + 1);
-  }
-  return c;
 }
 
 /** 256-colour CGRAM of the screen for the given state */
@@ -387,30 +375,7 @@ function drawBg(img, cg, vram, words, bg, palSize, haze = false, priority = null
 }
 
 function drawSprites(img, cg, vram, sprites) {
-  sprites.forEach(([sx, sy, tile, big, pal, hf, vf]) => {
-    const n = big ? 2 : 1;
-    for (let ty = 0; ty < n; ty++)
-      for (let tx = 0; tx < n; tx++) {
-        const t = tile + (hf ? n - 1 - tx : tx) + (vf ? n - 1 - ty : ty) * 16;
-        const base = (OBJ_BASE + (t & 0x1ff) * 32) & 0xffff;
-        for (let y = 0; y < 8; y++)
-          for (let x = 0; x < 8; x++) {
-            const c = tilePixel(vram, base, 4, hf ? 7 - x : x, vf ? 7 - y : y);
-            if (c) setPixel(img, sx + tx * 8 + x, sy + ty * 8 + y, cg[128 + pal * 16 + c]);
-          }
-      }
-  });
-}
-
-/** img: { data, width, height, clip?: [x0, y0, x1, y1] } */
-function setPixel(img, x, y, raw) {
-  const [x0, y0, x1, y1] = img.clip || [0, 0, img.width, img.height];
-  if (x < x0 || y < y0 || x >= x1 || y >= y1) return;
-  const i = (y * img.width + x) * 4;
-  img.data[i] = (raw & 31) << 3;
-  img.data[i + 1] = ((raw >> 5) & 31) << 3;
-  img.data[i + 2] = ((raw >> 10) & 31) << 3;
-  img.data[i + 3] = 255;
+  drawObj(img, cg, vram, sprites, { objBase: OBJ_BASE });
 }
 
 /**

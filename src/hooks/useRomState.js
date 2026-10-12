@@ -75,8 +75,10 @@ export default function useRomState({ toast, t } = {}) {
           const validation = parser.validate();
 
           if (!validation.isValid) {
-            setStatusMessage(`Error: ${validation.message}`);
-            toast?.error(t('toastRomInvalid', { file: fileName }), { detail: validation.message });
+            setStatusMessage({ key: validation.messageKey });
+            toast?.error(t('toastRomInvalid', { file: fileName }), {
+              detail: t(validation.messageKey),
+            });
             setLoading(false);
             return;
           }
@@ -86,7 +88,13 @@ export default function useRomState({ toast, t } = {}) {
           setRomParser(parser);
           romParserRef.current = parser;
           setRomInfo({ fileName, ...validation, restored });
-          setStatusMessage(validation.message + ` - ${fileName}`);
+          setStatusMessage({
+            key: 'statusRomLoaded',
+            params: {
+              status: { key: validation.messageKey, params: validation.messageParams },
+              file: fileName,
+            },
+          });
           // a restored backup holds unsaved edits: it matches no file on disk
           history.clearHistory({ saved: !restored });
           setModified(restored);
@@ -108,7 +116,7 @@ export default function useRomState({ toast, t } = {}) {
           }
         } catch (err) {
           console.error('[ROM] Failed to load:', err);
-          setStatusMessage(`Error: ${err.message}`);
+          setStatusMessage({ key: 'statusError', params: { error: err.message } });
           toast?.error(t('toastRomLoadFailed', { file: fileName }), { detail: err.message });
         } finally {
           setLoading(false);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TEAMS, SHOOTING_VALUES } from '../rom/constants';
+import { getPositionLabel } from '../rom/formation';
 import { useI18n } from '../i18n';
 import { IconCompare } from './Icons';
 
@@ -17,7 +17,7 @@ export default function TeamCompare({ teams }) {
 
   const calcAvg = (team, field) => {
     if (!team?.players) return 0;
-    return team.players.reduce((s, p) => s + (p[field] || 0), 0) / 15;
+    return team.players.reduce((s, p) => s + (p[field] || 0), 0) / (team.players.length || 1);
   };
 
   const stats = [
@@ -25,7 +25,17 @@ export default function TeamCompare({ teams }) {
     { key: 'speed', label: t('avgSpeed'), max: 16, color: 'var(--stat-speed)' },
     { key: 'stamina', label: t('avgStamina'), max: 16, color: 'var(--stat-stamina)' },
     { key: 'technique', label: t('avgTechnique'), max: 15, color: 'var(--stat-technique)' },
+    { key: 'attack', label: t('statAttackLong'), max: 16, color: 'var(--stat-shooting)' },
+    { key: 'defense', label: t('statDefenseLong'), max: 16, color: 'var(--stat-stamina)' },
   ];
+
+  // Players are paired by squad slot: slot N plays formation position N (12-15 = bench)
+  const posOf = (team, idx) =>
+    idx >= 11
+      ? 'SUB'
+      : team?.formation?.slots?.[idx]
+        ? getPositionLabel(team.formation.slots[idx])
+        : '';
 
   return (
     <div className="editor-panel team-compare-panel">
@@ -130,13 +140,23 @@ export default function TeamCompare({ teams }) {
             return (
               <div key={idx} className="compare-player-row">
                 <div className="compare-player left">
-                  <span className="compare-player-name">{pA.name}</span>
+                  <span className="compare-player-name">
+                    #{pA.number} {pA.name}
+                  </span>
                   <span className="compare-player-total">{totalA}</span>
                 </div>
-                <div className="compare-player-idx">{idx + 1}</div>
+                <div
+                  className="compare-player-idx"
+                  title={`${posOf(teamA, idx)} / ${posOf(teamB, idx)}`}
+                >
+                  {idx + 1}
+                  <span className="compare-player-pos">{posOf(teamA, idx)}</span>
+                </div>
                 <div className="compare-player right">
                   <span className="compare-player-total">{totalB}</span>
-                  <span className="compare-player-name">{pB.name}</span>
+                  <span className="compare-player-name">
+                    {pB.name} #{pB.number}
+                  </span>
                 </div>
               </div>
             );

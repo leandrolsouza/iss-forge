@@ -376,11 +376,11 @@ export default function SettingsPage() {
                         setTestStatus('success');
                       } else {
                         setTestStatus('error');
-                        setTestError(result.error || 'Unknown error');
+                        setTestError(result.error || t('unknownError'));
                       }
                     } catch (err) {
                       setTestStatus('error');
-                      setTestError(err.message || 'Connection failed');
+                      setTestError(err.message || t('connectionFailed'));
                     }
                   }}
                 >

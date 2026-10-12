@@ -5,6 +5,8 @@ import { NIBBLE_STATS, INDEX_STATS, clampStat, clampIndex } from '../rom/playerS
 import { useI18n } from '../i18n';
 import { IconPlayers } from './Icons';
 import DraftInput from './DraftInput';
+import RestoreOriginalButton from './RestoreOriginalButton';
+import { duplicateNumbers } from '../utils/validation';
 
 /**
  * Editable attribute columns, in table order.
@@ -52,6 +54,8 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
   }
 
   const player = team.players[selectedPlayer];
+  // Shirt numbers used twice (the game shows them as they are, but it confuses the line-up)
+  const dupNumbers = duplicateNumbers(team.players);
 
   // Text/number fields commit on Enter/blur (see DraftInput): one undo step per edit
   const sanitizeName = (value) => value.slice(0, 8).replace(/[^A-Za-z0-9 .'"/]/g, '');
@@ -178,18 +182,32 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                     <td className="col-num">
                       <DraftInput
                         type="number"
-                        className="input-mini"
+                        className={`input-mini ${dupNumbers.has(p.number) ? 'input-invalid' : ''}`}
                         value={p.number}
                         min={1}
                         max={16}
                         aria-label={`${t('num')} - ${p.name || idx + 1}`}
+                        aria-invalid={dupNumbers.has(p.number) || undefined}
+                        title={
+                          dupNumbers.has(p.number)
+                            ? t('valDuplicateNumber', {
+                                number: p.number,
+                                players: dupNumbers
+                                  .get(p.number)
+                                  .map((i) => i + 1)
+                                  .join(', '),
+                              })
+                            : undefined
+                        }
                         onCommit={(v) => handleNumberChange(idx, v)}
                       />
                     </td>
                     <td className="col-name">
                       <DraftInput
                         type="text"
-                        className="input-name"
+                        className={`input-name ${p.name?.trim() ? '' : 'input-invalid'}`}
+                        title={p.name?.trim() ? undefined : t('valNoName', { n: idx + 1 })}
+                        aria-invalid={!p.name?.trim() || undefined}
                         value={p.name}
                         maxLength={8}
                         spellCheck={false}
@@ -288,6 +306,12 @@ export default function PlayerEditor({ team, teamIndex, onPlayerChange }) {
                   <div className="detail-player-name">{player.name || '---'}</div>
                   <div className="detail-player-number">#{player.number}</div>
                 </div>
+                <RestoreOriginalButton
+                  teamIndex={teamIndex}
+                  part={`player:${selectedPlayer}`}
+                  label={t('restorePlayer')}
+                  className="detail-restore-btn"
+                />
 
                 <div className="detail-section">
                   <div className="detail-section-title-row">

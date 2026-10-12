@@ -28,6 +28,7 @@ const MAX_TOASTS = 4;
 let nextId = 1;
 
 export function ToastProvider({ children }) {
+  const { t } = useI18n();
   const [toasts, setToasts] = useState([]);
 
   const dismiss = useCallback((id) => setToasts((list) => list.filter((x) => x.id !== id)), []);
@@ -62,7 +63,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="toast-stack" role="region" aria-live="polite" aria-label="Notifications">
+      <div className="toast-stack" role="region" aria-live="polite" aria-label={t('notifications')}>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onDismiss={() => dismiss(toast.id)} />
         ))}

@@ -4,8 +4,7 @@
  * 1. Positional tile text (selection menu)
  * 2. Compressed tile graphics (in-game HUD) — with displacement to P17000 region
  */
-import { TEAMS, FLAG_DESIGN_ORDINALS } from '../constants';
-import { generateTeamNameData, MAX_TEAM_NAME_SIZE } from '../TeamNameGenerator';
+import { generateTeamNameData } from '../TeamNameGenerator';
 import { renderTextToPixels, encode2bppTiles } from '../TeamNameTileFont';
 import { konamiCompress } from '../KonamiCodec';
 
@@ -176,7 +175,6 @@ function fixSharedPointersIfNecessary(rom) {
   }
 
   if (needsPatch1) {
-    console.log('[TeamName] PATCH: Writing shared pointer fix at 0x39D78 (54 bytes)');
     rom.writeBytes(0x39d78, SHARED_PTR_PATCH_39D78);
   }
 
@@ -191,12 +189,7 @@ function fixSharedPointersIfNecessary(rom) {
   }
 
   if (needsPatch2) {
-    console.log('[TeamName] PATCH: Writing shared pointer fix at 0x444EB (243 bytes)');
     rom.writeBytes(0x444eb, SHARED_PTR_PATCH_444EB);
-  }
-
-  if (!needsPatch1 && !needsPatch2) {
-    console.log('[TeamName] Patches already applied');
   }
 }
 
@@ -323,11 +316,9 @@ function displaceTeamNameTilesIfNecessary(rom) {
   // Check if already displaced
   const formatByte = rom.readByte(TILE_FORMAT_FLAG_OFFSET);
   if (formatByte === P17000_FLAG) {
-    console.log('[TileName] Already displaced to P17000');
     return;
   }
 
-  console.log('[TileName] === DISPLACING TILES P48000 → P17000 ===');
   let newAddress = 0x17680;
   let pointerOffset = TILE_NAME_POINTER_OFFSET;
 
@@ -358,10 +349,6 @@ function displaceTeamNameTilesIfNecessary(rom) {
     rom.writeByte(pointerOffset, newB1);
     rom.writeByte(pointerOffset + 1, newB2);
 
-    console.log(
-      `[TileName] Team ${i}: 0x${originalAddress.toString(16)} (${size}B) → 0x${newAddress.toString(16)} ptr=[${newB1.toString(16)},${newB2.toString(16)}]`,
-    );
-
     pointerOffset += TILE_NAME_POINTER_STEP;
     newAddress += size;
   }
@@ -370,8 +357,6 @@ function displaceTeamNameTilesIfNecessary(rom) {
   for (const offset of TILE_FORMAT_OFFSETS) {
     rom.writeByte(offset, P17000_FLAG);
   }
-
-  console.log(`[TileName] === DISPLACEMENT DONE. End: 0x${newAddress.toString(16)} ===`);
 }
 
 // === Write tile graphics to P17000 region (after displacement) ===

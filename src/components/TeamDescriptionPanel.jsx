@@ -9,11 +9,12 @@ import {
   wrapDescriptionBody,
   measureTeamDescriptions,
   withFormationInTitle,
+  encodeTeamDescription,
+  readTeamDescriptionRaw,
 } from '../rom/teamDescription';
 import { findInvalidChars } from '../rom/scenario';
-
-// Approximate in-game colours of the two title styles
-const TITLE_PREVIEW = { 0x2c: '#f070b0', 0x24: '#f8d040' };
+import GameTextPreview from './GameTextPreview';
+import { originalTeams } from '../utils/originalTeams';
 
 /**
  * Selection-screen description editor ("Offensive 4-4-2" + short text).
@@ -21,9 +22,14 @@ const TITLE_PREVIEW = { 0x2c: '#f070b0', 0x24: '#f8d040' };
  */
 export default function TeamDescriptionPanel({ team, teamIndex }) {
   const { t } = useI18n();
-  const { teams, handleTeamDescriptionChange } = useRom();
+  const { teams, romParser, handleTeamDescriptionChange } = useRom();
   const [draft, setDraft] = useState(team.description);
   const [message, setMessage] = useState(null);
+  // the description of the ROM as loaded (goes to the draft: Apply writes it)
+  const original = useMemo(
+    () => originalTeams(romParser)[teamIndex]?.description || null,
+    [romParser, teamIndex],
+  );
 
   useEffect(() => {
     setDraft(team.description);
@@ -34,9 +40,22 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
   }, [teamIndex]);
 
   const usage = useMemo(
-    () => measureTeamDescriptions(teams.map((tm, i) => (i === teamIndex ? draft : tm.description))),
-    [teams, teamIndex, draft],
+    () =>
+      measureTeamDescriptions(
+        teams.map((tm, i) => (i === teamIndex ? draft : tm.description)),
+        romParser,
+      ),
+    [teams, teamIndex, draft, romParser],
   );
+
+  // What the game draws: the exact ROM bytes while unchanged (they may colour words
+  // inside the body), the encoded draft once edited
+  const dirty = !!draft && JSON.stringify(draft) !== JSON.stringify(team.description);
+  const previewBytes = useMemo(() => {
+    if (!draft) return [];
+    if (!dirty && romParser) return readTeamDescriptionRaw(romParser, teamIndex);
+    return encodeTeamDescription(draft);
+  }, [draft, dirty, romParser, teamIndex]);
 
   if (!draft) return null;
 
@@ -44,7 +63,6 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
   const tooLong = lines.length > TEAM_DESC.BODY_LINES;
   const over = usage > TEAM_DESC_CAPACITY;
   const invalid = findInvalidChars(`${draft.title}${draft.body}`);
-  const dirty = JSON.stringify(draft) !== JSON.stringify(team.description);
   const formationName = team.formation?.name;
   const titleFormation = /\d-\d-\d/.exec(draft.title)?.[0];
   const formationMismatch = formationName && titleFormation && titleFormation !== formationName;
@@ -105,13 +123,13 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
         </div>
 
         <div className="team-desc-preview" aria-label={t('scenarioPreview')}>
-          <div style={{ color: TITLE_PREVIEW[draft.titleColor] || '#f070b0' }}>
-            {draft.title.padEnd(TEAM_DESC.COLUMNS, ' ')}
-          </div>
-          <div>{' '.repeat(TEAM_DESC.COLUMNS)}</div>
-          {Array.from({ length: TEAM_DESC.BODY_LINES }).map((_, i) => (
-            <div key={i}>{(lines[i] || '').padEnd(TEAM_DESC.COLUMNS, ' ')}</div>
-          ))}
+          <GameTextPreview
+            kind="bytes"
+            bytes={previewBytes}
+            box={{ lines: TEAM_DESC.LINES, columns: TEAM_DESC.COLUMNS }}
+            palette="selection"
+            label={t('scenarioPreview')}
+          />
         </div>
       </div>
 
@@ -141,11 +159,22 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
       )}
 
       <div className="scenario-actions">
-        <button className="kit-btn active" onClick={apply} disabled={!dirty || over || tooLong}>
+        <button
+          className="kit-btn active"
+          onClick={apply}
+          disabled={!dirty || over || tooLong || invalid.length > 0}
+        >
           {t('scenarioApply')}
         </button>
         <button className="kit-btn" onClick={() => setDraft(team.description)} disabled={!dirty}>
           {t('scenarioDiscard')}
+        </button>
+        <button
+          className="kit-btn"
+          onClick={() => original && update(original)}
+          disabled={!original || JSON.stringify(draft) === JSON.stringify(original)}
+        >
+          {t('restoreOriginal')}
         </button>
       </div>
     </div>

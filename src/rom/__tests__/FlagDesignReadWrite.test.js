@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
+import { existsSync, readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { TEAMS } from '../constants';
 import { readFlagDesign } from '../readers/FlagDesignReader';
 import { writeFlagDesign } from '../writers/FlagDesignWriter';
 import { konamiCompress } from '../KonamiCodec';
 import RomParser from '../RomParser';
+
+const REAL_ROM = fileURLToPath(
+  new URL('../../../rom/original/International Superstar Soccer (Europe).sfc', import.meta.url),
+);
 
 /**
  * Create a mock ROM pre-populated with valid flag pointer table
@@ -151,5 +158,38 @@ describe('FlagDesignReader/FlagDesignWriter Roundtrip', () => {
     expect(result.grid[15][4]).toBe(1);
     expect(result.grid[15][12]).toBe(3);
     expect(result.grid[15][20]).toBe(4);
+  });
+});
+
+describe.skipIf(!existsSync(REAL_ROM))('flag design writes on the real ROM', () => {
+  const load = () => new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+  const noisy = (seed) =>
+    Array.from({ length: 16 }, (_, y) =>
+      Array.from({ length: 24 }, (_, x) => (x * 3 + y * 5 + ((x * y + seed) % 4)) % 5),
+    );
+
+  it('a bigger flag moves the blocks after it and keeps every other flag', () => {
+    const rom = load();
+    const brazil = TEAMS.findIndex((t) => t.id === 'BRAZIL');
+    expect(rom.flagSharedWith(brazil)).toEqual([]); // own blocks: the relocation path
+    const before = TEAMS.map((_, i) => rom.readFlagDesign(i).grid);
+    const grid = noisy(1);
+    expect(writeFlagDesign(rom, brazil, grid)).toBe(true);
+    TEAMS.forEach((_, i) =>
+      expect(rom.readFlagDesign(i).grid).toEqual(i === brazil ? grid : before[i]),
+    );
+  });
+
+  it('refuses a flag when the area is full and leaves the ROM untouched', () => {
+    const rom = load();
+    let refused = false;
+    for (let i = 0; i < TEAMS.length && !refused; i++) {
+      const snap = rom.readFlagDesignBytes();
+      if (!writeFlagDesign(rom, i, noisy(i + 7))) {
+        refused = true;
+        expect(rom.readFlagDesignBytes()).toEqual(snap);
+      }
+    }
+    expect(refused).toBe(true);
   });
 });

@@ -14,6 +14,7 @@ import { decodeIss, layoutFixed } from '../rom/gameTexts';
 import { wrapScenarioText } from '../rom/scenario';
 import { MENU_SPRITE_CHARS } from '../rom/menuSprites';
 import { TITLE_CHARS } from '../rom/titleScreens';
+import GameTextPreview from './GameTextPreview';
 
 /** Lines as the game draws them (fixed texts with several lines, boxes) */
 function previewLines(field, text) {
@@ -182,11 +183,21 @@ export default function ScreenTextPanel() {
                       onChange={(e) => update(f.id, e.target.value)}
                     />
                     <div className="scenario-preview" aria-label={t('scenarioPreview')}>
-                      {Array.from({ length: f.lines }).map((_, i) => (
-                        <div key={i} className="scenario-preview-line">
-                          {(lines[i] || '').padEnd(f.columns, ' ')}
-                        </div>
-                      ))}
+                      {f.kind === 'title' ? (
+                        Array.from({ length: f.lines }).map((_, i) => (
+                          <div key={i} className="scenario-preview-line">
+                            {(lines[i] || '').padEnd(f.columns, ' ')}
+                          </div>
+                        ))
+                      ) : (
+                        <GameTextPreview
+                          kind={f.kind === 'box' ? 'box' : 'fixed'}
+                          text={value}
+                          box={{ lines: f.lines || 1, columns: f.columns }}
+                          palette={screen.id === 'joypad' ? 'selection' : 'training'}
+                          label={t('scenarioPreview')}
+                        />
+                      )}
                       {lines.length > f.lines && (
                         <div className="scenario-preview-overflow">{t('gtTooLong')}</div>
                       )}

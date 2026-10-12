@@ -1,3 +1,4 @@
+/* global Buffer */
 import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync } from 'fs';
 import { fileURLToPath } from 'url';

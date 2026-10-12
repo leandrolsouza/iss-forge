@@ -16,12 +16,20 @@ import { wrapScenarioText } from '../rom/scenario';
 import { IconTeamName } from './Icons';
 import MenuTextPanel from './MenuTextPanel';
 import ScreenTextPanel from './ScreenTextPanel';
+import GameTextPreview from './GameTextPreview';
 import '../styles/scenario.css';
 import '../styles/tournament.css';
 import '../styles/game-texts.css';
 
 const G = GAME_TEXTS;
-const MODES = ['Dribble', 'Pass', 'Shoot', 'Defence', 'Corner Kick'];
+// Training modes, in ROM order (i18n keys)
+const MODES = [
+  'gtDrill_dribble',
+  'gtDrill_pass',
+  'gtDrill_shoot',
+  'gtDrill_defence',
+  'gtDrill_corner',
+];
 
 /** All editable texts as a flat list of { key, group, label, kind, box } */
 function buildItems(t) {
@@ -30,7 +38,7 @@ function buildItems(t) {
     items.push({
       key: `titles.${i}`,
       group: 'gtGroupTitles',
-      label: m,
+      label: t(m),
       kind: 'fixed',
       box: { lines: 1, columns: G.TITLE_LENGTH },
     }),
@@ -39,7 +47,7 @@ function buildItems(t) {
     items.push({
       key: `intros.${i}`,
       group: 'gtGroupIntros',
-      label: m,
+      label: t(m),
       kind: 'box',
       box: G.INTRO_BOX,
     }),
@@ -49,7 +57,7 @@ function buildItems(t) {
       items.push({
         key: `results.${g}.${k}`,
         group: 'gtGroupResults',
-        label: `${m} · ${t('gtGrade')} ${k + 1}`,
+        label: `${t(m)} · ${t('gtGrade')} ${k + 1}`,
         kind: 'box',
         box: G.RESULT_BOX,
       }),
@@ -106,6 +114,7 @@ export default function GameTextEditor() {
   const [draft, setDraft] = useState(null);
   const [message, setMessage] = useState(null);
   const [mode, setMode] = useState('training');
+  const [search, setSearch] = useState('');
 
   const items = useMemo(() => buildItems(t), [t]);
   const originals = useMemo(
@@ -143,6 +152,19 @@ export default function GameTextEditor() {
   };
 
   const groups = [...new Set(items.map((i) => i.group))];
+  // Search in the item names and in the texts (draft and original), accents ignored
+  const fold = (s) =>
+    String(s ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  const matches = (i) => {
+    const q = fold(search.trim());
+    if (!q) return true;
+    return [i.label, getPath(draft, i.key), getPath(originals, i.key)].some((s) =>
+      fold(s).includes(q),
+    );
+  };
 
   // Menus / Screens panels keep their draft locally and lose it when unmounted
   const switchMode = async (next) => {
@@ -225,7 +247,12 @@ export default function GameTextEditor() {
                   })
                 : t('gtImportFailed')}
             </strong>
-            <button className="kit-btn" onClick={() => setImportResult(null)}>
+            <button
+              className="kit-btn"
+              onClick={() => setImportResult(null)}
+              aria-label={t('close')}
+              title={t('close')}
+            >
               ×
             </button>
           </div>
@@ -269,25 +296,35 @@ export default function GameTextEditor() {
       ) : (
         <div className="scenario-body">
           <div className="scenario-list tournament-list">
-            {groups.map((g) => (
-              <div key={g}>
-                <div className="tournament-group-title gt-group-title">{t(g)}</div>
-                {items
-                  .filter((i) => i.group === g)
-                  .map((i) => (
-                    <button
-                      key={i.key}
-                      className={`scenario-card tournament-card ${i.key === selected ? 'active' : ''}`}
-                      onClick={() => setSelected(i.key)}
-                      title={getPath(draft, i.key)}
-                    >
-                      <span className="tournament-card-teams">{i.label}</span>
-                      <span />
-                      {changed(i.key) && <span className="tournament-card-warn">*</span>}
-                    </button>
-                  ))}
-              </div>
-            ))}
+            <input
+              type="search"
+              className="gt-search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('gtSearch')}
+              aria-label={t('gtSearch')}
+            />
+            {groups
+              .filter((g) => items.some((i) => i.group === g && matches(i)))
+              .map((g) => (
+                <div key={g}>
+                  <div className="tournament-group-title gt-group-title">{t(g)}</div>
+                  {items
+                    .filter((i) => i.group === g && matches(i))
+                    .map((i) => (
+                      <button
+                        key={i.key}
+                        className={`scenario-card tournament-card ${i.key === selected ? 'active' : ''}`}
+                        onClick={() => setSelected(i.key)}
+                        title={getPath(draft, i.key)}
+                      >
+                        <span className="tournament-card-teams">{i.label}</span>
+                        <span />
+                        {changed(i.key) && <span className="tournament-card-warn">*</span>}
+                      </button>
+                    ))}
+                </div>
+              ))}
           </div>
 
           <div className="scenario-form">
@@ -304,11 +341,12 @@ export default function GameTextEditor() {
                   spellCheck={false}
                 />
                 <div className="scenario-preview" aria-label={t('scenarioPreview')}>
-                  {Array.from({ length: item.box.lines }).map((_, i) => (
-                    <div key={i} className="scenario-preview-line">
-                      {(lines[i] || '').padEnd(item.box.columns, ' ')}
-                    </div>
-                  ))}
+                  <GameTextPreview
+                    kind={item.kind}
+                    text={value}
+                    box={item.box}
+                    label={t('scenarioPreview')}
+                  />
                   {tooMany && <div className="scenario-preview-overflow">{t('gtTooLong')}</div>}
                 </div>
               </div>

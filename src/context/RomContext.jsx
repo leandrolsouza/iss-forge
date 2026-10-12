@@ -7,6 +7,8 @@ import useRomState from '../hooks/useRomState';
 import useRomHandlers from '../hooks/useRomHandlers';
 import useAutoSave from '../hooks/useAutoSave';
 import { useToast } from './ToastContext';
+import { useSettings } from './SettingsContext';
+import { useConfirm } from './ConfirmContext';
 import { useI18n } from '../i18n';
 
 const RomContext = createContext(null);
@@ -15,11 +17,15 @@ export function RomProvider({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const toast = useToast();
   const { t } = useI18n();
+  const { settings } = useSettings();
+  const confirm = useConfirm();
 
   const state = useRomState({ toast, t });
   const handlers = useRomHandlers({
     toast,
     t,
+    settings,
+    confirm,
     romParser: state.romParser,
     romInfo: state.romInfo,
     teams: state.teams,

@@ -206,6 +206,7 @@ export default function GameTextEditor() {
                     screens: importResult.changed.screens ?? 0,
                     scenarios: importResult.changed.scenarios,
                     descriptions: importResult.changed.teamDescriptions,
+                    title: importResult.changed.titleScreen ?? 0,
                   })
                 : t('gtImportFailed')}
             </strong>

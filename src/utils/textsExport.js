@@ -12,6 +12,7 @@ import { findInvalidMenuChars, menuTextLength, writeMenuScreens } from '../rom/m
 import { encodeScreenField, measureScreenPacks } from '../rom/screenTexts';
 import { MENU_SPRITE_CHARS, assignMenuFont } from '../rom/menuSprites';
 import { TITLE_CHARS } from '../rom/titleScreens';
+import { readTitleTexts, TITLE_COPYRIGHT_CHARS, TITLE_PRESS_CHARS } from '../rom/titleScreenText';
 import { SCREEN_TEXTS } from '../rom/constants';
 import { findInvalidChars, wrapScenarioText } from '../rom/scenario';
 import {
@@ -73,6 +74,10 @@ export function exportTexts(romParser) {
     screens,
     scenarios,
     teamDescriptions,
+    titleScreen: {
+      ...readTitleTexts(romParser),
+      limits: `copyright: up to 3 lines of 32 letters (${TITLE_COPYRIGHT_CHARS}); pressStart: up to 32 letters (${TITLE_PRESS_CHARS})`,
+    },
   };
 }
 
@@ -147,7 +152,14 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
   const skipped = [];
   const warnings = [];
   const moved = [];
-  const changed = { training: 0, menus: 0, screens: 0, scenarios: 0, teamDescriptions: 0 };
+  const changed = {
+    training: 0,
+    menus: 0,
+    screens: 0,
+    scenarios: 0,
+    teamDescriptions: 0,
+    titleScreen: 0,
+  };
   const check = validateTextsFile(input);
   if (!check.valid) return { ok: false, errors: [check.error], skipped, warnings, moved, changed };
   const counter = { n: 0 };
@@ -500,6 +512,23 @@ export function applyTexts(romParser, input, { beforeCommit } = {}) {
       res = writeTeamDescriptions(work, next);
     }
     changed.teamDescriptions = touched.length;
+  }
+
+  // --- Title screen (copyright lines, PRESS START) ---
+  if (data.titleScreen && typeof data.titleScreen === 'object') {
+    const cur = readTitleTexts(work);
+    for (const key of ['copyright', 'pressStart']) {
+      const v = data.titleScreen[key];
+      if (!isStr(v) || v.toUpperCase().trim() === cur[key]) continue;
+      const res = work.writeTitleTexts({ [key]: v });
+      if (res.ok) changed.titleScreen++;
+      else
+        skipped.push(
+          `titleScreen.${key}: ${
+            res.error === 'noGlyph' ? `no letter for ${res.invalid.join(' ')}` : res.error
+          }`,
+        );
+    }
   }
 
   if (Object.values(changed).some(Boolean)) {

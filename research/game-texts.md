@@ -120,7 +120,8 @@ muda nenhum bloco real (73 blocos conferidos: telas e bandeiras).
 
 ### Não coberto
 
-O menu principal e os títulos dos modos estão na seção 5. Continua de fora o logotipo da tela título.
+O menu principal e os títulos dos modos estão na seção 5. A tela inicial (logo, copyright e PRESS START)
+está em `title-screen.md`.
 
 ### Varredura ampla (out/2026)
 

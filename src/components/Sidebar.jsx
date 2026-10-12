@@ -15,6 +15,7 @@ import {
   IconScenario,
   IconTrophy,
   IconPitch,
+  IconTitleScreen,
   IconMenu,
   IconSun,
   IconMoon,
@@ -135,6 +136,13 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
             title={t('editorMatchPalettes')}
           >
             <IconPitch size={20} />
+          </button>
+          <button
+            className="sidebar-icon-btn"
+            onClick={() => onOpenTab('titleScreen', t('editorTitleScreen'))}
+            title={t('editorTitleScreen')}
+          >
+            <IconTitleScreen size={20} />
           </button>
           {appSettings.aiEnabled && (
             <button
@@ -285,6 +293,15 @@ export default function Sidebar({ onOpenTab, collapsed, onToggleCollapse }) {
                 <IconPitch size={14} />
               </span>
               <span>{t('editorMatchPalettes')}</span>
+            </div>
+            <div
+              className="sidebar-item editor-item"
+              onClick={() => onOpenTab('titleScreen', t('editorTitleScreen'))}
+            >
+              <span className="item-icon">
+                <IconTitleScreen size={14} />
+              </span>
+              <span>{t('editorTitleScreen')}</span>
             </div>
             {appSettings.aiEnabled && (
               <div

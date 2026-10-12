@@ -71,6 +71,16 @@ import {
   applyPaletteUpdates,
   paletteStateToUpdates,
 } from './palettes';
+import {
+  readTitleScreen,
+  applyTitleScreenUpdates,
+  readTitleScreenBytes,
+  restoreTitleScreenBytes,
+  importTitleLogo,
+  restoreTitleLogo,
+} from './titleScreen';
+import { isOriginalLogo } from './titleLogo';
+import { writeTitleTexts } from './titleScreenText';
 
 export default class RomParser {
   constructor(romData) {
@@ -206,6 +216,35 @@ export default class RomParser {
   restoreMatchPalettes(palettes) {
     if (!palettes) return;
     applyPaletteUpdates(this, paletteStateToUpdates(palettes, readMatchPalettes(this)));
+  }
+
+  /** Title screen colours and the teams of the two players */
+  readTitleScreen() {
+    return readTitleScreen(this);
+  }
+  /** Batch edit: { colourGroupId: colours, 'team:left' | 'team:right': TEAMS index } */
+  applyTitleScreenUpdates(updates) {
+    applyTitleScreenUpdates(this, updates);
+  }
+  /** Copyright lines / PRESS START: @returns {{ ok: boolean, error?: string, invalid?: string[] }} */
+  writeTitleTexts(texts) {
+    return writeTitleTexts(this, texts);
+  }
+  /** Import a logo built by buildLogo (see titleLogo.js) */
+  importTitleLogo(built, options) {
+    return importTitleLogo(this, built, options);
+  }
+  restoreTitleLogo() {
+    return restoreTitleLogo(this);
+  }
+  isOriginalTitleLogo() {
+    return isOriginalLogo(this);
+  }
+  readTitleScreenBytes() {
+    return readTitleScreenBytes(this);
+  }
+  restoreTitleScreenBytes(snapshot) {
+    restoreTitleScreenBytes(this, snapshot);
   }
 
   /** The 9 Scenario mode situations */

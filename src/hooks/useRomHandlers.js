@@ -36,6 +36,7 @@ export default function useRomHandlers({
   setGameTexts,
   setMenuScreens,
   setScreenTexts,
+  setTitleScreen,
 }) {
   const handlePlayerChange = useCallback(
     (teamIndex, playerIndex, field, value) => {
@@ -443,6 +444,58 @@ export default function useRomHandlers({
   );
 
   /**
+   * Edit the title screen (colours and/or the teams of the two players) as one undo step.
+   * @param {Object} updates - { colourGroupId: rawColours[], 'team:left' | 'team:right': TEAMS index }
+   */
+  const handleTitleScreenChange = useCallback(
+    (updates) => {
+      if (!romParser || !updates || !Object.keys(updates).length) return;
+      pushSnapshot(teams);
+      romParser.applyTitleScreenUpdates(updates);
+      setTitleScreen(romParser.readTitleScreen());
+      markModified();
+    },
+    [romParser, teams, markModified, pushSnapshot, setTitleScreen],
+  );
+
+  /**
+   * Import a logo built by buildLogo (or restore the original with `null`), one undo step.
+   * @returns {{ ok: boolean, error?: string, size?: number, capacity?: number }}
+   */
+  const handleTitleLogoChange = useCallback(
+    (built, options) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = built
+        ? romParser.importTitleLogo(built, options)
+        : romParser.restoreTitleLogo();
+      setTitleScreen(romParser.readTitleScreen());
+      if (result.ok) markModified();
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setTitleScreen],
+  );
+
+  /**
+   * Replace the title screen copyright lines and/or PRESS START (one undo step).
+   * @param {{ copyright?: string, pressStart?: string }} texts
+   * @returns {{ ok: boolean, error?: string, invalid?: string[] }}
+   */
+  const handleTitleTextsChange = useCallback(
+    (texts) => {
+      if (!romParser) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.writeTitleTexts(texts);
+      // a failed write may still have moved blocks around: always re-read
+      setTitleScreen(romParser.readTitleScreen());
+      setMenuScreens(romParser.readMenuScreens());
+      if (result.ok) markModified();
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, setTitleScreen, setMenuScreens],
+  );
+
+  /**
    * Update a team's selection-screen description.
    * @returns {{ ok: boolean, used?: number, capacity?: number }}
    */
@@ -602,6 +655,7 @@ export default function useRomHandlers({
       setMenuScreens(romParser.readMenuScreens());
       setScreenTexts(romParser.readScreenTexts());
       setScenarios(romParser.readScenarios());
+      setTitleScreen(romParser.readTitleScreen());
       setTeams((prev) =>
         prev.map((t, i) => ({ ...t, description: romParser.readTeamDescription(i) })),
       );
@@ -617,6 +671,7 @@ export default function useRomHandlers({
     setMenuScreens,
     setScreenTexts,
     setScenarios,
+    setTitleScreen,
     setTeams,
   ]);
 
@@ -866,6 +921,9 @@ export default function useRomHandlers({
     handleTeamDescriptionChange,
     handleCopyTeam,
     handleMatchPaletteChange,
+    handleTitleScreenChange,
+    handleTitleTextsChange,
+    handleTitleLogoChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

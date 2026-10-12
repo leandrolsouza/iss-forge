@@ -21,6 +21,7 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     expect(json.scenarios).toHaveLength(9);
     expect(json.teamDescriptions).toHaveLength(27);
     expect(json.screens.joypad.find((e) => e.id === 'nameLob').text).toBe('= LOB =');
+    expect(json.titleScreen.pressStart).toBe('PRESS START');
     const before = new Uint8Array(rom.getRomData());
     const res = applyTexts(rom, json);
     expect(res.ok).toBe(true);
@@ -30,6 +31,7 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
       screens: 0,
       scenarios: 0,
       teamDescriptions: 0,
+      titleScreen: 0,
     });
     expect(Buffer.compare(rom.getRomData(), before)).toBe(0);
   });
@@ -44,6 +46,8 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
     json.teamDescriptions.find((d) => d.team === 'BRAZIL').body = 'Time muito tecnico.';
     json.screens.joypad.find((e) => e.id === 'shoot').text = 'CHUTE';
     json.screens.scenario.find((e) => e.id === 'congrats').text = 'PARABENS!';
+    json.titleScreen.pressStart = 'Aperte Start';
+    json.titleScreen.copyright = '©1995-2026 KONAMI\nTraducao: ISS Forge';
     const res = applyTexts(rom, json);
     expect(res.errors).toEqual([]);
     expect(res.changed).toEqual({
@@ -52,8 +56,11 @@ describe.skipIf(!existsSync(REAL_ROM))('texts JSON export/import (real ROM)', ()
       screens: 2,
       scenarios: 1,
       teamDescriptions: 1,
+      titleScreen: 2,
     });
     const again = exportTexts(rom);
+    expect(again.titleScreen.pressStart).toBe('APERTE START');
+    expect(again.titleScreen.copyright).toBe('©1995-2026 KONAMI\nTRADUCAO: ISS FORGE');
     expect(again.screens.joypad.find((e) => e.id === 'shoot').text).toBe('CHUTE');
     expect(again.training.titles[0]).toBe('~ Drible ~');
     expect(again.menus.prematch[0].text).toBe('Iniciar Jogo');

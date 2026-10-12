@@ -12,6 +12,7 @@ Scripts de apoio à engenharia reversa. **Não fazem parte do app.**
 | `png-montage.cjs` | Junta vários screenshots numa grade, para ver uma partida inteira de uma vez. |
 | `png-find-color.cjs` | Conta pixels de cores exatas e lista os frames onde mais aparecem. Serve para achar onde uma cor de teste, pintada na ROM, aparece no jogo. |
 | `rom-corrupt.cjs` | Copia a ROM com um trecho embaralhado (XOR). Carregando um save state com essa ROM, mostra se o que está na tela vem daquele trecho (busca binária: 16 fatias de 64 KB, depois de 4 KB, de 256 bytes). |
+| `wram-corrupt-search.cjs` | Mesma busca, mas compara bytes da WRAM em vez da tela: acha dados que o jogo descomprime/expande na WRAM (ex.: a lista de sprites do logo em `$7E:5000`, ver `../title-screen.md`). Use um estado salvo antes da tela ser montada. |
 
 ## Técnica usada nas paletas
 

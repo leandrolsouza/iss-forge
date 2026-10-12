@@ -350,6 +350,23 @@ export const MENU_SCREENS = [
     pointers: [0x1078a],
     title: true,
   },
+  // Title screen (TITLE_SCREEN.TEXT): BG3 map with the copyright lines and the
+  // plain font (BG3 tiles 0x20-0x5F, only loaded by the title screen and the
+  // wrong-region warning). Not menu texts: edited in the title screen tab.
+  {
+    offset: 0xd43c8,
+    id: 'titleScreenMap',
+    label: 'Title screen: copyright map',
+    pointers: [0x1019f],
+    title: true,
+  },
+  {
+    offset: 0x7f81b,
+    id: 'titleScreenFont',
+    label: 'Title screen: plain font',
+    pointers: [0x10050],
+    title: true,
+  },
 ];
 
 // ============================================================
@@ -719,10 +736,11 @@ export const TITLE_LAYOUT = {
  * Free space for relocated menu screens: 0xFF padding at the end of banks in the
  * original ROM, [start, end) file offsets. Excludes areas used by other editors
  * (0x17680-0x17FFF team-name tiles) and the padding right after the pre-match
- * and password screens (already counted as their own room).
+ * and password screens (already counted as their own room). The last 35 bytes
+ * of bank $81 are kept for a longer title-screen PRESS START (TITLE_SCREEN.TEXT).
  */
 export const MENU_FREE_SPACE = [
-  [0x0febb, 0x10000],
+  [0x0febb, 0x0ffdd],
   [0x1fe2a, 0x20000],
   [0x27f53, 0x28000],
   [0x47fa5, 0x48000],
@@ -1243,6 +1261,124 @@ export const REFEREE_PARTS = [
   { key: 'socks', from: 12, count: 2 },
   { key: 'extra', from: 14, count: 1 },
 ];
+
+// ============================================================
+// TITLE SCREEN ("INTERNATIONAL SUPERSTAR SOCCER" + PRESS START)
+//
+// Set up at $80:8CD5: VRAM load lists $82:804C / $82:8178, palette list
+// $81:8A44 (descriptors $81:8800-$8830, used only by this screen). The logo
+// flashes through $81:811C = lists 8A5C, 8A60, 8A64 (flash steps), 8A76 (logo
+// hidden in the sky colour) and 8A68 (grass + normal logo).
+// Layers: BG1 4bpp (map $1000, tiles $2000: brush stroke + grass), BG3 2bpp
+// (map $5C00, tiles $5000: copyright + PRESS START), OBJ (base $6000: logo,
+// players, ball). See research/title-screen.md.
+// ============================================================
+
+export const TITLE_SCREEN = {
+  /**
+   * Editable colour groups. `offset` = file offset of the first colour, `row` /
+   * `first` = where it lands in CGRAM (for the preview).
+   * logoTop / logoBottom colour 15 (outline) is stored as a "1 x black" command
+   * word ($8001); writing a colour there replaces it with a plain colour.
+   */
+  COLORS: [
+    { id: 'sky', offset: 0x2d49e, count: 1, row: 0, first: 0 }, // backdrop
+    { id: 'copyright', offset: 0x2d4a0, count: 3, row: 0, first: 1 }, // BG3 palette 0
+    { id: 'pressStart', offset: 0x2d4a8, count: 3, row: 0, first: 5 }, // BG3 palette 1
+    { id: 'grass', offset: 0x2dcf5, count: 30, row: 2, first: 1 }, // BG rows 2-3
+    { id: 'stroke', offset: 0x2d4fe, count: 15, row: 7, first: 1 }, // red brush stroke
+    { id: 'logoTop', offset: 0x2d4c0, count: 15, row: 10, first: 1 }, // "INTERNATIONAL"
+    { id: 'logoBottom', offset: 0x2d4de, count: 15, row: 11, first: 1 }, // "SUPERSTAR SOCCER"
+    { id: 'tm', offset: 0x2d520, count: 12, row: 15, first: 4 }, // "TM" (colours 1-3 = command)
+  ],
+  /** Flash steps of the logo (logoTop 15 colours + logoBottom 15 colours each) */
+  LOGO_FLASH: [0x2d53a, 0x2d578, 0x2d5b6],
+  /** 15 x sky colour: hides the grass, players and logo while they fade in */
+  SKY_FILL: { offset: 0x2d5f4, count: 15 },
+  /** Teams of the two players: immediate of LDA #$xx / STA $1720 and STA $1770 (ordinal x 2) */
+  TEAM_LEFT: 0x0d19,
+  TEAM_RIGHT: 0x0d1f,
+  /** "PRESS START": VRAM word address + letters (A = 1 ... Z = 26, 0 = space), 0xFF ends */
+  PRESS_START: { offset: 0x8645, attr: 0x2400 },
+  /** VRAM load lists of the screen (bank $82): [word dest, 24-bit pointer] entries */
+  LOAD_LISTS: [0x1004c, 0x10178],
+  /** Palettes the preview reads from elsewhere: ball (OBJ row 14) */
+  BALL_PALETTE: { offset: 0x2dedd, count: 15, row: 14, first: 1 },
+  /**
+   * Texts (BG3, 2bpp). Tiles 0x00-0x1F = the shaded title font (block shared
+   * with other screens, never changed): space, A-Z = 1-26, "." "1" "5" "9" "©".
+   * Tiles 0x20-0x5F = plain font in ASCII order (block TEXT.FONT, loaded only by
+   * the title screen and the wrong-region warning): extra characters of the
+   * copyright are redrawn there in the shaded style (rows coloured
+   * GLYPH_ROW_COLORS, the same rule the Konami letters follow).
+   */
+  TEXT: {
+    MAP: 0xd43c8, // compressed 32x32 BG3 map (MENU_SCREENS entry, can move)
+    FONT: 0x7f81b, // compressed plain font, BG3 tiles 0x00-0x5F (MENU_SCREENS entry)
+    MAP_ROWS: [24, 25, 26], // copyright lines, centred
+    COLUMNS: 32,
+    ATTR: 0x2000, // palette 0, priority
+    PRESS_ROW: 14,
+    /** LDX #$8645 at $80:84B5 and $80:8F2E (bank $81) */
+    PRESS_POINTERS: [0x04b6, 0x0f2f],
+    PRESS_HOME: 0x8645,
+    PRESS_HOME_LENGTH: 11,
+    /** Reserved end of bank $81 for a longer PRESS START (2 + 32 + 1 bytes) */
+    PRESS_SPARE: 0xffdd,
+    GLYPH_ROW_COLORS: [2, 1, 3, 3, 3, 1, 2, 2],
+  },
+  /**
+   * Logo: OBJ sprites. The sprite list (block LIST, loaded by the $82:8038 list
+   * entry "FE ptr D000" and expanded to $7E:5000) is [1, n (word), n] and then
+   * 4 arrays of n bytes: dx, dy (relative to ORIGIN), tile, attr (bit 4 =
+   * 16x16, bits 1-3 = palette, ORed with palette 2 by the logo object, bit 0 =
+   * tile bit 8, bit 7 = vertical flip). Tiles: block TILES, loaded to
+   * TILE_DEST_ENTRY's VRAM word address ($6700 = OBJ tile 0x70 originally).
+   */
+  LOGO: {
+    TILES: 0xf71c8,
+    LIST: 0xf7b25,
+    /** Both blocks live in this area (only this screen uses them): [start, end) */
+    AREA: [0xf71c8, 0xf7caa],
+    /** 24-bit pointers: tiles (VRAM list $82:8178) and sprite list ($82:8038) */
+    TILES_POINTER: 0x1018b,
+    LIST_POINTER: 0x10039,
+    TILE_DEST_ENTRY: 0x10189,
+    ORIGINAL_DEST: 0x6700,
+    /** Imported logos: OBJ tiles 0x60-0x17F (free on this screen), loaded to $6600 */
+    FIRST_TILE: 0x60,
+    LAST_TILE: 0x17f,
+    MAX_SPRITES: 107,
+    ORIGIN: [128, 112],
+    /** Room for an imported logo (keeps clear of PRESS START on row 14) */
+    MAX_WIDTH: 240,
+    MAX_HEIGHT: 88,
+    CENTER: [128, 60],
+    /** "TM" sprites of the original logo (OBJ palette 7) */
+    TM_TILES: [0xe9, 0xea],
+  },
+  /** Byte ranges written by this editor (undo snapshots) */
+  RANGES: [
+    [0x0d19, 0x0d1a],
+    [0x0d1f, 0x0d20],
+    [0x2d49e, 0x2d4ae],
+    [0x2d4c0, 0x2d4fc],
+    [0x2d4fe, 0x2d51c],
+    [0x2d520, 0x2d538],
+    [0x2d53a, 0x2d5f2],
+    [0x2d5f4, 0x2d612],
+    [0x2dcf5, 0x2dd31],
+    // PRESS START: home, reserved spare and the two pointers
+    [0x8645, 0x8653],
+    [0xffdd, 0x10000],
+    [0x04b6, 0x04b8],
+    [0x0f2f, 0x0f31],
+    // logo: VRAM address and pointers of the tiles, sprite list pointer, both blocks
+    [0x10189, 0x1018e],
+    [0x10039, 0x1003c],
+    [0xf71c8, 0xf7caa],
+  ],
+};
 
 // ============================================================
 // ROM OFFSETS - Player Names

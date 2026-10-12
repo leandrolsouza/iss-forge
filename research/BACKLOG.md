@@ -24,6 +24,7 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Exportar/importar todos os textos em JSON (importa o que couber, lista o resto; tira acentos); telas de menu que não cabem são movidas/reorganizadas no espaço livre | aba Textos do Jogo | `game-texts.md` |
 | Textos desenhados pelo código: tela de controles (títulos, ajudas, rótulos), cenário (placar, relógio, resultado), "NEXTGAME" do grupo, ordinais da World Series, "LEVEL" do treino; Senha, Grupo da Cup e Treino: pontuação agora podem ser movidas | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 4) |
 | Menu principal (listas de sprites montadas com a fonte grande do menu) e os 7 títulos dos modos (tilemaps com a fonte dos títulos, realocáveis como as telas de menu) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
+| Tela inicial: cores (logo, brilho do logo, pincelada, TM, céu, gramado, textos), times dos dois jogadores, copyright e PRESS START (dígitos e pontuação desenhados no estilo sombreado), importar logo de imagem (PNG) e esconder a pincelada; prévia desenhada a partir da ROM; textos no JSON | aba Tela Inicial | `title-screen.md` |
 | Alfabeto completo nas fontes grandes: no menu, B F J montadas e H Q V X Z desenhadas (ocupam letras 16x16 não usadas); nos títulos, B J montadas e K Q V X Y Z desenhadas (tiles novos no bloco da fonte) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
 
 ## Tradução PT-BR — estado (para continuar)
@@ -62,9 +63,9 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
   - tela de táticas por linha ("Defensive | Offensive", DF/MF/FW), que é outra tela;
   - "Referee" e os nomes dos árbitros na tela de Regras;
   - "TIME NAME SCORE NAME" no ranking do treino, "BONUS TIME", "TIME", "TIME UP" no exercício;
-  - "1P"/"2P" e "TYPE A" na tela de controles; "VS" entre os nomes antes da partida; "PRESS START";
-  - textos da partida (placar, GOAL, posições na barra inferior);
-  - logotipo da tela título.
+  - "1P"/"2P" e "TYPE A" na tela de controles; "VS" entre os nomes antes da partida;
+  - textos da partida (placar, GOAL, posições na barra inferior).
+  O PRESS START, o copyright e o logo da tela inicial já têm editor (aba Tela Inicial).
   Os nomes dos times nos quadros (ITALY, ROMANIA...) são editados na aba Nome do Time.
 
 ## Pendente — prioridade sugerida
@@ -90,7 +91,7 @@ Sugestão de ordem:
 - **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
   "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
 - **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
-  posições da partida, "Referee" e árbitros, logotipo. Exigem editar tiles (Tile Explorer). A técnica de
+  posições da partida, "Referee" e árbitros. Exigem editar tiles (Tile Explorer). A técnica de
   corromper fatias da ROM e ver o que estraga (`game-texts.md`, seção 5) acha rápido de onde vêm.
 - **Ponteiros extras** que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
 - **Acentos:** não existem nas fontes. Seria preciso desenhar tiles novos na fonte 8x8 e na 8x16 e mapear

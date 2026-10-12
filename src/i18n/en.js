@@ -31,7 +31,7 @@ export default {
   gtImportHelp:
     'Reads a texts file exported by ISS Forge. What fits is imported; what does not is listed with the reason. Ctrl+Z undoes it.',
   gtImportOk:
-    'Texts imported: training {training}, menus {menus}, screens {screens}, scenarios {scenarios}, descriptions {descriptions}. Ctrl+Z undoes it.',
+    'Texts imported: training {training}, menus {menus}, screens {screens}, scenarios {scenarios}, descriptions {descriptions}, title screen {title}. Ctrl+Z undoes it.',
   gtImportFailed: 'Invalid file:',
   gtImportSkipped:
     '{count} text(s) were left out (the rest was imported). Fix them in the file and import again:',
@@ -171,6 +171,7 @@ export default {
   stf_worldSeries_stageN: 'Stages 4 to 23',
   stf_training_level: 'LEVEL (number drawn after it)',
   editorMatchPalettes: 'Pitch & Ball',
+  editorTitleScreen: 'Title Screen',
   editorUniforms: 'Uniforms',
   editorHairSkin: 'Hair & Skin',
   editorFlagColors: 'Flag Colors',
@@ -688,6 +689,89 @@ export default {
   mpCrowd_shirtB: 'Shirt B',
   mpCrowd_shadow: 'Shadow',
   mpCrowdFromUniform: "Use the team's kit colours",
+
+  // Title screen
+  tsSubtitle: 'Colours and players of the opening screen',
+  tsRestoreAll: 'Restore everything',
+  tsShowPressStart: 'Show PRESS START (it blinks in the game)',
+  tsPreviewHelp:
+    'Preview drawn from the ROM, as the screen looks after the intro animation (the logo flashes as it appears).',
+  tsLogo: 'Logo',
+  tsLogoHelp:
+    'The last colour of each logo row is the letter outline. The flash of the logo when it appears follows the new colours automatically.',
+  tsLogoTop: 'INTERNATIONAL',
+  tsLogoBottom: 'SUPERSTAR SOCCER',
+  tsStroke: 'Brush stroke',
+  tsTm: 'TM symbol',
+  tsLogoPresets: 'Logo presets:',
+  tsLogo_original: 'Original',
+  tsLogo_brazil: 'Green stroke',
+  tsLogo_blue: 'Blue',
+  tsLogo_pink: 'Pink',
+  tsLogo_silver: 'Silver',
+  tsAdjustTarget: 'Apply to',
+  tsTarget_logo: 'Logo (both rows)',
+  tsTarget_logoTop: 'INTERNATIONAL',
+  tsTarget_logoBottom: 'SUPERSTAR SOCCER',
+  tsTarget_stroke: 'Brush stroke',
+  tsTarget_all: 'Logo, stroke and TM',
+  tsAdjustHelp:
+    'Presets and adjustments start from the original colours (individual edits of the chosen parts are replaced).',
+  tsLogoImport: 'Import a new logo',
+  tsLogoImportHelp:
+    'PNG with transparency works best (or an image on a flat background colour). The image is fitted in 240 x 88 pixels and converted to sprites with two palettes of up to 15 colours. It must fit in the room of the original logo: when it does not, use fewer colours or a smaller size.',
+  tsChooseImage: 'Choose image...',
+  tsRestoreLogo: 'Restore original logo',
+  tsRestoreLogoHelp: 'Puts the Konami logo, its colours and the brush stroke back',
+  tsLogoScale: 'Size',
+  tsLogoColors: 'Colours per palette',
+  tsColorsAuto: 'Automatic (most that fit)',
+  tsTolerance: 'Background tolerance',
+  tsRemoveBg: 'Remove background colour (top-left pixel)',
+  tsKeepTm: 'Keep the TM symbol',
+  tsHideStroke: 'Hide the red brush stroke',
+  tsLogoInfo:
+    '{sprites} of {max} sprites, {size} of {capacity} bytes, {colors} colours per palette.',
+  tsApplyLogo: 'Apply logo',
+  tsCancel: 'Cancel',
+  tsLogoPreviewing: 'Preview of the imported logo: not applied yet.',
+  tsErr_logoLoad: 'Could not open this image.',
+  tsErr_logoSize: 'The image is too big for the logo room.',
+  tsErr_logoEmpty: 'The image is empty (everything became transparent).',
+  tsErr_logoTooManySprites: 'The logo needs {sprites} sprites (max {max}). Use a smaller size.',
+  tsErr_logoTooManyTiles: 'The logo needs too many tiles. Use a smaller size.',
+  tsErr_logoNoSpace:
+    'It does not fit in the ROM ({size} of {capacity} bytes). Use fewer colours or a smaller size.',
+  tsBackground: 'Background',
+  tsSky: 'Sky',
+  tsSkyHelp:
+    'The sky colour is also used to hide the grass, the players and the logo while they fade in, so it is copied there too.',
+  tsGrassHelp:
+    'This grass is only used by the title screen (the match pitch is in the Pitch & Ball tab). The game lightens the far end of the pitch.',
+  tsTexts: 'Texts',
+  tsCopyright: '© 1995 KONAMI...',
+  tsPressStart: 'PRESS START',
+  tsCopyrightText: 'Copyright lines (up to 3, 32 letters each, centred)',
+  tsCopyrightChars:
+    'A-Z, 0-9, © and punctuation. New characters are drawn in the same shaded style.',
+  tsInsertCopyright: 'Insert ©',
+  tsPressText: 'PRESS START (blinking text)',
+  tsPressChars:
+    'A-Z, space, . 1 5 9 © (the text is also drawn by another screen with the same font).',
+  tsApplyTexts: 'Apply texts',
+  tsErr_noGlyph: 'No letter for: {chars}',
+  tsErr_tooManyLines: 'At most 3 lines.',
+  tsErr_tooWide: 'A line has more than 32 letters.',
+  tsErr_empty: 'PRESS START cannot be empty.',
+  tsErr_titleTextFull: 'Not enough free space in the ROM for this text.',
+  tsErr_noSpace: 'The space reserved for a longer PRESS START is in use.',
+  tsTextsHelp: 'Text colours: three shades each.',
+  tsPlayers: 'Players',
+  tsTeam_left: 'Left player (blue in the original)',
+  tsTeam_right: 'Right player (yellow in the original)',
+  tsOriginal: 'original',
+  tsPlayersHelp:
+    "The players wear the team's first kit, hair and skin (edit them in the Uniforms and Hair & Skin tabs). The demo match that follows does not change.",
 
   // Help Tooltips - Player Editor
   helpShooting: 'Shot power. Scale 1-15 (8 levels).',

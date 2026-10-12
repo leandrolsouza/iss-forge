@@ -30,6 +30,7 @@ export function RomProvider({ children }) {
     setGameTexts: state.setGameTexts,
     setMenuScreens: state.setMenuScreens,
     setScreenTexts: state.setScreenTexts,
+    setTitleScreen: state.setTitleScreen,
   });
 
   const autoSave = useAutoSave({

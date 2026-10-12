@@ -7,6 +7,7 @@ import ScenarioEditor from './components/ScenarioEditor';
 import TournamentEditor from './components/TournamentEditor';
 import GameTextEditor from './components/GameTextEditor';
 import MatchPaletteEditor from './components/MatchPaletteEditor';
+import TitleScreenEditor from './components/TitleScreenEditor';
 import UniformEditor from './components/UniformEditor';
 import HairSkinEditor from './components/HairSkinEditor';
 import FlagColorEditor from './components/FlagColorEditor';
@@ -222,6 +223,7 @@ export default function App() {
     if (activeTab === 'tournaments' && romParser) return <TournamentEditor />;
     if (activeTab === 'gameTexts' && romParser) return <GameTextEditor />;
     if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
+    if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
 
     if (!romParser || selectedTeamIndex === null) {
       return (

@@ -112,6 +112,14 @@ export const IconPitch = ({ size }) => (
   </Icon>
 );
 
+/** Title screen: a TV screen with a star */
+export const IconTitleScreen = ({ size }) => (
+  <Icon size={size}>
+    <path d="M1.5 2h13l.5.5v9l-.5.5h-13l-.5-.5v-9l.5-.5zM2 3v8h12V3H2zm3 10h6v1H5v-1z" />
+    <path d="M8 4l.9 1.9 2.1.3-1.5 1.4.4 2.1L8 8.7l-1.9 1 .4-2.1L5 6.2l2.1-.3L8 4z" />
+  </Icon>
+);
+
 export const IconScenario = ({ size }) => (
   <Icon size={size}>
     <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2z" />

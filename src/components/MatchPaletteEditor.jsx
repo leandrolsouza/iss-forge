@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import RomParser from '../rom/RomParser';
@@ -12,6 +12,7 @@ import {
   GRASS_PRESETS,
 } from '../rom/palettes';
 import { IconPitch } from './Icons';
+import { ColorSwatch, SwatchRow } from './ColorSwatch';
 import '../styles/match-palettes.css';
 
 const WEATHERS = ['sunny', 'rain', 'snow'];
@@ -37,61 +38,6 @@ const REFEREE_PRESETS = [
   { id: 'blue', kit: { shirt: '#2050f0', shorts: '#202020', socks: '#2050f0' } },
   { id: 'pink', kit: { shirt: '#f070c0', shorts: '#202020', socks: '#202020' } },
 ];
-
-/**
- * Color input that commits on the native `change` event (fired when the picker
- * is closed / confirmed) instead of on every `input`, so dragging inside the
- * picker creates a single undo step. Blur and Enter are fallbacks.
- */
-function ColorSwatch({ raw, onCommit, title }) {
-  const [value, setValue] = useState(rawToHex(raw));
-  const ref = useRef(null);
-  const latest = useRef({ raw, onCommit });
-  latest.current = { raw, onCommit };
-  useEffect(() => setValue(rawToHex(raw)), [raw]);
-
-  const commitHex = (hex) => {
-    const v = hexToRaw(hex);
-    if (v !== null && v !== latest.current.raw) latest.current.onCommit(v);
-  };
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return undefined;
-    const onNativeChange = (e) => commitHex(e.target.value);
-    el.addEventListener('change', onNativeChange);
-    return () => el.removeEventListener('change', onNativeChange);
-  }, []);
-
-  return (
-    <input
-      ref={ref}
-      type="color"
-      className="mp-swatch"
-      value={value}
-      title={title || value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={() => commitHex(value)}
-      onKeyDown={(e) => e.key === 'Enter' && commitHex(value)}
-    />
-  );
-}
-
-function SwatchRow({ colors, onChange, offset = 0, label }) {
-  return (
-    <div className="mp-swatch-row">
-      {label && <span className="mp-swatch-label">{label}</span>}
-      {colors.map((raw, i) => (
-        <ColorSwatch
-          key={i}
-          raw={raw}
-          title={`#${offset + i + 1} ${rawToHex(raw)}`}
-          onCommit={(v) => onChange(offset + i, v)}
-        />
-      ))}
-    </div>
-  );
-}
 
 function PitchPreview({ grass, detail }) {
   // Approximation: alternating mowing stripes (first colour of each grass row) + white lines

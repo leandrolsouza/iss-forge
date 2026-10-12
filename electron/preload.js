@@ -76,7 +76,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   // Auto-save / Backup
-  backupSave: (data, meta) => ipcRenderer.invoke('backup:save', { data, meta }),
+  backupSave: (data, meta, original) => ipcRenderer.invoke('backup:save', { data, meta, original }),
   backupLoad: () => ipcRenderer.invoke('backup:load'),
   backupClear: () => ipcRenderer.invoke('backup:clear'),
 

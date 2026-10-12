@@ -475,6 +475,8 @@ ipcMain.handle('recent:open', (event, filePath) => {
 // --- Auto-Save / Backup ---
 const BACKUP_FILENAME = 'autosave-backup.bin';
 const BACKUP_META_FILENAME = 'autosave-meta.json';
+// The unedited ROM of the backed-up session (base for patches and "restore original")
+const BACKUP_ORIGINAL_FILENAME = 'autosave-original.bin';
 
 function getBackupPath() {
   return path.join(app.getPath('userData'), BACKUP_FILENAME);
@@ -484,10 +486,15 @@ function getBackupMetaPath() {
   return path.join(app.getPath('userData'), BACKUP_META_FILENAME);
 }
 
-ipcMain.handle('backup:save', (event, { data, meta }) => {
+function getBackupOriginalPath() {
+  return path.join(app.getPath('userData'), BACKUP_ORIGINAL_FILENAME);
+}
+
+// `original` is only sent with the first backup of a session (it never changes)
+ipcMain.handle('backup:save', (event, { data, meta, original }) => {
   try {
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(getBackupPath(), buffer);
+    if (original) fs.writeFileSync(getBackupOriginalPath(), Buffer.from(original));
+    fs.writeFileSync(getBackupPath(), Buffer.from(data));
     fs.writeFileSync(getBackupMetaPath(), JSON.stringify(meta, null, 2), 'utf-8');
     return { success: true, timestamp: Date.now() };
   } catch (err) {
@@ -505,9 +512,13 @@ ipcMain.handle('backup:load', () => {
     }
     const buffer = fs.readFileSync(backupPath);
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
+    const originalPath = getBackupOriginalPath();
+    const original =
+      meta.hasOriginal && fs.existsSync(originalPath) ? fs.readFileSync(originalPath) : null;
     return {
       exists: true,
       data: Array.from(buffer),
+      original: original && original.length === buffer.length ? Array.from(original) : null,
       meta,
     };
   } catch (err) {
@@ -518,10 +529,9 @@ ipcMain.handle('backup:load', () => {
 
 ipcMain.handle('backup:clear', () => {
   try {
-    const backupPath = getBackupPath();
-    const metaPath = getBackupMetaPath();
-    if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
-    if (fs.existsSync(metaPath)) fs.unlinkSync(metaPath);
+    for (const p of [getBackupPath(), getBackupMetaPath(), getBackupOriginalPath()]) {
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
     return { success: true };
   } catch (err) {
     console.error('Failed to clear backup:', err.message);

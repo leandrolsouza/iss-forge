@@ -59,9 +59,9 @@ export function writeTeamNameText(rom, teamIndex, text) {
 
     // 2. Write in-game tile graphics (HUD during match)
     displaceTeamNameTilesIfNecessary(rom);
-    writeTileGraphicsP17(rom, teamIndex, text);
+    const tilesOk = writeTileGraphicsP17(rom, teamIndex, textToTiles(text));
 
-    return success;
+    return success && tilesOk;
   } catch (e) {
     console.error('Failed to write team name:', e);
     return false;
@@ -82,15 +82,27 @@ export function writeTeamNameMenu(rom, teamIndex, text) {
   }
 }
 
+const textToTiles = (text) => encode2bppTiles(renderTextToPixels(text));
+
 /**
- * Write ONLY the in-game tile graphics (scoreboard/HUD).
+ * Write ONLY the in-game tile graphics (scoreboard/HUD), drawn from `text`.
  * Does NOT touch the positional text (selection menu).
+ * @returns {boolean} false when the graphic does not fit in the tile area
  */
 export function writeTeamNameInGame(rom, teamIndex, text) {
+  return writeTeamNameInGameTiles(rom, teamIndex, textToTiles(text));
+}
+
+/**
+ * Write the in-game name graphic from raw 2bpp tile bytes (64 bytes, as returned by
+ * readTeamNameInGame): copies a team's graphic exactly, even a hand-drawn one.
+ * @returns {boolean} false when the graphic does not fit in the tile area
+ */
+export function writeTeamNameInGameTiles(rom, teamIndex, tiles) {
   try {
+    if (!tiles || tiles.length !== 64) return false;
     displaceTeamNameTilesIfNecessary(rom);
-    writeTileGraphicsP17(rom, teamIndex, text);
-    return true;
+    return writeTileGraphicsP17(rom, teamIndex, Uint8Array.from(tiles));
   } catch (e) {
     console.error('Failed to write in-game name:', e);
     return false;
@@ -200,42 +212,44 @@ const TEAM_NAME_ORDINALS = [
   0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 5, 25, 26,
 ];
 
+/**
+ * The menu name that fits: `text`, or the longest prefix of it whose sprite list fits
+ * in the selection-screen name area (the names after it shift into the free space).
+ * @returns {{ name: string, newData: Uint8Array, delta: number } | null} null if not even 1 letter fits
+ */
+function fitPositionalText(rom, teamIndex, text, addressMap = buildAddressMap(rom)) {
+  const current = addressMap.find((e) => e.teamIndex === teamIndex);
+  // end of the last name in the area (exclusive)
+  const end = Math.max(...addressMap.map((e) => e.address + e.size));
+  let name = text;
+  while (name.length > 0) {
+    const newData = generateTeamNameData(name);
+    const delta = newData.length - current.size;
+    if (delta <= 0 || end + delta <= MAXIMUM_ADDRESS) return { name, newData, delta };
+    name = name.substring(0, name.length - 1).trimEnd();
+  }
+  return null;
+}
+
+/**
+ * The menu name that writeTeamNameMenu would really write for `text` (shortened when
+ * the name area is full), or null when nothing fits. Does not change the ROM.
+ */
+export function fitTeamNameMenu(rom, teamIndex, text) {
+  return fitPositionalText(rom, teamIndex, text)?.name ?? null;
+}
+
 function writePositionalText(rom, teamIndex, text) {
-  const ordinal = TEAM_NAME_ORDINALS[teamIndex];
   const addressMap = buildAddressMap(rom);
   const current = addressMap.find((e) => e.teamIndex === teamIndex);
 
-  // Try the full name first, then progressively shorter until it fits
-  let nameToWrite = text;
-  let newData = generateTeamNameData(nameToWrite);
-  let newSize = newData.length;
-  let delta = newSize - current.size;
-
-  // Check if shift would exceed the limit
-  if (delta > 0) {
-    const toMove = addressMap.filter((e) => e.address > current.address);
-    if (toMove.length > 0) {
-      const lastEntry = toMove.sort((a, b) => a.address - b.address)[toMove.length - 1];
-      const wouldExceed = lastEntry.address + lastEntry.size + delta > MAXIMUM_ADDRESS;
-
-      if (wouldExceed) {
-        // Truncate name progressively until it fits
-        while (nameToWrite.length > 1 && delta > 0) {
-          nameToWrite = nameToWrite.substring(0, nameToWrite.length - 1);
-          newData = generateTeamNameData(nameToWrite);
-          newSize = newData.length;
-          delta = newSize - current.size;
-        }
-
-        // If still too big even at 1 char, try to fit without expansion (delta <= 0)
-        if (delta > 0) {
-          console.warn(`[TeamName] Cannot fit any text in slot for team ${teamIndex}`);
-          return false;
-        }
-        console.log(`[TeamName] Truncated "${text}" to "${nameToWrite}" to fit ROM space`);
-      }
-    }
+  const fit = fitPositionalText(rom, teamIndex, text, addressMap);
+  if (!fit) {
+    console.warn(`[TeamName] Cannot fit any text in slot for team ${teamIndex}`);
+    return false;
   }
+  const { newData, delta } = fit;
+  const newSize = newData.length;
 
   if (delta !== 0) {
     const toMove = addressMap
@@ -279,9 +293,6 @@ function writePositionalText(rom, teamIndex, text) {
     }
   }
 
-  console.log(
-    `[TeamName] Positional text "${nameToWrite}" at 0x${current.address.toString(16)} (${newSize}B, was ${current.size}B, delta ${delta})`,
-  );
   return true;
 }
 
@@ -403,7 +414,8 @@ function writeTilePointerP17(rom, pointerOffset, address) {
   rom.writeByte(pointerOffset + 1, (snesAddr >> 8) & 0xff);
 }
 
-function writeTileGraphicsP17(rom, teamIndex, text) {
+/** @returns {boolean} false (nothing written) when the address is invalid or the block does not fit */
+function writeTileGraphicsP17(rom, teamIndex, tileData) {
   const ordinal = TEAM_NAME_ORDINALS[teamIndex];
   const ptrOffset = TILE_NAME_POINTER_OFFSET + ordinal * TILE_NAME_POINTER_STEP;
   const dataAddr = readTilePointerP17(rom, ptrOffset);
@@ -412,21 +424,14 @@ function writeTileGraphicsP17(rom, teamIndex, text) {
     console.warn(
       `[TileName] WRITE FAIL: Invalid P17000 address 0x${dataAddr.toString(16)} for team ${teamIndex} (ord=${ordinal})`,
     );
-    return;
+    return false;
   }
 
   // Read current block size (first byte of compressed data = total compressed length)
   const currentBlockSize = rom.readByte(dataAddr);
 
-  // Render text to 2bpp tiles and compress
-  const pixels = renderTextToPixels(text);
-  const tileData = encode2bppTiles(pixels);
   const compressed = konamiCompress(tileData, 1);
   const newSize = compressed.length;
-
-  console.log(
-    `[TileName] WRITE team ${teamIndex} "${text}": addr=0x${dataAddr.toString(16)} slot=${currentBlockSize}B compressed=${newSize}B`,
-  );
 
   const delta = newSize - currentBlockSize;
 
@@ -438,14 +443,14 @@ function writeTileGraphicsP17(rom, teamIndex, text) {
       .sort((a, b) => a.address - b.address);
 
     // Check if shifting would exceed the maximum address
-    if (toMove.length > 0) {
-      const lastEntry = toMove[toMove.length - 1];
-      if (lastEntry.address + lastEntry.size + delta > TILE_MAXIMUM_ADDRESS_P17) {
-        console.warn(
-          `[TileName] WRITE FAIL: shifting would exceed P17 limit (last=0x${(lastEntry.address + lastEntry.size + delta).toString(16)} > 0x${TILE_MAXIMUM_ADDRESS_P17.toString(16)})`,
-        );
-        return;
-      }
+    const end = toMove.length
+      ? toMove[toMove.length - 1].address + toMove[toMove.length - 1].size
+      : dataAddr + currentBlockSize;
+    if (end + delta > TILE_MAXIMUM_ADDRESS_P17) {
+      console.warn(
+        `[TileName] WRITE FAIL: shifting would exceed P17 limit (end=0x${(end + delta).toString(16)} > 0x${TILE_MAXIMUM_ADDRESS_P17.toString(16)})`,
+      );
+      return false;
     }
 
     // Move data from last to first (to avoid overwriting)
@@ -460,8 +465,6 @@ function writeTileGraphicsP17(rom, teamIndex, text) {
       const entryPtrOffset = TILE_NAME_POINTER_OFFSET + entry.ordinal * TILE_NAME_POINTER_STEP;
       writeTilePointerP17(rom, entryPtrOffset, entry.address + delta);
     }
-
-    console.log(`[TileName] Shifted ${toMove.length} subsequent tile blocks by +${delta} bytes`);
   } else if (delta < 0) {
     // New data is smaller: shift subsequent blocks backward to reclaim space
     const tileMap = buildTileAddressMap(rom);
@@ -481,13 +484,11 @@ function writeTileGraphicsP17(rom, teamIndex, text) {
       const entryPtrOffset = TILE_NAME_POINTER_OFFSET + entry.ordinal * TILE_NAME_POINTER_STEP;
       writeTilePointerP17(rom, entryPtrOffset, entry.address + delta);
     }
-
-    console.log(`[TileName] Shifted ${toMove.length} subsequent tile blocks by ${delta} bytes`);
   }
 
   // Write new compressed data at the original address
   rom.writeBytes(dataAddr, compressed);
-  console.log(`[TileName] WRITE OK: "${text}" at 0x${dataAddr.toString(16)} (${newSize}B)`);
+  return true;
 }
 
 // === Pointer utilities ===

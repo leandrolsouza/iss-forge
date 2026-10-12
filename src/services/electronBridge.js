@@ -203,15 +203,16 @@ export function openRecentRom(filePath) {
  * Save ROM data as a backup
  * @param {number[]} data - ROM byte array
  * @param {object} meta - Metadata (fileName, timestamp, modified state)
+ * @param {number[]} [original] - the unedited ROM; only needed once per session
  * @returns {Promise<{success: boolean, timestamp?: number, error?: string}>}
  */
-export function backupSave(data, meta) {
-  return window.electronAPI.backupSave(data, meta);
+export function backupSave(data, meta, original) {
+  return window.electronAPI.backupSave(data, meta, original);
 }
 
 /**
  * Load the last auto-save backup
- * @returns {Promise<{exists: boolean, data?: number[], meta?: object, error?: string}>}
+ * @returns {Promise<{exists: boolean, data?: number[], original?: number[]|null, meta?: object, error?: string}>}
  */
 export function backupLoad() {
   return window.electronAPI.backupLoad();

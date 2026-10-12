@@ -1,16 +1,54 @@
 /**
  * Team name text reader
- * Reads positional tile data and reconstructs the team name string
+ * Reads positional tile data and reconstructs the team name string,
+ * and the in-game name graphic (4 compressed 2bpp tiles)
  */
 import { TEAMS } from '../constants';
+import { konamiDecompress } from '../KonamiCodec';
+import { decode2bppTiles, recognizeTextPixels } from '../TeamNameTileFont';
 
 const TEAM_NAME_POINTER_OFFSET = 0x39dae;
 const TEAM_NAME_POINTER_STEP = 2;
+
+// In-game name tiles: pointer table, and the flag telling whether the blocks were
+// moved from bank $89 (0x48000, original ROM) to 0x17680 by the editor
+const TILE_NAME_POINTER_OFFSET = 0x93cd;
+const TILE_FORMAT_FLAG_OFFSET = 0x93c6;
+const P17000_FLAG = 0x82;
+export const IN_GAME_NAME_TILE_BYTES = 64;
 
 // Maps our TEAMS array index to ISS Studio enum ordinal (pointer table position)
 const TEAM_NAME_ORDINALS = [
   0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 5, 25, 26,
 ];
+
+/** ROM address of a team's compressed in-game name tiles */
+export function inGameNameAddress(rom, teamIndex) {
+  const ptr = TILE_NAME_POINTER_OFFSET + TEAM_NAME_ORDINALS[teamIndex] * 2;
+  const b1 = rom.readByte(ptr);
+  const b2 = rom.readByte(ptr + 1);
+  return rom.readByte(TILE_FORMAT_FLAG_OFFSET) === P17000_FLAG
+    ? 0x10000 + ((b2 - 0x80) << 8) + b1
+    : 0x40000 + (b2 << 8) + b1;
+}
+
+/**
+ * The in-game name graphic (scoreboard/HUD): the exact 2bpp tile bytes, and the
+ * text when the graphic is exactly what the editor's font draws for it (null for
+ * custom drawings such as the original ARGENTINA and SUPER STAR).
+ * @returns {{ text: string|null, tiles: number[] }}
+ */
+export function readTeamNameInGame(rom, teamIndex) {
+  try {
+    const addr = inGameNameAddress(rom, teamIndex);
+    const out = konamiDecompress(rom.getRawData(), rom.offset(addr), 1);
+    const tiles = Array.from({ length: IN_GAME_NAME_TILE_BYTES }, (_, i) => out[i] || 0);
+    return { text: recognizeTextPixels(decode2bppTiles(tiles)), tiles };
+  } catch (e) {
+    console.warn('Failed to read in-game name for team', teamIndex, e);
+    return { text: null, tiles: null };
+  }
+}
 
 export function readTeamNameText(rom, teamIndex) {
   try {

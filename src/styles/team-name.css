@@ -61,7 +61,34 @@
 }
 
 .teamname-input-short {
-  max-width: 120px;
+  max-width: 200px;
+}
+
+.teamname-warning {
+  margin-top: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+}
+
+/* In-game name graphic (32x8 pixels, scaled) */
+.teamname-ingame-preview {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.teamname-ingame-canvas {
+  image-rendering: pixelated;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: #2f6b2f;
+}
+
+.teamname-ingame-caption {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
 }
 
 .teamname-autosave-hint {

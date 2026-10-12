@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 
 /**
  * BackupBanner — shows a notification when an unsaved backup is found on startup.
@@ -9,6 +10,7 @@ import { useRom } from '../context/RomContext';
 export default function BackupBanner() {
   const { t } = useI18n();
   const { checkBackup, clearBackup, loadRomData, romParser } = useRom();
+  const toast = useToast();
   const [backup, setBackup] = useState(null);
   const [dismissed, setDismissed] = useState(false);
 
@@ -27,14 +29,19 @@ export default function BackupBanner() {
     };
   }, [checkBackup, romParser]);
 
+  // The backup holds unsaved edits: load it as a modified session whose "original"
+  // (patch base, restore buttons) is the unedited ROM saved with it. The backup is
+  // kept until the restored session is saved or discarded.
   const handleRestore = useCallback(() => {
     if (!backup) return;
     const data = new Uint8Array(backup.data);
+    const originalData = backup.original ? new Uint8Array(backup.original) : null;
     const fileName = backup.meta?.fileName || 'backup.smc';
-    loadRomData(data, fileName);
-    clearBackup();
+    loadRomData(data, fileName, null, { originalData, restored: true });
+    // Older backups don't carry the unedited ROM: the backup becomes the base
+    if (!originalData) toast.warning(t('backupNoOriginal'));
     setDismissed(true);
-  }, [backup, loadRomData, clearBackup]);
+  }, [backup, loadRomData, toast, t]);
 
   const handleDiscard = useCallback(() => {
     clearBackup();

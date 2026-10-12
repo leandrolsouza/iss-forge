@@ -47,6 +47,10 @@ export default function useRomState({ toast, t } = {}) {
   const modifiedRef = useRef(false);
   modifiedRef.current = modified;
 
+  // `modified` follows the history's saved point (see useHistory); these are stable
+  const { isModified, touch: touchHistory, markSaved: markHistorySaved } = history;
+  const syncModified = useCallback(() => setModified(isModified()), [isModified]);
+
   // ROM waiting for the user to confirm discarding unsaved changes
   const [pendingLoad, setPendingLoad] = useState(null);
 
@@ -55,15 +59,18 @@ export default function useRomState({ toast, t } = {}) {
    * @param {Uint8Array} data
    * @param {string} fileName
    * @param {string|null} [filePath] - absolute path on disk (Electron); becomes the "Save" target
+   * @param {{ originalData?: Uint8Array, restored?: boolean }} [options]
+   *   restored: `data` is an auto-save backup (unsaved edits): the session starts as
+   *   modified and `originalData` (the unedited ROM) stays the base for patches/restores
    */
   const loadRomData = useCallback(
-    (data, fileName, filePath = null) => {
+    (data, fileName, filePath = null, { originalData = null, restored = false } = {}) => {
       setLoading(true);
 
       // Use setTimeout to allow the loading UI to render before synchronous parsing
       setTimeout(() => {
         try {
-          const parser = new RomParser(data);
+          const parser = new RomParser(data, originalData);
           const validation = parser.validate();
 
           if (!validation.isValid) {
@@ -77,9 +84,11 @@ export default function useRomState({ toast, t } = {}) {
 
           setRomParser(parser);
           romParserRef.current = parser;
-          setRomInfo({ fileName, ...validation });
+          setRomInfo({ fileName, ...validation, restored });
           setStatusMessage(validation.message + ` - ${fileName}`);
-          setModified(false);
+          // a restored backup holds unsaved edits: it matches no file on disk
+          history.clearHistory({ saved: !restored });
+          setModified(restored);
 
           const allTeams = parser.readAllTeams();
           setTeams(allTeams);
@@ -90,7 +99,6 @@ export default function useRomState({ toast, t } = {}) {
           setMenuScreens(parser.readMenuScreens());
           setScreenTexts(parser.readScreenTexts());
           setTitleScreen(parser.readTitleScreen());
-          history.clearHistory();
 
           if (allTeams.length > 0) {
             setSelectedTeamIndex(0);
@@ -133,14 +141,20 @@ export default function useRomState({ toast, t } = {}) {
   const cancelPendingLoad = useCallback(() => setPendingLoad(null), []);
 
   const markModified = useCallback(() => {
+    // Edits normally get a new state from pushSnapshot; this covers any that don't
+    touchHistory();
     setModified(true);
     setStatusMessage(romInfo?.fileName || '');
-  }, [romInfo]);
+  }, [romInfo, touchHistory]);
 
-  const markSaved = useCallback((path) => {
-    setModified(false);
-    setStatusMessage(path || '');
-  }, []);
+  const markSaved = useCallback(
+    (path) => {
+      markHistorySaved();
+      setModified(false);
+      setStatusMessage(path || '');
+    },
+    [markHistorySaved],
+  );
 
   // Undo/Redo operations
   // Snapshots hold { teams, scenarios, matchPalettes }. Callers keep passing
@@ -165,9 +179,20 @@ export default function useRomState({ toast, t } = {}) {
   });
 
   const pushSnapshot = useCallback(
-    (teamsSnapshot) => history.pushSnapshot({ teams: teamsSnapshot, ...currentGlobals() }),
+    (teamsSnapshot) => {
+      history.pushSnapshot({ teams: teamsSnapshot, ...currentGlobals() });
+    },
     [history],
   );
+
+  /**
+   * Drop the snapshot taken by the last pushSnapshot, when the edit it guarded was
+   * rejected or changed nothing (no empty undo steps). The caller is responsible for
+   * leaving the ROM bytes as they were before the edit.
+   */
+  const cancelSnapshot = useCallback(() => {
+    if (history.cancelLast()) syncModified();
+  }, [history, syncModified]);
 
   const applySnapshot = useCallback(
     (restored) => {
@@ -222,17 +247,17 @@ export default function useRomState({ toast, t } = {}) {
     const restored = history.undo({ teams, ...currentGlobals() });
     if (restored) {
       applySnapshot(restored);
-      setModified(history.canUndo);
+      syncModified();
     }
-  }, [history, teams, applySnapshot]);
+  }, [history, teams, applySnapshot, syncModified]);
 
   const performRedo = useCallback(() => {
     const restored = history.redo({ teams, ...currentGlobals() });
     if (restored) {
       applySnapshot(restored);
-      setModified(true);
+      syncModified();
     }
-  }, [history, teams, applySnapshot]);
+  }, [history, teams, applySnapshot, syncModified]);
 
   // Tab management
   const selectTeam = useCallback(
@@ -317,6 +342,7 @@ export default function useRomState({ toast, t } = {}) {
 
     // Undo/Redo
     pushSnapshot,
+    cancelSnapshot,
     performUndo,
     performRedo,
     canUndo: history.canUndo,

@@ -92,7 +92,6 @@ export default function App() {
     handleSpecialHairSkinChange,
     handleFlagColorChange,
     handleFlagColorBulkChange,
-    handleFlagDesignChange,
     handleFlagDesignBulkChange,
     handleTeamNameGenerate,
     handleTeamNameMenuSave,
@@ -414,7 +413,6 @@ export default function App() {
         return (
           <FlagDesignEditor
             {...props}
-            onFlagDesignChange={handleFlagDesignChange}
             onFlagDesignBulkChange={handleFlagDesignBulkChange}
             onFlagColorChange={handleFlagColorChange}
             onFlagColorBulkChange={handleFlagColorBulkChange}

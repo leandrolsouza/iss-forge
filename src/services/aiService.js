@@ -5,6 +5,16 @@
  * against the existing iss-forge-team JSON schema.
  */
 import { clampStat, gameSpeed } from '../rom/playerStats';
+import { textPixelWidth, IN_GAME_NAME_WIDTH } from '../rom/TeamNameTileFont';
+
+/** Scoreboard name: letters the editor font can draw, cut to the 32-pixel graphic */
+function fitInGameName(text) {
+  let name = text.replace(/[^A-Z0-9. ]/g, '').trim();
+  while (name.length > 1 && textPixelWidth(name) > IN_GAME_NAME_WIDTH) {
+    name = name.slice(0, -1).trimEnd();
+  }
+  return name || 'AI';
+}
 
 /**
  * SNES color values must be multiples of 8 (5-bit RGB: 0-248 in steps of 8)
@@ -38,7 +48,7 @@ const CONSTRAINTS = {
   colorRange: { min: 0, max: 248, step: 8 },
   flagColorCount: 4,
   teamNameTextMaxLength: 8,
-  teamNameInGameMaxLength: 3,
+  teamNameInGameMaxLength: 7,
   uniformStructure: {
     home: { shirt: 3, shorts: 3, socks: 2 },
     away: { shirt: 3, shorts: 3, socks: 2 },
@@ -101,7 +111,7 @@ All R, G, B values must be multiples of 8, range 0-248.
 ## Team Names
 - name: descriptive display name (max 20 chars)
 - teamNameText: max ${CONSTRAINTS.teamNameTextMaxLength} chars UPPERCASE (shown in menus)
-- teamNameInGame: exactly ${CONSTRAINTS.teamNameInGameMaxLength} chars UPPERCASE (scoreboard)
+- teamNameInGame: max ${CONSTRAINTS.teamNameInGameMaxLength} chars UPPERCASE (drawn on the scoreboard; usually the same name as teamNameText, or a shorter form)
 
 ## Uniforms
 Home kit:
@@ -141,11 +151,11 @@ Return ONLY a valid JSON object. No markdown fences, no explanation, no comments
 
 {
   "_format": "iss-forge-team",
-  "_version": 2,
+  "_version": 3,
   "name": "Team Display Name",
   "id": "TEAMID",
   "teamNameText": "TEAMNAME",
-  "teamNameInGame": "TEA",
+  "teamNameInGame": "TEAM",
   "players": [
     {
       "name": "PLAYER1",
@@ -276,7 +286,7 @@ export function sanitizeGeneratedTeam(data) {
 
   const team = {
     _format: 'iss-forge-team',
-    _version: 2,
+    _version: 3,
     name: String(data.name || 'AI Team').substring(0, 20),
     id: String(data.id || 'AITEAM')
       .substring(0, 10)
@@ -284,9 +294,9 @@ export function sanitizeGeneratedTeam(data) {
     teamNameText: String(data.teamNameText || data.name || 'AITEAM')
       .substring(0, CONSTRAINTS.teamNameTextMaxLength)
       .toUpperCase(),
-    teamNameInGame: String(data.teamNameInGame || (data.name || 'AIT').substring(0, 3))
-      .substring(0, CONSTRAINTS.teamNameInGameMaxLength)
-      .toUpperCase(),
+    teamNameInGame: fitInGameName(
+      String(data.teamNameInGame || data.teamNameText || data.name || 'AI TEAM').toUpperCase(),
+    ),
     players: [],
     uniforms: null,
     hairSkin: null,

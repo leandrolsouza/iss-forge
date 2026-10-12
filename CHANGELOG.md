@@ -45,6 +45,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The attribute formerly labelled "Speed" (byte 1, low nibble) is the goalkeeper kick power. The game only
   uses 0-7, so the editor now caps it at that range
 - The shooting/technique bars in the player details now update right after an edit
+- **Flag designs are written to the ROM at the end of each brush stroke** (they used to wait for the save).
+  Copying/swapping a team no longer loses unsaved drawings, and the auto-save backup and the emulator
+  test include them. A design that does not fit in the flag area is refused with a message instead of
+  being silently dropped at save time
+- **In-game (scoreboard) name** — the 32x8 graphic is now read from the ROM. Copy/swap and team JSON
+  carry the exact tiles (format v3), so they no longer overwrite e.g. "GERMANY" with "GER". The editor
+  shows the graphic, accepts names up to 32 pixels (about 7 letters) and reads back the text of graphics
+  drawn with its font. Pre-v3 files, whose scoreboard name was always the first 3 letters of the menu
+  name, get the full menu name
+- Team name: the menu field shows when a name will be shortened to fit the name area, the status bar shows
+  the name really written, and a rejected write leaves no undo step. The last name in the area could
+  overflow it
+- AI generator: applying a team is one undo step again (the flag created a second one)
+- Restoring the auto-save backup keeps the unedited ROM as the "original" (patch base and restore
+  buttons) and marks the session as modified. Undo/redo follow the saved point: undoing back to the last
+  save clears "modified", redoing past it sets it again
 
 ---
 

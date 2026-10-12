@@ -2,8 +2,17 @@
  * Team Import/Export as JSON
  * Allows sharing team configurations between users
  */
+import { textPixelWidth, IN_GAME_NAME_WIDTH } from '../rom/TeamNameTileFont';
 
-const EXPORT_VERSION = 2;
+/**
+ * v3: the in-game name travels as the exact tile graphic (`teamNameInGameTiles`), and
+ * `teamNameInGame` is its text (null for hand-drawn graphics). Before v3 the text was
+ * never read from the ROM: exports carried the first 3 letters of the menu name.
+ */
+const EXPORT_VERSION = 3;
+
+const isTileArray = (tiles) =>
+  Array.isArray(tiles) && tiles.length === 64 && tiles.every((b) => Number.isInteger(b));
 
 /**
  * Player fields to write on import.
@@ -34,8 +43,10 @@ export function exportTeam(team) {
     name: team.name,
     id: team.id,
     teamNameText: team.teamNameText || '',
-    teamNameInGame:
-      team.teamNameInGame || (team.teamNameText || team.name).substring(0, 3).toUpperCase(),
+    teamNameInGame: team.teamNameInGame || null,
+    teamNameInGameTiles: isTileArray(team.teamNameInGameTiles)
+      ? [...team.teamNameInGameTiles]
+      : undefined,
     players: team.players.map((p) => ({
       name: p.name,
       number: p.number,
@@ -120,9 +131,11 @@ export function validateImport(data) {
  * @param {RomParser} romParser
  * @param {number} teamIndex - Target team slot
  * @param {object} teamData - Imported team data
+ * @returns {{ warnings: string[] }} i18n keys of the parts that could not be written
  */
 export function applyImportedTeam(romParser, teamIndex, teamData) {
   const version = Number.isFinite(teamData._version) ? teamData._version : 1;
+  const warnings = [];
   // Write players
   if (teamData.players) {
     teamData.players.forEach((player, playerIndex) => {
@@ -191,9 +204,29 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
     romParser.writeTeamNameMenu(teamIndex, teamData.teamNameText);
   }
 
-  // Write team name (in-game / scoreboard)
-  if (teamData.teamNameInGame) {
-    romParser.writeTeamNameInGame(teamIndex, teamData.teamNameInGame);
+  // In-game name graphic: the exact tiles when the file has them (v3+), else drawn
+  // from the text
+  if (isTileArray(teamData.teamNameInGameTiles)) {
+    if (!romParser.writeTeamNameInGameTiles(teamIndex, teamData.teamNameInGameTiles)) {
+      warnings.push('toastInGameNameNoSpace');
+    }
+  } else {
+    let text = teamData.teamNameInGame;
+    // Before v3 this was always the first 3 letters of the menu name (the real
+    // graphic was never read): draw the full name, like the game does, when it fits
+    const menu = String(teamData.teamNameText || '').toUpperCase();
+    if (
+      version < 3 &&
+      text &&
+      menu &&
+      text === menu.substring(0, 3) &&
+      textPixelWidth(menu) <= IN_GAME_NAME_WIDTH
+    ) {
+      text = menu;
+    }
+    if (text && !romParser.writeTeamNameInGame(teamIndex, text)) {
+      warnings.push('toastInGameNameNoSpace');
+    }
   }
 
   // Write default formation (optional — older exports don't have it)
@@ -220,8 +253,11 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
   // Flag design (optional; 2D grid of palette indexes)
   const grid = teamData.flagDesign?.grid;
   if (Array.isArray(grid) && grid.length && Array.isArray(grid[0])) {
-    romParser.writeFlagDesign(teamIndex, grid);
+    // nothing is written when the compressed flag does not fit
+    if (!romParser.writeFlagDesign(teamIndex, grid)) warnings.push('toastFlagNoSpace');
   }
+
+  return { warnings };
 }
 
 /**
@@ -232,20 +268,22 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
  * @param {number} from - source slot (TEAMS index)
  * @param {number} to - destination slot
  * @param {{ swap?: boolean }} [options]
+ * @returns {{ warnings: string[] }}
  */
 export function copyTeam(romParser, from, to, { swap = false } = {}) {
-  if (from === to) return;
+  if (from === to) return { warnings: [] };
   const src = JSON.parse(JSON.stringify(exportTeam(romParser.readTeam(from))));
   const dst = swap ? JSON.parse(JSON.stringify(exportTeam(romParser.readTeam(to)))) : null;
   const { crowdMap } = romParser.readMatchPalettes();
 
-  applyImportedTeam(romParser, to, src);
+  const warnings = [...applyImportedTeam(romParser, to, src).warnings];
   const crowd = { [`crowdMap:${to}`]: crowdMap[from] };
   if (swap) {
-    applyImportedTeam(romParser, from, dst);
+    warnings.push(...applyImportedTeam(romParser, from, dst).warnings);
     crowd[`crowdMap:${from}`] = crowdMap[to];
   }
   romParser.applyPaletteUpdates(crowd);
+  return { warnings: [...new Set(warnings)] };
 }
 
 /**

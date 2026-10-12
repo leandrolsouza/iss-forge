@@ -403,18 +403,25 @@ export default {
   generate: 'Gerar',
   generated: 'Gerado!',
   nameInGame: 'Nome no Jogo (Placar)',
-  nameInGamePlaceholder: 'Ex: BRA',
-  nameInGameHint: 'Max 3 caracteres (A-Z, 0-9, ponto). Exibido no placar durante as partidas.',
+  nameInGamePlaceholder: 'Ex: BRASIL',
+  nameInGameHint:
+    'Desenho de 32x8 pixels (A-Z, 0-9, ponto, espaco): cerca de 7 letras. Exibido no placar durante as partidas.',
+  nameInGameCurrent: 'Atual (na ROM)',
+  nameInGameNew: 'Novo',
+  nameInGameTooWide: 'Largo demais: {width} de {max} pixels.',
+  nameInGameCustom:
+    'O desenho atual nao usa a fonte do editor (letras ajustadas a mao, como no jogo original). Gerar um nome novo substitui o desenho; copiar o time mantem o desenho.',
   nameInMenu: 'Texto no Menu (Tela de Selecao)',
   nameInMenuPlaceholder: 'Ex: BRASIL',
   nameInMenuHint:
     'Max 10 caracteres (A-Z, 0-9, ponto, espaco). Exibido sob a bandeira na tela de selecao.',
+  nameInMenuWillTruncate: 'Nao cabe no espaco dos nomes do menu: sera gravado como "{name}".',
   teamNameHowTitle: 'Como Funciona',
   teamNameHowTwo1:
-    'O time tem dois nomes: um curto no placar durante as partidas (3 chars) e um completo na tela de selecao (ate 10 chars).',
+    'O time tem dois nomes: um desenho no placar durante as partidas (cerca de 7 letras) e um nome na tela de selecao (ate 10 letras).',
   teamNameHowTwo2:
-    'Gere primeiro o nome in-game (ex: BRA), depois digite o nome completo no menu (ex: BRASIL) que salva automaticamente ao sair do campo.',
-  teamNameHowTwo3: 'Exemplos: BRA / BRASIL, GER / GERMANY, ITA / ITALY, ARG / ARGENTINA',
+    'Digite o nome do placar e clique em Gerar; o nome do menu salva automaticamente ao sair do campo.',
+  teamNameHowTwo3: 'Exemplos: BRASIL / BRASIL, GERMANY / GERMANY, U.S.A. / U.S.A.',
 
   // Preview
   overview: 'Visao Geral do Elenco',
@@ -508,6 +515,14 @@ export default {
   toastImportFailed: 'Falha ao importar o arquivo.',
   toastImportSingleTeam: 'Escolha um arquivo com um unico time.',
   toastTeamImported: '{name} importado para o slot {slot}.',
+  toastFlagNoSpace:
+    'O desenho da bandeira nao cabe no espaco das bandeiras da ROM: nada foi alterado.',
+  toastFlagNoSpaceDetail:
+    'Desenhos com mais detalhes comprimem menos. Use areas de cor maiores, ou simplifique a bandeira de outro time para liberar espaco.',
+  toastTeamNameNoSpace: 'O nome nao cabe no espaco dos nomes do menu.',
+  toastTeamNameTruncated: 'Nome do menu encurtado para "{name}" (falta espaco).',
+  toastInGameNameNoSpace:
+    'O nome do placar nao cabe no espaco dos desenhos de nome: o desenho anterior foi mantido.',
   tournamentApplied: 'Sorteio aplicado.',
 
   // Tabs & navigation
@@ -943,6 +958,8 @@ export default {
   backupFound: 'Backup nao salvo encontrado de {date}.',
   backupRestore: 'Restaurar',
   backupDiscard: 'Descartar',
+  backupNoOriginal:
+    'Este backup e de uma versao anterior e nao guarda a ROM original: "Restaurar original" e o patch vao usar o proprio backup como base.',
 
   // AI Team Generator
   editorAiGenerator: 'Gerador IA',

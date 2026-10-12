@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useSettings } from '../context/SettingsContext';
+import { useToast } from '../context/ToastContext';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
 import { buildSystemPrompt, parseLLMResponse, streamLLMWeb } from '../services/aiService';
@@ -62,8 +63,8 @@ export default function AIGeneratorPanel({ teamIndex }) {
     markModified,
     pushSnapshot,
     setStatusMessage,
-    handleFlagDesignBulkChange,
   } = useRom();
+  const toast = useToast();
 
   const team = teams?.[teamIndex];
 
@@ -198,12 +199,9 @@ export default function AIGeneratorPanel({ teamIndex }) {
   const handleApply = useCallback(() => {
     if (!generatedTeam || !romParser || teamIndex === null) return;
 
+    // One undo step: applyImportedTeam writes everything, flag design included
     pushSnapshot(teams);
-    applyImportedTeam(romParser, teamIndex, generatedTeam);
-
-    if (generatedTeam.flagDesign && generatedTeam.flagDesign.grid) {
-      handleFlagDesignBulkChange(teamIndex, generatedTeam.flagDesign.grid);
-    }
+    const { warnings } = applyImportedTeam(romParser, teamIndex, generatedTeam);
 
     const updatedTeam = romParser.readTeam(teamIndex);
     setTeams((prev) => {
@@ -214,6 +212,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
 
     markModified();
     setStatusMessage(t('aiApplied'));
+    warnings.forEach((key) => toast.warning(t(key)));
     setGeneratedTeam(null);
     setStreamText('');
   }, [
@@ -225,7 +224,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
     setTeams,
     markModified,
     setStatusMessage,
-    handleFlagDesignBulkChange,
+    toast,
     t,
   ]);
 

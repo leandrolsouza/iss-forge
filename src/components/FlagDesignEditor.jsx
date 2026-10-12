@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useI18n } from '../i18n';
 import { useConfirm } from '../context/ConfirmContext';
 import FlagTemplateSelector from './FlagTemplateSelector';
@@ -12,17 +12,25 @@ const PIXEL_SIZE = 22;
 export default function FlagDesignEditor({
   team,
   teamIndex,
-  onFlagDesignChange,
   onFlagDesignBulkChange,
   onFlagColorChange,
   onFlagColorBulkChange,
 }) {
   const [selectedColor, setSelectedColor] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
+  // A brush stroke is painted here and written to the ROM (one undo step) on mouse up
+  const [strokeGrid, setStrokeGrid] = useState(null);
+  const strokeRef = useRef(null);
   const canvasRef = useRef(null);
-  const strokeStarted = useRef(false);
   const confirm = useConfirm();
   const { t } = useI18n();
+
+  // A stroke never carries over to another team
+  useEffect(() => {
+    strokeRef.current = null;
+    setStrokeGrid(null);
+    setIsDrawing(false);
+  }, [teamIndex]);
 
   const COLOR_LABELS = [
     t('transparent'),
@@ -36,7 +44,8 @@ export default function FlagDesignEditor({
     return <div className="editor-panel empty">{t('flagDesignSelectTeam')}</div>;
   }
 
-  const { grid, flagColors } = team.flagDesign;
+  const { flagColors } = team.flagDesign;
+  const grid = strokeGrid || team.flagDesign.grid;
 
   // Get display color for a palette index
   const getDisplayColor = (paletteIdx) => {
@@ -46,18 +55,20 @@ export default function FlagDesignEditor({
     return `rgb(${color.r},${color.g},${color.b})`;
   };
 
-  // A brush stroke (mouse down -> up) is a single undo step: only the first
-  // pixel of the stroke pushes a snapshot
   const paint = (row, col) => {
-    if (grid[row][col] === selectedColor) return;
-    onFlagDesignChange(teamIndex, row, col, selectedColor, !strokeStarted.current);
-    strokeStarted.current = true;
+    const base = strokeRef.current || team.flagDesign.grid;
+    if (base[row][col] === selectedColor) return;
+    const next = base.map((r, y) =>
+      y === row ? r.map((p, x) => (x === col ? selectedColor : p)) : r,
+    );
+    strokeRef.current = next;
+    setStrokeGrid(next);
   };
 
   const handleMouseDown = (e, row, col) => {
     if (e.button !== 0) return;
     e.preventDefault();
-    strokeStarted.current = false;
+    strokeRef.current = null;
     setIsDrawing(true);
     paint(row, col);
   };
@@ -66,9 +77,14 @@ export default function FlagDesignEditor({
     if (isDrawing) paint(row, col);
   };
 
+  // End of the stroke: compress it into the ROM (the handler warns when it does not fit)
   const handleMouseUp = () => {
+    if (!isDrawing) return;
     setIsDrawing(false);
-    strokeStarted.current = false;
+    const painted = strokeRef.current;
+    strokeRef.current = null;
+    setStrokeGrid(null);
+    if (painted) onFlagDesignBulkChange(teamIndex, painted);
   };
 
   const isUniform = (value) => grid.every((row) => row.every((p) => p === value));

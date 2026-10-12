@@ -30,6 +30,7 @@ export function RomProvider({ children }) {
     requestLoadRom: state.requestLoadRom,
     setLoading: state.setLoading,
     pushSnapshot: state.pushSnapshot,
+    cancelSnapshot: state.cancelSnapshot,
     setScenarios: state.setScenarios,
     setMatchPalettes: state.setMatchPalettes,
     setTournamentDraws: state.setTournamentDraws,
@@ -46,7 +47,8 @@ export function RomProvider({ children }) {
     teams: state.teams,
   });
 
-  // Clear backup when ROM is saved (modified transitions to false while ROM is loaded)
+  // Clear the backup once the session matches the file on disk again (saved, or undone
+  // back to the last save). A restored backup never matches until it is saved.
   const prevModifiedRef = useRef(state.modified);
   useEffect(() => {
     if (prevModifiedRef.current && !state.modified && state.romParser) {

@@ -133,54 +133,50 @@ Sugestão de ordem:
 ## Melhorias nas abas existentes (revisão de código, out/2026)
 
 Achados de leitura do código (não reproduzidos no app; confirmar cada bug antes de corrigir). Ordem
-sugerida: 5.1 → 5.2 (com testes do desfazer) → prévia real do jogador (5.3) → resto.
+sugerida: ~~5.1~~ → 5.2 (o que falta) → prévia real do jogador (5.3) → resto.
 
-### 5.1 Bugs que podem perder ou estragar dados (prioridade máxima)
-- **Bandeiras gravadas só ao salvar** (`dirty`, `useRomHandlers.js` ~268-310):
-  - copiar/trocar time recarrega todos os times da ROM (`handleCopyTeam`) e perde desenhos pendentes de
-    qualquer time; `copyTeam` lê a bandeira de origem da ROM (`teamExport.js` ~238), sem o desenho novo;
-  - o backup automático grava a ROM sem as bandeiras pendentes (`useAutoSave.js` ~24);
-  - `prepareRomForWrite` ignora o `false` de `writeFlagDesign` quando a bandeira não cabe (só
-    `console.error` em `FlagDesignWriter.js` ~176-182) e muda `dirty` direto no estado do React.
-  - Correção: gravar ao terminar cada traço (o undo já restaura os bytes exatos via `flagBytes`) e avisar
-    quando não couber.
-- **Nome do Time grava no time errado:** os refs dos campos não são reiniciados ao trocar de time
-  (`TeamNameEditor.jsx` ~15-33, editor sem `key` por time em `App.jsx`); o `onBlur` grava mesmo sem
-  mudança. Também: o campo aceita sempre 10 letras, mas `getSlotMaxChars` existe e não é usado; quando o
-  nome é cortado, a barra de status mostra o texto pedido, não o gravado.
-- **Nome do placar (3 letras) nunca é lido da ROM:** `readTeam` não lê `teamNameInGame`; `exportTeam` usa
-  as 3 primeiras letras do nome do menu, e copiar/trocar/exportar JSON sobrescreve os tiles reais do placar.
-  Correção: ler os tiles 2bpp de volta (inverso de `TeamNameTileFont`) ou exportar/copiar os bytes crus.
-- **Gerador IA cria 2 passos de desfazer** (`AIGeneratorPanel.jsx` ~201-205: snapshot + 
-  `handleFlagDesignBulkChange`, que faz outro): um Ctrl+Z deixa o time pela metade. `applyImportedTeam`
-  já grava a bandeira; tirar a chamada extra.
-- **Restaurar o backup automático vira o "original":** `BackupBanner.jsx` carrega o backup como ROM nova
-  (`originalData` = backup), então "Restaurar original" e a base do patch usam dados editados, e
-  `modified=false` desliga o aviso ao fechar. Também: `performUndo` usa `canUndo` desatualizado para
-  `modified`, sem ponto de "salvo"; a troca modified→false limpa o backup (`RomContext.jsx`). Correção:
-  guardar os bytes/caminho originais no backup, marcar como modificado, controlar uma revisão salva.
+### 5.1 Bugs que podem perder ou estragar dados (feito, out/2026)
+- **Bandeiras:** cada traço (e Preencher/Limpar/modelo/imagem) é comprimido na ROM ao soltar o mouse, como
+  um passo de desfazer (`handleFlagDesignBulkChange`); não existe mais `dirty` nem gravação adiada no
+  salvar. Se não couber, nada muda e aparece um aviso (`toastFlagNoSpace`); `applyImportedTeam` devolve
+  `warnings` com o mesmo aviso.
+- **Nome do placar:** não são 3 letras: é um desenho de 32x8 pixels (4 tiles 2bpp) com o nome inteiro
+  (GERMANY, ITALY...). `readTeamNameInGame` (`TeamNameReader.js`) lê os tiles (`teamNameInGameTiles`) e o
+  texto quando o desenho é feito com a fonte do editor (`recognizeTextPixels`; aceita o espaçamento
+  mais apertado do original, como LY em ITALY). 15 dos 27 originais são reconhecidos; os outros têm letras
+  ajustadas a mão (HOLLAND, ARGENTINA, SUPER STAR...) e ficam com texto `null`. O original de RUSSIA usa um
+  U em forma de V e é lido como "RVSSIA". Copiar/trocar e o JSON (v3) levam os tiles exatos; JSON antigo
+  (v1/v2), cujo nome do placar era sempre as 3 primeiras letras do menu, desenha o nome do menu inteiro.
+  O editor mostra o desenho atual e o novo, e limita pela largura em pixels (`textPixelWidth`).
+- **Nome do Time:** o campo do menu avisa quando o nome vai ser encurtado (`fitTeamNameMenu`, que agora usa
+  o espaço livre da área em vez de só o tamanho atual do nome); o status mostra o nome gravado; gravação
+  recusada restaura os bytes e não deixa passo de desfazer. O último nome da área podia passar do limite.
+- **Gerador IA:** um passo de desfazer só.
+- **Backup:** guarda também a ROM original (`autosave-original.bin`, enviada uma vez por sessão);
+  restaurar carrega com `originalData` = original e `modified` ligado, e o backup só é apagado quando a
+  sessão volta a ser igual ao arquivo salvo. O histórico (`createHistoryStack` em `useHistory.js`, com
+  testes) controla o ponto salvo: desfazer até o último save desliga "modificado".
+  `cancelSnapshot` descarta o passo de uma gravação recusada (bandeira e nomes já usam).
+- **Ainda a conferir no emulador:** onde o desenho do nome do placar aparece na partida e se um nome de 7
+  letras gerado pelo editor aparece inteiro lá.
 
 ### 5.2 Desfazer e padrão de edição
-- **Seletores de cor** (Uniformes, Cabelo e Pele, Cores da Bandeira) gravam e criam um passo de desfazer a
-  cada movimento (`onChange`); Cabelo e Pele grava 2 vezes por movimento (1º e 2º uniforme). O campo hex
-  não aceita digitação parcial. Usar `ColorSwatch.jsx` (grava ao fechar o seletor / blur / Enter), um
-  handler em lote para os dois uniformes e mostrar a cor arredondada para 15 bits.
-- **Design da Bandeira:** um passo por pixel; Preencher/Limpar fazem 384 passos e o histórico (50,
-  `useHistory.js`) perde tudo o que havia antes. Juntar o traço num grid local e gravar no mouseup com
-  `onFlagDesignBulkChange`.
-- **Jogadores e Formação** gravam a cada tecla (`PlayerEditor.jsx` ~165-206, `FormationEditor.jsx`
-  ~267-327); o número da camisa não pode ficar vazio (vazio vira 1). Gravar no blur/Enter ou juntar
-  edições do mesmo campo em ~500 ms. `TeamPreview` rotula posições pelo índice da lista e o PlayerEditor
-  pela formação.
-- **Ctrl+Z dentro de caixas de texto** vai para o desfazer global (`electron/main.mjs`, `App.jsx`) e os
-  rascunhos são refeitos quando o estado muda (Cenários, Textos do Jogo, Outras telas, Menus): perde o
-  texto não aplicado. Trocar de cenário/sorteio/tela também descarta o rascunho sem aviso. Deixar o Ctrl+Z
-  nativo quando um input tem foco e guardar rascunhos por item (ou perguntar).
-- **Passos de desfazer vazios:** importar time tira o snapshot antes de abrir o arquivo (cancelar deixa um
-  passo); gravações recusadas (nomes, cenário, menu, descrição, treino) também. Tirar o snapshot depois de
-  validar ou descartar quando falhar.
-- **Testes:** `useHistory`, `useRomState.applySnapshot`/`performUndo` e `useRomHandlers` não têm testes
-  (onde estão quase todos os bugs acima). Casos: copiar time com bandeira pendente, goleiro Super
+Estado conferido no código (out/2026): seletores de cor e Design da Bandeira **feitos**; o resto parcial.
+- ~~**Seletores de cor**~~ (feito: `ColorEditorCard.jsx` grava ao fechar/blur/Enter, Cabelo e Pele em lote).
+- ~~**Design da Bandeira:** um passo por pixel~~ (feito: um passo por traço, gravado no mouseup).
+- **Jogadores e Formação:** Jogadores feito (`DraftInput`, número vazio é ignorado). Falta a **Formação**,
+  que ainda grava a cada tecla (`FormationEditor.jsx` ~60-68, 274-341) e transforma campo vazio em 0.
+  `TeamPreview` rotula posições pelo índice da lista e o PlayerEditor pela formação.
+- **Ctrl+Z dentro de caixas de texto:** feito (vai para o desfazer nativo) e trocar de item/aba pergunta
+  antes de descartar. Falta: qualquer desfazer global (botão ou foco fora do campo) relê cenários, textos,
+  menus, telas e sorteios em `applySnapshot` e os rascunhos são refeitos a partir do estado, perdendo o
+  texto não aplicado. Passar o desfazer pelo `guardDrafts` ou só reler o que mudou.
+- **Passos de desfazer vazios:** importar time e textos, nomes e bandeira feitos. Falta usar
+  `cancelSnapshot` nas gravações recusadas de descrição, cenário, treino, menu, outras telas e tela
+  inicial (`useRomHandlers.js`): conferir antes se cada writer deixa a ROM intacta quando falha (o da tela
+  inicial pode mover blocos).
+- **Testes:** `useHistory` tem testes (`src/hooks/__tests__`). Faltam `useRomState.applySnapshot` e
+  `useRomHandlers` (precisariam de um renderizador de hooks, que o projeto não tem). Casos: goleiro Super
   Star/Bélgica, IA aplicar + desfazer, `reloadTeams` além da formação.
 
 ### 5.3 Prévias aproximadas → desenho real

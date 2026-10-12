@@ -504,7 +504,7 @@ describe('Team Import/Export Integration', () => {
       const exported = exportTeam(team);
 
       expect(exported._format).toBe('iss-forge-team');
-      expect(exported._version).toBe(2);
+      expect(exported._version).toBe(3);
       expect(exported.players[0]).toHaveProperty('topSpeed');
       expect(exported.players[0]).toHaveProperty('gkKickIndex');
       expect(exported.players).toHaveLength(15);

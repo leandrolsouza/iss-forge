@@ -402,18 +402,25 @@ export default {
   generate: 'Generate',
   generated: 'Generated!',
   nameInGame: 'Name in Game (Scoreboard)',
-  nameInGamePlaceholder: 'e.g. GER',
-  nameInGameHint: 'Max 3 characters (A-Z, 0-9, dot). Shown on the scoreboard during matches.',
+  nameInGamePlaceholder: 'e.g. GERMANY',
+  nameInGameHint:
+    'A 32x8 pixel drawing (A-Z, 0-9, dot, space): about 7 letters. Shown on the scoreboard during matches.',
+  nameInGameCurrent: 'Current (in the ROM)',
+  nameInGameNew: 'New',
+  nameInGameTooWide: 'Too wide: {width} of {max} pixels.',
+  nameInGameCustom:
+    'The current drawing is not made with the editor font (letters adjusted by hand, as in the original game). Generating a new name replaces it; copying the team keeps it.',
   nameInMenu: 'Text in Menu (Selection Screen)',
   nameInMenuPlaceholder: 'e.g. GERMANY',
   nameInMenuHint:
     'Max 10 characters (A-Z, 0-9, dot, space). Shown under the flag on the team selection screen.',
+  nameInMenuWillTruncate: 'Does not fit in the menu name area: it will be saved as "{name}".',
   teamNameHowTitle: 'How It Works',
   teamNameHowTwo1:
-    'The team has two name displays: a short name on the scoreboard during matches (3 chars) and a full name on the selection screen (up to 10 chars).',
+    'The team has two names: a drawing on the scoreboard during matches (about 7 letters) and a name on the selection screen (up to 10 letters).',
   teamNameHowTwo2:
-    'Generate the in-game name first (e.g. GER), then type the full menu name (e.g. GERMANY) which saves automatically on blur.',
-  teamNameHowTwo3: 'Examples: GER / GERMANY, BRA / BRAZIL, ITA / ITALY, ARG / ARGENTINA',
+    'Type the scoreboard name and click Generate; the menu name saves automatically when you leave the field.',
+  teamNameHowTwo3: 'Examples: GERMANY / GERMANY, BRAZIL / BRAZIL, U.S.A. / U.S.A.',
 
   // Preview
   overview: 'Squad Overview',
@@ -506,6 +513,13 @@ export default {
   toastImportFailed: 'Could not import the file.',
   toastImportSingleTeam: 'Pick a file with a single team.',
   toastTeamImported: '{name} imported into slot {slot}.',
+  toastFlagNoSpace: 'The flag design does not fit in the ROM flag area: nothing was changed.',
+  toastFlagNoSpaceDetail:
+    'Detailed designs compress less. Use larger areas of colour, or simplify another team flag to free space.',
+  toastTeamNameNoSpace: 'The name does not fit in the menu name area.',
+  toastTeamNameTruncated: 'Menu name shortened to "{name}" (not enough space).',
+  toastInGameNameNoSpace:
+    'The scoreboard name does not fit in the name graphics area: the previous drawing was kept.',
   tournamentApplied: 'Draw applied.',
 
   // Tabs & navigation
@@ -941,6 +955,8 @@ export default {
   backupFound: 'Unsaved backup found from {date}.',
   backupRestore: 'Restore',
   backupDiscard: 'Discard',
+  backupNoOriginal:
+    'This backup comes from an older version and does not keep the original ROM: "Restore original" and patches will use the backup itself as the base.',
 
   // AI Team Generator
   editorAiGenerator: 'AI Generator',

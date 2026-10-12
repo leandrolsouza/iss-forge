@@ -110,6 +110,8 @@ describe.skipIf(!existsSync(REAL_ROM))('copyTeam (real ROM)', () => {
     formation: team.formation.slots,
     description: team.description,
     name: team.teamNameText,
+    // the in-game name graphic travels exactly (even hand-drawn ones)
+    inGameTiles: team.teamNameInGameTiles,
   });
 
   it('swaps two teams completely, crowd palette included', () => {
@@ -140,5 +142,57 @@ describe.skipIf(!existsSync(REAL_ROM))('copyTeam (real ROM)', () => {
     expect(rest).toEqual(srcRest);
     expect(srcName.startsWith(name)).toBe(true);
     expect(essence(rom.readTeam(ger))).toEqual(src);
+  });
+
+  it('refuses a flag that does not fit, writing nothing, and import reports it', () => {
+    const rom = load();
+    // noisy designs compress badly: fill the flag area team by team until one is refused
+    const noisy = (seed) =>
+      Array.from({ length: 16 }, (_, y) =>
+        Array.from({ length: 24 }, (_, x) => (x * 7 + y * 13 + ((x * y + seed) % 5)) % 5),
+      );
+    let refused = -1;
+    let before = null;
+    for (let i = 0; i < TEAMS.length && refused < 0; i++) {
+      before = rom.readFlagDesignBytes();
+      if (!rom.writeFlagDesign(i, noisy(i))) refused = i;
+    }
+    expect(refused).toBeGreaterThanOrEqual(0);
+    expect(rom.readFlagDesignBytes()).toEqual(before); // nothing written
+
+    const json = JSON.parse(JSON.stringify(exportTeam(rom.readTeam(idx('BRAZIL')))));
+    json.flagDesign.grid = noisy(refused);
+    const { warnings } = applyImportedTeam(rom, refused, json);
+    expect(warnings).toContain('toastFlagNoSpace');
+  });
+});
+
+describe.skipIf(!existsSync(REAL_ROM))('in-game name on import (real ROM)', () => {
+  const load = () => new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+
+  it('exports the graphic and its text', () => {
+    const rom = load();
+    const json = exportTeam(rom.readTeam(idx('GERMANY')));
+    expect(json.teamNameInGame).toBe('GERMANY');
+    expect(json.teamNameInGameTiles).toHaveLength(64);
+  });
+
+  it('pre-v3 files: the 3-letter name was derived from the menu name, the full name is drawn', () => {
+    const rom = load();
+    const json = JSON.parse(JSON.stringify(exportTeam(rom.readTeam(idx('GERMANY')))));
+    json._version = 2;
+    json.teamNameInGame = 'GER';
+    delete json.teamNameInGameTiles;
+    applyImportedTeam(rom, idx('ITALY'), json);
+    expect(rom.readTeamNameInGame(idx('ITALY')).text).toBe('GERMANY');
+  });
+
+  it('v3 files without tiles draw the given text', () => {
+    const rom = load();
+    const json = JSON.parse(JSON.stringify(exportTeam(rom.readTeam(idx('GERMANY')))));
+    json.teamNameInGame = 'GER';
+    delete json.teamNameInGameTiles;
+    applyImportedTeam(rom, idx('ITALY'), json);
+    expect(rom.readTeamNameInGame(idx('ITALY')).text).toBe('GER');
   });
 });

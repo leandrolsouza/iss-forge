@@ -12,7 +12,7 @@ import {
   readSpecialSkin,
 } from './readers/UniformReader';
 import { readFlagDesign } from './readers/FlagDesignReader';
-import { readTeamNameText } from './readers/TeamNameReader';
+import { readTeamNameText, readTeamNameInGame } from './readers/TeamNameReader';
 import { writePlayerName, writePlayerData, swapPlayers } from './writers/PlayerWriter';
 import {
   writeUniformColor,
@@ -30,6 +30,8 @@ import {
   writeTeamNameText,
   writeTeamNameMenu,
   writeTeamNameInGame,
+  writeTeamNameInGameTiles,
+  fitTeamNameMenu,
   getSlotMaxChars,
   readTeamNameBytes,
   writeTeamNameBytes,
@@ -84,10 +86,19 @@ import { isOriginalLogo } from './titleLogo';
 import { writeTitleTexts } from './titleScreenText';
 
 export default class RomParser {
-  constructor(romData) {
+  /**
+   * @param {ArrayLike<number>} romData
+   * @param {ArrayLike<number>} [originalData] - the unedited ROM, when `romData` already has
+   *   edits (restored auto-save backup). Defaults to a copy of `romData`.
+   */
+  constructor(romData, originalData = null) {
     this.data = new Uint8Array(romData);
     // Pristine copy of the file as loaded — used as the default base for patch export
-    this.originalData = new Uint8Array(this.data);
+    // and by every "restore original" button
+    this.originalData =
+      originalData && originalData.length === this.data.length
+        ? new Uint8Array(originalData)
+        : new Uint8Array(this.data);
     this.hasHeader = this.data.length % 1024 === 512;
     this.headerOffset = this.hasHeader ? 512 : 0;
   }
@@ -189,6 +200,10 @@ export default class RomParser {
   }
   readTeamNameText(teamIndex) {
     return readTeamNameText(this, teamIndex);
+  }
+  /** In-game name graphic: { text: string|null, tiles: number[64] } */
+  readTeamNameInGame(teamIndex) {
+    return readTeamNameInGame(this, teamIndex);
   }
   readFormation(teamIndex) {
     return readFormation(this, teamIndex);
@@ -363,8 +378,16 @@ export default class RomParser {
   writeTeamNameMenu(teamIndex, text) {
     return writeTeamNameMenu(this, teamIndex, text);
   }
+  /** What writeTeamNameMenu would write (shortened when the area is full); null if nothing fits */
+  fitTeamNameMenu(teamIndex, text) {
+    return fitTeamNameMenu(this, teamIndex, text);
+  }
   writeTeamNameInGame(teamIndex, text) {
     return writeTeamNameInGame(this, teamIndex, text);
+  }
+  /** Raw 2bpp tiles (64 bytes) of the in-game name, e.g. copied from another team */
+  writeTeamNameInGameTiles(teamIndex, tiles) {
+    return writeTeamNameInGameTiles(this, teamIndex, tiles);
   }
   /** Raw snapshot of every team-name region (for undo/redo) */
   readTeamNameBytes() {
@@ -419,6 +442,7 @@ export default class RomParser {
     const specialSkin = this.readSpecialSkin(teamIndex);
     const flagDesignData = this.readFlagDesign(teamIndex);
     const teamNameText = this.readTeamNameText(teamIndex);
+    const inGameName = this.readTeamNameInGame(teamIndex);
     const formation = this.readFormation(teamIndex);
     const description = this.readTeamDescription(teamIndex);
 
@@ -447,10 +471,11 @@ export default class RomParser {
       flagDesign: {
         grid: flagDesignData.grid,
         flagColors,
-        topAddr: flagDesignData.topAddr,
-        bottomAddr: flagDesignData.bottomAddr,
       },
       teamNameText,
+      // In-game name graphic: text when it is drawn with the editor's font, else null
+      teamNameInGame: inGameName.text,
+      teamNameInGameTiles: inGameName.tiles,
       formation: { slots: formation.slots, name: formation.name },
       description,
     };

@@ -32,6 +32,7 @@ export default function useRomHandlers({
   requestLoadRom,
   setLoading,
   pushSnapshot,
+  cancelSnapshot,
   setScenarios,
   setMatchPalettes,
   setTournamentDraws,
@@ -272,122 +273,125 @@ export default function useRomHandlers({
   );
 
   /**
-   * Paint one pixel. `newStep` = false continues the current brush stroke
-   * (mouse still down), so a whole stroke is one undo step.
+   * Replace a team's flag design (a brush stroke, fill, template, image...) as one
+   * undo step. It is compressed into the ROM right away, so copying teams, backups and
+   * the emulator always see it; when the compressed flag does not fit in the flag area
+   * nothing changes and the user is told.
+   * @returns {boolean} true when the design was written (or was already the same)
    */
-  const handleFlagDesignChange = useCallback(
-    (teamIndex, row, col, colorIdx, newStep = true) => {
-      if (!romParser) return;
-      if (newStep) pushSnapshot(teams);
-
-      setTeams((prev) => {
-        const newTeams = [...prev];
-        const team = { ...newTeams[teamIndex] };
-        const flagDesign = { ...team.flagDesign };
-        const grid = flagDesign.grid.map((r) => [...r]);
-        grid[row][col] = colorIdx;
-        flagDesign.grid = grid;
-        flagDesign.dirty = true;
-        team.flagDesign = flagDesign;
-        newTeams[teamIndex] = team;
-        return newTeams;
-      });
-
-      markModified();
-    },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
-  );
-
   const handleFlagDesignBulkChange = useCallback(
     (teamIndex, newGrid) => {
-      if (!romParser) return;
-      pushSnapshot(teams);
+      if (!romParser || !Array.isArray(newGrid)) return false;
+      const current = teams[teamIndex]?.flagDesign?.grid;
+      if (current && JSON.stringify(current) === JSON.stringify(newGrid)) return true;
 
-      setTeams((prev) => {
-        const newTeams = [...prev];
-        const team = { ...newTeams[teamIndex] };
-        const flagDesign = { ...team.flagDesign };
-        flagDesign.grid = newGrid.map((r) => [...r]);
-        flagDesign.dirty = true;
-        team.flagDesign = flagDesign;
-        newTeams[teamIndex] = team;
-        return newTeams;
-      });
+      pushSnapshot(teams);
+      const before = romParser.readFlagDesignBytes();
+      if (!romParser.writeFlagDesign(teamIndex, newGrid)) {
+        romParser.restoreFlagDesignBytes(before);
+        cancelSnapshot();
+        setStatusMessage('toastFlagNoSpace');
+        toast.error(t('toastFlagNoSpace'), { detail: t('toastFlagNoSpaceDetail') });
+        return false;
+      }
+
+      // Re-read every flag: blocks may be shared between teams
+      setTeams((prev) =>
+        prev.map((team, i) => {
+          if (!team.flagDesign) return team;
+          const { grid } = romParser.readFlagDesign(i);
+          if (JSON.stringify(grid) === JSON.stringify(team.flagDesign.grid)) return team;
+          return { ...team, flagDesign: { ...team.flagDesign, grid } };
+        }),
+      );
 
       markModified();
+      return true;
     },
-    [romParser, teams, markModified, setTeams, pushSnapshot],
+    [
+      romParser,
+      teams,
+      markModified,
+      setTeams,
+      pushSnapshot,
+      cancelSnapshot,
+      setStatusMessage,
+      toast,
+      t,
+    ],
+  );
+
+  /**
+   * Write a team name as one undo step and refresh the team from the ROM.
+   * `kind`: 'both' (menu + in-game graphic), 'menu' or 'inGame'. A rejected write
+   * restores the name bytes and leaves no undo step. The menu name is shortened when
+   * the selection-screen area is full: the status shows what was really written.
+   */
+  const writeTeamName = useCallback(
+    (teamIndex, text, kind) => {
+      if (!romParser) return false;
+      pushSnapshot(teams);
+      const before = romParser.readTeamNameBytes();
+      const write = {
+        both: () => romParser.writeTeamNameText(teamIndex, text),
+        menu: () => romParser.writeTeamNameMenu(teamIndex, text),
+        inGame: () => romParser.writeTeamNameInGame(teamIndex, text),
+      }[kind];
+
+      if (!write()) {
+        romParser.restoreTeamNameBytes(before);
+        cancelSnapshot();
+        const key = kind === 'inGame' ? 'toastInGameNameNoSpace' : 'toastTeamNameNoSpace';
+        setStatusMessage(key);
+        toast.error(t(key), { detail: text });
+        return false;
+      }
+
+      const teamNameText = romParser.readTeamNameText(teamIndex);
+      const inGame = romParser.readTeamNameInGame(teamIndex);
+      setTeams((prev) => {
+        const next = [...prev];
+        next[teamIndex] = {
+          ...next[teamIndex],
+          teamNameText,
+          teamNameInGame: inGame.text,
+          teamNameInGameTiles: inGame.tiles,
+        };
+        return next;
+      });
+      markModified();
+
+      const written = kind === 'inGame' ? inGame.text || text : teamNameText;
+      setStatusMessage(`${kind === 'inGame' ? t('nameInGame') : t('nameInMenu')}: ${written}`);
+      if (kind !== 'inGame' && teamNameText !== text) {
+        toast.warning(t('toastTeamNameTruncated', { name: teamNameText }), { detail: text });
+      }
+      return true;
+    },
+    [
+      romParser,
+      teams,
+      markModified,
+      setTeams,
+      setStatusMessage,
+      pushSnapshot,
+      cancelSnapshot,
+      toast,
+      t,
+    ],
   );
 
   const handleTeamNameGenerate = useCallback(
-    (teamIndex, text) => {
-      if (!romParser) return;
-      pushSnapshot(teams);
-
-      const success = romParser.writeTeamNameText(teamIndex, text);
-      if (success) {
-        const newName = romParser.readTeamNameText(teamIndex);
-        setTeams((prev) => {
-          const newTeams = [...prev];
-          const team = { ...newTeams[teamIndex] };
-          team.teamNameText = newName;
-          newTeams[teamIndex] = team;
-          return newTeams;
-        });
-        markModified();
-        setStatusMessage(`Generated: ${text}`);
-      } else {
-        setStatusMessage(`Error: "${text}" too long`);
-      }
-    },
-    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
+    (teamIndex, text) => writeTeamName(teamIndex, text, 'both'),
+    [writeTeamName],
   );
-
   const handleTeamNameMenuSave = useCallback(
-    (teamIndex, text) => {
-      if (!romParser) return;
-      pushSnapshot(teams);
-
-      const success = romParser.writeTeamNameMenu(teamIndex, text);
-      if (success) {
-        const newName = romParser.readTeamNameText(teamIndex);
-        setTeams((prev) => {
-          const newTeams = [...prev];
-          const team = { ...newTeams[teamIndex] };
-          team.teamNameText = newName;
-          newTeams[teamIndex] = team;
-          return newTeams;
-        });
-        markModified();
-        setStatusMessage(`Menu name: ${text}`);
-      } else {
-        setStatusMessage(`Error: "${text}" too long`);
-      }
-    },
-    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
+    (teamIndex, text) => writeTeamName(teamIndex, text, 'menu'),
+    [writeTeamName],
   );
-
   const handleTeamNameInGameGenerate = useCallback(
-    (teamIndex, text) => {
-      if (!romParser) return;
-      pushSnapshot(teams);
-
-      const success = romParser.writeTeamNameInGame(teamIndex, text);
-      if (success) {
-        setTeams((prev) => {
-          const newTeams = [...prev];
-          const team = { ...newTeams[teamIndex] };
-          team.teamNameInGame = text;
-          newTeams[teamIndex] = team;
-          return newTeams;
-        });
-        markModified();
-        setStatusMessage(`In-game: ${text}`);
-      } else {
-        setStatusMessage(`Error: "${text}" failed`);
-      }
-    },
-    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot],
+    (teamIndex, text) => writeTeamName(teamIndex, text, 'inGame'),
+    [writeTeamName],
   );
 
   /**
@@ -554,7 +558,7 @@ export default function useRomHandlers({
       if (!romParser || from === to) return;
       pushSnapshot(teams);
       const wanted = [teams[from]?.teamNameText, swap ? teams[to]?.teamNameText : null];
-      copyTeam(romParser, from, to, { swap });
+      const { warnings } = copyTeam(romParser, from, to, { swap });
       const fresh = romParser.readAllTeams();
       setTeams(fresh);
       setMatchPalettes(romParser.readMatchPalettes());
@@ -565,6 +569,7 @@ export default function useRomHandlers({
       const key = truncated ? 'copyTeamNameTruncated' : swap ? 'swapTeamDone' : 'copyTeamDone';
       setStatusMessage(key);
       toast[truncated ? 'warning' : 'success'](t(key));
+      warnings.forEach((w) => toast.warning(t(w)));
     },
     [
       romParser,
@@ -715,25 +720,17 @@ export default function useRomHandlers({
   ]);
 
   /**
-   * Flush pending (deferred) writes into the ROM buffer and repair the SNES
-   * internal checksum. Must run before any save or patch export so the output
-   * is complete and passes checksum checks in emulators/flashcarts.
+   * Repair the SNES internal checksum before any save, patch export or emulator run
+   * so the output passes checksum checks in emulators/flashcarts. (Every edit is
+   * already in the ROM buffer: nothing is deferred to save time.)
    */
   const prepareRomForWrite = useCallback(() => {
-    // Write dirty flag designs (they are compressed only at save time)
-    teams.forEach((team, idx) => {
-      if (team.flagDesign && team.flagDesign.dirty) {
-        romParser.writeFlagDesign(idx, team.flagDesign.grid);
-        team.flagDesign.dirty = false;
-      }
-    });
-
     try {
       romParser.fixChecksum();
     } catch (err) {
       console.warn('[Checksum] Could not fix internal checksum:', err.message);
     }
-  }, [romParser, teams]);
+  }, [romParser]);
 
   /** Save-time checks are advisory: report them, but never block the save */
   const reportValidation = useCallback(() => {
@@ -975,7 +972,7 @@ export default function useRomHandlers({
 
       // Snapshot only once there is something to apply (no empty undo steps)
       pushSnapshot(teams);
-      applyImportedTeam(romParser, teamIndex, teamData);
+      const { warnings } = applyImportedTeam(romParser, teamIndex, teamData);
 
       // Reload team from ROM to get fresh state
       const updatedTeam = romParser.readTeam(teamIndex);
@@ -989,6 +986,7 @@ export default function useRomHandlers({
       const name = teamData.name || teamData.teamNameText || 'team';
       setStatusMessage(`Imported: ${name} → slot ${teamIndex + 1}`);
       toast.success(t('toastTeamImported', { name, slot: teamIndex + 1 }));
+      warnings.forEach((w) => toast.warning(t(w)));
     },
     [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot, toast, t],
   );
@@ -1001,7 +999,6 @@ export default function useRomHandlers({
     handleSpecialHairSkinChange,
     handleFlagColorChange,
     handleFlagColorBulkChange,
-    handleFlagDesignChange,
     handleFlagDesignBulkChange,
     handleTeamNameGenerate,
     handleTeamNameMenuSave,

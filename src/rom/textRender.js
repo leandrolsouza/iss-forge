@@ -39,12 +39,13 @@ const fileOf = (ptr) => ((ptr >> 16) & 0x7f) * 0x8000 + ((ptr & 0xffff) - 0x8000
 
 /**
  * 256-colour CGRAM from a palette blob, as the loader ($80:ACF0) writes it: row 0
- * complete (backdrop + 15), then 15 colours per row (colour 0 skipped). A word with
- * bit 15 set repeats black n times.
+ * complete (backdrop + 15), then 15 colours per row (colour 0 skipped). The size word
+ * counts bytes minus one (the loop runs while it stays >= 0); a word with bit 15 set
+ * writes (low byte) black colours. Same rules as buildScreenCgram in screenView.js.
  */
 export function readCgramBlob(rom, file) {
   const cg = new Uint16Array(256);
-  const size = word(rom, file);
+  const count = (word(rom, file) >> 1) + 1;
   let index = 0;
   let produced = 0;
   const put = (c) => {
@@ -52,9 +53,9 @@ export function readCgramBlob(rom, file) {
     if (index < 256) cg[index++] = c;
     produced++;
   };
-  for (let a = file + 2; produced < size && a < file + 2 + 1024; a += 2) {
+  for (let a = file + 2; produced < count && a < file + 2 + 1024; a += 2) {
     const w = word(rom, a);
-    if (w & 0x8000) for (let n = 0; n < (w & 0x7fff) && produced < size; n++) put(0);
+    if (w & 0x8000) for (let n = 0; n < (w & 0xff) && produced < count; n++) put(0);
     else put(w);
   }
   return cg;

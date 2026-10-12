@@ -45,6 +45,7 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **Game Texts** — Translate the training mode texts and the texts of 19 menu screens (pre-match menu, rules, options...), with box previews and a space check. Export/import all texts as one JSON file for translation
 - **Pitch & Ball** — Recolour the pitch for every type (A/B/C) and weather (sunny/rain/snow), the ball and the referee/linesmen kit, with presets and hue/saturation/brightness tools
 - **Title Screen** — Recolour the logo, brush stroke, sky, grass and texts of the opening screen, pick the teams, poses and positions of the two players, move or hide the ball and the shadows, translate the copyright lines and PRESS START, import a new logo from an image (PNG), and remove or replace the brush stroke and the grass with images, with a live preview drawn from the ROM
+- **Screen Viewer** — See 10 menu screens and the title screen drawn from the ROM as it is now (frames, background, texts, colour effects), toggle layers, click a pixel to see its tile, palette and the ROM block it comes from, and browse that block's tiles
 - **Stadium & Crowd** — Recolour the perimeter wall/goal net and photographers, edit the 20 crowd palettes and choose which one each team's fans use
 - **Team Descriptions** — Edit the selection-screen text ("Offensive 4-4-2" + description) with a 15×8 preview, kept in sync with the formation
 - **Copy / Swap Teams** — Move a whole team (players, hidden attributes, kits, flag, names, formation, description, crowd) to another slot
@@ -215,7 +216,8 @@ Based on the work of:
 - [x] Title screen: colours, teams, texts and logo import
 - [ ] Other menu graphics (see `research/BACKLOG.md`)
 - [x] AI team generator
-- [ ] Screen viewer (any game screen drawn from the ROM, to check translations and find graphics)
+- [x] Screen viewer (menu screens drawn from the ROM, tile inspector)
+- [ ] Screen viewer: sprites, player lists and more screens
 - [x] Undo/Redo
 - [x] Auto-update
 - [x] Auto-backup

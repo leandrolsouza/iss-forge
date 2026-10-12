@@ -1,0 +1,124 @@
+/* ============================================================
+   SCREEN VIEWER
+   ============================================================ */
+
+.sv-list {
+  flex: 0 0 220px;
+}
+
+.sv-card {
+  grid-template-columns: 1fr;
+}
+
+.sv-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sv-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.sv-layer {
+  margin: 0;
+}
+
+.sv-screen-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.sv-canvas-wrap,
+.sv-sheet-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  line-height: 0;
+  border: 1px solid var(--border-primary);
+}
+
+.sv-canvas-wrap.clickable {
+  cursor: crosshair;
+}
+
+.sv-marker {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #ff3b3b;
+  box-shadow: 0 0 0 1px #000;
+  pointer-events: none;
+}
+
+.sv-side {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 260px;
+}
+
+.sv-inspect {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sv-top {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+.sv-layer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  font-size: var(--font-size-sm);
+}
+
+.sv-layer-info.visible {
+  border-color: var(--border-active);
+}
+
+.sv-layer-info .kit-btn {
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.sv-mono {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+.sv-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sv-sheet-wrap {
+  align-self: flex-start;
+}
+
+.sv-recipe summary {
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.sv-recipe .sv-mono {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}

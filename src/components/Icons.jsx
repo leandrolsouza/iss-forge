@@ -130,6 +130,14 @@ export const IconTitleScreen = ({ size }) => (
   </Icon>
 );
 
+/** Screen viewer: a screen with a magnifier */
+export const IconScreenViewer = ({ size }) => (
+  <Icon size={size}>
+    <path d="M1.5 2h13l.5.5V8h-1V3H2v8h5v1H1.5l-.5-.5v-9l.5-.5z" />
+    <path d="M11 8a2.5 2.5 0 0 1 2.02 3.97l1.84 1.83-.71.71-1.83-1.84A2.5 2.5 0 1 1 11 8zm0 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z" />
+  </Icon>
+);
+
 export const IconScenario = ({ size }) => (
   <Icon size={size}>
     <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2z" />

@@ -18,6 +18,7 @@ import {
   IconGameText,
   IconPitch,
   IconTitleScreen,
+  IconScreenViewer,
   IconSparkle,
   IconSettings,
   IconInfo,
@@ -39,6 +40,7 @@ export const EDITORS = [
   { id: 'gameTexts', labelKey: 'editorGameTexts', Icon: IconGameText, scope: 'global' },
   { id: 'matchPalettes', labelKey: 'editorMatchPalettes', Icon: IconPitch, scope: 'global' },
   { id: 'titleScreen', labelKey: 'editorTitleScreen', Icon: IconTitleScreen, scope: 'global' },
+  { id: 'screenViewer', labelKey: 'editorScreenViewer', Icon: IconScreenViewer, scope: 'global' },
   { id: 'ai', labelKey: 'editorAiGenerator', Icon: IconSparkle, scope: 'team', ai: true },
 ];
 

@@ -5,6 +5,7 @@ import PlayerEditor from './components/PlayerEditor';
 import FormationEditor from './components/FormationEditor';
 import ScenarioEditor from './components/ScenarioEditor';
 import TournamentEditor from './components/TournamentEditor';
+import ScreenViewer from './components/ScreenViewer';
 import GameTextEditor from './components/GameTextEditor';
 import MatchPaletteEditor from './components/MatchPaletteEditor';
 import TitleScreenEditor from './components/TitleScreenEditor';
@@ -363,6 +364,7 @@ export default function App() {
     if (activeTab === 'gameTexts' && romParser) return <GameTextEditor />;
     if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
     if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
+    if (activeTab === 'screenViewer' && romParser) return <ScreenViewer />;
 
     // ROM loaded but every tab was closed: don't fall back to the "Open ROM" screen
     if (romParser && !openTabs.some((tab) => tab.id === activeTab)) {

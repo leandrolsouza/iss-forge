@@ -25,6 +25,7 @@ Pesquisas detalhadas estão nos outros arquivos de `research/`; as ferramentas, 
 | Textos desenhados pelo código: tela de controles (títulos, ajudas, rótulos), cenário (placar, relógio, resultado), "NEXTGAME" do grupo, ordinais da World Series, "LEVEL" do treino; Senha, Grupo da Cup e Treino: pontuação agora podem ser movidas | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 4) |
 | Menu principal (listas de sprites montadas com a fonte grande do menu) e os 7 títulos dos modos (tilemaps com a fonte dos títulos, realocáveis como as telas de menu) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
 | Tela inicial: cores (logo, brilho do logo, pincelada, TM, céu, gramado, textos), times dos dois jogadores, copyright e PRESS START (dígitos e pontuação desenhados no estilo sombreado), importar logo de imagem (PNG) e esconder a pincelada; pincelada e gramado: remover ou trocar por imagem/textura; pose dos dois jogadores (864 quadros das animações); mover/esconder a bola, as sombras e os jogadores; prévia desenhada a partir da ROM; textos no JSON | aba Tela Inicial | `title-screen.md` |
+| Visualizador de telas: 10 telas (menu principal, pré-jogo e pré-jogo dos torneios, substituições, seleção de times, opções, controles, digitar senha, treino: instruções e nome) + tela inicial, desenhadas da ROM atual (listas de carga ``, paletas ``, PPU dos save states: modo 1, colour math das caixas); camadas liga/desliga; clique mostra o tile, a paleta e o bloco da ROM de onde vêm o tile e a célula do mapa; tiles do bloco em grade com troca de paleta; textos desenhados pelo código onde a posição é conhecida | aba Visualizador de Telas | `screen-viewer.md` |
 | Alfabeto completo nas fontes grandes: no menu, B F J montadas e H Q V X Z desenhadas (ocupam letras 16x16 não usadas); nos títulos, B J montadas e K Q V X Y Z desenhadas (tiles novos no bloco da fonte) | aba Textos do Jogo > Outras telas | `game-texts.md` (seção 5) |
 
 ## Tradução PT-BR — estado (para continuar)
@@ -90,7 +91,7 @@ Sugestão de ordem:
   editor; só voltar a isso se aparecer uma tela que os use.
 - **Rótulos curtos do cenário:** "SCORE" (5) e "TIME" (4) têm o número em posição fixa. Para caber
   "PLACAR"/"TEMPO" seria preciso mudar o `LDX` em `$87:D464`/`$87:D4F4` e os textos juntos (patch de código).
-- **Sprites e gráficos:** "1P"/"2P", "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
+- **Sprites e gráficos:** "1P"/"2P" (são tiles do BG1 da tela de controles: `0x6AD98` em `$2100` e `0xBE7D3` em `$2180`, mapa `0x671D9`), "TYPE A", "VS" antes da partida, "TIME UP", "BONUS TIME", placar e
   posições da partida, "Referee" e árbitros. Exigem editar tiles (visualizador de telas, seção 4). A técnica de
   corromper fatias da ROM e ver o que estraga (`game-texts.md`, seção 5) acha rápido de onde vêm.
 - **Ponteiros extras** que reaproveitam textos do treino (ver `game-texts.md`): conferir se alguma tela usa.
@@ -116,13 +117,16 @@ Sugestão de ordem:
   atributos, bandeiras etc. usam o ordinal).
 
 ### 4. Gráficos e espaço (ideias novas, out/2026)
-- **Visualizador de telas** (o README anunciava um "Tile Explorer" que não existe; a menção foi trocada por
-  este item no roadmap): generalizar a prévia da tela inicial (`renderTitleScreen`: listas de carga `$82` →
-  VRAM, paletas, BG/OBJ) para montar qualquer tela do jogo. Serve para conferir traduções sem emulador e
-  para achar os gráficos da seção 2.
+- ~~**Visualizador de telas.**~~ Feito (out/2026): `src/rom/screenView.js` + aba Visualizador de Telas;
+  receitas tiradas de save states (`research/tools/screen-recipe.mjs`) e conferidas contra screenshots
+  (`screen-check.mjs`: ≥ 96% nas telas sem listas de jogadores). Detalhes em `screen-viewer.md`.
+  **Falta:** sprites fora do menu principal (cursor, rostos, bandeiras, "TYPE A"), listas de nomes de
+  jogadores, mais telas (cenário, grupo da Copa, tabela da fase, World Series, Parabéns, títulos dos
+  modos); usar o inspetor para localizar os gráficos da seção 2.
 - **Fundos das outras telas:** o fundo azul do menu ("SUPER STAR SOCCER" repetido) e o da seleção de times
   têm a mesma estrutura do BG1 da tela inicial; reaproveitar `titleBackground.js` (importar imagem/textura,
-  cores) e `quantize.js`.
+  cores) e `quantize.js`. Localizado com o visualizador: é o BG2 de todos os menus (tiles `0xADECC` em
+  `$3000`, mapas `0xD45D8`/`0xD4724` em `$1000`/`$1400`, lista `$82:86DC`), compartilhado entre as telas.
 - **Expandir a ROM para 2 MB:** resolveria a falta de espaço (logo importado maior/com mais cores, gramado
   em imagem inteira, telas traduzidas longas). Mexe no cabeçalho, checksum, validação e patches; só fazer
   quando o espaço virar problema.
@@ -204,8 +208,8 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
     editadas mantêm os bytes exatos; "Aplicar" fica desabilitado com caracteres inválidos.
   - ~~Textos e menus: fonte do jogo.~~ Feito: `src/rom/textRender.js` (lista de fontes `0x10300`, tabela
     8x8 `0x10C80`, pares 8x16, paletas `0x2E2DD`/`0x2F3DB`), `GameTextPreview.jsx` em Treino, Cenários,
-    Outras telas e descrição; prévia da camada de texto da tela inteira em Menus. Falta: molduras/fundos dos
-    menus (configuração de BG1/BG2 desconhecida), títulos dos modos (fonte 4bpp + textura) e paletas do
+    Outras telas e descrição; prévia da camada de texto da tela inteira em Menus. ~~Falta: molduras/fundos dos
+    menus.~~ A configuração de BG1/BG2 está em `screen-viewer.md` e as telas inteiras aparecem no Visualizador de Telas (a prévia da aba Menus ainda é só a camada de texto). Falta: títulos dos modos (fonte 4bpp + textura) e paletas do
     cenário e do resultado do treino (sem dump; usam a do treino). Detalhes em `game-texts.md`, seção 6.
   - ~~Gramado da partida real.~~ Feito em parte: `src/rom/pitchPreview.js` desenha a grama com os tiles
     da partida (lista `0x1006C`) e o padrão de corte lido da VRAM; as linhas são um esquema (o jogo monta o
@@ -275,3 +279,6 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
 - `docs/` está no `.gitignore`; a documentação técnica foi para `research/`.
 - ~~O README anuncia um "Tile Explorer" que não existe.~~ Feito: tirado (o roadmap lista o visualizador de
   telas como pendente); o README também passou a citar `research/` e `game-translations/` na estrutura.
+  Agora o visualizador existe (aba Visualizador de Telas).
+- `readCgramBlob` (`textRender.js`) lia a word de tamanho dos blobs de paleta como número de cores (é bytes − 1)
+  e entrava no blob seguinte; corrigido junto com o visualizador (só mudava linhas não usadas pelas prévias).

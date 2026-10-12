@@ -134,3 +134,40 @@
   image-rendering: pixelated;
   cursor: pointer;
 }
+
+.ts-objects {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.ts-object {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ts-num-slider {
+  min-width: 0;
+}
+
+.ts-num-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ts-num-row input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.ts-num {
+  width: 60px;
+  padding: 2px 4px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-input);
+  border-radius: var(--input-border-radius);
+  font-size: 12px;
+}

@@ -71,9 +71,19 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
   tiles dentro das 2 linhas, posições razoáveis): 866 quadros. Escolher outro quadro só muda o `LDY`; a
   partida não muda.
 - Objetos: esquerda x = `0x72`, paleta 0; direita x = `0x90`, paleta 1, espelhada (x = origem − dx −
-  tamanho). Pés em y = `0xB0`. A bola (`$0480`) e as sombras são objetos à parte e não mudam.
+  tamanho). Pés em y = `0xB0`. A bola e as sombras são objetos à parte (seção "Bola, sombras e posições").
 - Linhas OBJ 12-13: cores de goleiro dos dois times (11 cores do bloco de goleiro), usadas pelas peças
   com o bit 5.
+
+- **Tile extra do quadro** (`$83:D472`): depois dos 2 DMAs, a word seguinte do registro escolhe 1 tile
+  (32 bytes) carregado no tile 7 da segunda linha (`0x37` / `0x57`): 0 = tile vazio (`$82:AB27`);
+  positivo = tabela + 3 × ordinal do time (detalhe por time, ex.: cabelo do Brasil); negativo = tabela +
+  deslocamento do jogador (0 à esquerda, `0x2D` à direita, com `$56,X` = 0). Peças que usam tiles além do
+  que o quadro carrega mostram o que outro quadro deixou na VRAM: o editor descarta esses quadros (864
+  sobram).
+- **Uniforme:** `$80:ADB3` compara a cor predominante dos dois times (`$81:8DB2[ordinal]`); se for igual, o
+  jogador da direita (time 2) usa o segundo uniforme (Itália x França, Alemanha x Inglaterra, Brasil x
+  Brasil...).
 
 ## Textos
 
@@ -108,6 +118,28 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
 - Limite prático: um logo do tamanho e detalhe do original cabe com ~10 cores por paleta; imagens
   grandes e cheias precisam de menos cores ou de um tamanho menor (até 72 sprites 16x16 de tiles).
 
+## Bola, sombras e posições
+
+Os valores são operandos de `LDA #imm` no código da tela (`$80:8D24`-`$8DDA`). Um objeto com handler 0
+não é executado e não aparece (testado: menu e partida de demonstração continuam normais).
+
+| O quê | Objeto | Arquivo (operando) | Original |
+|-------|--------|--------------------|----------|
+| Sombra do jogador da direita | `$1660` | x `0x0D28`, y `0x0D2D`, handler `0x0D32` | `0x90`, `0xB6`, `$80E2` |
+| Jogador da direita | `$0DE0` | x `0x0D44` | `0x90` |
+| Sombra do jogador da esquerda | `$16A0` | x `0x0D68`, y `0x0D6D`, handler `0x0D72` | `0x70`, `0xB6`, `$80E2` |
+| Jogador da esquerda | `$0E80` | x `0x0D84` | `0x72` |
+| Bola | `$0480` | x `0x0DA8`, chão `0x0DB0`, altura `0x0DB8`, handler `0x0DCA` | `0x84`, `0xBA`, `-54`, `$805D` |
+| Sombra da bola | `$1620` | mesmo x / chão da bola, handler `0x0DCF` | `$806C` |
+| Pés dos dois jogadores | `$80:8DDD` | y `0x0DE5` | `0xB0` |
+
+- Sprites (conferidos na OAM): sombra da esquerda = tiles `0x187` em (x − 8, y) e `0x188` em (x, y);
+  da direita, espelhada, `0x187` em (x, y) e `0x188` em (x − 8, y); sombra da bola `0x1B0` em (x − 4, chão −
+  3); bola `0x1A0` em (x − 4, chão + altura − 7).
+- A sombra da bola diminui com a altura: tiles `0xBED2B` + 32 × tamanho, tamanho = (altura − 1) / 48,
+  limitado a 2 (até 48 px = maior, até 96, acima).
+- O copyright e o PRESS START (BG3 com prioridade) ficam por cima de todos os sprites.
+
 ## Fundo (BG1)
 
 - Mapa `0x67E6E` (ponteiro `0x1019A`, 380 bytes + 22 de `FF`) e tiles `0xBE106` (ponteiro `0x1017C`,
@@ -130,4 +162,3 @@ Lista inicial `$81:8A44`. Os passos do brilho do logo estão em `$81:811C`: list
 - Liberar mais espaço para logos grandes (expandir a ROM ou mover blocos de outras telas).
 - Desenhar quadros novos para os jogadores (precisa de espaço para tiles e de um registro novo no banco
   ``; os quadros existentes são compartilhados com a partida).
-- Mover/esconder a bola e as sombras (objetos ``, ``, ``).

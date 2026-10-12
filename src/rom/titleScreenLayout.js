@@ -68,9 +68,7 @@ export const TITLE_BALL_SPRITES = TITLE_PLAYER_SPRITES.slice(-1);
 
 /**
  * Ball tiles, uncompressed in the ROM: [first OBJ tile, file offset, tile count]
- * (each tile is 32 bytes). The players' tiles come from their pose (titlePlayers.js).
+ * (each tile is 32 bytes). The players' tiles come from their pose (titlePlayers.js),
+ * the ball shadow from the ball height (titleObjects.js).
  */
-export const TITLE_RAW_TILES = [
-  [0x1a0, 0xbf4eb, 1],
-  [0x1b0, 0xbed4b, 1],
-];
+export const TITLE_RAW_TILES = [[0x1a0, 0xbf4eb, 1]];

@@ -1406,13 +1406,35 @@ export const TITLE_SCREEN = {
     /** Frame records live in $82:BC00-$82:F2E0 (file 0x13C00-0x172E0) */
     FRAMES: [0x13c00, 0x172e0],
   },
+  /**
+   * Objects set up by the title screen code ($80:8D24-$8DDA): each value below is
+   * the 16-bit operand of an LDA #imm. An object with handler 0 is never run, so
+   * it is not drawn (the handlers are the original ones, restored to show it).
+   * Ball: object $0480 (x, ground y, height z < 0 = above the ground) + its
+   * shadow, object $1620, at the same x / y. Player shadows: objects $16A0
+   * (left) and $1660 (right). Players: x of $0E80 / $0DE0 and their shared
+   * feet y ($80:8DE4).
+   */
+  OBJECTS: {
+    BALL: {
+      x: 0x0da8,
+      y: 0x0db0,
+      z: 0x0db8,
+      handlers: [
+        [0x0dca, 0x805d],
+        [0x0dcf, 0x806c],
+      ],
+    },
+    SHADOW_LEFT: { x: 0x0d68, y: 0x0d6d, handlers: [[0x0d72, 0x80e2]] },
+    SHADOW_RIGHT: { x: 0x0d28, y: 0x0d2d, handlers: [[0x0d32, 0x80e2]] },
+    PLAYER_LEFT_X: 0x0d84,
+    PLAYER_RIGHT_X: 0x0d44,
+    PLAYERS_Y: 0x0de5,
+  },
   /** Byte ranges written by this editor (undo snapshots) */
   RANGES: [
-    [0x0d19, 0x0d1a],
-    [0x0d1f, 0x0d20],
-    // player poses (LDY #frame)
-    [0x0d5b, 0x0d5d],
-    [0x0d9b, 0x0d9d],
+    // title screen set-up code: teams, poses, ball / shadows / player positions (immediates)
+    [0x0d19, 0x0de7],
     [0x2d49e, 0x2d4ae],
     [0x2d4c0, 0x2d4fc],
     [0x2d4fe, 0x2d51c],

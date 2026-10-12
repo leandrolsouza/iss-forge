@@ -21,6 +21,27 @@ const fileOf = (ptr) => ((ptr >> 16) & 0x7f) * 0x8000 + ((ptr & 0xffff) - 0x8000
 /** bank $82 address <-> file offset */
 const recordFile = (y) => 0x10000 + (y - 0x8000);
 const listFile = (addr) => 0x40000 + (addr - 0x8000);
+/** Tile (in the object's 2 rows) loaded by the third DMA of $83:D472 */
+const EXTRA_TILE = 0x17;
+/** Bank $82 entry used when a frame has no extra tile: a blank tile */
+const EXTRA_DEFAULT = 0xab27;
+
+/**
+ * The extra tile of a frame (the game's $83:D472): the word after the two tile
+ * pointers picks a 3-byte pointer in bank $82 to one 32-byte tile, loaded to
+ * tile 7 of the second row. 0 = blank; positive = table + 3 x team ordinal
+ * (per-team detail, e.g. hair); negative = table + per-player offset (the
+ * title objects use player 0: offset 0 on the left, 0x2D on the right).
+ */
+function extraTile(rom, extra, side, ordinal) {
+  let y = EXTRA_DEFAULT;
+  if (extra && extra < 0x8000) y = (extra + 3 * ordinal) | 0x8000;
+  else if (extra) y = ((side === 'right' ? 0x2d : 0) & 0xff) + extra;
+  const at = recordFile(y & 0xffff);
+  const ptr = long(rom, at);
+  if (ptr >> 16 < 0x80 || (ptr & 0xffff) < 0x8000) return new Uint8Array(32);
+  return rom.readBytes(fileOf(ptr) + 2, 32);
+}
 
 /**
  * Decode a frame record (null when it does not look like one).
@@ -52,9 +73,13 @@ export function readFrame(rom, y) {
     const tile = rom.readByte(lf + 3 + i * 4);
     const attr = rom.readByte(lf + 4 + i * 4);
     const big = (attr >> 4) & 1;
-    // tiles must come from the two DMA'd rows
+    // tiles must come from the two DMA'd rows (and from the part of them this frame loads:
+    // the rest of the row keeps whatever an earlier frame left there)
     const lastTile = tile + (big ? 17 : 0);
     if (lastTile >= 32 || (tile & 15) + (big ? 1 : 0) >= 16) return null;
+    // tile 7 of the second row is always loaded by the third DMA (see extraTile)
+    const covered = big ? [tile, tile + 1, tile + 16, tile + 17] : [tile];
+    if (covered.some((t) => t !== EXTRA_TILE && (t & 15) * 32 >= rows[t >> 4][1])) return null;
     if (dx < -48 || dx > 40 || dy < -72 || dy > 16) return null;
     sprites.push({
       dx,
@@ -67,7 +92,7 @@ export function readFrame(rom, y) {
       v: (attr >> 7) & 1,
     });
   }
-  return { sprites, rows };
+  return { sprites, rows, extra: word(rom, a + 8) };
 }
 
 let framesCache = null;
@@ -103,8 +128,9 @@ export function writePose(rom, side, y) {
  * @returns {{ sprites: number[][], tiles: [number, Uint8Array][] } | null}
  *   sprites: [x, y, tile, big, palette, hFlip, vFlip] (drawing order, top last);
  *   tiles: [first OBJ tile, bytes] to put in VRAM
+ * @param {number} [ordinal] - ROM ordinal of the player's team (picks the extra tile)
  */
-export function playerSprites(rom, side, y, origin = null) {
+export function playerSprites(rom, side, y, origin = null, ordinal = 0) {
   const s = SIDES[side];
   const frame = readFrame(rom, y);
   if (!frame) return null;
@@ -123,5 +149,6 @@ export function playerSprites(rom, side, y, origin = null) {
     ];
   });
   const tiles = frame.rows.map(([at, size], k) => [s.tile + k * 16, rom.readBytes(at, size)]);
+  tiles.push([s.tile + EXTRA_TILE, extraTile(rom, frame.extra, side, ordinal)]);
   return { sprites: sprites.reverse(), tiles };
 }

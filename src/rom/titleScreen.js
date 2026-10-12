@@ -8,10 +8,17 @@
  *
  * See TITLE_SCREEN in constants.js and research/title-screen.md.
  */
-import { TITLE_SCREEN, TEAMS, FLAG_DESIGN_ORDINALS } from './constants';
+import { TITLE_SCREEN, TEAMS, FLAG_DESIGN_ORDINALS, UNIFORM_COLORS } from './constants';
 import { getHairSkinOffset } from './readers/UniformReader';
 import { konamiDecompress } from './KonamiCodec';
-import { TITLE_SHADOW_SPRITES, TITLE_BALL_SPRITES, TITLE_RAW_TILES } from './titleScreenLayout';
+import { TITLE_RAW_TILES } from './titleScreenLayout';
+import {
+  readTitleObjects,
+  writeTitleObjects,
+  shadowSprites,
+  ballSprites,
+  ballShadowTile,
+} from './titleObjects';
 import { readPoses, writePose, playerSprites, listPoseFrames } from './titlePlayers';
 import { readLogoSprites, writeLogo, restoreOriginalLogo, isOriginalLogo } from './titleLogo';
 import { pressStartAt, readTitleTexts } from './titleScreenText';
@@ -61,6 +68,7 @@ export function readTitleScreen(rom) {
     logo: { original: isOriginalLogo(rom), sprites: readLogoSprites(rom).length },
     background: backgroundState(rom),
     poses: readPoses(rom),
+    objects: readTitleObjects(rom),
   };
 }
 
@@ -128,6 +136,7 @@ export function applyTitleScreenUpdates(rom, updates) {
   Object.entries(updates).forEach(([key, value]) => {
     if (key.startsWith('team:')) writeTitleTeam(rom, key.slice(5), value);
     else if (key.startsWith('pose:')) writePose(rom, key.slice(5), value);
+    else if (key === 'objects') writeTitleObjects(rom, value);
     else writeTitleColors(rom, key, value);
   });
 }
@@ -286,9 +295,19 @@ function buildCgram(rom, state) {
       put(3, 1, colors.slice(15));
     } else put(row, first, colors);
   });
+  // $80:ADB3: when both teams have the same predominant colour ($81:8DB2[ordinal]),
+  // team 2 (the right player) wears its second kit
+  const predominant = (side) => {
+    const index = state.teams[side];
+    return index === null
+      ? -1
+      : rom.readByte(UNIFORM_COLORS.PREDOMINANT_COLOR_OFFSET + FLAG_DESIGN_ORDINALS[index]);
+  };
+  const clash = predominant('left') >= 0 && predominant('left') === predominant('right');
   const team = (side, row) => {
     const index = state.teams[side];
-    const off = index === null ? null : getHairSkinOffset(TEAMS[index].id, 'first');
+    const kit = side === 'right' && clash ? 'second' : 'first';
+    const off = index === null ? null : getHairSkinOffset(TEAMS[index].id, kit);
     if (off !== null) put(row, 1, readColors(rom, off, 15));
   };
   team('left', 8);
@@ -342,12 +361,17 @@ function hazed(raw, y) {
   return add(raw & 31, r) | (add((raw >> 5) & 31, g) << 5) | (add((raw >> 10) & 31, b) << 10);
 }
 
-function drawBg(img, cg, vram, words, bg, palSize, haze = false) {
+/**
+ * priority: null = every tile, true / false = only tiles with / without the
+ * priority bit (BG3 high-priority tiles are drawn above the sprites, mode 1 + BG3 priority).
+ */
+function drawBg(img, cg, vram, words, bg, palSize, haze = false, priority = null) {
   for (let ty = 0; ty < 28; ty++)
     for (let tx = 0; tx < 32; tx++) {
       const w = words
         ? words[ty * 32 + tx]
         : vram[bg.map + (ty * 32 + tx) * 2] | (vram[bg.map + (ty * 32 + tx) * 2 + 1] << 8);
+      if (priority !== null && !!(w & 0x2000) !== priority) continue;
       const tile = w & 0x3ff;
       const pal = (w >> 10) & 7;
       const base = bg.chars + tile * bg.bpp * 8;
@@ -402,17 +426,25 @@ export function renderTitleScreen(rom, state = readTitleScreen(rom), { pressStar
   const img = { data: new Uint8ClampedArray(WIDTH * HEIGHT * 4), width: WIDTH, height: HEIGHT };
   for (let i = 0; i < WIDTH * HEIGHT; i++) setPixel(img, i % WIDTH, Math.floor(i / WIDTH), cg[0]);
   drawBg(img, cg, vram, null, BG1, 16, true);
-  drawBg(img, cg, vram, bg3Words(rom, vram, pressStart), BG3, 4);
-  drawSprites(img, cg, vram, TITLE_SHADOW_SPRITES);
+  const bg3 = bg3Words(rom, vram, pressStart);
+  drawBg(img, cg, vram, bg3, BG3, 4, false, false);
+  const objects = state.objects || readTitleObjects(rom);
+  vram.set(rom.readBytes(ballShadowTile(objects.ball.z), 32), (OBJ_BASE + 0x1b0 * 32) & 0xffff);
+  drawSprites(img, cg, vram, shadowSprites(objects));
   const poses = state.poses || readPoses(rom);
+  const feet = { left: objects.players.leftX, right: objects.players.rightX };
   for (const side of ['left', 'right']) {
-    const p = playerSprites(rom, side, poses[side]);
+    const team = state.teams?.[side];
+    const ordinal = team === null || team === undefined ? 0 : FLAG_DESIGN_ORDINALS[team];
+    const p = playerSprites(rom, side, poses[side], [feet[side], objects.players.y], ordinal);
     if (!p) continue;
     p.tiles.forEach(([tile, bytes]) => vram.set(bytes, (OBJ_BASE + tile * 32) & 0xffff));
     drawSprites(img, cg, vram, p.sprites);
   }
   drawSprites(img, cg, vram, readLogoSprites(rom));
-  drawSprites(img, cg, vram, TITLE_BALL_SPRITES);
+  drawSprites(img, cg, vram, ballSprites(objects));
+  // the copyright and PRESS START tiles have the priority bit: they cover the sprites
+  drawBg(img, cg, vram, bg3, BG3, 4, false, true);
   return { width: WIDTH, height: HEIGHT, data: img.data };
 }
 
@@ -433,10 +465,12 @@ export function renderPoseSheet(rom, state, side, { columns = 12, cell = [40, 64
   };
   const cg = buildCgram(rom, state);
   const vram = new Uint8Array(0x10000);
+  const team = state.teams?.[side];
+  const ordinal = team === null || team === undefined ? 0 : FLAG_DESIGN_ORDINALS[team];
   frames.forEach((y, k) => {
     const x0 = (k % columns) * cw;
     const y0 = Math.floor(k / columns) * ch;
-    const p = playerSprites(rom, side, y, [x0 + cw / 2, y0 + ch - 6]);
+    const p = playerSprites(rom, side, y, [x0 + cw / 2, y0 + ch - 6], ordinal);
     if (!p) return;
     p.tiles.forEach(([tile, bytes]) => vram.set(bytes, (OBJ_BASE + tile * 32) & 0xffff));
     img.clip = [x0, y0, x0 + cw, y0 + ch];

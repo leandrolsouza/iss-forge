@@ -6,6 +6,7 @@ import { TEAMS, TITLE_SCREEN } from '../rom/constants';
 import { adjustPalette, GRASS_PRESETS } from '../rom/palettes';
 import { renderTitleScreen, renderPoseSheet } from '../rom/titleScreen';
 import { buildBackground, buildBackgroundFitting } from '../rom/titleBackground';
+import { OBJECT_LIMITS } from '../rom/titleObjects';
 import { checkTitleTexts } from '../rom/titleScreenText';
 import {
   buildLogo,
@@ -61,7 +62,7 @@ const LOGO_PRESETS = [
 ];
 const PRESET_PARTS = ['logoTop', 'logoBottom', 'stroke'];
 
-function TitlePreview({ romParser, titleScreen, teams, pressStart, drafts }) {
+function TitlePreview({ romParser, titleScreen, teams, pressStart, drafts, objects }) {
   const ref = useRef(null);
   // imports not applied yet (logo, background) are drawn from a copy of the ROM
   const active = drafts.filter(Boolean);
@@ -76,13 +77,15 @@ function TitlePreview({ romParser, titleScreen, teams, pressStart, drafts }) {
     const canvas = ref.current;
     if (!canvas || !romParser || !titleScreen) return;
     const rom = view || romParser;
-    const state = view ? view.readTitleScreen() : titleScreen;
+    const base = view ? view.readTitleScreen() : titleScreen;
+    // objects being dragged with a slider (not written yet)
+    const state = objects ? { ...base, objects } : base;
     const { width, height, data } = renderTitleScreen(rom, state, { pressStart });
     canvas.width = width;
     canvas.height = height;
     canvas.getContext('2d').putImageData(new ImageData(data, width, height), 0, 0);
     // `teams` is a dependency on purpose: the players wear the teams' kits
-  }, [romParser, titleScreen, teams, pressStart, view]);
+  }, [romParser, titleScreen, teams, pressStart, view, objects]);
   return (
     <canvas ref={ref} className={`ts-canvas ${view ? 'draft' : ''}`} width={256} height={224} />
   );
@@ -658,6 +661,167 @@ function PosePicker({ t, romParser, titleScreen, side, original, onPick, onClose
   );
 }
 
+/**
+ * Range + number input. While dragging, `onPreview` gets every value; the
+ * value is committed (one undo step) on release, Enter or blur.
+ */
+function NumberSlider({ label, value, min, max, onPreview, onCommit, disabled }) {
+  const [v, setV] = useState(value);
+  const ref = useRef(null);
+  const latest = useRef({ value, onCommit });
+  latest.current = { value, onCommit };
+  useEffect(() => setV(value), [value]);
+  const commit = (n) => {
+    const x = Math.max(min, Math.min(max, Math.round(Number(n))));
+    if (Number.isFinite(x) && x !== latest.current.value) latest.current.onCommit(x);
+    else setV(latest.current.value);
+  };
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const onChange = (e) => commit(e.target.value);
+    el.addEventListener('change', onChange);
+    return () => el.removeEventListener('change', onChange);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <label className="mp-slider ts-num-slider">
+      <span>{label}</span>
+      <span className="ts-num-row">
+        <input
+          ref={ref}
+          type="range"
+          min={min}
+          max={max}
+          value={v}
+          disabled={disabled}
+          onChange={(e) => {
+            setV(Number(e.target.value));
+            onPreview(Number(e.target.value));
+          }}
+        />
+        <input
+          type="number"
+          className="ts-num"
+          min={min}
+          max={max}
+          value={v}
+          disabled={disabled}
+          onChange={(e) => setV(e.target.value)}
+          onBlur={(e) => commit(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && commit(e.target.value)}
+        />
+      </span>
+    </label>
+  );
+}
+
+/** Ball, ball shadow, player shadows and player positions */
+function ObjectsEditor({ t, objects, original, setDraft, onCommit }) {
+  const [follow, setFollow] = useState(true);
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+  /** objects with one value changed (+ the shadows following the players) */
+  const withValue = (part, key, value) => {
+    const next = structuredClone(objects);
+    if (part === 'players' && follow) {
+      const d = value - objects.players[key];
+      if (key === 'leftX') next.shadowLeft.x = clamp(next.shadowLeft.x + d, 'x');
+      if (key === 'rightX') next.shadowRight.x = clamp(next.shadowRight.x + d, 'x');
+      if (key === 'y') {
+        next.shadowLeft.y = clamp(next.shadowLeft.y + d, 'y');
+        next.shadowRight.y = clamp(next.shadowRight.y + d, 'y');
+      }
+    }
+    next[part][key] = value;
+    return next;
+  };
+  const clamp = (v, k) => Math.max(OBJECT_LIMITS[k][0], Math.min(OBJECT_LIMITS[k][1], v));
+  const slider = (part, key, label, limits = OBJECT_LIMITS[key] || OBJECT_LIMITS.x) => (
+    <NumberSlider
+      key={`${part}.${key}`}
+      label={label}
+      value={objects[part][key]}
+      min={limits[0]}
+      max={limits[1]}
+      onPreview={(v) => setDraft(withValue(part, key, v))}
+      onCommit={(v) => {
+        setDraft(null);
+        onCommit(withValue(part, key, v));
+      }}
+    />
+  );
+  const height = objects.ball.z;
+  const toggle = (part) => (
+    <label className="mp-check">
+      <input
+        type="checkbox"
+        checked={objects[part].visible}
+        onChange={(e) =>
+          onCommit({ ...objects, [part]: { ...objects[part], visible: e.target.checked } })
+        }
+      />
+      {t(`tsShow_${part}`)}
+    </label>
+  );
+
+  return (
+    <div className="ts-logo-import">
+      <div className="detail-section-title ts-subtitle">{t('tsObjects')}</div>
+      <div className="ts-objects">
+        <div className="ts-object">
+          {toggle('ball')}
+          {slider('ball', 'x', t('tsObjX'))}
+          {slider('ball', 'y', t('tsObjGround'))}
+          <NumberSlider
+            label={t('tsObjHeight')}
+            value={-height}
+            min={0}
+            max={-OBJECT_LIMITS.z[0]}
+            onPreview={(v) => setDraft(withValue('ball', 'z', -v))}
+            onCommit={(v) => {
+              setDraft(null);
+              onCommit(withValue('ball', 'z', -v));
+            }}
+          />
+        </div>
+        {['shadowLeft', 'shadowRight'].map((part) => (
+          <div key={part} className="ts-object">
+            {toggle(part)}
+            {slider(part, 'x', t('tsObjX'))}
+            {slider(part, 'y', t('tsObjY'))}
+          </div>
+        ))}
+        <div className="ts-object">
+          <span className="mp-swatch-label">{t('tsObjPlayers')}</span>
+          {slider('players', 'leftX', t('tsObjLeftX'))}
+          {slider('players', 'rightX', t('tsObjRightX'))}
+          {slider('players', 'y', t('tsObjFeet'))}
+          <label className="mp-check">
+            <input type="checkbox" checked={follow} onChange={(e) => setFollow(e.target.checked)} />
+            {t('tsObjFollow')}
+          </label>
+        </div>
+      </div>
+      <div className="mp-presets">
+        <button
+          className="kit-btn"
+          onClick={() => onCommit({ ...objects, ball: { ...objects.ball, z: 0 } })}
+        >
+          {t('tsBallOnGround')}
+        </button>
+        <button
+          className="kit-btn"
+          disabled={same(objects, original)}
+          onClick={() => onCommit(structuredClone(original))}
+        >
+          {t('tsObjRestore')}
+        </button>
+      </div>
+      <p className="mp-hint">{t('tsObjHelp')}</p>
+    </div>
+  );
+}
+
 export default function TitleScreenEditor() {
   const { t } = useI18n();
   const {
@@ -672,6 +836,7 @@ export default function TitleScreenEditor() {
   const [logoDraft, setLogoDraft] = useState(null);
   const [bgDraft, setBgDraft] = useState(null);
   const [poseSide, setPoseSide] = useState(null);
+  const [objectsDraft, setObjectsDraft] = useState(null);
   const [pressStart, setPressStart] = useState(true);
   const [adjust, setAdjust] = useState({ hue: 0, saturation: 1, lightness: 1 });
   const [target, setTarget] = useState('logo');
@@ -743,12 +908,14 @@ export default function TitleScreenEditor() {
         updates[`pose:${side}`] = originals.poses[side];
       }
     });
+    if (!same(titleScreen.objects, originals.objects)) updates.objects = originals.objects;
     handleTitleScreenChange(updates);
   };
   const allOriginal =
     Object.keys(colors).every(isOriginal) &&
     same(titleScreen.teams, originals.teams) &&
     same(titleScreen.poses, originals.poses) &&
+    same(titleScreen.objects, originals.objects) &&
     titleScreen.background?.top === 'original' &&
     titleScreen.background?.grass === 'original' &&
     titleScreen.logo?.original !== false;
@@ -788,6 +955,7 @@ export default function TitleScreenEditor() {
             teams={teams}
             pressStart={pressStart}
             drafts={[logoDraft, bgDraft]}
+            objects={objectsDraft}
           />
           {(logoDraft || bgDraft) && <p className="mp-warning">{t('tsLogoPreviewing')}</p>}
           <label className="mp-check">
@@ -1008,6 +1176,13 @@ export default function TitleScreenEditor() {
             )}
             <p className="mp-hint">{t('tsPlayersHelp')}</p>
             <p className="mp-hint">{t('tsPoseHelp')}</p>
+            <ObjectsEditor
+              t={t}
+              objects={titleScreen.objects}
+              original={originals.objects}
+              setDraft={setObjectsDraft}
+              onCommit={(objects) => handleTitleScreenChange({ objects })}
+            />
           </section>
         </div>
       </div>

@@ -287,3 +287,15 @@ describe('duplicateNumbers / validationText', () => {
     expect(validationText(w, t)).toBe('Ataque 17');
   });
 });
+
+describe('goalkeeper hair', () => {
+  it('warns when the starting goalkeeper does not use hair style 0', () => {
+    const team = makeTeam();
+    team.players[0] = makePlayer({ hairStyle: 5 });
+    team.players[3] = makePlayer({ number: 4, hairStyle: 6 });
+    const warnings = validateRom([team]).filter((w) => w.key === 'valKeeperHair');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({ type: 'warning', playerIndex: 0 });
+    expect(validateRom([makeTeam()]).some((w) => w.key === 'valKeeperHair')).toBe(false);
+  });
+});

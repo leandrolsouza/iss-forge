@@ -276,6 +276,8 @@ Positions: GK goalkeeper, LB/RB full back, CB centre back, SW sweeper, DM defens
 
 ## Hair Styles (hairStyle)
 ${HAIR_STYLES.join(' | ')}
+- GOALKEEPERS (player 1 and the reserve goalkeeper) ALWAYS use hairStyle 0: the game only draws keepers with that hair, any other value shows broken sprites in the match.
+- Most players of real teams use 0; give other styles to the players known for them (2-4 per team).
 
 ## Special players (isSpecial, specialHair, specialSkin)
 - Most players use the team hair/skin colors: isSpecial = false.
@@ -518,10 +520,11 @@ export function sanitizeGeneratedTeam(data, context = DEFAULT_AI_CONTEXT) {
       ...(p.attack != null ? { attack: clampStat(p.attack) } : {}),
       ...(p.defense != null ? { defense: clampStat(p.defense) } : {}),
       ...(gkKick != null ? { gkKick, gkKickIndex: SHOOTING_VALUES.indexOf(gkKick) } : {}),
-      hairStyle: Math.max(
-        0,
-        Math.min(AI_LIMITS.maxHairStyle, Math.round(Number(p.hairStyle)) || 0),
-      ),
+      // the goalkeeper only has graphics for hair style 0 (others draw broken sprites)
+      hairStyle:
+        i === 0
+          ? 0
+          : Math.max(0, Math.min(AI_LIMITS.maxHairStyle, Math.round(Number(p.hairStyle)) || 0)),
       isSpecial: Boolean(p.isSpecial),
     });
   }
@@ -680,25 +683,39 @@ function isSchemaRejected(error) {
   return error?.code === 'api' && /^HTTP (400|422)\b/.test(error.detail || '');
 }
 
+/** Whether structured output is still worth trying with these settings this session */
+export function structuredState(settings) {
+  return { structured: !noStructuredOutput.has(structuredKey(settings)) };
+}
+
 /**
- * One step of a generation: request → parse → validate, asking again (with the list
- * of problems and the previous answer) while important problems remain.
+ * One JSON request with corrections: request → parse → validate, asking again (with
+ * the list of problems and the previous answer) while errors remain.
+ * Shared by the team steps and the championship plan.
+ * @param {object} options
+ * @param {string} options.systemPrompt
+ * @param {object} options.schema - structured-output definition
+ * @param {string} options.userPrompt
+ * @param {object} options.settings
+ * @param {function} options.validate - (data) => { raw, errors, warnings }
+ * @param {object} [options.state] - structuredState(settings), shared between requests
+ * @param {object} [options.attemptInfo] - extra fields for onAttempt (e.g. { part })
  * @returns {Promise<{ raw: object, errors: string[], warnings: string[], attempts: number }>}
  */
-async function generatePart({
-  part,
+export async function requestValidated({
+  systemPrompt,
+  schema,
   userPrompt,
   settings,
-  context,
+  validate,
+  state = structuredState(settings),
+  attemptInfo = {},
   onChunk,
   onAttempt,
   signal,
-  maxAttempts,
-  stream,
-  state,
+  maxAttempts = AI_MAX_ATTEMPTS,
+  stream = streamCompletion,
 }) {
-  const systemPrompt = buildSystemPrompt(context, part);
-  const outputSchema = buildPartSchema(context, part);
   let best = null;
   let lastError = null;
   let feedback = null; // { previous, problems } of the last attempt
@@ -706,7 +723,7 @@ async function generatePart({
 
   while (attempt < maxAttempts) {
     attempt++;
-    onAttempt?.({ part, attempt, maxAttempts, problems: feedback?.problems || [] });
+    onAttempt?.({ ...attemptInfo, attempt, maxAttempts, problems: feedback?.problems || [] });
     const prompt = feedback
       ? buildRepairPrompt(userPrompt, feedback.previous, feedback.problems)
       : userPrompt;
@@ -717,7 +734,7 @@ async function generatePart({
         systemPrompt,
         userPrompt: prompt,
         settings,
-        schema: state.structured ? outputSchema : null,
+        schema: state.structured ? schema : null,
         onChunk,
         signal,
       });
@@ -755,8 +772,7 @@ async function generatePart({
       continue;
     }
 
-    const raw = pickPart(parsed.data, part);
-    const { errors, warnings } = validateGeneratedTeam(raw, context, part);
+    const { raw, errors, warnings } = validate(parsed.data);
     if (!best || errors.length < best.errors.length) {
       best = { raw, errors, warnings };
     }
@@ -766,6 +782,23 @@ async function generatePart({
 
   if (best) return { ...best, attempts: attempt };
   throw lastError || aiError('parse');
+}
+
+/** One step of a team generation ('squad' or 'look') */
+function generatePart({ part, userPrompt, settings, context, state, ...options }) {
+  return requestValidated({
+    systemPrompt: buildSystemPrompt(context, part),
+    schema: buildPartSchema(context, part),
+    userPrompt,
+    settings,
+    state,
+    attemptInfo: { part },
+    validate: (data) => {
+      const raw = pickPart(data, part);
+      return { raw, ...validateGeneratedTeam(raw, context, part) };
+    },
+    ...options,
+  });
 }
 
 /**

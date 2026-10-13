@@ -18,6 +18,7 @@ import TeamPreview from './components/TeamPreview';
 import TeamCompare from './components/TeamCompare';
 import AboutPanel from './components/AboutPanel';
 import AIGeneratorPanel from './components/AIGeneratorPanel';
+import LeagueGeneratorPanel from './components/LeagueGeneratorPanel';
 import SettingsPage from './components/SettingsPage';
 import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
@@ -370,6 +371,7 @@ export default function App() {
     if (activeTab === 'matchPalettes' && romParser) return <MatchPaletteEditor />;
     if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
     if (activeTab === 'screenViewer' && romParser) return <ScreenViewer />;
+    if (activeTab === 'aiLeague' && romParser) return <LeagueGeneratorPanel />;
 
     // ROM loaded but every tab was closed: don't fall back to the "Open ROM" screen
     if (romParser && !openTabs.some((tab) => tab.id === activeTab)) {

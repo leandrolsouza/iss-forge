@@ -35,6 +35,12 @@ indexada pelo id do time (`$1720`) e é seguida por `playerDataAddress()`.
 | 5 | 5-4 | — | sempre 0 |
 | 5 | 3-0 | `hairStyle` | estilo de cabelo |
 
+**Goleiro e cabelo:** na ROM original todo goleiro titular (jogador 1) tem o byte 5 = `00` (cabelo 0, cor
+normal). Testado no emulador (Italia x Brasil a partir do menu pre-jogo): com o goleiro em `hairStyle` 5, ele
+aparece como um amontoado de pedaços de sprites quando entra em cena; com o goleiro "especial" (bit 6) ou com
+os jogadores de linha usando os 11 estilos, nada quebra. O jogo so tem o desenho do goleiro com o cabelo 0. O
+editor avisa (`valKeeperHair`) e a geracao por IA sempre grava 0 no jogador 1.
+
 Na UI os campos de 4 bits usam a escala 1-16 (nibble + 1, como a stamina). Os de 3 bits (chute, técnica e
 chute do goleiro) usam a escala 1, 3, ..., 15 (`SHOOTING_VALUES`).
 

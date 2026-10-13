@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
-import { useSettings } from '../context/SettingsContext';
 import { useToast } from '../context/ToastContext';
 import {
   AI_PARTS,
@@ -11,7 +10,8 @@ import {
   optimizePrompt,
 } from '../services/aiService';
 import { SPECIAL_HAIR_KEYS, SPECIAL_SKIN_KEYS } from '../services/aiTeamSchema';
-import { aiErrorKey, aiErrorDetail, getProvider, modelForProvider } from '../services/aiProviders';
+import { aiErrorKey, aiErrorDetail } from '../services/aiProviders';
+import useAiSettings from '../hooks/useAiSettings';
 import { positionText } from '../rom/formation';
 import { wrapDescriptionBody } from '../rom/teamDescription';
 import { applyImportedTeam } from '../utils/teamExport';
@@ -104,20 +104,7 @@ export default function AIGeneratorPanel({ teamIndex }) {
   const abortRef = useRef(null); // AbortController of the running generation
   const optimizeAbortRef = useRef(null); // ... and of the running prompt improvement
   const keptRef = useRef(null); // result being regenerated in part
-  const { settings: appSettings } = useSettings();
-
-  const settings = useMemo(
-    () => ({
-      provider: appSettings.aiProvider,
-      endpoint: appSettings.aiEndpoint,
-      // never a model of another provider (old settings could keep one)
-      model: modelForProvider(getProvider(appSettings.aiProvider), appSettings.aiModel),
-      apiKey: appSettings.aiApiKey,
-      temperature: appSettings.aiTemperature,
-      maxTokens: appSettings.aiMaxTokens,
-    }),
-    [appSettings],
-  );
+  const settings = useAiSettings();
 
   // Rotate placeholder examples every 5 seconds
   useEffect(() => {

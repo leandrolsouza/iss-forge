@@ -622,6 +622,10 @@ function validatePlayers(data, errors, warnings) {
     }
     if (!isNumber(p.hairStyle)) {
       warnings.push(`${at}.hairStyle is missing (short hair used)`);
+    } else if (i === 0 && p.hairStyle !== 0) {
+      warnings.push(
+        `${at} is the goalkeeper: hairStyle ${p.hairStyle} changed to 0 (the game only draws keepers with hair 0)`,
+      );
     } else if (!Number.isInteger(p.hairStyle) || p.hairStyle < 0 || p.hairStyle > 10) {
       warnings.push(`${at}.hairStyle ${p.hairStyle} changed to the 0-10 range`);
     }

@@ -1,0 +1,248 @@
+/* Championship generator (AI) */
+
+.league-panel {
+  padding: 0;
+  overflow-y: auto;
+}
+
+.league-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.league-request {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.league-request .ai-prompt-input {
+  min-height: 52px;
+}
+
+.league-plan-stream {
+  height: 280px;
+  flex: none;
+}
+
+.league-summary {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.league-summary strong {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.league-progress {
+  margin-left: auto;
+  font-family: monospace;
+}
+
+.league-progress-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+}
+
+.league-progress-bar > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.league-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.league-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.league-toolbar-spacer {
+  flex: 1;
+}
+
+.league-concurrency {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.league-table-wrap {
+  overflow-x: auto;
+}
+
+.league-table td {
+  vertical-align: middle;
+}
+
+.league-table input,
+.league-table select,
+.league-brief textarea {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: 3px;
+  color: var(--text-primary);
+  font-size: 11px;
+  padding: 3px 5px;
+}
+
+.league-table input {
+  width: 140px;
+}
+
+.league-table select {
+  max-width: 140px;
+}
+
+.league-table .league-name-input {
+  width: 80px;
+  font-family: monospace;
+}
+
+.league-table .league-name-input.league-name-short {
+  width: 64px;
+}
+
+.league-lower {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.league-kits {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.league-kits .ai-swatch {
+  width: 14px;
+  height: 14px;
+}
+
+.league-status {
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.league-status-pending {
+  color: var(--text-tertiary);
+}
+
+.league-status-running {
+  color: var(--accent);
+}
+
+.league-status-done {
+  color: #6fcf7f;
+}
+
+.league-status-error {
+  color: #f48771;
+  cursor: help;
+}
+
+.league-problems {
+  color: var(--text-tertiary);
+}
+
+.league-actions {
+  white-space: nowrap;
+}
+
+.league-actions .ai-btn-small {
+  margin-left: 4px;
+}
+
+.league-row-running td {
+  background: rgba(100, 150, 255, 0.05);
+}
+
+.league-table .league-details-row > td {
+  background: var(--bg-secondary);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.league-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 2px;
+}
+
+.league-brief {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.league-brief textarea {
+  width: 100%;
+  font-family: inherit;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+.league-stars {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.league-team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.league-team-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.league-players {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  columns: 3;
+  column-gap: 16px;
+  font-size: 11px;
+  font-family: monospace;
+}
+
+.league-pos {
+  display: inline-block;
+  width: 30px;
+  color: var(--text-tertiary);
+}
+
+.league-team-issues {
+  flex-basis: 100%;
+}

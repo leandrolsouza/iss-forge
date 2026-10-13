@@ -107,6 +107,42 @@ export function flagSharedWith(rom, teamIndex) {
     .map((e) => e.teamIndex);
 }
 
+const REVERSE_INDEX = [0, 12, 13, 14, 15];
+
+/** Compressed top and bottom halves of a 24×16 design (palette indexes 0-4) */
+function compressFlagDesign(grid) {
+  const half = (rows) =>
+    konamiCompress(
+      encodeSnes4bppTiles(rows.map((row) => row.map((pixel) => REVERSE_INDEX[pixel] || 0))),
+      1,
+    );
+  return [half(grid.slice(0, 8)), half(grid.slice(8, 16))];
+}
+
+/** Bytes a design takes in the flag area (both compressed halves) */
+export function flagDesignSize(grid) {
+  return compressFlagDesign(grid).reduce((n, block) => n + block.length, 0);
+}
+
+/**
+ * Room in the flag area: `free` bytes after the last block, and the bytes of each
+ * team's own blocks (0 for blocks shared with other teams, which an edit leaves
+ * where they are). A team can be rewritten with `ownSize + its part of free`.
+ */
+export function flagAreaUsage(rom) {
+  const entries = readAllFlagAddresses(rom);
+  const blocks = getUniqueBlocks(entries);
+  const end = Math.max(...blocks.map((b) => b.address + b.size));
+  const users = new Map();
+  for (const e of entries) {
+    for (const addr of [e.topAddr, e.bottomAddr]) users.set(addr, (users.get(addr) || 0) + 1);
+  }
+  const ownSize = entries.map((e) =>
+    users.get(e.topAddr) === 1 && users.get(e.bottomAddr) === 1 ? e.topSize + e.bottomSize : 0,
+  );
+  return { free: Math.max(0, MAXIMUM_ADDRESS - end), ownSize };
+}
+
 export function writeFlagDesign(rom, teamIndex, grid) {
   try {
     const ordinal = FLAG_DESIGN_ORDINALS[teamIndex];
@@ -116,19 +152,8 @@ export function writeFlagDesign(rom, teamIndex, grid) {
     const oldTopSize = readCompressedSize(rom, topAddr);
     const oldBottomSize = readCompressedSize(rom, bottomAddr);
 
-    // Encode pixel grid to SNES 4bpp tiles
-    const REVERSE_INDEX = [0, 12, 13, 14, 15];
-    const topGrid = grid.slice(0, 8).map((row) => row.map((pixel) => REVERSE_INDEX[pixel] || 0));
-    const bottomGrid = grid
-      .slice(8, 16)
-      .map((row) => row.map((pixel) => REVERSE_INDEX[pixel] || 0));
-
-    const topTiles = encodeSnes4bppTiles(topGrid);
-    const bottomTiles = encodeSnes4bppTiles(bottomGrid);
-
-    // Compress with full LZ algorithm
-    const topCompressed = konamiCompress(topTiles, 1);
-    const bottomCompressed = konamiCompress(bottomTiles, 1);
+    // Encode to SNES 4bpp tiles and compress with full LZ algorithm
+    const [topCompressed, bottomCompressed] = compressFlagDesign(grid);
 
     // Blocks shared with other teams: give this team its own copy at the end of the
     // used area instead of changing the other flags too

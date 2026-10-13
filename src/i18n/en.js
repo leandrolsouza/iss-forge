@@ -1072,6 +1072,55 @@ export default {
 
   // AI Team Generator
   editorAiGenerator: 'AI Generator',
+  // AI Championship Generator
+  editorAiLeague: 'Championship Generator',
+  aiLeagueTitle: 'AI Championship Generator',
+  aiLeagueDescription:
+    'Describe a championship and season (e.g. "Premier League 1998/99"). The AI lists the 26 clubs in final-standing order, completes the list with the best-placed clubs of the division below when there are not enough, then generates every team. You review and adjust everything before applying. Super Star is left unchanged.',
+  aiLeaguePlaceholder:
+    'E.g. Brasileirao 2002 · Premier League 1998/99 · Italian Serie A 1990, well balanced attributes',
+  aiLeaguePlan: 'Plan championship',
+  aiLeaguePlanning: 'Planning...',
+  aiLeagueReplan: 'Plan again',
+  aiLeagueReplanConfirm:
+    'Planning again discards the teams already generated for this championship. Continue?',
+  aiLeagueSummary: '{total} clubs: {main} of the championship + {lower} of the {lowerDivision}',
+  aiLeagueSummaryMain: '{total} clubs of the championship',
+  aiLeagueLower: 'lower division',
+  aiLeagueProgress: '{done} of {total} ready',
+  aiLeagueUnverified:
+    'The squads come from what the AI knows: for smaller clubs or old seasons it may invent players. Review before applying.',
+  aiLeagueIssues: 'Problems in the plan ({count})',
+  aiLeagueGenerate: 'Generate teams ({count})',
+  aiLeagueAllGenerated: 'All teams generated',
+  aiLeagueConcurrency: 'At a time',
+  aiLeagueConcurrencyHint:
+    'How many teams to generate in parallel. Local server (LM Studio): 1. Cloud APIs usually take 2 to 4, within the limits of your account.',
+  aiLeaguePause: 'Pause',
+  aiLeaguePausing: 'Pausing...',
+  aiLeagueApply: 'Apply championship',
+  aiLeagueApplyPartial:
+    'Only {done} of {total} clubs are generated. Apply just these? The other slots stay as they are.',
+  aiLeagueApplied: 'Championship applied: {count} teams written. Undo reverts all of it at once.',
+  aiLeagueDiscard: 'Discard championship',
+  aiLeagueDiscardConfirm: 'Discard the plan and every team generated for this championship?',
+  aiLeagueColSlot: 'Slot',
+  aiLeagueColClub: 'Club',
+  aiLeagueColMenu: 'Menu',
+  aiLeagueColScore: 'Scoreboard',
+  aiLeagueColPos: 'Pos.',
+  aiLeagueColStrength: 'Strength',
+  aiLeagueColKits: 'Shirts',
+  aiLeagueColStatus: 'Status',
+  aiLeagueSlotHint: 'Game slot that gets this club (changing it swaps with the club that had it)',
+  aiLeagueStatus_pending: 'Queued',
+  aiLeagueStatus_running: 'Generating',
+  aiLeagueStatus_done: 'Ready',
+  aiLeagueStatus_error: 'Error',
+  aiLeagueGenerateOne: 'Generate',
+  aiLeagueRedo: 'Redo',
+  aiLeagueBrief: 'Brief of this club (what the AI uses to generate the team)',
+  aiLeagueStars: 'Key players',
   aiTitle: 'AI Team Generator',
   aiDescription:
     'Describe the team you want and the AI will generate all data (players, formation, description, uniforms, colors, flag).',
@@ -1284,6 +1333,8 @@ export default {
   valStamina: 'Player {n} "{name}": stamina out of 1-16 ({value})',
   valDuplicateNumber: 'Number {number} repeated (players {players})',
   valBlackShirt: 'Every home shirt colour is black',
+  valKeeperHair:
+    'The goalkeeper ({name}) does not use "Short hair": the game only draws keepers with that hair, other styles show as broken sprites in the match.',
   gtDrill_dribble: 'Dribble',
   gtDrill_pass: 'Pass',
   gtDrill_shoot: 'Shoot',

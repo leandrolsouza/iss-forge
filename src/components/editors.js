@@ -42,6 +42,7 @@ export const EDITORS = [
   { id: 'titleScreen', labelKey: 'editorTitleScreen', Icon: IconTitleScreen, scope: 'global' },
   { id: 'screenViewer', labelKey: 'editorScreenViewer', Icon: IconScreenViewer, scope: 'global' },
   { id: 'ai', labelKey: 'editorAiGenerator', Icon: IconSparkle, scope: 'team', ai: true },
+  { id: 'aiLeague', labelKey: 'editorAiLeague', Icon: IconSparkle, scope: 'global', ai: true },
 ];
 
 /** Tabs that are not editors but can be open in the tab bar */

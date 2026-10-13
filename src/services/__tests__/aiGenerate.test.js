@@ -881,3 +881,18 @@ describe('prompt optimizer', () => {
     ).rejects.toMatchObject({ code: 'empty' });
   });
 });
+
+describe('goalkeeper hair', () => {
+  it('keeps the goalkeeper on hair style 0 (the only keeper graphics in the game)', () => {
+    const raw = validTeam();
+    raw.players[0].hairStyle = 6;
+    raw.players[1].hairStyle = 6;
+    const team = sanitizeGeneratedTeam(raw);
+    expect(team.players[0].hairStyle).toBe(0);
+    expect(team.players[1].hairStyle).toBe(6);
+    expect(validateGeneratedTeam(raw).warnings.join()).toContain('players[0] is the goalkeeper');
+    expect(buildSystemPrompt(undefined, 'squad')).toContain('GOALKEEPERS');
+    expect(en.valKeeperHair).toBeTypeOf('string');
+    expect(ptBR.valKeeperHair).toBeTypeOf('string');
+  });
+});

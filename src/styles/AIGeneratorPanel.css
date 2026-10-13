@@ -1,5 +1,13 @@
 /* AI Team Generator Panel — Two-column layout */
 
+/* The theme has no --accent / --text-tertiary: map them to the theme's button and muted
+   colours (primary buttons were drawn without a background) */
+.ai-generator-panel,
+.league-panel {
+  --accent: var(--bg-button);
+  --text-tertiary: var(--text-muted);
+}
+
 .ai-generator-panel {
   padding: 0;
   overflow-y: auto;
@@ -138,7 +146,10 @@
   font-size: 10px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
   text-align: left;
   line-height: 1.3;
   max-width: 100%;
@@ -190,7 +201,9 @@
   font-weight: 500;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.15s, opacity 0.15s;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
 }
 
 .ai-btn:disabled {
@@ -716,7 +729,9 @@
   font-size: 12px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .ai-templates-btn:hover {
@@ -813,7 +828,10 @@
   cursor: pointer;
   text-align: left;
   line-height: 1.4;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
 
 .ai-modal-template-item:hover {

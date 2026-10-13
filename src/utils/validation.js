@@ -62,6 +62,13 @@ export function validateRom(teams) {
       }
     });
 
+    // The game only has keeper graphics for hair style 0: any other style draws the
+    // goalkeeper as a cluster of broken sprites (checked in the emulator)
+    const keeper = team.players[0];
+    if (keeper && keeper.hairStyle > 0) {
+      push('warning', 'valKeeperHair', { n: 1, name: keeper.name }, 0);
+    }
+
     // Duplicate numbers in the same team (one warning per repeated number)
     for (const [number, list] of duplicateNumbers(team.players)) {
       push('warning', 'valDuplicateNumber', {

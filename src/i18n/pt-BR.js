@@ -1075,6 +1075,56 @@ export default {
 
   // AI Team Generator
   editorAiGenerator: 'Gerador IA',
+  // AI Championship Generator
+  editorAiLeague: 'Gerador de Campeonato',
+  aiLeagueTitle: 'Gerador de Campeonato com IA',
+  aiLeagueDescription:
+    'Descreva um campeonato e a temporada (ex.: "Brasileirao 2002"). A IA monta a lista dos 26 clubes pela classificacao final, completa com os melhores colocados da divisao de baixo quando faltar clube, e depois gera cada time. Voce revisa e ajusta tudo antes de aplicar. O Super Star nao e alterado.',
+  aiLeaguePlaceholder:
+    'Ex.: Brasileirao 2002 · Premier League 1998/99 · Serie A italiana 1990, atributos bem equilibrados',
+  aiLeaguePlan: 'Planejar campeonato',
+  aiLeaguePlanning: 'Planejando...',
+  aiLeagueReplan: 'Planejar de novo',
+  aiLeagueReplanConfirm:
+    'Planejar de novo descarta os times ja gerados deste campeonato. Continuar?',
+  aiLeagueSummary: '{total} clubes: {main} do campeonato + {lower} da {lowerDivision}',
+  aiLeagueSummaryMain: '{total} clubes do campeonato',
+  aiLeagueLower: 'divisao inferior',
+  aiLeagueProgress: '{done} de {total} prontos',
+  aiLeagueUnverified:
+    'Os elencos vem do conhecimento da IA: em clubes menores ou temporadas antigas ela pode inventar jogadores. Revise antes de aplicar.',
+  aiLeagueIssues: 'Problemas no plano ({count})',
+  aiLeagueGenerate: 'Gerar times ({count})',
+  aiLeagueAllGenerated: 'Todos os times gerados',
+  aiLeagueConcurrency: 'Ao mesmo tempo',
+  aiLeagueConcurrencyHint:
+    'Quantos times gerar em paralelo. Servidor local (LM Studio): 1. APIs na nuvem costumam aguentar 2 a 4, dentro do limite da sua conta.',
+  aiLeaguePause: 'Pausar',
+  aiLeaguePausing: 'Pausando...',
+  aiLeagueApply: 'Aplicar campeonato',
+  aiLeagueApplyPartial:
+    'So {done} de {total} clubes estao gerados. Aplicar apenas esses? Os outros slots ficam como estao.',
+  aiLeagueApplied: 'Campeonato aplicado: {count} times gravados. Desfazer volta tudo de uma vez.',
+  aiLeagueDiscard: 'Descartar campeonato',
+  aiLeagueDiscardConfirm: 'Descartar o plano e todos os times gerados deste campeonato?',
+  aiLeagueColSlot: 'Slot',
+  aiLeagueColClub: 'Clube',
+  aiLeagueColMenu: 'Menu',
+  aiLeagueColScore: 'Placar',
+  aiLeagueColPos: 'Pos.',
+  aiLeagueColStrength: 'Forca',
+  aiLeagueColKits: 'Camisas',
+  aiLeagueColStatus: 'Status',
+  aiLeagueSlotHint:
+    'Slot do jogo que recebe este clube (trocar aqui troca com o clube que estava nele)',
+  aiLeagueStatus_pending: 'Na fila',
+  aiLeagueStatus_running: 'Gerando',
+  aiLeagueStatus_done: 'Pronto',
+  aiLeagueStatus_error: 'Erro',
+  aiLeagueGenerateOne: 'Gerar',
+  aiLeagueRedo: 'Refazer',
+  aiLeagueBrief: 'Briefing deste clube (e o que a IA usa para gerar o time)',
+  aiLeagueStars: 'Destaques',
   aiTitle: 'Gerador de Time com IA',
   aiDescription:
     'Descreva o time que voce quer e a IA vai gerar todos os dados (jogadores, formacao, descricao, uniformes, cores, bandeira).',
@@ -1287,6 +1337,8 @@ export default {
   valStamina: 'Jogador {n} "{name}": stamina fora de 1-16 ({value})',
   valDuplicateNumber: 'Numero {number} repetido (jogadores {players})',
   valBlackShirt: 'Todas as cores da camisa titular estao pretas',
+  valKeeperHair:
+    'O goleiro ({name}) nao usa "Cabelo Curto": o jogo so tem o desenho do goleiro com esse cabelo, e outros estilos aparecem como sprites quebrados na partida.',
   gtDrill_dribble: 'Drible',
   gtDrill_pass: 'Passe',
   gtDrill_shoot: 'Chute',

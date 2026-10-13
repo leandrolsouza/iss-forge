@@ -368,7 +368,7 @@ export function aiTestConnection(payload) {
 
 /**
  * Start a streaming LLM generation. Chunks arrive via event listeners.
- * @param {object} payload - { prompt, systemPrompt, settings? }
+ * @param {object} payload - { prompt, systemPrompt, settings?, schema?, requestId? }
  * @returns {Promise<{success: boolean}>}
  */
 export function aiGenerateStream(payload) {
@@ -376,27 +376,38 @@ export function aiGenerateStream(payload) {
 }
 
 /**
+ * Cancel a running stream started with aiGenerateStream
+ * @param {string} requestId
+ */
+export function aiCancelStream(requestId) {
+  return window.electronAPI.aiCancelStream(requestId);
+}
+
+/**
  * Listen for streaming text chunks from LLM
- * @param {function} callback - receives a string chunk
+ * @param {function} callback - receives (chunk, requestId)
+ * @returns {function} removes the listener
  */
 export function onAiStreamChunk(callback) {
-  window.electronAPI.onAiStreamChunk(callback);
+  return window.electronAPI.onAiStreamChunk(callback);
 }
 
 /**
  * Listen for stream completion
- * @param {function} callback
+ * @param {function} callback - receives { requestId, stopReason, truncated }
+ * @returns {function} removes the listener
  */
 export function onAiStreamDone(callback) {
-  window.electronAPI.onAiStreamDone(callback);
+  return window.electronAPI.onAiStreamDone(callback);
 }
 
 /**
  * Listen for stream errors
- * @param {function} callback - receives { code, detail } (see aiErrorKey in aiProviders.js)
+ * @param {function} callback - receives ({ code, detail }, requestId) (see aiErrorKey in aiProviders.js)
+ * @returns {function} removes the listener
  */
 export function onAiStreamError(callback) {
-  window.electronAPI.onAiStreamError(callback);
+  return window.electronAPI.onAiStreamError(callback);
 }
 
 // ─── App Settings ────────────────────────────────────────────────────────────

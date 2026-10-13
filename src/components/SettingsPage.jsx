@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import {
   getProvider,
   getProviderIds,
   buildBedrockEndpoint,
+  buildRequestBody,
   aiErrorKey,
   aiErrorDetail,
   fetchErrorToAi,
   responseErrorToAi,
+  DEFAULT_MAX_TOKENS,
+  modelForProvider,
 } from '../services/aiProviders';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
@@ -16,11 +19,19 @@ import '../styles/settings.css';
 
 export default function SettingsPage() {
   const { t } = useI18n();
-  const { settings, updateSetting, selectExportPath } = useSettings();
+  const { settings, loaded, updateSetting, selectExportPath } = useSettings();
   const [showApiKey, setShowApiKey] = useState(false);
   const [activeSection, setActiveSection] = useState('editor');
   const [testStatus, setTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
   const [testError, setTestError] = useState(null); // { code, detail } (see aiErrorKey)
+
+  // Settings saved by older versions may keep a model of another provider (the list
+  // shows nothing selected but the model is still sent): fix it once loaded
+  useEffect(() => {
+    if (!loaded || !settings.aiModel) return;
+    const fixed = modelForProvider(getProvider(settings.aiProvider), settings.aiModel);
+    if (fixed !== settings.aiModel) updateSetting('aiModel', fixed);
+  }, [loaded, settings.aiProvider, settings.aiModel, updateSetting]);
 
   const tabs = [
     { id: 'editor', label: t('settingsEditor') },
@@ -160,10 +171,12 @@ export default function SettingsPage() {
                   } else if (!providerConfig.endpointEditable) {
                     updateSetting('aiEndpoint', providerConfig.endpoint);
                   }
-                  // Auto-set default model if user has no model set
-                  if (providerConfig.defaultModel && !settings.aiModel) {
-                    updateSetting('aiModel', providerConfig.defaultModel);
-                  }
+                  // A model of the old provider means nothing to the new one (e.g. a GPT
+                  // model sent to Claude): keep it only when the new provider lists it
+                  updateSetting(
+                    'aiModel',
+                    modelForProvider(providerConfig, settings.aiModel, settings.aiProvider),
+                  );
                 }}
               >
                 {getProviderIds().map((id) => {
@@ -295,9 +308,11 @@ export default function SettingsPage() {
                     max="2"
                     step="0.1"
                     value={settings.aiTemperature}
-                    onChange={(e) =>
-                      updateSetting('aiTemperature', parseFloat(e.target.value) || 0.7)
-                    }
+                    onChange={(e) => {
+                      // 0 is a valid temperature (most deterministic)
+                      const value = parseFloat(e.target.value);
+                      updateSetting('aiTemperature', Number.isFinite(value) ? value : 0.7);
+                    }}
                   />
                 </div>
                 <div className="settings-inline-field">
@@ -306,10 +321,12 @@ export default function SettingsPage() {
                     className="settings-input settings-input-small"
                     type="number"
                     min="1024"
-                    max="16384"
+                    max="65536"
                     step="512"
                     value={settings.aiMaxTokens}
-                    onChange={(e) => updateSetting('aiMaxTokens', parseInt(e.target.value) || 4096)}
+                    onChange={(e) =>
+                      updateSetting('aiMaxTokens', parseInt(e.target.value) || DEFAULT_MAX_TOKENS)
+                    }
                   />
                 </div>
               </div>
@@ -347,24 +364,15 @@ export default function SettingsPage() {
                         } else if (settings.aiApiKey) {
                           headers['Authorization'] = `Bearer ${settings.aiApiKey}`;
                         }
-                        const body =
-                          provider.format === 'anthropic'
-                            ? {
-                                model: settings.aiModel || 'claude-sonnet-4-6',
-                                max_tokens: 32,
-                                temperature: 0.1,
-                                system: 'You are a helpful assistant.',
-                                messages: [{ role: 'user', content: 'Say "OK" and nothing else.' }],
-                              }
-                            : {
-                                messages: [
-                                  { role: 'system', content: 'You are a helpful assistant.' },
-                                  { role: 'user', content: 'Say "OK" and nothing else.' },
-                                ],
-                                temperature: 0.1,
-                                max_tokens: 32,
-                                ...(settings.aiModel ? { model: settings.aiModel } : {}),
-                              };
+                        const body = buildRequestBody({
+                          format: provider.format,
+                          systemPrompt: 'You are a helpful assistant.',
+                          userPrompt: 'Say "OK" and nothing else.',
+                          model: settings.aiModel,
+                          temperature: undefined,
+                          maxTokens: 32,
+                          stream: false,
+                        });
                         const resp = await fetch(settings.aiEndpoint, {
                           method: 'POST',
                           headers,

@@ -7,14 +7,17 @@ import fs from 'fs';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import {
+  DEFAULT_MAX_TOKENS,
   fetchErrorToAi,
   responseErrorToAi,
   getProvider,
   getEffectiveEndpoint,
   buildHeaders,
   buildRequestBody,
+  isTruncatedStop,
   parseResponse,
-  parseStreamChunk,
+  readSseStream,
+  readBedrockEventStream,
 } from './aiProviders.mjs';
 import * as projects from './projects.mjs';
 
@@ -36,7 +39,7 @@ const settingsStore = new Store({
     aiModel: '',
     aiApiKey: '',
     aiTemperature: 0.7,
-    aiMaxTokens: 4096,
+    aiMaxTokens: DEFAULT_MAX_TOKENS,
     aiRegion: 'us-east-1',
   },
 });
@@ -884,7 +887,7 @@ ipcMain.handle('ai:testConnection', async (event, { settings }) => {
     systemPrompt: 'You are a helpful assistant.',
     userPrompt: 'Say "OK" and nothing else.',
     model: config.model,
-    temperature: 0.1,
+    temperature: undefined,
     maxTokens: 32,
     stream: false,
   });
@@ -920,22 +923,28 @@ ipcMain.handle('ai:testConnection', async (event, { settings }) => {
   }
 });
 
-ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) => {
-  const config = settings || loadAiSettings();
+/** Request body of a generation, with the user's settings (0 is a valid temperature) */
+function generationBody(provider, config, { prompt, systemPrompt, schema }, stream) {
+  return buildRequestBody({
+    format: provider.format,
+    systemPrompt,
+    userPrompt: prompt,
+    model: config.model,
+    temperature: config.temperature,
+    maxTokens: config.maxTokens || DEFAULT_MAX_TOKENS,
+    stream,
+    schema: schema || null,
+  });
+}
+
+ipcMain.handle('ai:generate', async (event, payload) => {
+  const config = payload.settings || loadAiSettings();
   const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
   const provider = getProvider(providerId);
   const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model);
 
   const headers = buildHeaders(provider, config.apiKey);
-  const body = buildRequestBody({
-    format: provider.format,
-    systemPrompt,
-    userPrompt: prompt,
-    model: config.model,
-    temperature: config.temperature || 0.7,
-    maxTokens: config.maxTokens || 4096,
-    stream: false,
-  });
+  const body = generationBody(provider, config, payload, false);
 
   try {
     const response = await fetch(endpoint, {
@@ -960,230 +969,77 @@ ipcMain.handle('ai:generate', async (event, { prompt, systemPrompt, settings }) 
       success: true,
       content: result.content,
       usage: result.usage,
+      truncated: isTruncatedStop(result.stopReason),
     };
   } catch (err) {
     return { success: false, error: fetchErrorToAi(err, endpoint) };
   }
 });
 
-// AI streaming generation — sends chunks back to renderer via events
-ipcMain.handle('ai:generate-stream', async (event, { prompt, systemPrompt, settings }) => {
-  const config = settings || loadAiSettings();
+// Running streams by request id, so the renderer can cancel them ('ai:cancel-stream')
+const aiStreams = new Map();
+
+ipcMain.handle('ai:cancel-stream', (event, requestId) => {
+  aiStreams.get(requestId)?.abort();
+  aiStreams.delete(requestId);
+  return { success: true };
+});
+
+/**
+ * AI streaming generation — sends chunks back to renderer via events. Every event
+ * carries the request id, so chunks of an old (cancelled) stream are never mixed
+ * into a new one:
+ *   ai:stream-chunk (text, requestId)
+ *   ai:stream-done  ({ requestId, stopReason, truncated })
+ *   ai:stream-error (error, requestId)
+ */
+ipcMain.handle('ai:generate-stream', async (event, payload) => {
+  const requestId = payload.requestId ?? null;
+  const config = payload.settings || loadAiSettings();
   const sender = event.sender;
   const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
   const provider = getProvider(providerId);
-
-  // Bedrock Converse API uses AWS Event Stream binary protocol for streaming
-  if (provider.format === 'bedrock') {
-    const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model, true);
-    const headers = buildHeaders(provider, config.apiKey);
-    const body = buildRequestBody({
-      format: provider.format,
-      systemPrompt,
-      userPrompt: prompt,
-      model: config.model,
-      temperature: config.temperature || 0.7,
-      maxTokens: config.maxTokens || 4096,
-      stream: false,
-    });
-
-    try {
-      console.log('[Bedrock Stream] Requesting:', endpoint);
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-        signal: AbortSignal.timeout(180000),
-      });
-
-      console.log('[Bedrock Stream] Response status:', response.status);
-
-      if (!response.ok) {
-        const error = await responseErrorToAi(response);
-        console.log('[Bedrock Stream] Error:', error.detail);
-        sender.send('ai:stream-error', error);
-        return { success: false };
-      }
-
-      // Parse AWS Event Stream binary protocol
-      const reader = response.body.getReader();
-      let eventBuffer = Buffer.alloc(0);
-      let chunkCount = 0;
-      let parsedCount = 0;
-      let errorCount = 0;
-      let sentChunks = 0;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          console.log(
-            '[Bedrock Stream] Done. chunks:',
-            chunkCount,
-            'parsed:',
-            parsedCount,
-            'errors:',
-            errorCount,
-            'sent:',
-            sentChunks,
-          );
-          break;
-        }
-
-        chunkCount++;
-        eventBuffer = Buffer.concat([eventBuffer, Buffer.from(value)]);
-
-        // Process complete messages from the buffer
-        // AWS Event Stream: each message starts with [4B total_len][4B header_len][4B prelude_crc]
-        while (eventBuffer.length >= 12) {
-          const totalLength = eventBuffer.readUInt32BE(0);
-          if (totalLength < 16 || totalLength > 1048576) {
-            eventBuffer = eventBuffer.slice(1);
-            continue;
-          }
-          if (eventBuffer.length < totalLength) break;
-
-          const frame = eventBuffer.slice(0, totalLength);
-          eventBuffer = eventBuffer.slice(totalLength);
-
-          // Extract payload using header length from prelude
-          const headerLength = frame.readUInt32BE(4);
-          const payloadStart = 12 + headerLength;
-          const payloadEnd = totalLength - 4;
-
-          if (payloadStart >= payloadEnd) continue;
-
-          const payloadBytes = frame.slice(payloadStart, payloadEnd);
-          let jsonStr = payloadBytes.toString('utf-8');
-
-          // Trim any trailing null bytes or garbage
-          const lastBrace = jsonStr.lastIndexOf('}');
-          if (lastBrace >= 0) {
-            jsonStr = jsonStr.substring(0, lastBrace + 1);
-          }
-
-          try {
-            const evt = JSON.parse(jsonStr);
-            parsedCount++;
-            if (parsedCount <= 3) {
-              console.log(
-                '[Bedrock Stream] Event keys:',
-                Object.keys(evt),
-                'sample:',
-                JSON.stringify(evt).substring(0, 150),
-              );
-            }
-
-            // Bedrock HTTP stream: flat structure {delta:{text}, contentBlockIndex} or {stopReason}
-            if (evt.delta && evt.delta.text) {
-              sentChunks++;
-              sender.send('ai:stream-chunk', evt.delta.text);
-            } else if (evt.stopReason || evt.messageStop) {
-              console.log(
-                '[Bedrock Stream] messageStop. parsed:',
-                parsedCount,
-                'sent:',
-                sentChunks,
-              );
-              sender.send('ai:stream-done');
-              return { success: true };
-            }
-          } catch (_e) {
-            errorCount++;
-            if (errorCount <= 3) {
-              console.log(
-                '[Bedrock Stream] Parse error on frame, payload preview:',
-                jsonStr.substring(0, 80),
-              );
-            }
-          }
-        }
-      }
-
-      sender.send('ai:stream-done');
-      return { success: true };
-    } catch (err) {
-      sender.send('ai:stream-error', fetchErrorToAi(err, endpoint));
-      return { success: false };
-    }
-  }
-
   const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model, true);
-
   const headers = buildHeaders(provider, config.apiKey);
-  const body = buildRequestBody({
-    format: provider.format,
-    systemPrompt,
-    userPrompt: prompt,
-    model: config.model,
-    temperature: config.temperature || 0.7,
-    maxTokens: config.maxTokens || 4096,
-    stream: true,
-  });
+  // Bedrock ConverseStream takes the same body as Converse (no "stream" flag)
+  const body = generationBody(provider, config, payload, provider.format !== 'bedrock');
+
+  const controller = new AbortController();
+  if (requestId != null) aiStreams.set(requestId, controller);
+  const send = (channel, ...args) => {
+    if (!controller.signal.aborted && !sender.isDestroyed()) sender.send(channel, ...args);
+  };
 
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(180000), // 3 min timeout for streaming
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(180000)]),
     });
 
     if (!response.ok) {
-      sender.send('ai:stream-error', await responseErrorToAi(response));
+      send('ai:stream-error', await responseErrorToAi(response), requestId);
       return { success: false };
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const onContent = (text) => send('ai:stream-chunk', text, requestId);
+    const { stopReason, error } =
+      provider.format === 'bedrock'
+        ? await readBedrockEventStream(response.body, onContent)
+        : await readSseStream(response.body, provider.format, onContent);
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      // Keep last incomplete line in buffer
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-
-        // Handle SSE "event:" lines for Anthropic
-        if (trimmed.startsWith('event:')) continue;
-
-        if (!trimmed.startsWith('data:')) continue;
-        const data = trimmed.slice(5).trim();
-
-        const chunk = parseStreamChunk(data, provider.format);
-        if (chunk.done) {
-          sender.send('ai:stream-done');
-          return { success: true };
-        }
-        if (chunk.content) {
-          sender.send('ai:stream-chunk', chunk.content);
-        }
-      }
+    if (error) {
+      send('ai:stream-error', error, requestId);
+      return { success: false };
     }
-
-    // Process remaining buffer
-    if (buffer.trim()) {
-      const trimmed = buffer.trim();
-      if (trimmed.startsWith('data:')) {
-        const data = trimmed.slice(5).trim();
-        const chunk = parseStreamChunk(data, provider.format);
-        if (chunk.content) {
-          sender.send('ai:stream-chunk', chunk.content);
-        }
-      }
-    }
-
-    sender.send('ai:stream-done');
+    send('ai:stream-done', { requestId, stopReason, truncated: isTruncatedStop(stopReason) });
     return { success: true };
   } catch (err) {
-    sender.send('ai:stream-error', fetchErrorToAi(err, endpoint));
+    send('ai:stream-error', fetchErrorToAi(err, endpoint), requestId);
     return { success: false };
+  } finally {
+    if (requestId != null) aiStreams.delete(requestId);
   }
 });
 

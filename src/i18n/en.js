@@ -608,6 +608,8 @@ export default {
   toastTeamNameTruncated: 'Menu name shortened to "{name}" (not enough space).',
   toastInGameNameNoSpace:
     'The scoreboard name does not fit in the name graphics area: the previous drawing was kept.',
+  toastKeeperShared:
+    "Super Star and Belgium use the same goalkeeper in the ROM: the other team's goalkeeper colors changed too.",
   tournamentApplied: 'Draw applied.',
 
   // Tabs & navigation
@@ -1072,7 +1074,7 @@ export default {
   editorAiGenerator: 'AI Generator',
   aiTitle: 'AI Team Generator',
   aiDescription:
-    'Describe the team you want and the AI will generate all data (players, uniforms, colors, flag).',
+    'Describe the team you want and the AI will generate all data (players, formation, description, uniforms, colors, flag).',
   aiPromptPlaceholder:
     'Describe the team... e.g. "A Brazilian team from the 90s with fast players and green/yellow uniforms"',
   aiGenerate: 'Generate',
@@ -1095,9 +1097,35 @@ export default {
   aiPreviewTitle: 'Generated Team Preview',
   aiPreviewPlayers: 'Players',
   aiPreviewUniforms: 'Uniforms',
+  aiPreviewSpecial: 'Special players hair / skin',
+  aiPreviewFlag: 'Flag',
   aiClose: 'Close',
-  aiRetry: 'Try Again',
+  aiRetry: 'Discard',
+  aiCancel: 'Cancel',
+  aiOptimize: 'Improve prompt',
+  aiOptimizing: 'Improving...',
+  aiOptimizingWait: 'The AI is rewriting your request...',
+  aiOptimizeHint:
+    'The AI rewrites your text with the details the generator understands (team, formation, players by position, attributes, kits, flag and description) without changing your idea. You review it before using it.',
+  aiOptimizedTitle: 'Suggested prompt',
+  aiUseOptimizedGenerate: 'Use and generate',
+  aiUseOptimized: 'Use (edit first)',
+  aiDiscardOptimized: 'Keep mine',
+  aiRestorePrompt: 'Back to the original text',
+  aiStage: 'step {current} of {total}: {part}',
+  aiPartSquad: 'squad',
+  aiPartLook: 'kits and flag',
+  aiRegenerate: 'Redo {part}',
+  aiRegenerateHint:
+    'Generates only this part again with the current prompt text; the rest is kept.',
+  aiContinue: 'Continue where it stopped',
+  aiContinueHint: 'Generates only the missing parts, keeping what was already generated.',
   aiAttempt: 'Attempt {current} of {total}...',
+  aiFixing: '(fixing {count} problem(s))',
+  aiAttemptsUsed: 'generated in {count} attempts',
+  aiUnresolved:
+    'The AI did not fix {count} problem(s): the editor adjusted them (check before applying)',
+  aiAdjustments: 'Automatic adjustments ({count})',
   aiStreamOutput: 'AI Output',
   aiStreamWaiting: 'The AI response will appear here as it generates...',
   aiStreamParsing: 'Parsing result...',
@@ -1113,6 +1141,8 @@ export default {
   aiErrorInvalidResponse:
     'The server answered in an unexpected format. Check the chosen provider and model.',
   aiErrorEmpty: 'The AI returned no text. Try again.',
+  aiErrorTruncated:
+    'The AI answer was cut off before the end (token limit). Raise "Max Tokens" in Settings (8192 or more) and try again.',
   aiErrorGeneric: 'Something went wrong while generating the team.',
   aiTipsTitle: 'Tips for a good prompt',
   aiTipsToggle: 'Show prompt tips',
@@ -1148,7 +1178,7 @@ export default {
   'aiTpl.holland74':
     'Netherlands 1974 Total Football. Cruyff #14: speed 15, technique 15, long hair. Neeskens, Rep, Krol all with technique 13+. Every outfield player speed 12+. GK: Jongbloed. Home: orange shirt, white shorts, orange socks. Away: white shirt, orange shorts. Fair skin, mix of long and short hair. Flag: red, white, blue horizontal bands.',
   'aiTpl.italy06':
-    'Italy 2006 Champions. Buffon GK (speed 10, stamina 16). Cannavaro, Nesta (stamina 15, technique 11). Pirlo #21 (technique 15, speed 10). Totti, Del Piero forwards (shooting 13+). Home: dark blue shirt, white shorts. Away: white shirt, dark blue shorts. Fair skin. Flag: green, white, red vertical stripes.',
+    'Italy 2006 Champions. Buffon GK (speed 10, stamina 16). Cannavaro, Nesta (stamina 15, technique 11). Pirlo #8 (technique 15, speed 10). Totti, Del Piero forwards (shooting 13+). Home: dark blue shirt, white shorts. Away: white shirt, dark blue shorts. Fair skin. Flag: green, white, red vertical stripes.',
   'aiTpl.france98':
     'France 1998 World Cup. Barthez GK (bald). Thuram, Desailly, Blanc (stamina 14+). Zidane #10 (technique 15, shooting 13). Henry (speed 16, shooting 11). Balanced midfield: Deschamps, Petit. Home: blue shirt, white shorts, red socks. Away: white shirt, blue shorts. Mix of dark and fair skin. Flag: blue, white, red vertical stripes.',
   'aiTpl.allstarsSA':
@@ -1160,7 +1190,7 @@ export default {
   'aiTpl.marvel':
     'Marvel Avengers FC. Names: Rogers, Stark, Banner, Thor, Romanof, Barton, TChalla, Parker, Strange, Maximof, Vision, Rhodes, Lang, Barnes, Danvers. TChalla #7 (speed 16), Thor #3 (shooting 15, long hair), Rogers #1 GK (stamina 16, short hair). Home: red shirt, blue shorts, red socks. Away: black shirt, gold shorts. Mix of skin tones and hair. Flag: red background with blue "A" shape.',
   'aiTpl.cyberpunk':
-    'Cyberpunk 2077 team "NETRUN". Names: Cipher, Glitch, Neon, Pixel, Proxy, Vector, Daemon, Socket, Kernel, Chrome, Binary, Codec, Ping, Flux, Zero. All speed 13+, stamina low (6-9). Zero #0 GK (bald). Mix of bald, dreadlocks, mohawk styles. Home: black shirt, neon green accents. Away: dark purple, cyan accents. Pale skin. Flag: black background with neon green angular circuit pattern.',
+    'Cyberpunk 2077 team "NETRUN". Names: Cipher, Glitch, Neon, Pixel, Proxy, Vector, Daemon, Socket, Kernel, Chrome, Binary, Codec, Ping, Flux, Zero. All speed 13+, stamina low (6-9). Zero #1 GK (bald). Mix of bald, dreadlocks and short hair. Home: black shirt, neon green accents. Away: dark purple, cyan accents. Pale skin. Flag: black background with neon green angular circuit pattern.',
   'aiTpl.anime':
     'Captain Tsubasa style. Tsubasa #10 (technique 15, speed 14), Hyuga #9 (shooting 15, speed 13), Misaki #11 (technique 13). Wakabaya GK (stamina 16). All midfielders technique 11+, speed 12+. Home: white shirt, blue collar and cuffs, blue shorts. Away: red shirt, white shorts. Fair skin, all short/mid-length hair. Flag: white background with red rising sun.',
   'aiTpl.medieval':
@@ -1172,11 +1202,11 @@ export default {
   'aiTpl.defensive':
     'Fortress FC. Italian catenaccio. GK with stamina 16. 5 defenders all stamina 14-16, technique 11+. Midfielders stamina 13+, speed 10+. Only 2 forwards (speed 12, shooting 11). Low overall speed (avg 9). Home: dark navy shirt, dark navy shorts, white socks. Away: white shirt, navy shorts. Fair skin, short hair. Flag: navy background with white shield shape.',
   'aiTpl.technical':
-    'Tiki-Taka FC, Barcelona style. All outfield players technique 13-15. Speed moderate (10-12). Midfield-heavy: 5 midfielders with technique 15. Short passing, possession. Xavi-style: technique > speed. Home: dark red and blue vertical split shirt, dark red shorts. Away: gold shirt, black shorts. Mix of skin tones. Flag: dark red and blue vertical halves with gold star.',
+    'Tiki-Taka FC, Barcelona style. All outfield players technique 13-15. Speed moderate (10-12). Midfield-heavy: 5 midfielders with technique 15. Short passing, possession. Xavi-style: technique > speed. Home: dark red shirt, blue shorts. Away: gold shirt, black shorts. Mix of skin tones. Flag: dark red and blue vertical halves with gold star.',
   'aiTpl.coders':
-    'Team Stack Overflow. Names: Python, Java, Rust, Golang, Kotlin, Swift, TypeSc, Lua, Ruby, Haskell, Clojure, Scala, Elixir, Zig, Carbon. Python #1 GK (stamina 14). Rust #7 (speed 16, technique 13). All technique 11+. Home: black shirt with green text, black shorts. Away: dark green shirt, black shorts. Mix of skin/hair. Flag: black background with green "< >" brackets.',
+    'Team Stack Overflow. Names: Python, Java, Rust, Golang, Kotlin, Swift, TypeSc, Lua, Ruby, Haskell, Clojure, Scala, Elixir, Zig, Carbon. Python #1 GK (stamina 14). Rust #7 (speed 16, technique 13). All technique 11+. Home: black shirt, green shorts, black socks. Away: dark green shirt, black shorts. Mix of skin/hair. Flag: black background with green "< >" brackets.',
   'aiTpl.food':
-    'Brazilian Food FC. Names: Feijoada, Caipira, Acai, Tapioca, Brigadei, Paoqueij, Coxinha, Farofa, Acaraje, Moqueca, Vatapa, Churrasco, Pudim, Guarana, Rapadura. Churrasco #9 (shooting 15, speed 14, bald). Acai #7 (speed 16). Home: green shirt, yellow shorts, green socks. Away: yellow shirt, green shorts. Medium tan skin. Flag: green background with yellow diamond.',
+    'Brazilian Food FC. Names: Feijoada, Caipira, Acai, Tapioca, Brigadei, Paoqueij, Coxinha, Farofa, Acaraje, Moqueca, Vatapa, Picanha, Pudim, Guarana, Rapadura. Picanha #9 (shooting 15, speed 14, bald). Acai #7 (speed 16). Home: green shirt, yellow shorts, green socks. Away: yellow shirt, green shorts. Medium tan skin. Flag: green background with yellow diamond.',
 
   // Settings
   settingsTitle: 'Settings',

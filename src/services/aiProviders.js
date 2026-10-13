@@ -17,17 +17,16 @@ export const AI_PROVIDERS = {
     format: 'openai', // Standard OpenAI chat completions format
     apiKeyUrl: 'https://platform.openai.com/api-keys',
     models: [
-      { id: 'gpt-5.5', name: 'GPT-5.5' },
-      { id: 'gpt-5.4', name: 'GPT-5.4' },
-      { id: 'gpt-5.2', name: 'GPT-5.2' },
-      { id: 'gpt-5', name: 'GPT-5' },
+      { id: 'gpt-6-astra', name: 'GPT-6 Astra' },
+      { id: 'gpt-6.1-sol', name: 'GPT-6.1 Sol' },
+      { id: 'gpt-6-sol', name: 'GPT-6 Sol' },
+      { id: 'gpt-6-luna', name: 'GPT-6 Luna' },
       { id: 'gpt-4o', name: 'GPT-4o' },
-      { id: 'gpt-4o-mini', name: 'GPT-4o Mini' },
       { id: 'gpt-4.1', name: 'GPT-4.1' },
       { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini' },
       { id: 'gpt-4.1-nano', name: 'GPT-4.1 Nano' },
     ],
-    defaultModel: 'gpt-4o-mini',
+    defaultModel: 'gpt-6-luna',
     requiresApiKey: true,
     endpointEditable: false,
   },
@@ -39,14 +38,18 @@ export const AI_PROVIDERS = {
     format: 'anthropic', // Anthropic Messages API format
     apiKeyUrl: 'https://console.anthropic.com/settings/keys',
     models: [
+      { id: 'claude-fable-5-1', name: 'Claude Fable 5.1' },
+      { id: 'claude-opus-5-5', name: 'Claude Opus 5.5' },
+      { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5' },
+      { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5' },
+      { id: 'claude-opus-5', name: 'Claude Opus 5' },
+      { id: 'claude-sonnet-5', name: 'Claude Sonnet 5' },
+      { id: 'claude-fable-5', name: 'Claude Fable 5' },
+      { id: 'claude-opus-4-8', name: 'Claude Opus 4.8' },
+      { id: 'claude-opus-4-7', name: 'Claude Opus 4.7' },
       { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
-      { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5' },
-      { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },
-      { id: 'claude-opus-4-5', name: 'Claude Opus 4.5' },
-      { id: 'claude-sonnet-4-0', name: 'Claude Sonnet 4' },
-      { id: 'claude-opus-4-0', name: 'Claude Opus 4' },
     ],
-    defaultModel: 'claude-sonnet-4-6',
+    defaultModel: 'claude-sonnet-5-5',
     requiresApiKey: true,
     endpointEditable: false,
   },
@@ -58,14 +61,15 @@ export const AI_PROVIDERS = {
     format: 'openai', // Google's OpenAI-compatible layer
     apiKeyUrl: 'https://aistudio.google.com/apikey',
     models: [
+      { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash' },
       { id: 'gemini-3.5-flash', name: 'Gemini 3.5 Flash' },
-      { id: 'gemini-3.0-flash', name: 'Gemini 3 Flash' },
+      { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite' },
+      { id: 'gemini-3.0-flash', name: 'Gemini 3.0 Flash' },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
-      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite' },
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
     ],
-    defaultModel: 'gemini-2.5-flash',
+    defaultModel: 'gemini-3.6-flash',
     requiresApiKey: true,
     endpointEditable: false,
   },
@@ -77,13 +81,12 @@ export const AI_PROVIDERS = {
     format: 'openai', // xAI uses OpenAI-compatible format
     apiKeyUrl: 'https://console.x.ai/team/default/api-keys',
     models: [
-      { id: 'grok-4.3', name: 'Grok 4.3 (Latest)' },
+      { id: 'grok-4.7', name: 'Grok 4.7' },
+      { id: 'grok-4.6', name: 'Grok 4.6' },
+      { id: 'grok-4.3', name: 'Grok 4.3' },
       { id: 'grok-4', name: 'Grok 4' },
-      { id: 'grok-420-reasoning', name: 'Grok 420 Reasoning' },
-      { id: 'grok-3', name: 'Grok 3' },
-      { id: 'grok-3-mini', name: 'Grok 3 Mini' },
     ],
-    defaultModel: 'grok-3-mini',
+    defaultModel: 'grok-4.7',
     requiresApiKey: true,
     endpointEditable: false,
   },
@@ -104,6 +107,10 @@ export const AI_PROVIDERS = {
     ],
     defaultRegion: 'us-east-1',
     models: [
+      { id: 'us.anthropic.claude-haiku-5-5', name: 'Claude Haiku 5.5' },
+      { id: 'us.anthropic.claude-sonnet-5-5', name: 'Claude Sonnet 5.5' },
+      { id: 'us.anthropic.claude-opus-5-5', name: 'Claude Opus 5.5' },
+      { id: 'us.anthropic.claude-fable-5-1', name: 'Claude Fable 5.1' },
       { id: 'us.anthropic.claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
       { id: 'us.anthropic.claude-sonnet-4-5-v2', name: 'Claude Sonnet 4.5 v2' },
       { id: 'us.anthropic.claude-haiku-4-5-v1', name: 'Claude Haiku 4.5' },
@@ -148,6 +155,22 @@ export function getProviderIds() {
 }
 
 /**
+ * The model to use with `provider`: `currentModel` when the provider lists it (or, for
+ * a provider with a free-text model field, when it was typed for that same provider),
+ * else the provider's default ('' = the model loaded in the local server).
+ * Avoids sending a model of another provider (e.g. a GPT model to Claude).
+ * @param {object} provider - from AI_PROVIDERS
+ * @param {string} currentModel
+ * @param {string} [modelProviderId] - provider the current model was chosen for
+ */
+export function modelForProvider(provider, currentModel, modelProviderId = provider.id) {
+  const models = provider.models || [];
+  if (currentModel && models.some((m) => m.id === currentModel)) return currentModel;
+  if (!models.length && modelProviderId === provider.id) return currentModel || '';
+  return provider.defaultModel || '';
+}
+
+/**
  * Build request headers for a given provider
  * @param {object} provider - Provider config from AI_PROVIDERS
  * @param {string} apiKey - User's API key
@@ -166,16 +189,27 @@ export function buildHeaders(provider, apiKey) {
   return headers;
 }
 
+export const DEFAULT_TEMPERATURE = 0.7;
+export const DEFAULT_MAX_TOKENS = 8192;
+
+/** Temperature to send: 0 is a valid value, only null/undefined/NaN fall back */
+function effectiveTemperature(temperature) {
+  return Number.isFinite(temperature) ? temperature : DEFAULT_TEMPERATURE;
+}
+
 /**
  * Build request body for a given provider format
  * @param {object} options
- * @param {string} options.format - 'openai' or 'anthropic'
+ * @param {string} options.format - 'openai', 'anthropic' or 'bedrock'
  * @param {string} options.systemPrompt
  * @param {string} options.userPrompt
  * @param {string} options.model
  * @param {number} options.temperature
  * @param {number} options.maxTokens
  * @param {boolean} options.stream
+ * @param {{name: string, description: string, schema: object}|null} [options.schema] -
+ *   structured output: json_schema response_format (OpenAI format), a forced tool
+ *   (Anthropic, Bedrock Converse)
  * @returns {object} Request body
  */
 export function buildRequestBody({
@@ -186,15 +220,24 @@ export function buildRequestBody({
   temperature,
   maxTokens,
   stream,
+  schema,
 }) {
   if (format === 'anthropic') {
     return {
-      model: model || 'claude-sonnet-4-6',
-      max_tokens: maxTokens || 4096,
-      temperature: temperature || 0.7,
+      model: model || 'claude-sonnet-5-5',
+      max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
+      temperature: effectiveTemperature(temperature),
       stream: stream || false,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
+      ...(schema
+        ? {
+            tools: [
+              { name: schema.name, description: schema.description, input_schema: schema.schema },
+            ],
+            tool_choice: { type: 'tool', name: schema.name },
+          }
+        : {}),
     };
   }
 
@@ -203,21 +246,48 @@ export function buildRequestBody({
       system: [{ text: systemPrompt }],
       messages: [{ role: 'user', content: [{ text: userPrompt }] }],
       inferenceConfig: {
-        temperature: temperature || 0.7,
-        maxTokens: maxTokens || 4096,
+        temperature: effectiveTemperature(temperature),
+        maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
       },
+      ...(schema
+        ? {
+            toolConfig: {
+              tools: [
+                {
+                  toolSpec: {
+                    name: schema.name,
+                    description: schema.description,
+                    inputSchema: { json: schema.schema },
+                  },
+                },
+              ],
+              toolChoice: { tool: { name: schema.name } },
+            },
+          }
+        : {}),
     };
   }
 
   // OpenAI-compatible format (default)
+  // GPT-6 and OpenAI reasoning models (o3, o4+) only accept temperature=1 (the API default).
+  // Omit temperature for those models to avoid invalid_request_error.
+  const isReasoningModel = model && (model.startsWith('gpt-6') || /^o\d/.test(model));
   const body = {
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: temperature || 0.7,
-    max_tokens: maxTokens || 4096,
+    ...(isReasoningModel || !Number.isFinite(temperature) ? {} : { temperature }),
+    max_completion_tokens: maxTokens || DEFAULT_MAX_TOKENS,
     stream: stream || false,
+    ...(schema
+      ? {
+          response_format: {
+            type: 'json_schema',
+            json_schema: { name: schema.name, strict: true, schema: schema.schema },
+          },
+        }
+      : {}),
   };
 
   if (model) {
@@ -225,6 +295,11 @@ export function buildRequestBody({
   }
 
   return body;
+}
+
+/** True when the model stopped because it ran out of output tokens */
+export function isTruncatedStop(stopReason) {
+  return stopReason === 'length' || stopReason === 'max_tokens';
 }
 
 /**
@@ -266,6 +341,7 @@ const AI_ERROR_KEYS = {
   invalidResponse: 'aiErrorInvalidResponse',
   parse: 'aiErrorParse',
   empty: 'aiErrorEmpty',
+  truncated: 'aiErrorTruncated',
   noRom: 'aiNoRom',
 };
 
@@ -287,10 +363,11 @@ export function aiErrorDetail(error) {
 }
 
 /**
- * Parse a non-streaming response based on provider format
+ * Parse a non-streaming response based on provider format.
+ * A forced tool call (structured output) comes back as its JSON input, as text.
  * @param {object} data - Parsed JSON response
- * @param {string} format - 'openai' or 'anthropic'
- * @returns {{ content: string|null, usage: object|null, error: {code: string, detail: string}|null }}
+ * @param {string} format - 'openai', 'anthropic' or 'bedrock'
+ * @returns {{ content: string|null, usage: object|null, stopReason?: string|null, error: {code: string, detail: string}|null }}
  */
 export function parseResponse(data, format) {
   if (format === 'anthropic') {
@@ -301,8 +378,9 @@ export function parseResponse(data, format) {
         error: aiError('invalidResponse', 'Claude: no content'),
       };
     }
+    const toolBlock = data.content.find((b) => b.type === 'tool_use');
     const textBlock = data.content.find((b) => b.type === 'text');
-    if (!textBlock) {
+    if (!toolBlock && !textBlock) {
       return {
         content: null,
         usage: null,
@@ -310,8 +388,9 @@ export function parseResponse(data, format) {
       };
     }
     return {
-      content: textBlock.text,
+      content: toolBlock ? JSON.stringify(toolBlock.input) : textBlock.text,
       usage: data.usage || null,
+      stopReason: data.stop_reason || null,
       error: null,
     };
   }
@@ -326,8 +405,9 @@ export function parseResponse(data, format) {
         error: aiError('invalidResponse', 'Bedrock: no content'),
       };
     }
+    const toolBlock = message.content.find((b) => b.toolUse);
     const textBlock = message.content.find((b) => b.text);
-    if (!textBlock) {
+    if (!toolBlock && !textBlock) {
       return {
         content: null,
         usage: null,
@@ -335,8 +415,9 @@ export function parseResponse(data, format) {
       };
     }
     return {
-      content: textBlock.text,
+      content: toolBlock ? JSON.stringify(toolBlock.toolUse.input) : textBlock.text,
       usage: data.usage || null,
+      stopReason: data.stopReason || null,
       error: null,
     };
   }
@@ -353,19 +434,25 @@ export function parseResponse(data, format) {
   return {
     content: data.choices[0].message.content,
     usage: data.usage || null,
+    stopReason: data.choices[0].finish_reason || null,
     error: null,
   };
 }
 
 /**
- * Parse a streaming chunk based on provider format
+ * Parse a streaming chunk based on provider format.
+ * A chunk can carry content AND be the last one (OpenAI-compatible servers often send
+ * the last token with finish_reason): use `content` before stopping on `done`.
+ * Structured output streams as JSON text: Anthropic `input_json_delta`, Bedrock
+ * `toolUse.input`.
  * @param {string} line - A single SSE data line (without the "data: " prefix)
- * @param {string} format - 'openai' or 'anthropic'
- * @returns {{ content: string|null, done: boolean }}
+ * @param {string} format - 'openai', 'anthropic' or 'bedrock'
+ * @returns {{ content: string|null, done: boolean, stopReason: string|null, error: object|null }}
  */
 export function parseStreamChunk(line, format) {
+  const none = { content: null, done: false, stopReason: null, error: null };
   if (!line || line === '[DONE]') {
-    return { content: null, done: true };
+    return { ...none, done: true };
   }
 
   try {
@@ -374,32 +461,98 @@ export function parseStreamChunk(line, format) {
     if (format === 'anthropic') {
       // Anthropic streaming events
       if (parsed.type === 'content_block_delta') {
-        return { content: parsed.delta?.text || null, done: false };
+        const delta = parsed.delta || {};
+        return { ...none, content: delta.text ?? delta.partial_json ?? null };
+      }
+      if (parsed.type === 'message_delta') {
+        return { ...none, stopReason: parsed.delta?.stop_reason || null };
       }
       if (parsed.type === 'message_stop') {
-        return { content: null, done: true };
+        return { ...none, done: true };
       }
-      return { content: null, done: false };
+      if (parsed.type === 'error') {
+        return {
+          ...none,
+          done: true,
+          error: aiError('api', parsed.error?.message || JSON.stringify(parsed.error || parsed)),
+        };
+      }
+      return none;
     }
 
     if (format === 'bedrock') {
       // Bedrock ConverseStream events
       if (parsed.contentBlockDelta) {
-        return { content: parsed.contentBlockDelta.delta?.text || null, done: false };
+        const delta = parsed.contentBlockDelta.delta || {};
+        return { ...none, content: delta.text ?? delta.toolUse?.input ?? null };
       }
       if (parsed.messageStop) {
-        return { content: null, done: true };
+        return { ...none, done: true, stopReason: parsed.messageStop.stopReason || null };
       }
-      return { content: null, done: false };
+      return none;
     }
 
     // OpenAI format
+    if (parsed.error) {
+      return {
+        ...none,
+        done: true,
+        error: aiError('api', parsed.error.message || JSON.stringify(parsed.error)),
+      };
+    }
     const content = parsed.choices?.[0]?.delta?.content;
-    const finishReason = parsed.choices?.[0]?.finish_reason;
-    return { content: content || null, done: finishReason === 'stop' };
+    const finishReason = parsed.choices?.[0]?.finish_reason || null;
+    return {
+      ...none,
+      content: content || null,
+      done: finishReason != null,
+      stopReason: finishReason,
+    };
   } catch (_e) {
-    return { content: null, done: false };
+    return none;
   }
+}
+
+/**
+ * Read a Server-Sent Events body (OpenAI / Anthropic streaming).
+ * Calls onContent(text) for every piece of text; resolves { stopReason, error }.
+ * Same as readSseStream in electron/aiProviders.mjs.
+ */
+export async function readSseStream(body, format, onContent) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let stopReason = null;
+  let error = null;
+
+  // true when the stream is over
+  const handleLine = (line) => {
+    const trimmed = line.trim();
+    // "event:" lines (Anthropic) and comments carry nothing we need
+    if (!trimmed.startsWith('data:')) return false;
+    const chunk = parseStreamChunk(trimmed.slice(5).trim(), format);
+    if (chunk.content) onContent(chunk.content);
+    if (chunk.stopReason) stopReason = chunk.stopReason;
+    if (chunk.error) error = chunk.error;
+    return chunk.done;
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (handleLine(line)) {
+        reader.cancel().catch(() => {});
+        return { stopReason, error };
+      }
+    }
+  }
+  buffer += decoder.decode();
+  if (buffer.trim()) handleLine(buffer);
+  return { stopReason, error };
 }
 
 /**

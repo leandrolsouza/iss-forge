@@ -87,8 +87,18 @@ function buildHeaders(provider, apiKey) {
   return headers;
 }
 
+const DEFAULT_TEMPERATURE = 0.7;
+const DEFAULT_MAX_TOKENS = 8192;
+
+/** Temperature to send: 0 is a valid value, only null/undefined/NaN fall back */
+function effectiveTemperature(temperature) {
+  return Number.isFinite(temperature) ? temperature : DEFAULT_TEMPERATURE;
+}
+
 /**
- * Build request body based on provider format
+ * Build request body based on provider format.
+ * `schema` ({ name, description, schema }) asks for structured output: json_schema
+ * response_format (OpenAI format), a forced tool (Anthropic, Bedrock Converse).
  */
 function buildRequestBody({
   format,
@@ -98,15 +108,24 @@ function buildRequestBody({
   temperature,
   maxTokens,
   stream,
+  schema,
 }) {
   if (format === 'anthropic') {
     return {
-      model: model || 'claude-sonnet-4-6',
-      max_tokens: maxTokens || 4096,
-      temperature: temperature || 0.7,
+      model: model || 'claude-sonnet-5-5',
+      max_tokens: maxTokens || DEFAULT_MAX_TOKENS,
+      temperature: effectiveTemperature(temperature),
       stream: stream || false,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
+      ...(schema
+        ? {
+            tools: [
+              { name: schema.name, description: schema.description, input_schema: schema.schema },
+            ],
+            tool_choice: { type: 'tool', name: schema.name },
+          }
+        : {}),
     };
   }
 
@@ -115,21 +134,48 @@ function buildRequestBody({
       system: [{ text: systemPrompt }],
       messages: [{ role: 'user', content: [{ text: userPrompt }] }],
       inferenceConfig: {
-        temperature: temperature || 0.7,
-        maxTokens: maxTokens || 4096,
+        temperature: effectiveTemperature(temperature),
+        maxTokens: maxTokens || DEFAULT_MAX_TOKENS,
       },
+      ...(schema
+        ? {
+            toolConfig: {
+              tools: [
+                {
+                  toolSpec: {
+                    name: schema.name,
+                    description: schema.description,
+                    inputSchema: { json: schema.schema },
+                  },
+                },
+              ],
+              toolChoice: { tool: { name: schema.name } },
+            },
+          }
+        : {}),
     };
   }
 
   // OpenAI-compatible format (default)
+  // GPT-6 and OpenAI reasoning models (o3, o4+) only accept temperature=1 (the API default).
+  // Omit temperature for those models to avoid invalid_request_error.
+  const isReasoningModel = model && (model.startsWith('gpt-6') || /^o\d/.test(model));
   const body = {
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: temperature || 0.7,
-    max_tokens: maxTokens || 4096,
+    ...(isReasoningModel || !Number.isFinite(temperature) ? {} : { temperature }),
+    max_completion_tokens: maxTokens || DEFAULT_MAX_TOKENS,
     stream: stream || false,
+    ...(schema
+      ? {
+          response_format: {
+            type: 'json_schema',
+            json_schema: { name: schema.name, strict: true, schema: schema.schema },
+          },
+        }
+      : {}),
   };
 
   if (model) {
@@ -137,6 +183,11 @@ function buildRequestBody({
   }
 
   return body;
+}
+
+/** True when the model stopped because it ran out of output tokens */
+function isTruncatedStop(stopReason) {
+  return stopReason === 'length' || stopReason === 'max_tokens';
 }
 
 /**
@@ -170,7 +221,8 @@ async function responseErrorToAi(response) {
 }
 
 /**
- * Parse a non-streaming response based on format
+ * Parse a non-streaming response based on format.
+ * A forced tool call (structured output) comes back as its JSON input, as text.
  */
 function parseResponse(data, format) {
   if (format === 'anthropic') {
@@ -181,8 +233,9 @@ function parseResponse(data, format) {
         error: aiError('invalidResponse', 'Claude: no content'),
       };
     }
+    const toolBlock = data.content.find((b) => b.type === 'tool_use');
     const textBlock = data.content.find((b) => b.type === 'text');
-    if (!textBlock) {
+    if (!toolBlock && !textBlock) {
       return {
         content: null,
         usage: null,
@@ -190,8 +243,9 @@ function parseResponse(data, format) {
       };
     }
     return {
-      content: textBlock.text,
+      content: toolBlock ? JSON.stringify(toolBlock.input) : textBlock.text,
       usage: data.usage || null,
+      stopReason: data.stop_reason || null,
       error: null,
     };
   }
@@ -205,8 +259,9 @@ function parseResponse(data, format) {
         error: aiError('invalidResponse', 'Bedrock: no content'),
       };
     }
+    const toolBlock = message.content.find((b) => b.toolUse);
     const textBlock = message.content.find((b) => b.text);
-    if (!textBlock) {
+    if (!toolBlock && !textBlock) {
       return {
         content: null,
         usage: null,
@@ -214,8 +269,9 @@ function parseResponse(data, format) {
       };
     }
     return {
-      content: textBlock.text,
+      content: toolBlock ? JSON.stringify(toolBlock.toolUse.input) : textBlock.text,
       usage: data.usage || null,
+      stopReason: data.stopReason || null,
       error: null,
     };
   }
@@ -232,6 +288,7 @@ function parseResponse(data, format) {
   return {
     content: data.choices[0].message.content,
     usage: data.usage || null,
+    stopReason: data.choices[0].finish_reason || null,
     error: null,
   };
 }
@@ -240,10 +297,17 @@ function parseResponse(data, format) {
  * Parse a streaming SSE line based on format.
  * For Anthropic, events come as "event: <type>\ndata: <json>"
  * For OpenAI, events come as "data: <json>" or "data: [DONE]"
+ *
+ * Returns { content, done, stopReason, error }. A chunk can carry content AND be the
+ * last one (OpenAI-compatible servers often send the last token with finish_reason):
+ * callers must use `content` before stopping on `done`.
+ * Structured output streams as JSON text: Anthropic `input_json_delta`, Bedrock
+ * `toolUse.input`.
  */
 function parseStreamChunk(line, format) {
+  const none = { content: null, done: false, stopReason: null, error: null };
   if (!line || line === '[DONE]') {
-    return { content: null, done: true };
+    return { ...none, done: true };
   }
 
   try {
@@ -251,35 +315,160 @@ function parseStreamChunk(line, format) {
 
     if (format === 'anthropic') {
       if (parsed.type === 'content_block_delta') {
-        return { content: parsed.delta?.text || null, done: false };
+        const delta = parsed.delta || {};
+        return { ...none, content: delta.text ?? delta.partial_json ?? null };
+      }
+      if (parsed.type === 'message_delta') {
+        return { ...none, stopReason: parsed.delta?.stop_reason || null };
       }
       if (parsed.type === 'message_stop') {
-        return { content: null, done: true };
+        return { ...none, done: true };
       }
-      return { content: null, done: false };
+      if (parsed.type === 'error') {
+        return {
+          ...none,
+          done: true,
+          error: aiError('api', parsed.error?.message || JSON.stringify(parsed.error || parsed)),
+        };
+      }
+      return none;
     }
 
     if (format === 'bedrock') {
       if (parsed.contentBlockDelta) {
-        return { content: parsed.contentBlockDelta.delta?.text || null, done: false };
+        const delta = parsed.contentBlockDelta.delta || {};
+        return { ...none, content: delta.text ?? delta.toolUse?.input ?? null };
       }
       if (parsed.messageStop) {
-        return { content: null, done: true };
+        return { ...none, done: true, stopReason: parsed.messageStop.stopReason || null };
       }
-      return { content: null, done: false };
+      return none;
     }
 
     // OpenAI format
+    if (parsed.error) {
+      return {
+        ...none,
+        done: true,
+        error: aiError('api', parsed.error.message || JSON.stringify(parsed.error)),
+      };
+    }
     const content = parsed.choices?.[0]?.delta?.content;
-    const finishReason = parsed.choices?.[0]?.finish_reason;
-    return { content: content || null, done: finishReason === 'stop' };
+    const finishReason = parsed.choices?.[0]?.finish_reason || null;
+    return {
+      ...none,
+      content: content || null,
+      done: finishReason != null,
+      stopReason: finishReason,
+    };
   } catch (_e) {
-    return { content: null, done: false };
+    return none;
   }
+}
+
+/**
+ * Read a Server-Sent Events body (OpenAI / Anthropic streaming).
+ * Calls onContent(text) for every piece of text; resolves { stopReason, error }.
+ */
+async function readSseStream(body, format, onContent) {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let stopReason = null;
+  let error = null;
+
+  // true when the stream is over
+  const handleLine = (line) => {
+    const trimmed = line.trim();
+    // "event:" lines (Anthropic) and comments carry nothing we need
+    if (!trimmed.startsWith('data:')) return false;
+    const chunk = parseStreamChunk(trimmed.slice(5).trim(), format);
+    if (chunk.content) onContent(chunk.content);
+    if (chunk.stopReason) stopReason = chunk.stopReason;
+    if (chunk.error) error = chunk.error;
+    return chunk.done;
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    // Keep last incomplete line in buffer
+    buffer = lines.pop() || '';
+    for (const line of lines) {
+      if (handleLine(line)) {
+        reader.cancel().catch(() => {});
+        return { stopReason, error };
+      }
+    }
+  }
+  buffer += decoder.decode();
+  if (buffer.trim()) handleLine(buffer);
+  return { stopReason, error };
+}
+
+/**
+ * Read a Bedrock ConverseStream body (AWS Event Stream binary protocol).
+ * Each message: [4B total_len][4B header_len][4B prelude_crc][headers][payload][4B crc].
+ * Payloads are flat: {delta:{text}} / {delta:{toolUse:{input}}} / {stopReason} /
+ * {message} for exceptions. Resolves { stopReason, error }.
+ */
+async function readBedrockEventStream(body, onContent) {
+  const reader = body.getReader();
+  let eventBuffer = Buffer.alloc(0);
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    eventBuffer = Buffer.concat([eventBuffer, Buffer.from(value)]);
+
+    while (eventBuffer.length >= 12) {
+      const totalLength = eventBuffer.readUInt32BE(0);
+      if (totalLength < 16 || totalLength > 1048576) {
+        eventBuffer = eventBuffer.subarray(1);
+        continue;
+      }
+      if (eventBuffer.length < totalLength) break;
+
+      const frame = eventBuffer.subarray(0, totalLength);
+      eventBuffer = eventBuffer.subarray(totalLength);
+
+      const headerLength = frame.readUInt32BE(4);
+      const payloadStart = 12 + headerLength;
+      const payloadEnd = totalLength - 4;
+      if (payloadStart >= payloadEnd) continue;
+
+      let jsonStr = frame.subarray(payloadStart, payloadEnd).toString('utf-8');
+      // Trim any trailing null bytes or garbage
+      const lastBrace = jsonStr.lastIndexOf('}');
+      if (lastBrace >= 0) jsonStr = jsonStr.substring(0, lastBrace + 1);
+
+      let evt;
+      try {
+        evt = JSON.parse(jsonStr);
+      } catch (_e) {
+        continue;
+      }
+      const text = evt.delta?.text ?? evt.delta?.toolUse?.input;
+      if (text) {
+        onContent(text);
+      } else if (evt.stopReason || evt.messageStop) {
+        reader.cancel().catch(() => {});
+        return { stopReason: evt.stopReason || evt.messageStop?.stopReason || null, error: null };
+      } else if (typeof evt.message === 'string' && !evt.role) {
+        // exception frame (throttling, validation, model errors...)
+        reader.cancel().catch(() => {});
+        return { stopReason: null, error: aiError('api', `Bedrock: ${evt.message}`) };
+      }
+    }
+  }
+  return { stopReason: null, error: null };
 }
 
 export {
   AI_PROVIDERS,
+  DEFAULT_MAX_TOKENS,
   aiError,
   fetchErrorToAi,
   responseErrorToAi,
@@ -287,6 +476,9 @@ export {
   getEffectiveEndpoint,
   buildHeaders,
   buildRequestBody,
+  isTruncatedStop,
   parseResponse,
   parseStreamChunk,
+  readSseStream,
+  readBedrockEventStream,
 };

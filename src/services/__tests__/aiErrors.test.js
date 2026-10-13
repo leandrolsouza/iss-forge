@@ -21,6 +21,7 @@ describe('AI errors', () => {
       'invalidResponse',
       'parse',
       'empty',
+      'truncated',
       'noRom',
       'other',
     ]) {

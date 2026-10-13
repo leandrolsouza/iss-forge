@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
   aiModel: '',
   aiApiKey: '',
   aiTemperature: 0.7,
-  aiMaxTokens: 4096,
+  aiMaxTokens: 8192, // the full team JSON is ~3k tokens; reasoning models need room to think
   aiRegion: 'us-east-1',
 };
 

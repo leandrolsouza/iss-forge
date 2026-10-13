@@ -1180,6 +1180,8 @@ export default function useRomHandlers({
         newTeams[teamIndex] = updatedTeam;
         return newTeams;
       });
+      // a team sharing the goalkeeper (Super Star / Belgium) changed too
+      syncSharedKeepers(teamIndex);
 
       markModified();
       const name = teamData.name || teamData.teamNameText || t('team');
@@ -1187,7 +1189,17 @@ export default function useRomHandlers({
       toast.success(t('toastTeamImported', { name, slot: teamIndex + 1 }));
       warnings.forEach((w) => toast.warning(t(w)));
     },
-    [romParser, teams, markModified, setTeams, setStatusMessage, pushSnapshot, toast, t],
+    [
+      romParser,
+      teams,
+      markModified,
+      setTeams,
+      setStatusMessage,
+      pushSnapshot,
+      syncSharedKeepers,
+      toast,
+      t,
+    ],
   );
 
   return {

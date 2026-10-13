@@ -114,14 +114,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   aiGenerate: (payload) => ipcRenderer.invoke('ai:generate', payload),
   aiTestConnection: (payload) => ipcRenderer.invoke('ai:testConnection', payload),
   aiGenerateStream: (payload) => ipcRenderer.invoke('ai:generate-stream', payload),
+  aiCancelStream: (requestId) => ipcRenderer.invoke('ai:cancel-stream', requestId),
+  // The stream listeners return a function that removes them
   onAiStreamChunk: (callback) => {
-    ipcRenderer.on('ai:stream-chunk', (event, chunk) => callback(chunk));
+    const handler = (event, chunk, requestId) => callback(chunk, requestId);
+    ipcRenderer.on('ai:stream-chunk', handler);
+    return () => ipcRenderer.removeListener('ai:stream-chunk', handler);
   },
   onAiStreamDone: (callback) => {
-    ipcRenderer.on('ai:stream-done', () => callback());
+    const handler = (event, info) => callback(info || {});
+    ipcRenderer.on('ai:stream-done', handler);
+    return () => ipcRenderer.removeListener('ai:stream-done', handler);
   },
   onAiStreamError: (callback) => {
-    ipcRenderer.on('ai:stream-error', (event, error) => callback(error));
+    const handler = (event, error, requestId) => callback(error, requestId);
+    ipcRenderer.on('ai:stream-error', handler);
+    return () => ipcRenderer.removeListener('ai:stream-error', handler);
   },
 
   // App Settings

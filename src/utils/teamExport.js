@@ -3,6 +3,7 @@
  * Allows sharing team configurations between users
  */
 import { textPixelWidth, IN_GAME_NAME_WIDTH } from '../rom/TeamNameTileFont';
+import { sharedKeeperTeams } from '../rom/readers/UniformReader';
 
 /**
  * v3: the in-game name travels as the exact tile graphic (`teamNameInGameTiles`), and
@@ -192,6 +193,15 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
     });
   }
 
+  // Super Star has no goalkeeper of its own (it uses Belgium's): writing it changes the
+  // other team's goalkeeper too
+  if (
+    (teamData.uniforms?.goalkeeper || teamData.hairSkin?.goalkeeper) &&
+    sharedKeeperTeams(teamIndex).length
+  ) {
+    warnings.push('toastKeeperShared');
+  }
+
   // Write flag colors
   if (teamData.flagColors && Array.isArray(teamData.flagColors)) {
     teamData.flagColors.forEach((color, idx) => {
@@ -203,7 +213,9 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
 
   // Write team name (menu / selection screen)
   if (teamData.teamNameText) {
-    romParser.writeTeamNameMenu(teamIndex, teamData.teamNameText);
+    if (!romParser.writeTeamNameMenu(teamIndex, teamData.teamNameText)) {
+      warnings.push('toastTeamNameNoSpace');
+    }
   }
 
   // In-game name graphic: the exact tiles when the file has them (v3+), else drawn
@@ -239,11 +251,13 @@ export function applyImportedTeam(romParser, teamIndex, teamData) {
   // Selection-screen description (optional)
   const d = teamData.description;
   if (d && typeof d.title === 'string' && typeof d.body === 'string') {
-    romParser.writeTeamDescription(teamIndex, {
+    const written = romParser.writeTeamDescription(teamIndex, {
       title: d.title,
       titleColor: Number.isInteger(d.titleColor) ? d.titleColor : 0x2c,
       body: d.body,
     });
+    // the 27 descriptions share one area: nothing is written when it is full
+    if (written && written.ok === false) warnings.push('descFull');
   }
 
   // Special hair / skin presets (optional)

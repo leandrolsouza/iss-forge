@@ -197,6 +197,9 @@ export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleColla
   const [expandedSections, setExpandedSections] = useState({
     editors: true,
     formation: true,
+    matchPalettes: true,
+    contentGroup: true,
+    screensGroup: true,
   });
 
   const toggleSection = (section) => {

@@ -12,6 +12,8 @@ import {
   responseErrorToAi,
   DEFAULT_MAX_TOKENS,
   modelForProvider,
+  getEffectiveEndpoint,
+  parseResponse,
 } from '../services/aiProviders';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
@@ -226,6 +228,19 @@ export default function SettingsPage() {
                   onChange={(e) => updateSetting('aiEndpoint', e.target.value)}
                 />
                 <p className="settings-hint">{t('settingsAiEndpointHint')}</p>
+                {(() => {
+                  // what the requests really go to (a bare host gets /v1/chat/completions)
+                  const resolved = getEffectiveEndpoint(
+                    getProvider(settings.aiProvider),
+                    settings.aiEndpoint,
+                    settings.aiModel,
+                  );
+                  return resolved && resolved !== settings.aiEndpoint ? (
+                    <p className="settings-hint">
+                      {t('settingsAiEndpointResolved', { url: resolved })}
+                    </p>
+                  ) : null;
+                })()}
               </div>
             )}
 
@@ -373,15 +388,21 @@ export default function SettingsPage() {
                           maxTokens: 32,
                           stream: false,
                         });
-                        const resp = await fetch(settings.aiEndpoint, {
-                          method: 'POST',
-                          headers,
-                          body: JSON.stringify(body),
-                        });
+                        const resp = await fetch(
+                          getEffectiveEndpoint(provider, settings.aiEndpoint, settings.aiModel),
+                          { method: 'POST', headers, body: JSON.stringify(body) },
+                        );
                         if (!resp.ok) {
                           result = { success: false, error: await responseErrorToAi(resp) };
                         } else {
-                          result = { success: true };
+                          // a 200 is not enough: some servers answer unknown paths with it
+                          const parsed = parseResponse(
+                            await resp.json().catch(() => ({})),
+                            provider.format,
+                          );
+                          result = parsed.error
+                            ? { success: false, error: parsed.error }
+                            : { success: true };
                         }
                       }
                       if (result.success) {

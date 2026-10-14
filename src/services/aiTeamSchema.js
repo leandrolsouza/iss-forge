@@ -489,6 +489,17 @@ export const TEAM_OUTPUT_SCHEMA = buildOutputSchema();
 // ─── Description ─────────────────────────────────────────────────────────────
 
 /**
+ * Lines cut from a longer text, ending at the last sentence end when that keeps at
+ * least half of them (no "...and the" left on screen).
+ */
+function endAtSentence(lines) {
+  const text = lines.join('\n');
+  const end = Math.max(text.lastIndexOf('.'), text.lastIndexOf('!'), text.lastIndexOf('?'));
+  if (end < text.length / 2) return lines;
+  return wrapDescriptionBody(text.slice(0, end + 1).replace(/\n/g, ' '));
+}
+
+/**
  * The description as it will be written: allowed characters only, the formation
  * name of the title matching the chosen formation, body wrapped to the screen
  * (cut to its lines and, with a budget, to the free bytes).
@@ -499,10 +510,9 @@ export function fitDescription(desc, { formationName = null, budget = null } = {
   let title = cleanDescriptionText(desc.title).slice(0, AI_LIMITS.descriptionTitle).trim();
   if (formationName && /\d-\d-\d/.test(title)) title = title.replace(/\d-\d-\d/, formationName);
   const titleColor = DESCRIPTION_STYLES[desc.style] ?? DESCRIPTION_STYLES.offensive;
-  let lines = wrapDescriptionBody(cleanDescriptionText(desc.body, { multiline: true })).slice(
-    0,
-    AI_LIMITS.descriptionLines,
-  );
+  const allLines = wrapDescriptionBody(cleanDescriptionText(desc.body, { multiline: true }));
+  let lines = allLines.slice(0, AI_LIMITS.descriptionLines);
+  if (allLines.length > lines.length) lines = endAtSentence(lines);
   const build = () => ({ title, titleColor, body: lines.join('\n') });
   if (budget != null) {
     // drop words from the end until it fits
@@ -671,15 +681,15 @@ function validateTeamSetup(data, context, errors, warnings) {
   if (!title) {
     errors.push('description.title is missing');
   } else if (title.length > AI_LIMITS.descriptionTitle) {
-    errors.push(
-      `description.title "${title}" has ${title.length} characters (max ${AI_LIMITS.descriptionTitle})`,
+    warnings.push(
+      `description.title "${title}" has ${title.length} characters (max ${AI_LIMITS.descriptionTitle}): cut`,
     );
   }
   const body = cleanDescriptionText(d.body, { multiline: true });
   const lines = wrapDescriptionBody(body);
   if (lines.length > AI_LIMITS.descriptionLines) {
-    errors.push(
-      `description.body takes ${lines.length} lines of ${AI_LIMITS.descriptionColumns} characters on screen (max ${AI_LIMITS.descriptionLines}): shorten it`,
+    warnings.push(
+      `description.body takes ${lines.length} lines of ${AI_LIMITS.descriptionColumns} characters on screen (max ${AI_LIMITS.descriptionLines}): cut at the end of a sentence`,
     );
   }
   const typed = stripAccents(`${d.title ?? ''}${d.body ?? ''}`).replace(/\s+/g, '');
@@ -693,8 +703,52 @@ function validateTeamSetup(data, context, errors, warnings) {
       body: lines.slice(0, AI_LIMITS.descriptionLines).join('\n'),
     }).length;
     if (bytes > context.descriptionBudget) {
+      warnings.push(
+        `description takes ${bytes} bytes but only ${context.descriptionBudget} are free in the ROM: cut to about ${Math.max(0, context.descriptionBudget - (bytes - body.length))} characters`,
+      );
+    }
+  }
+}
+
+/** Hue (0-360) of a clearly coloured shade, null for greys, black and white */
+function hueOf(c) {
+  const max = Math.max(c.r, c.g, c.b);
+  const min = Math.min(c.r, c.g, c.b);
+  if (max < 40 || (max - min) / max < 0.3) return null;
+  let h;
+  if (max === c.r) h = ((c.g - c.b) / (max - min)) * 60;
+  else if (max === c.g) h = ((c.b - c.r) / (max - min)) * 60 + 120;
+  else h = ((c.r - c.g) / (max - min)) * 60 + 240;
+  return (h + 360) % 360;
+}
+
+const hueGap = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
+
+/** Shade lists that must be one colour (dark → light) */
+const SHADE_PARTS = [
+  'uniforms.home.shirt',
+  'uniforms.home.shorts',
+  'uniforms.home.socks',
+  'uniforms.away.shirt',
+  'uniforms.away.shorts',
+  'uniforms.away.socks',
+  'uniforms.goalkeeper.shirtAndSocks',
+];
+
+function validateShades(data, errors) {
+  for (const path of SHADE_PARTS) {
+    const list = getPath(data, path);
+    if (!Array.isArray(list)) continue;
+    const hues = list
+      .map(readColor)
+      .filter(Boolean)
+      .map(hueOf)
+      .filter((h) => h != null);
+    // neighbouring hues are a gradient (France's keeper: red to yellow); far ones are not
+    const mixed = hues.some((a) => hues.some((b) => hueGap(a, b) > 60));
+    if (mixed) {
       errors.push(
-        `description takes ${bytes} bytes but only ${context.descriptionBudget} are free in the ROM: shorten the body to about ${Math.max(0, context.descriptionBudget - (bytes - body.length))} characters`,
+        `${path} mixes different colors: use shades of ONE color, dark to light (e.g. yellow: {"r":184,"g":144,"b":0}, {"r":224,"g":184,"b":0}, {"r":248,"g":224,"b":0})`,
       );
     }
   }
@@ -828,6 +882,7 @@ export function validateGeneratedTeam(data, context = DEFAULT_AI_CONTEXT, part =
       warnings.push(`hairSkin.template "${hairTemplate}" does not exist (treated as "custom")`);
     }
     validateColors(resolved, errors);
+    validateShades(data, errors);
     validateFlag(data, ctx, errors, warnings);
     validateLooks(data, ctx, warnings);
   }

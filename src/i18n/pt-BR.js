@@ -1291,7 +1291,9 @@ export default {
   settingsAiProviderCompatible: 'Compativel com OpenAI (Local/Custom)',
   settingsAiProviderHint: 'Selecione seu provedor de IA. Provedores cloud exigem chave de API.',
   settingsAiEndpoint: 'Endpoint da API',
-  settingsAiEndpointHint: 'URL customizada. Editavel apenas para provedor Compativel com OpenAI.',
+  settingsAiEndpointHint:
+    'Endereco do servidor (ex.: http://127.0.0.1:1234 do LM Studio). Pode ser so o host: o editor completa com /v1/chat/completions.',
+  settingsAiEndpointResolved: 'As requisicoes vao para: {url}',
   settingsAiModel: 'Modelo',
   settingsAiModelHint: 'Selecione ou digite o modelo. Deixe vazio para servidores locais.',
   settingsAiModelPlaceholder: 'Digite ou selecione um modelo...',

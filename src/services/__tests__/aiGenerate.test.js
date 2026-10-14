@@ -7,7 +7,11 @@ import { sharedKeeperTeams } from '../../rom/readers/UniformReader';
 import en from '../../i18n/en';
 import ptBR from '../../i18n/pt-BR';
 import { getPresetSlots } from '../../rom/formation';
-import { encodeTeamDescription, TEAM_DESC_CAPACITY } from '../../rom/teamDescription';
+import {
+  encodeTeamDescription,
+  TEAM_DESC_CAPACITY,
+  wrapDescriptionBody,
+} from '../../rom/teamDescription';
 import { applyImportedTeam } from '../../utils/teamExport';
 import * as webAi from '../aiProviders';
 import * as electronAi from '../../../electron/aiProviders.mjs';
@@ -175,11 +179,13 @@ describe('validateGeneratedTeam', () => {
     team.description.body = 'word '.repeat(30);
     team.specialHair = 'purple';
     const { errors, warnings } = validateGeneratedTeam(team);
-    const text = errors.join('\n');
-    expect(text).toContain('formation must be one of');
-    expect(text).toContain('description.title "A very long title here" has 22 characters');
-    expect(text).toMatch(/description\.body takes \d+ lines/);
-    expect(warnings.join('\n')).toContain('specialHair must be one of');
+    expect(errors.join('\n')).toContain('formation must be one of');
+    // too long texts are cut by the sanitizer: no new attempt for them
+    const warned = warnings.join('\n');
+    expect(warned).toContain('description.title "A very long title here" has 22 characters');
+    expect(warned).toMatch(/description\.body takes \d+ lines/);
+    expect(warned).toContain('specialHair must be one of');
+    expect(errors.join()).not.toContain('description');
 
     delete team.description;
     expect(validateGeneratedTeam(team).errors.join()).toContain('description is missing');
@@ -203,9 +209,9 @@ describe('validateGeneratedTeam', () => {
       fitMenuName: (text) => text.slice(0, 5),
       descriptionBudget: 20,
     };
-    const text = validateGeneratedTeam(team, context).errors.join('\n');
-    expect(text).toContain('only "TESTU" fits');
-    expect(text).toMatch(/only 20 are free in the ROM/);
+    const result = validateGeneratedTeam(team, context);
+    expect(result.errors.join('\n')).toContain('only "TESTU" fits');
+    expect(result.warnings.join('\n')).toMatch(/only 20 are free in the ROM/);
     expect(validateGeneratedTeam(team, { menuNameMax: 5 }).errors.join()).toContain('(max 5)');
   });
 
@@ -894,5 +900,81 @@ describe('goalkeeper hair', () => {
     expect(buildSystemPrompt(undefined, 'squad')).toContain('GOALKEEPERS');
     expect(en.valKeeperHair).toBeTypeOf('string');
     expect(ptBR.valKeeperHair).toBeTypeOf('string');
+  });
+});
+
+describe('OpenAI-compatible endpoint', () => {
+  for (const [label, ai] of [
+    ['renderer', webAi],
+    ['electron', electronAi],
+  ]) {
+    it(`${label}: completes a bare host to /v1/chat/completions`, () => {
+      const local = ai.getProvider('openai-compatible');
+      const url = (typed) => ai.getEffectiveEndpoint(local, typed);
+      expect(url('http://127.0.0.1:1234')).toBe('http://127.0.0.1:1234/v1/chat/completions');
+      expect(url('http://127.0.0.1:1234/')).toBe('http://127.0.0.1:1234/v1/chat/completions');
+      expect(url('127.0.0.1:1234')).toBe('http://127.0.0.1:1234/v1/chat/completions');
+      expect(url('http://localhost:11434/v1')).toBe('http://localhost:11434/v1/chat/completions');
+      expect(url('http://localhost:1234/v1/chat/completions')).toBe(
+        'http://localhost:1234/v1/chat/completions',
+      );
+      expect(url('https://host/openai/deployments/x/chat/completions?api-version=1')).toBe(
+        'https://host/openai/deployments/x/chat/completions?api-version=1',
+      );
+      // cloud providers keep their own endpoint
+      expect(ai.getEffectiveEndpoint(ai.getProvider('openai'), 'http://x')).toBe(
+        'https://api.openai.com/v1/chat/completions',
+      );
+    });
+  }
+
+  it('shows what came back when the answer has no choices', () => {
+    const { error } = webAi.parseResponse({}, 'openai');
+    expect(error.detail).toContain('(answer: {})');
+  });
+});
+
+describe('kit shades and description cut (found with a real local model)', () => {
+  it('asks again when a shirt mixes colors instead of shading one', () => {
+    const team = validTeam();
+    // gemma-4-e4b answered Brazil's yellow shirt like this
+    team.uniforms.home.shirt = [c(0, 0, 128), c(248, 160, 0), c(248, 200, 0)];
+    const { errors } = validateGeneratedTeam(team, undefined, 'look');
+    expect(errors.join()).toContain('uniforms.home.shirt mixes different colors');
+    // one hue, white/grey/black shades: fine
+    team.uniforms.home.shirt = [c(184, 144, 0), c(224, 184, 0), c(248, 224, 0)];
+    team.uniforms.away.shirt = [c(160, 160, 160), c(208, 208, 208), c(248, 248, 248)];
+    team.uniforms.home.shorts = [c(0, 0, 96), c(0, 0, 160), c(16, 16, 16)];
+    expect(validateGeneratedTeam(team, undefined, 'look').errors).toEqual([]);
+    expect(buildSystemPrompt(undefined, 'look')).toContain('SHADING of ONE color');
+  });
+
+  it('cuts a long description at the end of a sentence', () => {
+    const body =
+      'The Samba spirit shines through! Our attack is built on speed and skill. Romario leads the line with goals.';
+    const fitted = fitDescription({ style: 'offensive', title: 'Brazilian Flair', body });
+    expect(fitted.body.replace(/\n/g, ' ')).toBe(
+      'The Samba spirit shines through! Our attack is built on speed and skill.',
+    );
+    expect(wrapDescriptionBody(fitted.body).length).toBeLessThanOrEqual(6);
+  });
+});
+
+describe.skipIf(!hasRealRom)('kit shades on the real ROM', () => {
+  it('accept every kit of the original game', () => {
+    const rom = new RomParser(new Uint8Array(readFileSync(REAL_ROM)));
+    const plain = (l) => l.map(({ r, g, b }) => ({ r, g, b }));
+    for (let i = 0; i < 27; i++) {
+      const u = rom.readUniformColors(i);
+      const uniforms = {};
+      for (const kit of ['home', 'away', 'goalkeeper']) {
+        uniforms[kit] = Object.fromEntries(Object.entries(u[kit]).map(([k, v]) => [k, plain(v)]));
+      }
+      const errors = validateGeneratedTeam({ uniforms }, undefined, 'look').errors;
+      expect(
+        errors.filter((e) => e.includes('mixes')),
+        `team ${i}`,
+      ).toEqual([]);
+    }
   });
 });

@@ -53,6 +53,28 @@ function getProvider(providerId) {
 }
 
 /**
+ * Full chat-completions URL of an OpenAI-compatible server from what the user typed:
+ * "127.0.0.1:1234", "http://localhost:1234/" or ".../v1" become
+ * ".../v1/chat/completions" (LM Studio, Ollama, llama.cpp answer an unknown path with
+ * an empty 200, which looked like a broken answer). Other paths are kept as typed.
+ */
+function normalizeOpenAiEndpoint(endpoint) {
+  const text = String(endpoint || '').trim();
+  if (!text) return text;
+  let url;
+  try {
+    url = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(text) ? text : `http://${text}`);
+  } catch {
+    return text;
+  }
+  const path = url.pathname.replace(/\/+$/, '');
+  if (!path) url.pathname = '/v1/chat/completions';
+  else if (/\/v\d+$/.test(path)) url.pathname = `${path}/chat/completions`;
+  else return text;
+  return url.toString();
+}
+
+/**
  * Get effective endpoint — uses custom endpoint for openai-compatible, otherwise provider's default
  */
 function getEffectiveEndpoint(provider, customEndpoint, model, stream) {
@@ -66,7 +88,7 @@ function getEffectiveEndpoint(provider, customEndpoint, model, stream) {
     return `${baseUrl}/model/${modelId}/${action}`;
   }
   if (provider.id === 'openai-compatible' && customEndpoint) {
-    return customEndpoint;
+    return normalizeOpenAiEndpoint(customEndpoint);
   }
   return provider.endpoint;
 }
@@ -281,7 +303,10 @@ function parseResponse(data, format) {
     return {
       content: null,
       usage: null,
-      error: aiError('invalidResponse', 'no choices[0].message'),
+      error: aiError(
+        'invalidResponse',
+        `no choices[0].message (answer: ${JSON.stringify(data ?? null).slice(0, 200)})`,
+      ),
     };
   }
 
@@ -474,6 +499,7 @@ export {
   responseErrorToAi,
   getProvider,
   getEffectiveEndpoint,
+  normalizeOpenAiEndpoint,
   buildHeaders,
   buildRequestBody,
   isTruncatedStop,

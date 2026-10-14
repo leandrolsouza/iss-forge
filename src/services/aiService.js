@@ -297,15 +297,16 @@ function lookSections(ctx) {
 Every color is {"r","g","b"}. All values must be multiples of 8, range 0-248.
 
 ## Uniforms
+Each list is the SHADING of ONE color (dark → medium → light), never different colors: a yellow shirt is dark yellow, yellow, light yellow. Stripes, collars or sleeves of another color are not possible.
 Home kit:
-- shirt: 3 colors (dark → medium → light, for shading effect)
-- shorts: 3 colors (dark → medium → light)
-- socks: 2 colors (dark → light)
+- shirt: 3 shades (dark → medium → light)
+- shorts: 3 shades (dark → medium → light)
+- socks: 2 shades (dark → light)
 
 Away kit: same structure, contrasting colors to home
 
 Goalkeeper kit:
-- shirtAndSocks: 5 colors (shading gradient)
+- shirtAndSocks: 5 shades of one color (dark → light)
 - shorts: 1 color
 
 IMPORTANT: Home and away kits must be VISUALLY DISTINCT. Goalkeeper must differ from both.

@@ -1287,7 +1287,9 @@ export default {
   settingsAiProviderCompatible: 'OpenAI-Compatible (Local/Custom)',
   settingsAiProviderHint: 'Select your AI provider. Cloud providers require an API key.',
   settingsAiEndpoint: 'API Endpoint',
-  settingsAiEndpointHint: 'Custom endpoint URL. Only editable for OpenAI-Compatible provider.',
+  settingsAiEndpointHint:
+    'Server address (e.g. http://127.0.0.1:1234 for LM Studio). The host alone is enough: the editor adds /v1/chat/completions.',
+  settingsAiEndpointResolved: 'Requests go to: {url}',
   settingsAiModel: 'Model',
   settingsAiModelHint: 'Select or type the model to use. Leave empty for local servers.',
   settingsAiModelPlaceholder: 'Type or select a model...',

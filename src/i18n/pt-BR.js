@@ -1083,9 +1083,9 @@ export default {
     'Este backup e de uma versao anterior e nao guarda a ROM original: "Restaurar original" e o patch vao usar o proprio backup como base.',
 
   // AI Team Generator
-  editorAiGenerator: 'Gerador IA',
+  editorAiGenerator: 'Gerador de Times (IA)',
   // AI Championship Generator
-  editorAiLeague: 'Gerador de Campeonato',
+  editorAiLeague: 'Gerador de Campeonato (IA)',
   aiLeagueTitle: 'Gerador de Campeonato com IA',
   aiLeagueDescription:
     'Descreva um campeonato e a temporada (ex.: "Brasileirao 2002"). A IA monta a lista dos 26 clubes pela classificacao final, completa com os melhores colocados da divisao de baixo quando faltar clube, e depois gera cada time. Voce revisa e ajusta tudo antes de aplicar. O Super Star nao e alterado.',

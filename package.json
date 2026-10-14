@@ -22,7 +22,7 @@
     "name": "Leandro Luiz De Souza",
     "email": "leandro.souza@gmail.com"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "dependencies": {
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.9",

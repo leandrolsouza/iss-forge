@@ -1080,9 +1080,9 @@ export default {
     'This backup comes from an older version and does not keep the original ROM: "Restore original" and patches will use the backup itself as the base.',
 
   // AI Team Generator
-  editorAiGenerator: 'AI Generator',
+  editorAiGenerator: 'Team Generator (AI)',
   // AI Championship Generator
-  editorAiLeague: 'Championship Generator',
+  editorAiLeague: 'Championship Generator (AI)',
   aiLeagueTitle: 'AI Championship Generator',
   aiLeagueDescription:
     'Describe a championship and season (e.g. "Premier League 1998/99"). The AI lists the 26 clubs in final-standing order, completes the list with the best-placed clubs of the division below when there are not enough, then generates every team. You review and adjust everything before applying. Super Star is left unchanged.',

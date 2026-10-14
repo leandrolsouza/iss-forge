@@ -123,8 +123,8 @@ function SessionCard({ t, lang }) {
             <dd>
               {modified
                 ? t('sessionUnsavedSince', {
-                    date: formatDateTime(projectSavedAt(currentProject), lang),
-                  })
+                  date: formatDateTime(projectSavedAt(currentProject), lang),
+                })
                 : formatDateTime(projectSavedAt(currentProject), lang)}
             </dd>
             {currentProject.romFileName && (
@@ -196,6 +196,7 @@ export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleColla
   const { projectsAvailable, currentProject, openProjectSwitcher } = useRom();
   const [expandedSections, setExpandedSections] = useState({
     editors: true,
+    formation: true,
   });
 
   const toggleSection = (section) => {
@@ -234,7 +235,7 @@ export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleColla
               <IconProject size={20} />
             </button>
           )}
-          {editors.map((e) => (
+          {editors.flatMap((e) => (e.children ? e.children : [e])).map((e) => (
             <button
               key={e.id}
               className={`sidebar-icon-btn ${activeTab === e.id ? 'selected' : ''}`}
@@ -287,16 +288,54 @@ export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleColla
                 {i > 0 && editors[i - 1].scope !== e.scope && (
                   <div className="sidebar-divider" role="separator" />
                 )}
-                <button
-                  className={`sidebar-item editor-item ${activeTab === e.id ? 'selected' : ''}`}
-                  onClick={() => open(e)}
-                  aria-current={activeTab === e.id ? 'page' : undefined}
-                >
-                  <span className="item-icon">
-                    <e.Icon size={14} />
-                  </span>
-                  <span>{t(e.labelKey)}</span>
-                </button>
+
+                {e.children ? (
+                  /* ── Group with sub-items ── */
+                  <>
+                    <button
+                      className="sidebar-subgroup-header"
+                      onClick={() => toggleSection(e.id)}
+                      aria-expanded={expandedSections[e.id] ?? true}
+                    >
+                      <span className="subgroup-chevron">
+                        <IconChevron expanded={expandedSections[e.id] ?? true} />
+                      </span>
+                      <span className="item-icon">
+                        <e.Icon size={14} />
+                      </span>
+                      <span>{t(e.labelKey)}</span>
+                    </button>
+                    {(expandedSections[e.id] ?? true) && (
+                      <div className="sidebar-subgroup-content">
+                        {e.children.map((child) => (
+                          <button
+                            key={child.id}
+                            className={`sidebar-item editor-subitem ${activeTab === child.id ? 'selected' : ''}`}
+                            onClick={() => open(child)}
+                            aria-current={activeTab === child.id ? 'page' : undefined}
+                          >
+                            <span className="item-icon">
+                              <child.Icon size={14} />
+                            </span>
+                            <span>{t(child.labelKey)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* ── Regular item ── */
+                  <button
+                    className={`sidebar-item editor-item ${activeTab === e.id ? 'selected' : ''}`}
+                    onClick={() => open(e)}
+                    aria-current={activeTab === e.id ? 'page' : undefined}
+                  >
+                    <span className="item-icon">
+                      <e.Icon size={14} />
+                    </span>
+                    <span>{t(e.labelKey)}</span>
+                  </button>
+                )}
               </React.Fragment>
             ))}
           </div>

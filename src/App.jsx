@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import PlayerEditor from './components/PlayerEditor';
 import FormationEditor from './components/FormationEditor';
+import FormationDescEditor from './components/FormationDescEditor';
 import ScenarioEditor from './components/ScenarioEditor';
 import TournamentEditor from './components/TournamentEditor';
 import ScreenViewer from './components/ScreenViewer';
@@ -399,6 +400,7 @@ export default function App() {
       case 'players':
         return <PlayerEditor {...props} onPlayerChange={handlePlayerChange} />;
       case 'formation':
+      case 'formationTactics':
         return (
           <FormationEditor
             {...props}
@@ -406,6 +408,8 @@ export default function App() {
             onSwapPlayers={handleSwapPlayers}
           />
         );
+      case 'formationDesc':
+        return <FormationDescEditor {...props} />;
       case 'uniforms':
         return <UniformEditor {...props} onUniformChange={handleUniformChange} />;
       case 'hairskin':

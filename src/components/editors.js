@@ -24,10 +24,22 @@ import {
   IconInfo,
 } from './Icons';
 
+// Flatten a list of editors (expanding children) for ID lookups
+const flattenEditors = (list) => list.flatMap((e) => (e.children ? [e, ...e.children] : [e]));
+
 /** scope 'team': edits the selected team; 'global': whole ROM / app */
 export const EDITORS = [
   { id: 'players', labelKey: 'editorPlayers', Icon: IconPlayers, scope: 'team' },
-  { id: 'formation', labelKey: 'editorFormation', Icon: IconFormation, scope: 'team' },
+  {
+    id: 'formation',
+    labelKey: 'editorFormation',
+    Icon: IconFormation,
+    scope: 'team',
+    children: [
+      { id: 'formationTactics', labelKey: 'editorFormationTactics', Icon: IconFormation, scope: 'team' },
+      { id: 'formationDesc', labelKey: 'editorFormationDesc', Icon: IconGameText, scope: 'team' },
+    ],
+  },
   { id: 'uniforms', labelKey: 'editorUniforms', Icon: IconUniform, scope: 'team' },
   { id: 'hairskin', labelKey: 'editorHairSkin', Icon: IconHairSkin, scope: 'team' },
   { id: 'flagcolors', labelKey: 'editorFlagColors', Icon: IconFlag, scope: 'team' },
@@ -51,7 +63,9 @@ const EXTRA_TABS = [
   { id: 'about', labelKey: 'aboutTitle', Icon: IconInfo, scope: 'global' },
 ];
 
-const BY_ID = Object.fromEntries([...EDITORS, ...EXTRA_TABS].map((e) => [e.id, e]));
+const BY_ID = Object.fromEntries(
+  [...flattenEditors(EDITORS), ...EXTRA_TABS].map((e) => [e.id, e]),
+);
 
 export const getEditor = (id) => BY_ID[id];
 

@@ -20,6 +20,8 @@ export default {
   // Editor names
   editorPlayers: 'Players',
   editorFormation: 'Formation',
+  editorFormationTactics: 'Tactics',
+  editorFormationDesc: 'Selection Desc',
   editorScenarios: 'Scenarios',
   editorTournaments: 'Tournaments',
   editorGameTexts: 'Game Texts',

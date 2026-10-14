@@ -249,3 +249,10 @@
   line-height: 1.45;
   white-space: pre;
 }
+
+/* Standalone description editor: centers the panel instead of splitting the body */
+.formation-side--full {
+  max-width: 580px;
+  margin: 0 auto;
+  flex: 0 1 580px;
+}

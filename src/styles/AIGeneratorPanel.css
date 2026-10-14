@@ -843,3 +843,13 @@
 .ai-modal-template-item:active {
   background: var(--bg-active);
 }
+
+/* What the AI meant to draw (crest / flag) */
+.ai-crest-idea {
+  margin: 4px 0 0;
+  max-width: 260px;
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}

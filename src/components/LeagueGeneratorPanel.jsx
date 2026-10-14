@@ -37,7 +37,7 @@ const average = (list) =>
       }
     : null;
 const nameChars = (value) => value.toUpperCase().replace(/[^A-Z0-9. ]/g, '');
-const PART_LABEL_KEYS = { squad: 'aiPartSquad', look: 'aiPartLook' };
+const PART_LABEL_KEYS = { squad: 'aiPartSquad', look: 'aiPartLook', flag: 'aiPartFlag' };
 
 /**
  * Championship generator: plan of the clubs (reviewed and editable), generation of
@@ -184,9 +184,12 @@ export default function LeagueGeneratorPanel() {
       return { ...prev, slots };
     });
 
-  /** Generate the clubs `indexes`, `concurrency` at a time */
+  /**
+   * Generate the clubs `indexes`, `concurrency` at a time. `parts` redoes only those
+   * steps of clubs already generated (e.g. ['flag'] for the crest).
+   */
   const runTeams = useCallback(
-    async (indexes) => {
+    async (indexes, parts = null) => {
       const start = draftRef.current;
       if (!start || !indexes.length || !romParser) return;
       const controller = new AbortController();
@@ -220,6 +223,9 @@ export default function LeagueGeneratorPanel() {
               budgets,
               results: current.results,
               settings,
+              ...(parts && previous?.raw
+                ? { parts, previous: { raw: previous.raw, parts: previous.parts } }
+                : {}),
               signal: controller.signal,
               onStage: ({ part }) => setLiveOf(i, { part, attempt: 1, chars: 0 }),
               onAttempt: ({ attempt }) => setLiveOf(i, { attempt, chars: 0 }),
@@ -232,6 +238,9 @@ export default function LeagueGeneratorPanel() {
             setResult(i, {
               status: 'done',
               team: result.team,
+              // the answer of each step, so one of them can be redone later
+              raw: result.raw,
+              parts: result.parts,
               errors: result.errors,
               warnings: result.warnings,
               attempts: result.attempts,
@@ -562,6 +571,7 @@ export default function LeagueGeneratorPanel() {
                         onChange={(patch) => updateTeam(i, patch)}
                         onSlot={(slot) => changeSlot(i, slot)}
                         onGenerate={() => runTeams([i])}
+                        onRedoCrest={() => runTeams([i], ['flag'])}
                       />
                     );
                   })}
@@ -593,6 +603,7 @@ function LeagueRow({
   onChange,
   onSlot,
   onGenerate,
+  onRedoCrest,
 }) {
   const problems = (result?.errors?.length || 0) + (result?.warnings?.length || 0);
   let statusText = t(`aiLeagueStatus_${status}`);
@@ -716,6 +727,12 @@ function LeagueRow({
                   <div className="league-team-side">
                     {team.flagDesign && (
                       <FlagCanvas grid={team.flagDesign.grid} colors={team.flagColors} scale={3} />
+                    )}
+                    {team.crestIdea && <p className="ai-crest-idea">{team.crestIdea}</p>}
+                    {result?.raw && (
+                      <button className="ai-btn ai-btn-small" onClick={onRedoCrest} disabled={busy}>
+                        {t('aiLeagueRedoCrest')}
+                      </button>
                     )}
                     <span>{team.formationName || '—'}</span>
                     {team.description && (

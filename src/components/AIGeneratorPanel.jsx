@@ -23,7 +23,7 @@ import '../styles/AIGeneratorPanel.css';
 const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 
 /** i18n key of each generation step */
-const PART_LABEL_KEYS = { squad: 'aiPartSquad', look: 'aiPartLook' };
+const PART_LABEL_KEYS = { squad: 'aiPartSquad', look: 'aiPartLook', flag: 'aiPartFlag' };
 
 const EXAMPLE_KEYS = [
   'aiExample1',
@@ -592,6 +592,9 @@ export default function AIGeneratorPanel({ teamIndex }) {
                       scale={3}
                       label={t('aiPreviewFlag')}
                     />
+                    {generatedTeam.crestIdea && (
+                      <p className="ai-crest-idea">{generatedTeam.crestIdea}</p>
+                    )}
                   </div>
                 )}
               </div>

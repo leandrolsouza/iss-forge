@@ -27,6 +27,7 @@ import {
 import { getFormationName, getPositionLabel, getPresetSlots } from '../rom/formation';
 import { FLAG_TEMPLATES } from '../rom/flagTemplates';
 import { HAIR_SKIN_TEMPLATES } from '../rom/hairSkinTemplates';
+import { MAX_SHAPES, renderShapes } from '../rom/flagShapes';
 import { TEAM_DESC, encodeTeamDescription, wrapDescriptionBody } from '../rom/teamDescription';
 import { textPixelWidth, IN_GAME_NAME_WIDTH } from '../rom/TeamNameTileFont';
 
@@ -108,6 +109,9 @@ export const DESCRIPTION_STYLES = { offensive: 0x2c, defensive: 0x24 };
 /** Value of a template field that means "no template: everything is in the answer" */
 export const CUSTOM_TEMPLATE = 'custom';
 
+/** flagDesign.template of a crest drawn with shape commands (see rom/flagShapes.js) */
+export const SHAPES_TEMPLATE = 'shapes';
+
 /** Clamp a flag design to 16 rows × 24 cells of 0-4 (missing cells transparent) */
 export function normalizeFlagGrid(grid) {
   const rows = Array.isArray(grid) ? grid : [];
@@ -178,11 +182,21 @@ export function resolveHairSkin(hairSkin) {
 }
 
 /**
- * Flag design of an answer: the drawn grid when there is one, else the template's.
- * @returns {{ grid: number[][]|null, template: string }} raw (not normalized) grid
+ * Flag design of an answer: drawn from its shape commands ("shapes"), the drawn grid
+ * ("custom"), or the template's.
+ * @returns {{ grid: number[][]|null, template: string, shapes?: object }} raw (not
+ *   normalized) grid; `shapes` is the renderShapes result
  */
 export function resolveFlagDesign(flagDesign) {
   const fd = flagDesign && typeof flagDesign === 'object' ? flagDesign : {};
+  const shapeList = Array.isArray(fd.shapes) ? fd.shapes.filter((x) => typeof x === 'string') : [];
+  if (
+    shapeList.length &&
+    (fd.template === SHAPES_TEMPLATE || !(Array.isArray(fd.grid) && fd.grid.length))
+  ) {
+    const shapes = renderShapes(shapeList);
+    return { grid: shapes.grid, template: SHAPES_TEMPLATE, shapes };
+  }
   if (Array.isArray(fd.grid) && fd.grid.length) return { grid: fd.grid, template: CUSTOM_TEMPLATE };
   const tpl = AI_FLAG_TEMPLATES.find((t) => t.id === fd.template);
   return tpl
@@ -411,16 +425,27 @@ export function buildTeamSchema({ menuNameMax = DEFAULT_AI_CONTEXT.menuNameMax }
       second: obj({ hair: colorsUpTo(1), skin: colorsUpTo(5) }),
       goalkeeper: obj({ hair: colorsUpTo(1), skin: colorsUpTo(3) }),
     }),
+    crestIdea: {
+      type: 'string',
+      description:
+        'First describe the real crest/flag: silhouette, main elements, letters, colors (1-3 sentences)',
+    },
     flagColors: colors(AI_LIMITS.flagColors),
     flagDesign: obj({
       template: oneOf(
-        [...AI_FLAG_TEMPLATES.map((t) => t.id), CUSTOM_TEMPLATE],
-        'Ready-made design, or "custom" to draw the grid',
+        [SHAPES_TEMPLATE, ...AI_FLAG_TEMPLATES.map((t) => t.id), CUSTOM_TEMPLATE],
+        '"shapes" to draw with shape commands, a ready-made design, or "custom" to paint the grid',
       ),
+      shapes: {
+        type: 'array',
+        description: 'For "shapes": the drawing commands, in order; [] otherwise',
+        items: { type: 'string' },
+        maxItems: MAX_SHAPES,
+      },
       grid: {
         type: 'array',
         description:
-          '[] to use the template; for "custom" 16 rows of 24 cells: 0 = transparent, 1-4 = flagColors index',
+          '[] unless "custom": 16 rows of 24 cells, 0 = transparent, 1-4 = flagColors index',
         items: { type: 'array', items: int(0, 4), maxItems: AI_LIMITS.flagCols },
         maxItems: AI_LIMITS.flagRows,
       },
@@ -449,12 +474,14 @@ export const PART_FIELDS = {
     'specialHair',
     'specialSkin',
   ],
-  look: ['uniforms', 'hairSkin', 'flagColors', 'flagDesign'],
+  look: ['uniforms', 'hairSkin'],
+  flag: ['crestIdea', 'flagColors', 'flagDesign'],
 };
 
 const PART_SCHEMA_INFO = {
   squad: ['iss_team_squad', 'Squad of a team for International Superstar Soccer (SNES)'],
-  look: ['iss_team_look', 'Kits, hair/skin colors and flag of a team for ISS (SNES)'],
+  look: ['iss_team_look', 'Kits and hair/skin colors of a team for ISS (SNES)'],
+  flag: ['iss_team_crest', 'Crest / flag of a team for ISS (SNES), 24x16 pixels'],
 };
 
 /**
@@ -754,14 +781,15 @@ function validateShades(data, errors) {
   }
 }
 
-function validateColors(data, errors) {
-  for (const section of ['uniforms', 'hairSkin']) {
+function validateColors(data, errors, sections = ['uniforms', 'hairSkin', 'flagColors']) {
+  for (const section of sections.filter((x) => x !== 'flagColors')) {
     if (!data[section] || typeof data[section] !== 'object') {
       errors.push(`"${section}" is missing`);
     }
   }
   for (const [path, count] of COLOR_PARTS) {
     const section = path.split('.')[0];
+    if (!sections.includes(section)) continue;
     if (section !== 'flagColors' && (!data[section] || typeof data[section] !== 'object')) continue;
     const value = getPath(data, path);
     if (!Array.isArray(value)) {
@@ -780,16 +808,80 @@ function validateColors(data, errors) {
   }
 }
 
+/** Below this two colours of the crest blend together at 24×16 */
+const LEGIBLE_DISTANCE = 90;
+
+/**
+ * Problems of a crest drawn with shapes: commands that could not be read, elements
+ * hidden or cut, letters and emblems in a colour too close to what is under them.
+ */
+function validateShapeCrest(shapes, data, errors, warnings) {
+  errors.push(...shapes.errors.map((e) => `flagDesign.${e}`));
+  const palette = (Array.isArray(data.flagColors) ? data.flagColors : []).map(readColor);
+  const rgb = (i) => palette[i - 1] || null;
+  for (const layer of shapes.layers) {
+    const at = `flagDesign.shapes[${layer.index}] "${layer.line}"`;
+    if (layer.cmd === 'bg' || layer.cmd === 'hstripes' || layer.cmd === 'vstripes') continue;
+    if (!layer.visible) {
+      warnings.push(`${at} is not visible (outside the frame or covered by later shapes)`);
+      continue;
+    }
+    const isText = layer.cmd === 'text' || layer.cmd === 'ctext';
+    if (isText && layer.clipped) {
+      errors.push(`${at}: the letters are cut by the frame or the grid edge: move or shorten them`);
+    }
+    if (layer.cmd === 'border') continue;
+    // pixels of the element drawn on a colour that hides them
+    const hides = (v) => {
+      if (v <= 0) return false;
+      if (v === layer.color) return true;
+      const x = rgb(layer.color);
+      const y = rgb(v);
+      return !!(x && y && colorDistance(x, y) < LEGIBLE_DISTANCE);
+    };
+    const hidden = layer.under.filter(hides);
+    const share = layer.under.length ? hidden.length / layer.under.length : 0;
+    if (share > (isText ? 0.15 : 0.5)) {
+      const counts = new Map();
+      hidden.forEach((v) => counts.set(v, (counts.get(v) || 0) + 1));
+      const under = [...counts].sort((p, q) => q[1] - p[1])[0][0];
+      const msg = `${at}: ${Math.round(share * 100)}% of it is drawn on color ${under}, ${layer.color === under ? 'the same color' : 'too close to its color'}: it will not be seen. Use a contrasting color, or move it`;
+      if (isText || layer.cmd === 'star') errors.push(msg);
+      else warnings.push(msg);
+    }
+  }
+}
+
 function validateFlag(data, context, errors, warnings) {
   const requested = data.flagDesign?.template;
-  const { grid } = resolveFlagDesign(data.flagDesign);
+  const { grid, shapes } = resolveFlagDesign(data.flagDesign);
   if (!Array.isArray(grid)) {
     errors.push(
-      requested && requested !== CUSTOM_TEMPLATE
-        ? `flagDesign.template "${requested}" does not exist: choose one of the list or "custom" with a grid`
-        : `flagDesign: choose a template, or "custom" with a grid of ${AI_LIMITS.flagRows} rows of ${AI_LIMITS.flagCols} numbers`,
+      requested === SHAPES_TEMPLATE
+        ? 'flagDesign.shapes is empty: write the drawing commands'
+        : requested && requested !== CUSTOM_TEMPLATE
+          ? `flagDesign.template "${requested}" does not exist: choose "shapes", one of the list or "custom" with a grid`
+          : `flagDesign: use "shapes" with drawing commands, a template, or "custom" with a grid of ${AI_LIMITS.flagRows} rows of ${AI_LIMITS.flagCols} numbers`,
     );
     return;
+  }
+  if (shapes) validateShapeCrest(shapes, data, errors, warnings);
+  // two palette colours used by the design that look the same
+  const palette = (Array.isArray(data.flagColors) ? data.flagColors : []).map(readColor);
+  const used = [...new Set(grid.flat().filter((v) => v > 0))].sort();
+  for (const i of used) {
+    for (const j of used) {
+      if (
+        i < j &&
+        palette[i - 1] &&
+        palette[j - 1] &&
+        colorDistance(palette[i - 1], palette[j - 1]) < 40
+      ) {
+        warnings.push(
+          `flagColors ${i} and ${j} are almost the same color: the design will look flat`,
+        );
+      }
+    }
   }
   const errorsBefore = errors.length;
   const badRows = grid.filter((row) => !Array.isArray(row) || row.length !== AI_LIMITS.flagCols);
@@ -803,7 +895,9 @@ function validateFlag(data, context, errors, warnings) {
   const badCells = cells.filter((v) => !Number.isInteger(v) || v < 0 || v > 4).length;
   if (badCells) errors.push(`flagDesign.grid has ${badCells} cell(s) that are not integers 0-4`);
   if (new Set(cells.filter((v) => Number.isInteger(v) && v > 0)).size < 2) {
-    warnings.push('flagDesign.grid uses a single color: the flag will show no design');
+    (shapes ? errors : warnings).push(
+      'the flag design uses a single color: it will show no design',
+    );
   }
   // compressed designs share one area of the ROM: too much detail does not fit
   if (
@@ -812,7 +906,7 @@ function validateFlag(data, context, errors, warnings) {
     !context.fitsFlag(normalizeFlagGrid(grid))
   ) {
     errors.push(
-      'the flag design does not fit in the flag space of the ROM (too much detail): use larger areas of one color, or a template',
+      'the flag design does not fit in the flag space of the ROM (too much detail): use fewer and larger shapes of one color',
     );
   }
 }
@@ -848,7 +942,7 @@ function validateLooks(data, context, warnings) {
  * Check the raw object parsed from the model's answer (before sanitizing).
  * @param {object} data
  * @param {object} [context] - limits of the target slot (see DEFAULT_AI_CONTEXT)
- * @param {'all'|'squad'|'look'} [part] - only the checks of one generation step
+ * @param {'all'|'squad'|'look'|'flag'} [part] - only the checks of one generation step
  * @returns {{ errors: string[], warnings: string[] }}
  */
 export function validateGeneratedTeam(data, context = DEFAULT_AI_CONTEXT, part = 'all') {
@@ -859,13 +953,13 @@ export function validateGeneratedTeam(data, context = DEFAULT_AI_CONTEXT, part =
   }
   const ctx = { ...DEFAULT_AI_CONTEXT, ...context };
 
-  if (part !== 'look') {
+  if (part === 'all' || part === 'squad') {
     validateNames(data, ctx, errors, warnings);
     validateTeamSetup(data, ctx, errors, warnings);
     validatePlayers(data, errors, warnings);
   }
 
-  if (part !== 'squad') {
+  if (part === 'all' || part === 'look') {
     // templates fill what the answer leaves empty
     const resolved = {
       ...data,
@@ -881,10 +975,14 @@ export function validateGeneratedTeam(data, context = DEFAULT_AI_CONTEXT, part =
     ) {
       warnings.push(`hairSkin.template "${hairTemplate}" does not exist (treated as "custom")`);
     }
-    validateColors(resolved, errors);
+    validateColors(resolved, errors, ['uniforms', 'hairSkin']);
     validateShades(data, errors);
-    validateFlag(data, ctx, errors, warnings);
     validateLooks(data, ctx, warnings);
+  }
+
+  if (part === 'all' || part === 'flag') {
+    validateColors(data, errors, ['flagColors']);
+    validateFlag(data, ctx, errors, warnings);
   }
 
   return { errors, warnings };

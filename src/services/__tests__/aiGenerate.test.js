@@ -37,6 +37,7 @@ import {
   buildSystemPrompt,
   buildAiContext,
   buildLookRequest,
+  buildFlagRequest,
   buildOptimizerPrompt,
   cleanOptimizedPrompt,
   optimizePrompt,
@@ -460,7 +461,7 @@ describe('generateTeam', () => {
       return { text, truncated: false };
     });
 
-  it('makes the squad, then the visual identity, each with its own schema', async () => {
+  it('makes the squad, the kits, then the crest, each with its own schema', async () => {
     const stream = fakeStream();
     const stages = [];
     const result = await generateTeam({
@@ -469,29 +470,36 @@ describe('generateTeam', () => {
       stream,
       onStage: (s) => stages.push(s.part),
     });
-    expect(stages).toEqual(['squad', 'look']);
-    expect(stream).toHaveBeenCalledTimes(2);
-    const [squadCall, lookCall] = stream.mock.calls.map((c) => c[0]);
+    expect(stages).toEqual(['squad', 'look', 'flag']);
+    expect(stream).toHaveBeenCalledTimes(3);
+    const [squadCall, lookCall, flagCall] = stream.mock.calls.map((c) => c[0]);
     expect(squadCall.schema.name).toBe('iss_team_squad');
     expect(Object.keys(squadCall.schema.schema.properties)).toContain('players');
     expect(Object.keys(squadCall.schema.schema.properties)).not.toContain('uniforms');
     expect(lookCall.schema.name).toBe('iss_team_look');
-    expect(squadCall.systemPrompt).not.toContain('## Flag');
+    expect(squadCall.systemPrompt).not.toContain('## flagColors');
     expect(lookCall.systemPrompt).not.toContain('## Players');
+    expect(lookCall.systemPrompt).not.toContain('## flagColors');
+    expect(flagCall.schema.name).toBe('iss_team_crest');
+    expect(Object.keys(flagCall.schema.schema.properties)).toEqual([
+      'crestIdea',
+      'flagColors',
+      'flagDesign',
+    ]);
+    expect(flagCall.systemPrompt).toContain('frame shield');
+    // the crest step knows the team and its kits
+    expect(flagCall.userPrompt).toContain('Team: "Test United"');
+    expect(flagCall.userPrompt).toMatch(/home shirt #[0-9A-F]{6}/);
     // the visual step knows the squad
     expect(lookCall.userPrompt).toContain('a test team');
     expect(lookCall.userPrompt).toContain('"Test United"');
     expect(lookCall.userPrompt).toContain('PLAYER1, PLAYER2');
     expect(Object.keys(result.raw.squad)).not.toContain('uniforms');
-    expect(Object.keys(result.raw.look)).toEqual([
-      'uniforms',
-      'hairSkin',
-      'flagColors',
-      'flagDesign',
-    ]);
+    expect(Object.keys(result.raw.look)).toEqual(['uniforms', 'hairSkin']);
+    expect(Object.keys(result.raw.flag)).toEqual(['flagColors', 'flagDesign']);
     expect(result.team.players).toHaveLength(15);
     expect(result.team.uniforms.home.shirt).toEqual(validTeam().uniforms.home.shirt);
-    expect(result.attempts).toBe(2);
+    expect(result.attempts).toBe(3);
   });
 
   it('asks again with the problems of the step until it is right', async () => {
@@ -505,7 +513,7 @@ describe('generateTeam', () => {
       stream,
       onAttempt: (info) => attempts.push(info),
     });
-    expect(stream).toHaveBeenCalledTimes(3);
+    expect(stream).toHaveBeenCalledTimes(4);
     expect(result.errors).toEqual([]);
     expect(result.parts.squad.attempts).toBe(2);
     expect(result.parts.look.attempts).toBe(1);
@@ -521,7 +529,7 @@ describe('generateTeam', () => {
     bad.players[0].name = 'MARADONAA';
     const stream = fakeStream([bad, bad]);
     const result = await generateTeam({ userPrompt: 'p', settings, stream, maxAttempts: 2 });
-    expect(stream).toHaveBeenCalledTimes(3);
+    expect(stream).toHaveBeenCalledTimes(4);
     expect(result.errors.join()).toContain('MARADONAA');
     expect(result.team.players[0].name).toBe('MARADONA');
   });
@@ -544,6 +552,23 @@ describe('generateTeam', () => {
     expect(again.team.uniforms.home.shirt[2]).toEqual(c(248, 0, 0));
     expect(again.team.predominantColor).toBe(2);
     expect(again.attempts).toBe(1);
+    // the crest alone
+    const crest = fakeStream([
+      {
+        ...validTeam(),
+        flagDesign: { template: 'shapes', shapes: ['bg 1', 'circle 12 8 5 2'], grid: [] },
+      },
+    ]);
+    const third = await generateTeam({
+      userPrompt: 'p',
+      settings,
+      stream: crest,
+      parts: ['flag'],
+      previous: again,
+    });
+    expect(crest).toHaveBeenCalledTimes(1);
+    expect(third.team.flagTemplate).toBe('shapes');
+    expect(third.team.uniforms.home.shirt[2]).toEqual(c(248, 0, 0));
   });
 
   it('keeps the finished steps when a later one fails', async () => {
@@ -563,7 +588,8 @@ describe('generateTeam', () => {
       parts: ['look'],
       previous: err.partial,
     });
-    expect(resume).toHaveBeenCalledTimes(1);
+    // look was asked, and the crest that never ran
+    expect(resume).toHaveBeenCalledTimes(2);
     expect(result.team.players).toHaveLength(15);
   });
 
@@ -574,12 +600,12 @@ describe('generateTeam', () => {
     });
     const fallback = { ...settings, model: 'no-schema-model' };
     const result = await generateTeam({ userPrompt: 'p', settings: fallback, stream });
-    expect(result).toMatchObject({ attempts: 2, structured: false });
-    expect(stream).toHaveBeenCalledTimes(3);
+    expect(result).toMatchObject({ attempts: 3, structured: false });
+    expect(stream).toHaveBeenCalledTimes(4);
     // remembered for the next generation
     await generateTeam({ userPrompt: 'p', settings: fallback, stream });
-    expect(stream).toHaveBeenCalledTimes(5);
-    expect(stream.mock.calls[3][0].schema).toBeNull();
+    expect(stream).toHaveBeenCalledTimes(7);
+    expect(stream.mock.calls[4][0].schema).toBeNull();
   });
 
   it('stops on cut answers, unreadable answers and other errors', async () => {
@@ -609,11 +635,15 @@ describe('generateTeam', () => {
 });
 
 describe('step prompts and schemas', () => {
-  it('split the fields between the two steps', () => {
+  it('split the fields between the steps', () => {
     const squad = buildPartSchema(undefined, 'squad').schema;
     const look = buildPartSchema(undefined, 'look').schema;
+    const flag = buildPartSchema(undefined, 'flag').schema;
     const all = Object.keys(TEAM_OUTPUT_SCHEMA.schema.properties);
-    expect([...squad.required, ...look.required].sort()).toEqual([...all].sort());
+    expect([...squad.required, ...look.required, ...flag.required].sort()).toEqual([...all].sort());
+    expect(validateGeneratedTeam(pickPart(validTeam(), 'flag'), undefined, 'flag').errors).toEqual(
+      [],
+    );
     expect(squad.required).toEqual(Object.keys(squad.properties));
     expect(validateGeneratedTeam(pickPart(validTeam(), 'look'), undefined, 'look')).toEqual({
       errors: [],
@@ -622,7 +652,7 @@ describe('step prompts and schemas', () => {
     expect(
       validateGeneratedTeam(pickPart(validTeam(), 'squad'), undefined, 'squad').errors,
     ).toEqual([]);
-    for (const part of ['squad', 'look']) {
+    for (const part of ['squad', 'look', 'flag']) {
       const prompt = buildSystemPrompt(undefined, part);
       for (const key of Object.keys(buildPartSchema(undefined, part).schema.properties)) {
         expect(prompt).toContain(`"${key}"`);
@@ -720,7 +750,9 @@ describe('templates', () => {
     raw.flagDesign = { template: 'unicorn', grid: [] };
     expect(validateGeneratedTeam(raw).errors.join()).toContain('"unicorn" does not exist');
     raw.flagDesign = { template: 'custom', grid: [] };
-    expect(validateGeneratedTeam(raw).errors.join()).toContain('choose a template');
+    expect(validateGeneratedTeam(raw).errors.join()).toContain(
+      'use "shapes" with drawing commands',
+    );
   });
 
   it('fill empty hair/skin lists from the template, filled ones override it', () => {
@@ -976,5 +1008,75 @@ describe.skipIf(!hasRealRom)('kit shades on the real ROM', () => {
         `team ${i}`,
       ).toEqual([]);
     }
+  });
+});
+
+describe('crest drawn with shapes', () => {
+  const crest = (shapes, flagColors) => ({
+    crestIdea: 'test crest',
+    flagColors: flagColors || [c(16, 16, 16), c(248, 248, 248), c(200, 160, 0), c(0, 0, 160)],
+    flagDesign: { template: 'shapes', shapes, grid: [] },
+  });
+
+  it('renders the shapes into the flag design', () => {
+    const raw = {
+      ...validTeam(),
+      ...crest(['frame shield', 'vstripes 1 2 1 2', 'ctext CAM 6 3', 'border 3']),
+    };
+    expect(validateGeneratedTeam(raw, undefined, 'flag').errors).toEqual([]);
+    const team = sanitizeGeneratedTeam(raw);
+    expect(team.flagTemplate).toBe('shapes');
+    expect(team.crestIdea).toBe('test crest');
+    expect(team.flagDesign.grid[0][0]).toBe(0);
+    expect(team.flagDesign.grid.flat()).toContain(3);
+  });
+
+  it('sends unreadable commands and illegible letters back to the model', () => {
+    const errors = (shapes, colors) =>
+      validateGeneratedTeam(crest(shapes, colors), undefined, 'flag').errors.join('\n');
+    expect(errors(['bg 1', 'circle 12 8'])).toContain('the form is "circle CX CY R COLOR"');
+    // letters in the colour of the background
+    expect(errors(['bg 1', 'ctext ABC 6 1'])).toContain('it will not be seen');
+    // letters in a colour too close to it (dark grey on black)
+    expect(
+      errors(['bg 1', 'ctext ABC 6 2'], [c(16, 16, 16), c(48, 48, 48), c(0, 0, 0), c(0, 0, 0)]),
+    ).toContain('drawn on color 1, too close to its color');
+    // letters partly over a ring of their own colour (SCCP on a black ring)
+    expect(errors(['frame circle', 'bg 2', 'ring 12 8 8 1 2', 'ctext SCCP 6 1'])).toMatch(
+      /\d+% of it is drawn on color 1/,
+    );
+    expect(errors(['bg 1', 'text ABCD 18 0 2'])).toContain('letters are cut');
+    expect(errors(['bg 1'])).toContain('single color');
+    expect(validateGeneratedTeam(crest([]), undefined, 'flag').errors.join()).toContain(
+      'flagDesign.shapes is empty',
+    );
+  });
+
+  it('respects the flag space of the ROM', () => {
+    const { errors } = validateGeneratedTeam(
+      crest(['bg 1', 'circle 12 8 5 2']),
+      { fitsFlag: () => false },
+      'flag',
+    );
+    expect(errors.join()).toContain('does not fit in the flag space');
+  });
+
+  it('tells the crest step what to draw and how', () => {
+    const prompt = buildSystemPrompt(undefined, 'flag');
+    expect(prompt).toContain('crestIdea');
+    expect(prompt).toContain('frame shield|circle|round|full');
+    expect(prompt).toContain('ctext TEXT Y C');
+    expect(prompt).not.toContain('## Players');
+    expect(
+      buildFlagRequest(
+        'Atletico MG 2002',
+        { name: 'Atletico Mineiro', teamNameText: 'ATL.MG' },
+        {
+          uniforms: {
+            home: { shirt: [c(0, 0, 0), c(16, 16, 16), c(32, 32, 32)], shorts: [c(248, 248, 248)] },
+          },
+        },
+      ),
+    ).toContain('Its kits: home shirt #101010, home shorts #F8F8F8');
   });
 });

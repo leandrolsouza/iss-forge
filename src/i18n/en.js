@@ -1119,6 +1119,7 @@ export default {
   aiLeagueStatus_error: 'Error',
   aiLeagueGenerateOne: 'Generate',
   aiLeagueRedo: 'Redo',
+  aiLeagueRedoCrest: 'Redo crest',
   aiLeagueBrief: 'Brief of this club (what the AI uses to generate the team)',
   aiLeagueStars: 'Key players',
   aiTitle: 'AI Team Generator',
@@ -1163,7 +1164,8 @@ export default {
   aiRestorePrompt: 'Back to the original text',
   aiStage: 'step {current} of {total}: {part}',
   aiPartSquad: 'squad',
-  aiPartLook: 'kits and flag',
+  aiPartLook: 'kits',
+  aiPartFlag: 'crest / flag',
   aiRegenerate: 'Redo {part}',
   aiRegenerateHint:
     'Generates only this part again with the current prompt text; the rest is kept.',

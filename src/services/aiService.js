@@ -170,8 +170,8 @@ function descriptionSpaceHint(budget) {
   return `at most ${chars} characters (the description area of the ROM is shared by all teams)`;
 }
 
-/** Steps of a generation: the squad first, then its visual identity */
-export const AI_PARTS = ['squad', 'look'];
+/** Steps of a generation: the squad, its kits and hair/skin, then its crest / flag */
+export const AI_PARTS = ['squad', 'look', 'flag'];
 
 const SQUAD_EXAMPLE = `  "name": "Team Display Name",
   "teamNameText": "TEAMNAME",
@@ -223,12 +223,15 @@ const LOOK_EXAMPLE = `  "uniforms": {
     "first": { "hair": [], "skin": [] },
     "second": { "hair": [], "skin": [] },
     "goalkeeper": { "hair": [{"r":40,"g":24,"b":8}], "skin": [] }
-  },
+  }`;
+
+const FLAG_EXAMPLE = `  "crestIdea": "Shield with black and white vertical stripes, a white band across the middle with the black initials CAM.",
   "flagColors": [
-    {"r":0,"g":0,"b":128}, {"r":248,"g":248,"b":248}, {"r":200,"g":0,"b":0}, {"r":248,"g":200,"b":0}
+    {"r":16,"g":16,"b":16}, {"r":248,"g":248,"b":248}, {"r":200,"g":160,"b":0}, {"r":0,"g":0,"b":0}
   ],
   "flagDesign": {
-    "template": "horizontal-3",
+    "template": "shapes",
+    "shapes": ["frame shield", "vstripes 1 2 1 2 1 2", "rect 4 5 16 7 2", "ctext CAM 6 1", "border 3"],
     "grid": []
   }`;
 
@@ -323,44 +326,84 @@ NOTE: in this ROM slot the goalkeeper kit and the goalkeeper hair/skin are SHARE
 - first (home kit) and second (away kit): hair 1 color, skin 5 colors (darkest → lightest)
 - goalkeeper: hair 1 color, skin 3 colors
 - Prefer the template closest to the players; custom skin gradients should look natural (shadow → base → highlight)
-
-## Flag (flagColors, flagDesign)
-- flagColors: exactly 4 palette colors. In the design, cell value N uses flagColors[N-1]; 0 = transparent.
-- flagDesign.template: a ready-made design from the list below, or "${CUSTOM_TEMPLATE}".
-- flagDesign.grid: [] to use the template as it is. For "${CUSTOM_TEMPLATE}": EXACTLY 16 rows × 24 columns of 0-4 (count them).
-- Use a template when one matches the flag (stripes, crosses, circle, diamond...) and choose flagColors for its numbers. Draw a custom grid only for designs no template has (emblems, letters, animals...).
-- Custom designs: a RECOGNIZABLE shape/symbol, not just stripes. National teams: the real flag. Fictional teams: an iconic symbol (star, shield, bolt, skull...). Color 1 as background, 2-4 for the design. Simple, bold silhouettes read best at 16×24 and take less ROM space.
-Templates (preview: 8 rows of 12 digits separated by "/", each digit = a 2×2 block of the design):
-${flagTemplateLines()}
 ${otherKitsSection(ctx.otherKits)}`;
+}
+
+/** Crest / flag step: what to draw and how (shape commands, templates, grid) */
+function flagSections() {
+  return `## Colors (SNES 5-bit RGB)
+Every color is {"r","g","b"}. All values must be multiples of 8, range 0-248.
+
+## What to draw (crestIdea)
+The game shows this picture next to the team name: 24 pixels wide, 16 tall, 4 colors.
+- First write crestIdea: describe the picture you will draw. A real CLUB: its real crest (silhouette, main elements, initials, colors). A NATIONAL team: its real flag. A fictional team: a simple iconic emblem matching its theme.
+- Then draw it. At 24×16 only the essentials can be seen: the silhouette, 1 or 2 main elements, at most 4-5 letters. Leave out small details (stars above the crest, mottos, years).
+- Colors come from the real crest; they usually match the kits.
+
+## flagColors
+Exactly 4 colors. In the drawing, color N is flagColors[N-1]. Put next to each other only colors with strong contrast (letters and emblems must stand out from what is under them).
+
+## flagDesign.template = "shapes" (best for crests and emblems)
+Draw with commands (one string each, in order, later ones on top). The grid is x 0-24 (left → right) by y 0-16 (top → bottom); its center is 12,8. C = color 1-4.
+- frame shield|circle|round|full: silhouette of the crest; outside it stays transparent. "shield" and "circle" cover x 4-20; "full" (default) is a whole rectangle like a flag; "round" has rounded corners.
+- bg C: fill the frame
+- hstripes C1 C2 ...: equal horizontal bands over the frame; vstripes C1 C2 ...: equal vertical bands
+- rect X Y W H C: rectangle with top-left X,Y and size W×H
+- circle CX CY R C; ring CX CY R C [T]: circle outline T pixels thick; ellipse CX CY RX RY C
+- tri X1 Y1 X2 Y2 X3 Y3 C; poly X1,Y1 X2,Y2 X3,Y3 ... C: filled polygon
+- star CX CY R C: 5-pointed star
+- line X1 Y1 X2 Y2 C [W]; cross C [W]; saltire C [W]: diagonal cross
+- text TEXT X Y C: letters 3 wide × 5 tall, 1 pixel apart (A-Z 0-9 . space), top-left X,Y; ctext TEXT Y C: centered in the frame. 4 letters take 15 pixels, 6 letters 23.
+- border C: 1-pixel outline of the frame, drawn last
+Examples:
+- Club, striped shield with initials: ["frame shield", "vstripes 1 2 1 2 1 2", "rect 4 5 16 7 2", "ctext CAM 6 1", "border 3"]
+- Club, round badge with a star: ["frame circle", "bg 1", "ring 12 8 8 2 2", "star 12 8.5 5 3"]
+- Club, shield split in two halves with a letter: ["frame shield", "bg 1", "rect 12 0 8 16 2", "ctext S 6 3", "border 3"]
+- Japan: ["bg 1", "circle 12 8 5 2"]
+- Brazil: ["bg 1", "poly 12,1 22,8 12,15 2,8 2", "circle 12 8 4 3"]
+
+## Other ways
+- template: a ready-made flag design from the list below (stripes, crosses...), shapes [] and grid []. Good for simple national flags.
+- "${CUSTOM_TEMPLATE}": paint the grid yourself, EXACTLY 16 rows × 24 numbers 0-4. Only when shapes cannot draw it.
+Templates (preview: 8 rows of 12 digits separated by "/", each digit = a 2×2 block):
+${flagTemplateLines()}
+`;
 }
 
 const PART_INTROS = {
   all: 'Output a single JSON object that will be imported directly into the game ROM.',
   squad:
     'This step creates the SQUAD of the team: names, formation, players and the selection-screen description. Kits, hair/skin colors and flag are made in another step: do not include them.',
-  look: 'This step creates the VISUAL IDENTITY of a team whose squad is already made: kits, hair/skin colors and flag. Do not include players or names.',
+  look: 'This step creates the KITS and HAIR/SKIN colors of a team whose squad is already made. Do not include players, names or the flag.',
+  flag: 'This step creates the CREST / FLAG of a team (24×16 pixels, 4 colors). Do not include anything else.',
 };
 
 const PART_CLOSINGS = {
-  all: `Include ALL ${AI_LIMITS.players} players and ALL description/uniform/hairSkin/flag data. Output valid JSON only.`,
+  all: `Include ALL ${AI_LIMITS.players} players and ALL description/uniform/hairSkin/crest data. Output valid JSON only.`,
   squad: `Include ALL ${AI_LIMITS.players} players and the description. Output valid JSON only.`,
-  look: 'Include ALL uniform, hairSkin and flag data. Output valid JSON only.',
+  look: 'Include ALL uniform and hairSkin data. Output valid JSON only.',
+  flag: 'Write crestIdea first, then flagColors and flagDesign. Output valid JSON only.',
 };
 
 /**
  * Build the system prompt with the ROM constraints of one step (or of the whole team).
  * The fields and their order match buildTeamSchema (aiTeamSchema.js).
  * @param {object} [context] - limits of the target slot (buildAiContext)
- * @param {'all'|'squad'|'look'} [part]
+ * @param {'all'|'squad'|'look'|'flag'} [part]
  */
 export function buildSystemPrompt(context = DEFAULT_AI_CONTEXT, part = 'all') {
   const ctx = { ...DEFAULT_AI_CONTEXT, ...context };
+  const has = (p) => part === 'all' || part === p;
   const sections = [
-    part !== 'look' ? squadSections(ctx) : '',
-    part !== 'squad' ? lookSections(ctx) : '',
+    has('squad') ? squadSections(ctx) : '',
+    has('look') ? lookSections(ctx) : '',
+    has('flag') ? flagSections() : '',
   ].filter(Boolean);
-  const example = [part !== 'look' ? SQUAD_EXAMPLE : '', part !== 'squad' ? LOOK_EXAMPLE : '']
+  const example = [
+    has('squad') ? SQUAD_EXAMPLE : '',
+    has('look') ? LOOK_EXAMPLE : '',
+    has('flag') ? FLAG_EXAMPLE : '',
+  ]
     .filter(Boolean)
     .join(',\n');
   return `You are a team data generator for International Superstar Soccer (SNES, 1995). ${PART_INTROS[part]} Follow ALL constraints below.
@@ -375,7 +418,6 @@ Return ONLY a valid JSON object. No markdown fences, no explanation, no comments
 {
 ${example}
 }
-${part !== 'squad' ? `\nA custom flag instead looks like: "flagDesign": { "template": "${CUSTOM_TEMPLATE}", "grid": [[1,1,1, ... 24 numbers], ... 16 rows] }\n` : ''}
 ${PART_CLOSINGS[part]}`;
 }
 
@@ -397,7 +439,40 @@ export function buildLookRequest(userPrompt, squad) {
     special.length
       ? `Special players (own hair/skin: ${squad.specialHair || 'regular'} / ${squad.specialSkin || 'regular'}): ${special.join(', ')}. The team hair/skin colors are for the others.`
       : '',
-    'Now create only its kits, hair/skin colors and flag.',
+    'Now create only its kits and hair/skin colors.',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+/** "#RRGGBB" of the middle shade of a colour list */
+const mainHex = (list) => {
+  const c = readColor(Array.isArray(list) ? list[Math.floor(list.length / 2)] : null);
+  return c
+    ? `#${[c.r, c.g, c.b].map((v) => v.toString(16).padStart(2, '0').toUpperCase()).join('')}`
+    : null;
+};
+
+/**
+ * User prompt of the crest step: the request plus the team made so far (name, kit
+ * colours), so the crest is the team's and its colours match.
+ */
+export function buildFlagRequest(userPrompt, squad, look) {
+  const name = squad?.name || squad?.teamNameText;
+  const u = look?.uniforms;
+  const kits = [
+    mainHex(u?.home?.shirt) && `home shirt ${mainHex(u.home.shirt)}`,
+    mainHex(u?.home?.shorts) && `home shorts ${mainHex(u.home.shorts)}`,
+    mainHex(u?.away?.shirt) && `away shirt ${mainHex(u.away.shirt)}`,
+  ].filter(Boolean);
+  if (!name && !kits.length) return userPrompt;
+  return [
+    userPrompt,
+    '',
+    '---',
+    name ? `Team: "${name}" (menu name ${squad?.teamNameText || '?'}).` : '',
+    kits.length ? `Its kits: ${kits.join(', ')}.` : '',
+    'Now create only its crest / flag.',
   ]
     .filter(Boolean)
     .join('\n');
@@ -573,6 +648,7 @@ export function sanitizeGeneratedTeam(data, context = DEFAULT_AI_CONTEXT) {
   // Sanitize flag design (a drawn grid, or the chosen template)
   const flag = resolveFlagDesign(data.flagDesign);
   team.flagTemplate = flag.template;
+  team.crestIdea = typeof data.crestIdea === 'string' ? data.crestIdea.trim() : '';
   team.flagDesign = flag.grid ? { grid: normalizeFlagGrid(flag.grid) } : null;
 
   // Which team changes kit when both wear the same colour: follows the home shirt
@@ -803,8 +879,8 @@ function generatePart({ part, userPrompt, settings, context, state, ...options }
 }
 
 /**
- * Generate a team in two steps: the squad (names, formation, players, description),
- * then its visual identity (kits, hair/skin, flag), each with its own corrections.
+ * Generate a team in three steps: the squad (names, formation, players, description),
+ * its kits and hair/skin, then its crest / flag, each with its own corrections.
  * `parts` + `previous` regenerate one step and keep the other one.
  *
  * @param {object} options
@@ -849,7 +925,12 @@ export async function generateTeam({
     try {
       const result = await generatePart({
         part,
-        userPrompt: part === 'look' ? buildLookRequest(userPrompt, raw.squad) : userPrompt,
+        userPrompt:
+          part === 'look'
+            ? buildLookRequest(userPrompt, raw.squad)
+            : part === 'flag'
+              ? buildFlagRequest(userPrompt, raw.squad, raw.look)
+              : userPrompt,
         settings,
         context,
         onChunk,
@@ -869,7 +950,7 @@ export async function generateTeam({
     }
   }
 
-  const team = sanitizeGeneratedTeam({ ...raw.squad, ...raw.look }, context);
+  const team = sanitizeGeneratedTeam({ ...raw.squad, ...raw.look, ...raw.flag }, context);
   const all = AI_PARTS.map((p) => done[p]).filter(Boolean);
   return {
     team,

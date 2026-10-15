@@ -93,11 +93,21 @@ export function teamPalettes(team, kit) {
  * @param {number} [options.teamIndex] - picks the per-team detail tile
  * @param {[number, number]} [options.cell] - image size; the feet go at the bottom centre
  * @param {number|null} [options.background] - raw colour, null = transparent
+ * @param {boolean} [options.details] - false = leave out the pieces drawn with
+ *   `extraPalette` (the per-team crest; the referee has none)
  * @returns {{ width: number, height: number, data: Uint8ClampedArray } | null}
  */
 export function renderPlayer(
   rom,
-  { pose, palette, extraPalette = palette, teamIndex = 0, cell = [40, 64], background = null },
+  {
+    pose,
+    palette,
+    extraPalette = palette,
+    teamIndex = 0,
+    cell = [40, 64],
+    background = null,
+    details = true,
+  },
 ) {
   const [w, h] = cell;
   const ordinal = FLAG_DESIGN_ORDINALS[teamIndex] ?? 0;
@@ -110,8 +120,32 @@ export function renderPlayer(
   cg.set(extraPalette.subarray(0, 16), 192);
   const img = createImage(w, h);
   if (background !== null) fillImage(img, background);
-  drawSprites(img, cg, vram, p.sprites);
+  // details = the pieces drawn with the extra palette (the crest on the chest)
+  const sprites = details ? p.sprites : p.sprites.filter((sp) => !(sp[4] & 4));
+  drawSprites(img, cg, vram, sprites);
   return { width: w, height: h, data: img.data };
+}
+
+/**
+ * 16-colour palette of the referee and linesmen (OBJ row 14): the 15 colours of the
+ * `referee` match palette (hair, skin x5, shirt x3, shorts x3, socks x2, shadow) after
+ * the transparent colour 0 — the same layout as the outfield players.
+ */
+export function refereePalette(referee) {
+  return Uint16Array.from([0, ...Array.from({ length: 15 }, (_, i) => referee?.[i] ?? 0)]);
+}
+
+/**
+ * Front and back of the referee (the game draws him with the players' frames and
+ * OBJ row 14; there is no team crest on his shirt).
+ * @param {object} rom - RomParser
+ * @param {number[]} referee - 15 raw colours (MATCH_PALETTES referee)
+ * @returns {{ front, back }} images from renderPlayer
+ */
+export function renderReferee(rom, referee, { background = PREVIEW_GRASS } = {}) {
+  const palette = refereePalette(referee);
+  const draw = (pose) => renderPlayer(rom, { pose, palette, background, details: false });
+  return { front: draw(PREVIEW_POSES.front), back: draw(PREVIEW_POSES.back) };
 }
 
 /**

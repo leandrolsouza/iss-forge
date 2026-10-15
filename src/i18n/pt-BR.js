@@ -866,6 +866,12 @@ export default {
   mpRefPreset_green: 'Verde',
   mpRefPreset_blue: 'Azul',
   mpRefPreset_pink: 'Rosa',
+  mpRefereePreviewHint:
+    'Previa com os quadros de animacao dos jogadores, que o jogo tambem usa para o arbitro e os bandeirinhas.',
+  mpSceneStand: 'Arquibancada e muro',
+  mpSceneGoal: 'Gol e fotografos',
+  mpScenePreviewHint:
+    'Cenas da partida desenhadas com os graficos do jogo e estas cores (o mapa foi capturado de uma partida, porque o jogo monta o cenario enquanto a camera anda). O gramado usa a paleta do tipo B com sol. Passe o mouse sobre o nome de uma paleta para destacar o que ela pinta.',
   mpStadium: 'Estadio',
   mpStadiumHelp:
     'Valem para todos os tipos de gramado e climas. Para ver as partes no jogo, procure o muro em volta do campo, a rede do gol e os fotografos atras da linha de fundo.',
@@ -891,6 +897,16 @@ export default {
   mpCrowd_shirtB: 'Camisa B',
   mpCrowd_shadow: 'Sombra',
   mpCrowdFromUniform: 'Usar cores do uniforme do time',
+  mpCrowdPreset_original: 'Original',
+  mpCrowdPreset_redWhite: 'Vermelho e branco',
+  mpCrowdPreset_blueWhite: 'Azul e branco',
+  mpCrowdPreset_skyWhite: 'Celeste e branco',
+  mpCrowdPreset_greenYellow: 'Verde e amarelo',
+  mpCrowdPreset_redYellow: 'Vermelho e amarelo',
+  mpCrowdPreset_orange: 'Laranja',
+  mpCrowdPreset_blackWhite: 'Preto e branco',
+  mpCrowdPresetOriginalHelp:
+    'Volta as cores originais desta paleta (sem mudar qual paleta o time usa)',
 
   // Title screen
   tsSubtitle: 'Cores e jogadores da tela de abertura',

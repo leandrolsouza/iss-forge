@@ -3,10 +3,30 @@ import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import RomParser from '../rom/RomParser';
 import { CROWD_PARTS, TEAMS } from '../rom/constants';
-import { rgbToRaw, shadeRamp } from '../rom/palettes';
+import { hexToRaw, rgbToRaw, shadeRamp } from '../rom/palettes';
+import { STAND_SCENE, matchSceneColors } from '../rom/stadiumPreview';
 import { IconPlayers } from './Icons';
 import { ColorSwatch, SwatchRow } from './ColorSwatch';
+import MatchScenePreview from './MatchScenePreview';
 import '../styles/match-palettes.css';
+
+/** BG palette row of each fan group (to highlight it in the preview) */
+const GROUP_ROWS = [[5], [6]];
+
+/**
+ * Crowd presets: two shirt colours spread over the 4 shirt ramps (group 1 = main /
+ * second, group 2 = second / main), so the stand mixes both. `null` = original palette.
+ */
+const CROWD_PRESETS = [
+  { id: 'original', shirts: null },
+  { id: 'redWhite', shirts: ['#e01010', '#f8f8f8'] },
+  { id: 'blueWhite', shirts: ['#2050f0', '#f8f8f8'] },
+  { id: 'skyWhite', shirts: ['#68b8f8', '#f8f8f8'] },
+  { id: 'greenYellow', shirts: ['#10a040', '#f8e000'] },
+  { id: 'redYellow', shirts: ['#e01010', '#f8d000'] },
+  { id: 'orange', shirts: ['#f87000', '#f8f8f8'] },
+  { id: 'blackWhite', shirts: ['#383838', '#f8f8f8'] },
+];
 
 /** Brightest colour of a uniform part ({ r, g, b } list) as a raw SNES colour */
 function brightestRaw(colors) {
@@ -19,6 +39,7 @@ export default function CrowdPaletteEditor() {
   const { t } = useI18n();
   const { romParser, matchPalettes, teams, handleMatchPaletteChange } = useRom();
   const [teamIndex, setTeamIndex] = useState(0);
+  const [highlight, setHighlight] = useState(null);
 
   const originals = useMemo(
     () => (romParser ? new RomParser(romParser.getOriginalData()).readMatchPalettes() : null),
@@ -54,15 +75,8 @@ export default function CrowdPaletteEditor() {
     setColors(next);
   };
 
-  const fromUniform = () => {
-    const u = teams[teamIndex]?.uniforms;
-    if (!u) return;
-    const picks = [
-      [0, 'shirtA', brightestRaw(u.home?.shirt)],
-      [0, 'shirtB', brightestRaw(u.away?.shirt)],
-      [15, 'shirtA', brightestRaw(u.home?.shorts)],
-      [15, 'shirtB', brightestRaw(u.home?.socks)],
-    ];
+  /** Paint shirt ramps: picks = [rowOffset, 'shirtA'|'shirtB', raw | null] */
+  const paintShirts = (picks) => {
     const next = [...colors];
     picks.forEach(([rowOffset, key, raw]) => {
       if (raw === null) return;
@@ -72,6 +86,31 @@ export default function CrowdPaletteEditor() {
         .forEach((v, i) => (next[rowOffset + part.from + i] = v));
     });
     setColors(next);
+  };
+
+  const fromUniform = () => {
+    const u = teams[teamIndex]?.uniforms;
+    if (!u) return;
+    paintShirts([
+      [0, 'shirtA', brightestRaw(u.home?.shirt)],
+      [0, 'shirtB', brightestRaw(u.away?.shirt)],
+      [15, 'shirtA', brightestRaw(u.home?.shorts)],
+      [15, 'shirtB', brightestRaw(u.home?.socks)],
+    ]);
+  };
+
+  const applyPreset = ({ shirts }) => {
+    if (!shirts) {
+      setColors([...originals.crowds[n]]);
+      return;
+    }
+    const [main, second] = shirts.map(hexToRaw);
+    paintShirts([
+      [0, 'shirtA', main],
+      [0, 'shirtB', second],
+      [15, 'shirtA', second],
+      [15, 'shirtB', main],
+    ]);
   };
 
   const paletteLabel = (m) => {
@@ -136,9 +175,44 @@ export default function CrowdPaletteEditor() {
             </p>
           )}
 
+          <div className="mp-scene-row">
+            <MatchScenePreview
+              scene={STAND_SCENE}
+              colors={matchSceneColors(matchPalettes, teamIndex)}
+              highlight={highlight}
+              label={`${t('mpSceneStand')} · ${teamName(teamIndex)}`}
+            />
+          </div>
+          <p className="mp-hint">{t('mpScenePreviewHint')}</p>
+
+          <div className="mp-presets">
+            <span>{t('mpGrassPresets')}</span>
+            {CROWD_PRESETS.map((p) => (
+              <button
+                key={p.id}
+                className="kit-btn"
+                title={p.shirts ? undefined : t('mpCrowdPresetOriginalHelp')}
+                onClick={() => applyPreset(p)}
+              >
+                {p.shirts && (
+                  <span className="mp-preset-chips" aria-hidden="true">
+                    {p.shirts.map((hex) => (
+                      <span key={hex} className="mp-preset-chip" style={{ background: hex }} />
+                    ))}
+                  </span>
+                )}
+                {t(`mpCrowdPreset_${p.id}`)}
+              </button>
+            ))}
+          </div>
+
           {[0, 15].map((rowOffset, r) => (
             <div key={rowOffset} className="mp-crowd-row">
-              <div className="mp-crowd-row-title">
+              <div
+                className="mp-crowd-row-title mp-highlightable"
+                onMouseEnter={() => setHighlight(GROUP_ROWS[r])}
+                onMouseLeave={() => setHighlight(null)}
+              >
                 {t('mpCrowdRow')} {r + 1}
               </div>
               {CROWD_PARTS.map(({ key, from, count }) => (

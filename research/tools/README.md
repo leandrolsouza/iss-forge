@@ -16,6 +16,8 @@ Scripts de apoio à engenharia reversa. **Não fazem parte do app.**
 | `screen-check.mjs` | Desenha as receitas de `SCREEN_VIEWS` (`src/rom/screenView.js`) e compara com screenshots do emulador; grava `check_<id>.png` (editor, emulador, diferenças). |
 | `ext-loader.mjs` | Hook do Node (`--import`) para os scripts importarem os módulos do app, cujos imports não têm extensão. |
 | `wram-corrupt-search.cjs` | Mesma busca, mas compara bytes da WRAM em vez da tela: acha dados que o jogo descomprime/expande na WRAM (ex.: a lista de sprites do logo em `$7E:5000`, ver `../title-screen.md`). Use um estado salvo antes da tela ser montada. |
+| `scene-capture.mjs` | Recorta um retângulo dos mapas BG2/BG1 de um save state da partida (`node scene-capture.mjs estado.st x0 y0 colunas linhas nome`, coordenadas do BG2 em pixels), acha na ROM os tiles crus trocados durante o jogo e confere que o desenho só com a ROM é idêntico (`diffPixels: 0`). Gera `nome.json`. |
+| `scene-gen.mjs` | Junta `stand.json` e `goal120.json` em `src/rom/matchScenes.js` (cenas das prévias de Estádio e Torcida). |
 
 ## Técnica usada nas paletas
 

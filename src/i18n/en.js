@@ -863,6 +863,12 @@ export default {
   mpRefPreset_green: 'Green',
   mpRefPreset_blue: 'Blue',
   mpRefPreset_pink: 'Pink',
+  mpRefereePreviewHint:
+    "Preview with the players' animation frames, which the game also uses for the referee and the linesmen.",
+  mpSceneStand: 'Stand and wall',
+  mpSceneGoal: 'Goal and photographers',
+  mpScenePreviewHint:
+    "Match scenes drawn with the game's graphics and these colours (the map was captured from a match, because the game builds the scenery while the camera scrolls). The grass uses the type B sunny palette. Hover over a palette name to highlight what it paints.",
   mpStadium: 'Stadium',
   mpStadiumHelp:
     'Shared by every pitch type and weather. In-game, look at the wall around the pitch, the goal net and the photographers behind the goal line.',
@@ -888,6 +894,16 @@ export default {
   mpCrowd_shirtB: 'Shirt B',
   mpCrowd_shadow: 'Shadow',
   mpCrowdFromUniform: "Use the team's kit colours",
+  mpCrowdPreset_original: 'Original',
+  mpCrowdPreset_redWhite: 'Red and white',
+  mpCrowdPreset_blueWhite: 'Blue and white',
+  mpCrowdPreset_skyWhite: 'Sky blue and white',
+  mpCrowdPreset_greenYellow: 'Green and yellow',
+  mpCrowdPreset_redYellow: 'Red and yellow',
+  mpCrowdPreset_orange: 'Orange',
+  mpCrowdPreset_blackWhite: 'Black and white',
+  mpCrowdPresetOriginalHelp:
+    "Restores this palette's original colours (keeps the palette the team uses)",
 
   // Title screen
   tsSubtitle: 'Colours and players of the opening screen',

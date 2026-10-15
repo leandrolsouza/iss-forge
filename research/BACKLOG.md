@@ -213,8 +213,11 @@ sugerida: ~~5.1~~ → ~~5.2~~ → prévia real do jogador (5.3) → resto.
     cenário e do resultado do treino (sem dump; usam a do treino). Detalhes em `game-texts.md`, seção 6.
   - ~~Gramado da partida real.~~ Feito em parte: `src/rom/pitchPreview.js` desenha a grama com os tiles
     da partida (lista `0x1006C`) e o padrão de corte lido da VRAM; as linhas são um esquema (o jogo monta o
-    tilemap em perspectiva por código). Falta: tiles dos tipos A/C (sem dump), linhas reais, bola e árbitro
+    tilemap em perspectiva por código). Falta: tiles dos tipos A/C (sem dump), linhas reais e bola
     com sprites. Detalhes em `match-palettes.md`, "Gráficos do gramado".
+  - ~~Prévias de Árbitro, Estádio e Torcida.~~ Feito: árbitro com os quadros dos jogadores; arquibancada
+    (torcida + muro) e gol (rede + fotógrafos) com mapas recortados de save states e os tiles da ROM.
+    Passar o mouse no nome de uma paleta destaca o que ela pinta. Ver `match-palettes.md`, "Prévias".
   - ~~Conferir no emulador que editar as cores da bandeira muda o escudo da camisa.~~ Conferido.
 
 ### 5.4 Acabamento (feito em grande parte, out/2026)

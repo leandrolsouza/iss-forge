@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-10-15
+
+### Added
+
+- Referee preview: the referee drawn front and back with the game's own player frames and the
+  edited referee palette (no team crest on the shirt)
+- Stadium preview: two match scenes drawn with the real match graphics — the main stand with the
+  perimeter wall, and the left goal with the net and the photographers — following every colour edit
+- Crowd preview: the main stand painted with the crowd palette of the selected team
+- Crowd presets (Original, red and white, blue and white, sky blue and white, green and yellow,
+  red and yellow, orange, black and white): two shirt colours spread over both fan groups, like
+  the presets of the other match palette screens
+- Hovering a palette name (wall and net, photographers, fan groups) highlights in the preview what
+  that palette paints
+- The match scenes are tilemap rectangles captured from the original game (the game builds the
+  scenery while the camera scrolls); tiles, including the ones swapped in during play, and colours
+  always come from the ROM and the editor, and render pixel-identical to the emulator
+
+---
+
 ## [1.0.7] - 2026-10-15
 
 ### Fixed
@@ -159,6 +179,8 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.1.0]: ../../releases/tag/v1.1.0
+[1.0.7]: ../../releases/tag/v1.0.7
 [1.0.6]: ../../releases/tag/v1.0.6
 [1.0.5]: ../../releases/tag/v1.0.5
 [1.0.4]: ../../releases/tag/v1.0.4

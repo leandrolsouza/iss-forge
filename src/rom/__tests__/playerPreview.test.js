@@ -9,6 +9,8 @@ import {
   keeperPalette,
   teamPalettes,
   renderTeamKit,
+  renderReferee,
+  refereePalette,
   SHADOW_COLOR,
 } from '../playerPreview';
 
@@ -150,5 +152,39 @@ describe.skipIf(!existsSync(REAL_ROM))('player previews (real ROM)', () => {
     const edited = structuredClone(team);
     edited.uniforms.home.shirt[1] = c5(31, 0, 31);
     expect(has(renderTeamKit(rom, edited, ger, 'home').front, rawOf(31, 0, 31))).toBe(true);
+  });
+
+  it('draws the referee with the referee palette and no team crest', () => {
+    const rom = load();
+    const referee = [...rom.readMatchPalettes().referee];
+    const raws = (img) => {
+      const s = new Set();
+      for (let i = 0; i < img.data.length; i += 4)
+        if (img.data[i + 3])
+          s.add(
+            (img.data[i] >> 3) | ((img.data[i + 1] >> 3) << 5) | ((img.data[i + 2] >> 3) << 10),
+          );
+      return s;
+    };
+    const { front, back } = renderReferee(rom, referee, { background: null });
+    for (const img of [front, back]) {
+      const used = raws(img);
+      expect(used.size).toBeGreaterThan(5);
+      // every pixel comes from the referee palette (the crest would bring other colours)
+      expect([...used].every((c) => referee.includes(c))).toBe(true);
+    }
+    // an edited shirt shade shows up
+    referee[7] = rawOf(31, 31, 0);
+    expect(
+      raws(renderReferee(rom, referee, { background: null }).front).has(rawOf(31, 31, 0)),
+    ).toBe(true);
+  });
+});
+
+describe('referee palette', () => {
+  it('puts the 15 referee colours after the transparent colour', () => {
+    const p = refereePalette(Array.from({ length: 15 }, (_, i) => i + 1));
+    expect(Array.from(p)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    expect(Array.from(refereePalette(null))).toEqual(Array(16).fill(0));
   });
 });

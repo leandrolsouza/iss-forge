@@ -4,9 +4,36 @@ import { useRom } from '../context/RomContext';
 import RomParser from '../rom/RomParser';
 import { REFEREE_PARTS } from '../rom/constants';
 import { hexToRaw, shadeRamp } from '../rom/palettes';
+import { renderReferee } from '../rom/playerPreview';
 import { IconUniform } from './Icons';
 import { ColorSwatch, SwatchRow } from './ColorSwatch';
+import PixelCanvas from './PixelCanvas';
 import '../styles/match-palettes.css';
+
+/** The referee drawn with the players' frames and the edited palette */
+function RefereePreview({ rom, referee }) {
+  const { t } = useI18n();
+  const images = useMemo(() => (rom ? renderReferee(rom, referee) : null), [rom, referee]);
+  if (!images) return null;
+  return (
+    <div className="player-preview mp-referee-preview">
+      {[
+        ['front', t('previewFront')],
+        ['back', t('previewBack')],
+      ].map(([view, label]) => (
+        <figure key={view} className="player-preview-item">
+          <PixelCanvas
+            image={images[view]}
+            scale={3}
+            label={`${t('mpReferee')} · ${label}`}
+            className="player-preview-canvas"
+          />
+          <figcaption>{label}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
 
 const REFEREE_PRESETS = [
   { id: 'original', kit: null },
@@ -71,27 +98,31 @@ export default function RefereePaletteEditor() {
         <section className="detail-section mp-section">
           <div className="detail-section-title">{t('mpReferee')}</div>
           <p className="mp-hint">{t('mpRefereeHelp')}</p>
-          <div className="mp-referee">
-            {REFEREE_PARTS.map(({ key, from, count }) => (
-              <div key={key} className="mp-referee-part">
-                <span className="mp-swatch-label">{t(`mpRef_${key}`)}</span>
-                <SwatchRow
-                  colors={matchPalettes.referee.slice(from, from + count)}
-                  offset={from}
-                  onChange={setColor('referee')}
-                />
-                {['shirt', 'shorts', 'socks'].includes(key) && (
-                  <label className="mp-quick" title={t('mpQuickColor')}>
-                    <span>{t('mpQuickColor')}</span>
-                    <ColorSwatch
-                      raw={matchPalettes.referee[from + count - 1]}
-                      onCommit={(v) => setRefereePart(key, v)}
-                    />
-                  </label>
-                )}
-              </div>
-            ))}
+          <div className="mp-pitch-row">
+            <RefereePreview rom={romParser} referee={matchPalettes.referee} />
+            <div className="mp-referee">
+              {REFEREE_PARTS.map(({ key, from, count }) => (
+                <div key={key} className="mp-referee-part">
+                  <span className="mp-swatch-label">{t(`mpRef_${key}`)}</span>
+                  <SwatchRow
+                    colors={matchPalettes.referee.slice(from, from + count)}
+                    offset={from}
+                    onChange={setColor('referee')}
+                  />
+                  {['shirt', 'shorts', 'socks'].includes(key) && (
+                    <label className="mp-quick" title={t('mpQuickColor')}>
+                      <span>{t('mpQuickColor')}</span>
+                      <ColorSwatch
+                        raw={matchPalettes.referee[from + count - 1]}
+                        onCommit={(v) => setRefereePart(key, v)}
+                      />
+                    </label>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
+          <p className="mp-hint">{t('mpRefereePreviewHint')}</p>
           <div className="mp-presets">
             {REFEREE_PRESETS.map((p) => (
               <button key={p.id} className="kit-btn" onClick={() => applyReferee(p)}>

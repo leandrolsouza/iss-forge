@@ -116,9 +116,29 @@ tipo B):
 - **Tipos A e C:** sem dump; usam outros tiles de corte (origem não localizada).
 - A prévia da aba Campo e Bola desenha a grama com esses tiles e o padrão, e as linhas como esquema.
 
+## Prévias de árbitro, estádio e torcida (out/2026)
+
+- **Árbitro:** na partida ele é um objeto como os jogadores (OAM com paleta OBJ 6 = linha 14 da CGRAM),
+  desenhado com os mesmos quadros de animação. A prévia (`renderReferee` em `src/rom/playerPreview.js`)
+  usa os quadros parados de frente/costas com `[0, ...referee]` e sem as peças de paleta +4 (o escudo do
+  time). A cor 15 ("extra") é a sombra.
+- **Cenas da partida** (`src/rom/matchScenes.js`, `src/rom/stadiumPreview.js`): retângulos dos mapas
+  BG2 (`$1000`) e BG1 (`$0000`) recortados de save states da demo CPU x CPU (BG1 rola sempre 16 px a mais
+  que o BG2 nos dois eixos). Arquibancada: `f240` a partir de `match.st` (Alemanha x Itália), BG2 x=104,
+  y=288, 32×20 células. Gol: `f120` da segunda demo (Holanda x Espanha), x=248, y=40, 24×32.
+- Os tiles vêm da lista `0x1006C` **mais tiles crus** que o jogo troca por DMA durante a partida (animação
+  da torcida e rede do gol em perspectiva; tiles `0xC0`-`0x12B`, `0x200`-`0x220`, `0x2A0`-`0x2B6`): ficam em
+  `rawTiles` = [primeiro tile, offset no arquivo, quantidade], achados por busca exata dos 32 bytes na ROM.
+  O desenho só com a ROM é idêntico ao da VRAM do save state.
+- Conferido com as paletas da ROM: a arquibancada bate 100% com a CGRAM do estado (torcida da Alemanha,
+  linhas 4-6), menos o gramado (aquela partida era com chuva); o gol bate 100% (torcida da Holanda).
+- **Fotógrafos:** parte da roupa deles usa a **linha 6 (torcida)**, não só a linha 1.
+- Backdrop (cor 0) da partida: `0x1CE5`, aparece nos vãos da torcida.
+
 ## Pendências / ideias
 
 - Backdrop (variante "+3", `$85:F7B5`).
+- Arquibancada do lado de baixo (perto da câmera) usa outros tiles; não está nas prévias.
 - O sistema de paletas também serve para menus. A tabela completa de descritores está em `$81:875B`-`$89E5`.
 - Separar uma paleta de torcida compartilhada exigiria um blob novo em espaço livre (31 cores + tamanho)
   e um descritor novo.

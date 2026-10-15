@@ -1,6 +1,6 @@
 {
   "name": "iss-forge",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "ISS Forge - ROM Editor for International Superstar Soccer (SNES 1995)",
   "main": "electron/main.mjs",
   "scripts": {

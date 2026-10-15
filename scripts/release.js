@@ -153,4 +153,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { validateVersion, validateAssets, publish, manifestName };
+module.exports = { validateVersion, validateAssets, publish, manifestName, gh };

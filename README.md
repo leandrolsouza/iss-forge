@@ -238,6 +238,21 @@ rerunning the failed job reuses it and replaces assets. Published releases
 are never overwritten by the workflow: ship corrections under a new version.
 Do not move an already published tag or manually publish an incomplete draft.
 
+Release Maintenance runs after each release workflow and weekly on Mondays at
+07:23 UTC (04:23 in Sao Paulo). It preserves every release, draft, prerelease,
+tag and asset. It compares the three update manifests with published file names
+and sizes, checks required installers/blockmaps and manifest fields, and adds a
+managed warning to incomplete stable releases without replacing their notes.
+The highest complete stable SemVer becomes Latest. If none is complete, Latest
+is left unchanged. Binaries are not downloaded or rehashed by this audit.
+Network or YAML parsing failures during inspection abort before applying changes.
+
+Use the Release Maintenance workflow's manual trigger for a preview; select
+`apply` to update release notes and Latest. The Actions summary lists findings
+and proposed changes. The equivalent CLI is `node scripts/release-maintenance.js`
+(preview) or `node scripts/release-maintenance.js --apply`, with `GH_REPO` and
+an authenticated GitHub CLI. Historical installers and blockmaps stay available.
+
 Windows builds currently use unsigned NSIS installers, configured with
 `win.verifyUpdateCodeSignature: false`; the updater still verifies the
 manifest's SHA-512. When code signing is configured, remove that setting.

@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2026-10-15
+
+### Added
+
+- Status bar update indicator with "Check for updates" button — shows live update state (checking, available, downloading, ready) directly in the bottom bar; clickable chips for available/downloaded states re-open the update toast
+
+---
+
 ## [1.0.4] - 2026-10-15
 
 ### Changed
@@ -121,6 +129,7 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.0.5]: ../../releases/tag/v1.0.5
 [1.0.4]: ../../releases/tag/v1.0.4
 [1.0.3]: ../../releases/tag/v1.0.3
 [1.0.2]: ../../releases/tag/v1.0.2

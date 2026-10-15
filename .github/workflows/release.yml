@@ -98,11 +98,33 @@ jobs:
           npx electron-builder --mac --publish never
 
       - name: Upload assets to release
-        run: |
-          files=$(find release -maxdepth 1 -type f \( -name "*.dmg" -o -name "*.zip" -o -name "*.blockmap" -o -name "latest-mac.yml" \) | tr '\n' ' ')
-          gh release upload ${{ github.ref_name }} $files --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const releaseId = ${{ needs.create-release.outputs.release_id }};
+            const releaseDir = path.join(process.env.GITHUB_WORKSPACE, 'release');
+            const files = fs.readdirSync(releaseDir).filter(f => {
+              return f.endsWith('.dmg') || f.endsWith('.zip') || f.endsWith('.blockmap') || f === 'latest-mac.yml';
+            });
+            for (const file of files) {
+              const filePath = path.join(releaseDir, file);
+              const stat = fs.statSync(filePath);
+              if (!stat.isFile()) continue;
+              console.log(`Uploading ${file} (${stat.size} bytes)`);
+              await github.rest.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: releaseId,
+                name: file,
+                data: fs.readFileSync(filePath),
+                headers: {
+                  'content-type': 'application/octet-stream',
+                  'content-length': stat.size,
+                },
+              });
+            }
 
   build-linux:
     needs: create-release
@@ -132,11 +154,33 @@ jobs:
           npx electron-builder --linux --publish never
 
       - name: Upload assets to release
-        run: |
-          files=$(find release -maxdepth 1 -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.blockmap" -o -name "latest-linux.yml" \) | tr '\n' ' ')
-          gh release upload ${{ github.ref_name }} $files --clobber
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const releaseId = ${{ needs.create-release.outputs.release_id }};
+            const releaseDir = path.join(process.env.GITHUB_WORKSPACE, 'release');
+            const files = fs.readdirSync(releaseDir).filter(f => {
+              return f.endsWith('.AppImage') || f.endsWith('.deb') || f.endsWith('.blockmap') || f === 'latest-linux.yml';
+            });
+            for (const file of files) {
+              const filePath = path.join(releaseDir, file);
+              const stat = fs.statSync(filePath);
+              if (!stat.isFile()) continue;
+              console.log(`Uploading ${file} (${stat.size} bytes)`);
+              await github.rest.repos.uploadReleaseAsset({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: releaseId,
+                name: file,
+                data: fs.readFileSync(filePath),
+                headers: {
+                  'content-type': 'application/octet-stream',
+                  'content-length': stat.size,
+                },
+              });
+            }
 
   publish-release:
     needs: [create-release, build-windows, build-macos, build-linux]

@@ -1079,6 +1079,9 @@ export default {
   updateChecking: 'Verificando atualizacoes...',
   updateNotAvailable: 'ISS Forge esta atualizado.',
   updateError: 'Falha ao verificar atualizacoes.',
+  statusCheckUpdates: 'Verificar atualizacao',
+  statusUpToDate: 'Atualizado',
+  statusUpdateInstall: 'Reiniciar',
 
   // Auto-Save / Backup
   backupFound: 'Backup nao salvo encontrado de {date}.',

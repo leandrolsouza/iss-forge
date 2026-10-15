@@ -29,3 +29,74 @@
 .status-item {
   opacity: 0.9;
 }
+
+/* ============================================================
+   UPDATE CHIP (status bar right side)
+   ============================================================ */
+
+.status-update {
+  font-size: var(--font-size-sm);
+  font-family: inherit;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+/* Clickable states render as <button> — reset native button styles */
+button.status-update {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.status-update--idle {
+  opacity: 0.6;
+}
+
+button.status-update--idle:hover,
+button.status-update--error:hover {
+  opacity: 1;
+}
+
+.status-update--checking {
+  opacity: 0.5;
+  animation: status-update-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes status-update-pulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 0.9; }
+}
+
+.status-update--ok {
+  color: var(--color-success, #4caf50);
+  opacity: 0.85;
+}
+
+.status-update--available {
+  color: var(--color-success, #4caf50);
+  font-weight: 600;
+  opacity: 1;
+}
+
+button.status-update--available:hover,
+button.status-update--downloaded:hover {
+  text-decoration: underline;
+}
+
+.status-update--downloading {
+  opacity: 0.8;
+}
+
+.status-update--downloaded {
+  color: var(--color-accent, #4fc3f7);
+  font-weight: 600;
+  opacity: 1;
+}
+
+.status-update--error {
+  color: var(--color-warning, #c0a000);
+  opacity: 0.85;
+}

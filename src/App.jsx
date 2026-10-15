@@ -54,6 +54,7 @@ import { useToast } from './context/ToastContext';
 import { isTeamTab } from './components/editors';
 import { OPEN_TEAM_PICKER_EVENT } from './components/TeamSelector';
 import { useI18n } from './i18n';
+import { useUpdater } from './hooks/useUpdater';
 
 const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'url', 'email', 'password', '']);
 
@@ -70,6 +71,7 @@ function isEditableFocused() {
 export default function App() {
   const { t, lang } = useI18n();
   const toast = useToast();
+  const updater = useUpdater();
   const {
     romParser,
     romInfo,
@@ -593,9 +595,19 @@ export default function App() {
         selectedTeam={
           selectedTeamIndex !== null && isTeamTab(activeTab) ? TEAMS[selectedTeamIndex]?.name : null
         }
+        updateState={updater.updateState}
+        onCheckForUpdates={updater.check}
+        onShowNotification={updater.show}
       />
 
-      <UpdateNotification />
+      <UpdateNotification
+        updateState={updater.updateState}
+        dismissed={updater.dismissed}
+        menuTriggered={updater.menuTriggered}
+        onDownload={updater.download}
+        onInstall={updater.install}
+        onDismiss={updater.dismiss}
+      />
 
       {loading && <LoadingOverlay />}
 

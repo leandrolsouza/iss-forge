@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-10-15
+
+### Fixed
+- Auto-update on Windows: download no longer fails on unsigned builds (code signature verification is now skipped)
+
+---
+
 ## [1.0.1] - 2026-10-14
 
 ### Fixed

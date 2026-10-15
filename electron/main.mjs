@@ -1064,6 +1064,10 @@ function setupAutoUpdater() {
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  // Skip code-signature verification — the app is not code-signed, so the
+  // default NSIS verifier would reject every downloaded update.
+  autoUpdater.verifyUpdateCodeSignature = async () => null;
+
   autoUpdater.on('checking-for-update', () => {
     sendUpdaterStatus('checking');
   });

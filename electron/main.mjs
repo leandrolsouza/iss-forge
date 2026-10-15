@@ -92,6 +92,7 @@ const MAIN_I18N = {
     zoomReset: 'Zoom normal',
     help: 'Ajuda',
     about: 'Sobre o ISS Forge',
+    checkForUpdates: 'Verificar Atualizações',
     openRomTitle: 'Abrir ROM do ISS',
     saveRomAsTitle: 'Salvar ROM Como',
     snesRom: 'ROM SNES',
@@ -132,6 +133,7 @@ const MAIN_I18N = {
     zoomReset: 'Reset Zoom',
     help: 'Help',
     about: 'About ISS Forge',
+    checkForUpdates: 'Check for Updates',
     openRomTitle: 'Open ISS ROM',
     saveRomAsTitle: 'Save ROM As',
     snesRom: 'SNES ROM',
@@ -231,7 +233,7 @@ function createWindow() {
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     // Provider documentation links open in the browser, with no preload privileges.
-    if (url.startsWith('https://')) shell.openExternal(url).catch(() => {});
+    if (url.startsWith('https://')) shell.openExternal(url).catch(() => { });
     return { action: 'deny' };
   });
   mainWindow.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) =>
@@ -377,6 +379,24 @@ function createMenu() {
             mainWindow.webContents.send('menu:about');
           },
         },
+        { type: 'separator' },
+        {
+          label: tr('checkForUpdates'),
+          click: () => {
+            if (!app.isPackaged) {
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: tr('checkForUpdates'),
+                message: 'Dev mode — auto-update is disabled.',
+              });
+              return;
+            }
+            mainWindow.webContents.send('menu:checkForUpdates');
+            autoUpdater.checkForUpdates().catch((err) => {
+              console.error('Menu update check failed:', err.message);
+            });
+          },
+        },
       ],
     },
   ];
@@ -510,7 +530,7 @@ ipc.handle('emulator:test', async (event, { data, extension }) => {
     else args.push(romPath);
 
     const child = spawn(exe, args, { detached: true, stdio: 'ignore', cwd: path.dirname(exe) });
-    child.on('error', () => {});
+    child.on('error', () => { });
     child.unref();
     return { success: true, path: romPath };
   } catch (err) {
@@ -525,9 +545,9 @@ ipc.handle('emulator:select', async () => {
     filters:
       process.platform === 'win32'
         ? [
-            { name: tr('programs'), extensions: ['exe'] },
-            { name: tr('allFiles'), extensions: ['*'] },
-          ]
+          { name: tr('programs'), extensions: ['exe'] },
+          { name: tr('allFiles'), extensions: ['*'] },
+        ]
         : [{ name: tr('allFiles'), extensions: ['*'] }],
   });
   if (result.canceled || !result.filePaths.length) return { success: false };

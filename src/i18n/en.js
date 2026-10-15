@@ -1071,6 +1071,9 @@ export default {
   updateReady: 'Update ready to install.',
   updateInstallRestart: 'Restart & Install',
   updateLater: 'Later',
+  updateChecking: 'Checking for updates...',
+  updateNotAvailable: 'ISS Forge is up to date.',
+  updateError: 'Update check failed.',
 
   // Auto-Save / Backup
   backupFound: 'Unsaved backup found from {date}.',

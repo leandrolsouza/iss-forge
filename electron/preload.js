@@ -73,7 +73,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updaterDownload: () => ipcRenderer.invoke('updater:download'),
   updaterInstall: () => ipcRenderer.invoke('updater:install'),
   onUpdaterStatus: (callback) => {
-    ipcRenderer.on('updater:status', (event, data) => callback(data));
+    const handler = (event, data) => callback(data);
+    ipcRenderer.on('updater:status', handler);
+    return () => ipcRenderer.removeListener('updater:status', handler);
+  },
+  onMenuCheckForUpdates: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('menu:checkForUpdates', handler);
+    return () => ipcRenderer.removeListener('menu:checkForUpdates', handler);
   },
 
   // Auto-save / Backup

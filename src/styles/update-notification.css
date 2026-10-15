@@ -21,6 +21,7 @@
     transform: translateY(10px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -81,4 +82,13 @@
   background: var(--bg-button);
   border-radius: 2px;
   transition: width 0.3s ease;
+}
+
+/* Error variant — uses warning border to distinguish from info states */
+.update-notification--error {
+  border-color: var(--color-warning, #c0a000);
+}
+
+.update-notification--error .update-notification-text {
+  color: var(--color-warning, #c0a000);
 }

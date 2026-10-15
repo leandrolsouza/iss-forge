@@ -280,7 +280,7 @@ export default {
   welcomeDropRelease: 'Solte para abrir a ROM',
   welcomeDropInvalid: 'Tipo de arquivo invalido — use .smc, .sfc ou .bin',
   welcomeDropHint: 'Aceita arquivos .smc, .sfc e .bin',
-  welcomeBetaNotice: 'Versao beta — algumas funcionalidades ainda estao em desenvolvimento.',
+
   welcomeFeatures: 'O que voce pode editar:',
   welcomePlayerNames: 'Nomes dos jogadores',
   welcomeShirtNumbers: 'Numeros das camisas',
@@ -1358,12 +1358,11 @@ export default {
   gtDrill_defence: 'Defesa',
   gtDrill_corner: 'Escanteio',
   aboutDescription: 'Editor de ROM para International Superstar Soccer',
-  aboutBetaNotice: 'Esta e uma versao beta. Algumas funcionalidades ainda estao sendo refinadas.',
+
   aboutAuthor: 'Autor',
   aboutCredits: 'Creditos',
   aboutBasedOn: 'Baseado nos trabalhos de:',
-  aboutCreditPuma: 'mapas de enderecos da ROM e pesquisa',
-  aboutCreditFalcon: 'testes e documentacao',
+
   aboutTechnology: 'Tecnologia',
   aboutNotAffiliated: 'O ISS Forge nao tem relacao com a Konami.',
   aboutTrademark: 'International Superstar Soccer e marca registrada da Konami.',

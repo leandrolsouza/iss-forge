@@ -538,7 +538,7 @@ export default function App() {
           </button>
         </div>
         <span className="app-titlebar-title">
-          ISS Forge <span className="beta-badge">BETA</span>{' '}
+          ISS Forge{' '}
           {romInfo
             ? `- ${currentProject ? currentProject.name : romInfo.fileName}${modified ? ' *' : ''}`
             : ''}

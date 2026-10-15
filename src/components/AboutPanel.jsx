@@ -19,64 +19,15 @@ export default function AboutPanel() {
         {/* Logo/Title */}
         <div className="about-header">
           <div className="about-logo">
-            <svg width="64" height="64" viewBox="0 0 512 512">
-              <defs>
-                <linearGradient id="abg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#1a5276' }} />
-                  <stop offset="100%" style={{ stopColor: '#0d2f4a' }} />
-                </linearGradient>
-              </defs>
-              <rect x="16" y="16" width="480" height="480" rx="64" fill="url(#abg)" />
-              <circle cx="256" cy="210" r="72" fill="#fff" opacity="0.9" />
-              <path
-                d="M256 155 L273 173 L267 195 L245 195 L239 173 Z"
-                fill="#2c3e50"
-                opacity="0.8"
-              />
-              <path
-                d="M285 181 L303 192 L301 215 L285 221 L273 208 Z"
-                fill="#2c3e50"
-                opacity="0.7"
-              />
-              <path
-                d="M227 181 L209 192 L211 215 L227 221 L239 208 Z"
-                fill="#2c3e50"
-                opacity="0.7"
-              />
-              <text
-                x="256"
-                y="360"
-                fontFamily="Arial, sans-serif"
-                fontSize="48"
-                fontWeight="900"
-                fill="#fff"
-                textAnchor="middle"
-              >
-                ISS
-              </text>
-              <text
-                x="256"
-                y="400"
-                fontFamily="Arial, sans-serif"
-                fontSize="32"
-                fontWeight="700"
-                fill="#2ecc71"
-                textAnchor="middle"
-              >
-                FORGE
-              </text>
-            </svg>
+            <img src="/logo.png" alt="ISS Forge" width="80" height="80" />
           </div>
-          <h1 className="about-title">
-            ISS Forge <span className="beta-badge">BETA</span>
-          </h1>
+          <h1 className="about-title">ISS Forge</h1>
           <p className="about-version">v{__APP_VERSION__}</p>
           <p className="about-description">
             {t('aboutDescription')}
             <br />
             Super Nintendo Entertainment System (1995)
           </p>
-          <p className="about-beta-notice">{t('aboutBetaNotice')}</p>
         </div>
 
         {/* Author */}
@@ -124,12 +75,6 @@ export default function AboutPanel() {
               </li>
               <li>
                 <strong>ProtonNoir</strong> — Konami SNES Compressor/Decompressor
-              </li>
-              <li>
-                <strong>Equipe Puma</strong> — {t('aboutCreditPuma')}
-              </li>
-              <li>
-                <strong>Equipe Falcon Brasil</strong> — {t('aboutCreditFalcon')}
               </li>
             </ul>
           </div>

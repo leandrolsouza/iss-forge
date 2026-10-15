@@ -205,12 +205,12 @@ iss-forge/
 
 ISS Forge includes an AI team generator supporting multiple providers:
 
-- **OpenAI-Compatible (Local)** — LM Studio, Ollama, etc.
-- **OpenAI** — GPT-4o, GPT-4o-mini
-- **Claude (Anthropic)** — Claude 4 Sonnet, Opus, Haiku
-- **Gemini (Google)** — Gemini 2.5 Pro, Flash
-- **Grok (xAI)** — Grok 3
-- **AWS Bedrock** — Claude via Bedrock
+- **OpenAI-Compatible (Local/Custom)** — LM Studio, Ollama, llama.cpp, and any OpenAI-compatible server
+- **OpenAI** — GPT-6 Astra, GPT-6.1 Sol, GPT-6 Luna, GPT-4o, GPT-4.1 and variants
+- **Claude (Anthropic)** — Claude Fable 5.1, Opus 5.5, Sonnet 5.5, Haiku 5.5 and earlier generations
+- **Gemini (Google)** — Gemini 3.6 Flash, 3.5 Flash/Lite, 3.0 Flash, 2.5 Pro/Flash, 2.0 Flash
+- **Grok (xAI)** — Grok 4.7, 4.6, 4.3, 4
+- **AWS Bedrock** — Claude (Haiku/Sonnet/Opus/Fable), Amazon Nova (Pro/Lite/Micro), Meta Llama 3.3 70B
 
 Describe the team you want in natural language and the AI generates players, uniforms, colors and flag.
 
@@ -223,40 +223,6 @@ Based on the work of:
 - **Rodrigo Mallmann Guerra** — ISS Studio (Java)
 - **Esteban Fuentealba** — Web ISS Studio (Vue/WASM)
 - **ProtonNoir** — Konami SNES Compressor/Decompressor
-- **Equipe Puma** — ROM offset maps & research
-- **Equipe Falcon Brasil** — Testing & documentation
-
-## Roadmap
-
-- [x] Player editor (names, numbers, attributes)
-- [x] Uniform editor with color preview
-- [x] Hair & skin editor
-- [x] Flag editor (design + colors)
-- [x] Flag templates + image import
-- [x] Team name editor
-- [x] Squad overview
-- [x] Team comparison
-- [x] Import/export teams (JSON)
-- [x] BPS/IPS patch export + automatic checksum fix
-- [x] Default formation & lineup editor
-- [x] Scenario mode editor
-- [x] Pitch, ball and referee palettes
-- [x] Stadium and crowd palettes
-- [x] Team descriptions, copy/swap teams, test in emulator
-- [x] All player attributes (3 speeds, attack/defence duels, goalkeeper kick)
-- [x] International Cup / World Series draws
-- [x] Training texts and menu screens translation
-- [x] Title screen: colours, teams, texts and logo import
-- [ ] Other menu graphics (see `research/BACKLOG.md`)
-- [x] AI team generator
-- [x] Screen viewer (menu screens drawn from the ROM, tile inspector)
-- [ ] Screen viewer: sprites, player lists and more screens
-- [x] Undo/Redo
-- [x] Auto-update
-- [x] Auto-backup
-- [x] Internationalization (pt-BR / en)
-- [x] Light/dark themes
-- [ ] Multi-ROM version support
 
 ## License
 

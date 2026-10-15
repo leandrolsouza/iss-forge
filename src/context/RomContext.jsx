@@ -37,6 +37,7 @@ export function RomProvider({ children }) {
     setTeams: state.setTeams,
     markModified: state.markModified,
     markSaved: state.markSaved,
+    captureSavePoint: state.captureSavePoint,
     setStatusMessage: state.setStatusMessage,
     requestLoadRom: state.requestLoadRom,
     setLoading: state.setLoading,
@@ -57,6 +58,7 @@ export function RomProvider({ children }) {
     modified: state.modified,
     teams: state.teams,
     currentProject: state.currentProject,
+    onError: (err) => toast.error(t('backupFailed'), { detail: err.message, duration: 0 }),
   });
 
   const projects = useProjects({
@@ -72,6 +74,7 @@ export function RomProvider({ children }) {
     requestLoadRom: state.requestLoadRom,
     unloadRom: state.unloadRom,
     markSaved: state.markSaved,
+    captureSavePoint: state.captureSavePoint,
     setLoading: state.setLoading,
     clearBackup: autoSave.clearBackup,
     clearProjectAutosave: autoSave.clearProjectAutosave,

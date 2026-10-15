@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import RomParser from '../RomParser';
+import { seedSupportedLayout } from './compatibilityFixture';
 import { ISS_CHAR_TABLE, ISS_CHAR_REVERSE, PLAYER_NAMES } from '../constants';
 
 describe('RomParser', () => {
@@ -7,6 +8,7 @@ describe('RomParser', () => {
   function createMockRom(size = 1048576) {
     const data = new Uint8Array(size);
     const headerOffset = size % 1024 === 512 ? 512 : 0;
+    seedSupportedLayout(data, headerOffset);
     // Write ISS internal title at LoROM header 0x7FC0
     const title = 'INTERNATIONAL SS     ';
     for (let i = 0; i < 21; i++) {

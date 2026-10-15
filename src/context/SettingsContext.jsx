@@ -5,6 +5,8 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { isElectron } from '../utils/fileHelpers';
+import { useToast } from './ToastContext';
+import { useI18n } from '../i18n';
 
 const SettingsContext = createContext(null);
 
@@ -25,6 +27,8 @@ const DEFAULT_SETTINGS = {
 };
 
 export function SettingsProvider({ children }) {
+  const toast = useToast();
+  const { t } = useI18n();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState(false);
 
@@ -45,20 +49,29 @@ export function SettingsProvider({ children }) {
   }, []);
 
   // Update a single setting and persist
-  const updateSetting = useCallback(async (key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-    if (isElectron()) {
-      await window.electronAPI.settingsSet(key, value);
-    }
-  }, []);
+  const updateSettings = useCallback(
+    async (partial) => {
+      if (!isElectron()) {
+        setSettings((prev) => ({ ...prev, ...partial }));
+        return true;
+      }
+      try {
+        const result = await window.electronAPI.settingsSetAll(partial);
+        if (!result.success) throw new Error(result.error);
+        setSettings((prev) => ({ ...prev, ...result.settings }));
+        return true;
+      } catch (err) {
+        toast.error(t('settingsSaveFailed'), { detail: err.message });
+        return false;
+      }
+    },
+    [toast, t],
+  );
 
-  // Update multiple settings at once and persist
-  const updateSettings = useCallback(async (partial) => {
-    setSettings((prev) => ({ ...prev, ...partial }));
-    if (isElectron()) {
-      await window.electronAPI.settingsSetAll(partial);
-    }
-  }, []);
+  const updateSetting = useCallback(
+    (key, value) => updateSettings({ [key]: value }),
+    [updateSettings],
+  );
 
   // Open native folder picker for export path
   const selectExportPath = useCallback(async () => {

@@ -36,8 +36,8 @@ export function saveRom(data, filePath) {
 /**
  * Open "Save As" dialog
  */
-export function saveRomAs() {
-  return window.electronAPI.saveRomAs();
+export function saveRomAs(options) {
+  return window.electronAPI.saveRomAs(options);
 }
 
 /**
@@ -144,8 +144,8 @@ export function setModifiedState(isModified) {
 /**
  * Notify main process that save operation completed
  */
-export function notifySaveComplete() {
-  window.electronAPI.notifySaveComplete();
+export function notifySaveComplete(fromClose = false) {
+  window.electronAPI.notifySaveComplete(fromClose);
 }
 
 /**

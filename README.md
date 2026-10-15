@@ -4,13 +4,11 @@
 
 <h1 align="center">ISS Forge</h1>
 
-> **BETA** — This project is in beta. Features are being added and refined continuously.
-
 <p align="center">
 
-![Status](https://img.shields.io/badge/status-beta-orange)
+![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-GPL--3.0-blue)
 
 </p>
 
@@ -20,19 +18,50 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 
 ## Screenshots
 
-<p align="center">
-  <img src="screenshots/1.png" alt="Screenshot 1" width="45%" />
-  &nbsp;&nbsp;
-  <img src="screenshots/2.png" alt="Screenshot 2" width="45%" />
-</p>
-<p align="center">
-  <img src="screenshots/3.png" alt="Screenshot 3" width="45%" />
-  &nbsp;&nbsp;
-  <img src="screenshots/4.png" alt="Screenshot 4" width="45%" />
-</p>
-<p align="center">
-  <img src="screenshots/5.png" alt="Screenshot 5" width="45%" />
-</p>
+Captured from the desktop app. Click any image to view it at full resolution.
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Players &amp; detailed attributes</strong><br />
+      <a href="screenshots/players.png"><img src="screenshots/players.png" alt="Brazil squad editor with all player attributes and the selected player's in-game stats" width="100%" /></a>
+    </td>
+    <td width="50%" align="center">
+      <strong>Projects &amp; session management</strong><br />
+      <a href="screenshots/projects.png"><img src="screenshots/projects.png" alt="ISS Forge welcome screen with independent ROM projects and import and export actions" width="100%" /></a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Uniform colours &amp; live previews</strong><br />
+      <a href="screenshots/uniforms.png"><img src="screenshots/uniforms.png" alt="Brazil home kit colour editor with front and back previews drawn from the ROM" width="100%" /></a>
+    </td>
+    <td width="50%" align="center">
+      <strong>Formation &amp; lineup</strong><br />
+      <a href="screenshots/formation.png"><img src="screenshots/formation.png" alt="Brazil 4-4-2 formation on an interactive pitch with player roles and substitute swaps" width="100%" /></a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Flag design</strong><br />
+      <a href="screenshots/flag-design.png"><img src="screenshots/flag-design.png" alt="Brazil flag pixel editor with indexed colour palette and in-game preview" width="100%" /></a>
+    </td>
+    <td width="50%" align="center">
+      <strong>Title screen customisation</strong><br />
+      <a href="screenshots/title-screen.png"><img src="screenshots/title-screen.png" alt="Title screen editor with a live game preview, logo palettes and background controls" width="100%" /></a>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <strong>Game texts &amp; translation</strong><br />
+      <a href="screenshots/game-texts.png"><img src="screenshots/game-texts.png" alt="Training instruction editor with the game's font preview and text space usage" width="100%" /></a>
+    </td>
+    <td width="50%" align="center">
+      <strong>Screen viewer &amp; tile inspector</strong><br />
+      <a href="screenshots/screen-viewer.png"><img src="screenshots/screen-viewer.png" alt="Pre-match screen drawn from the ROM with layer controls, pixel inspection and the source tile sheet" width="100%" /></a>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -62,7 +91,7 @@ ISS Forge is a visual ROM editor for International Superstar Soccer on the Super
 - **Patch Export** — Export your hack as a BPS (recommended, CRC32-validated) or IPS patch, against the opened ROM or any clean base ROM
 - **Auto Checksum** — SNES internal checksum/complement is recalculated automatically on save and patch export
 - **Auto-update** — Automatic updates via GitHub Releases
-- **Auto-backup** — Backup before saving + session recovery
+- **Auto-backup** — Backup every minute while editing, atomic saves and session recovery
 - **Undo/Redo** — Undo and redo changes
 - **Themes** — Light and dark mode
 - **Internationalization** — Portuguese (pt-BR) and English
@@ -125,8 +154,10 @@ npm run format:check
 
 ## Compatible ROMs
 
-- International Superstar Soccer (SNES) — `.smc` / `.sfc` files
-- Jikkyou World Soccer 2: Fighting Eleven (Japanese version)
+- International Superstar Soccer (Europe), 1 MB — `.smc` / `.sfc` files, with or without a 512-byte copier header
+- Hacks and translations that preserve the supported European engine and pointer layout
+
+Compatibility is checked using engine signatures and internal pointers, rather than the title alone. Other versions (including the Japanese release) and expanded/relocated layouts are rejected until their offsets are verified. Modified titles and checksums remain supported when the layout matches.
 
 ## Tech Stack
 
@@ -183,6 +214,8 @@ ISS Forge includes an AI team generator supporting multiple providers:
 
 Describe the team you want in natural language and the AI generates players, uniforms, colors and flag.
 
+In the desktop app, API keys are protected with the operating system's secure storage and are scoped to each provider and destination. Enter a replacement key and click **Save**; a stored key is never returned to the interface. Existing keys are migrated automatically. If secure storage is unavailable, a key is retained only for the current session and the settings page shows a warning. Use HTTPS endpoints, or HTTP for a server on localhost.
+
 ## Credits
 
 Based on the work of:
@@ -227,7 +260,7 @@ Based on the work of:
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+GPL-3.0-only — see [LICENSE](LICENSE) for details.
 
 ---
 

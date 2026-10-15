@@ -232,8 +232,8 @@ export default function App() {
         requestLoadRom(new Uint8Array(data.data), data.name, data.path || null),
       );
       // Saving from the quit prompt was already confirmed there
-      window.electronAPI.onMenuSave((opts) => handleSave({ confirm: !opts.fromClose }));
-      window.electronAPI.onSaveAsPath((filePath) => handleSaveToPath(filePath));
+      window.electronAPI.onMenuSave((opts) => handleSave({ ...opts, confirm: !opts.fromClose }));
+      window.electronAPI.onSaveAsPath((filePath, options) => handleSaveToPath(filePath, options));
       window.electronAPI.onMenuUndo(undo);
       window.electronAPI.onMenuRedo(redo);
       window.electronAPI.onMenuAbout?.(() => openTabGuarded('about', t('aboutTitle')));

@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   saveRom: (data, filePath) => ipcRenderer.invoke('rom:save', { data, filePath }),
-  saveRomAs: () => ipcRenderer.invoke('dialog:saveRomAs'),
+  saveRomAs: (options = {}) => ipcRenderer.invoke('dialog:saveRomAs', options),
   getCurrentPath: () => ipcRenderer.invoke('rom:getCurrentPath'),
   savePatch: (data, defaultName, format) =>
     ipcRenderer.invoke('patch:save', { data, defaultName, format }),
@@ -35,7 +35,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('menu:save', (event, opts) => callback(opts || {}));
   },
   onSaveAsPath: (callback) => {
-    ipcRenderer.on('rom:save-as-path', (event, path) => callback(path));
+    ipcRenderer.on('rom:save-as-path', (event, path, options) => callback(path, options || {}));
   },
   onRomLoadCancelled: (callback) => {
     ipcRenderer.on('rom:loadCancelled', () => callback());
@@ -54,7 +54,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App state
   setModifiedState: (isModified) => ipcRenderer.send('rom:modifiedState', isModified),
-  notifySaveComplete: () => ipcRenderer.send('rom:saveComplete'),
+  notifySaveComplete: (fromClose = false) => ipcRenderer.send('rom:saveComplete', { fromClose }),
   setLocale: (locale) => ipcRenderer.send('app:setLocale', locale),
   setTheme: (theme) => ipcRenderer.send('app:setTheme', theme),
   sendCloseResponse: (choice) => ipcRenderer.send('app:closeResponse', choice),

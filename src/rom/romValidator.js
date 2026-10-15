@@ -16,6 +16,7 @@
  */
 
 import { calculateSnesChecksum } from './checksum';
+import { hasSupportedLayout } from './romCompatibility';
 
 // Expected sizes for SNES ROMs (in bytes)
 const VALID_ROM_SIZES = [
@@ -29,8 +30,10 @@ const VALID_ROM_SIZES = [
 
 // Known ISS game titles found in the SNES internal header (21 chars, space-padded)
 const KNOWN_ISS_TITLES = [
+  'SUPER STAR SOCCER', // Internal title of ISS Europe (CRC32 6CD568A9)
   'INTERNATIONAL SS', // International Superstar Soccer (Europe)
   'JIKKYO WORLD SOCCER', // Jikkyou World Soccer 2 (Japan)
+  'JIKKYO WORLD SOCCER 2',
   'PERFECT ELEVEN', // Perfect Eleven (alternative title)
 ];
 
@@ -128,9 +131,7 @@ function calculateChecksum(data, headerOffset) {
  */
 function isKnownISSTitle(title) {
   const upper = title.toUpperCase();
-  return KNOWN_ISS_TITLES.some(
-    (known) => upper.includes(known) || known.includes(upper.substring(0, 10)),
-  );
+  return KNOWN_ISS_TITLES.some((known) => upper === known);
 }
 
 /**
@@ -199,8 +200,15 @@ export function validateRomFile(data) {
   // --- Map mode check (LoROM expected for ISS: 0x20 or 0x30) ---
   const mapMode = readMapMode(data, headerOffset);
   result.info.mapMode = mapMode;
-  if ((mapMode & 0x0f) !== 0x00 && (mapMode & 0x2f) !== 0x20) {
+  if (mapMode !== 0x20 && mapMode !== 0x30) {
     result.warnings.push('unexpectedMapMode');
+  }
+
+  // Never apply the European offsets to an unverified game/revision. A modified
+  // title or checksum is fine when the engine and pointer layout still match.
+  if ((mapMode !== 0x20 && mapMode !== 0x30) || !hasSupportedLayout(data, headerOffset)) {
+    result.errors.push('unsupportedLayout');
+    result.isValid = false;
   }
 
   // --- ROM size indicator ---

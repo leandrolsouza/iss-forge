@@ -21,7 +21,11 @@ import '../styles/settings.css';
 
 export default function SettingsPage() {
   const { t } = useI18n();
-  const { settings, loaded, updateSetting, selectExportPath } = useSettings();
+  const { settings, loaded, updateSetting, updateSettings, selectExportPath } = useSettings();
+  const [apiKeyDraft, setApiKeyDraft] = useState('');
+  const [endpointDraft, setEndpointDraft] = useState(settings.aiEndpoint);
+  useEffect(() => setEndpointDraft(settings.aiEndpoint), [settings.aiEndpoint]);
+  useEffect(() => setApiKeyDraft(''), [settings.aiProvider, settings.aiEndpoint]);
   const [showApiKey, setShowApiKey] = useState(false);
   const [activeSection, setActiveSection] = useState('editor');
   const [testStatus, setTestStatus] = useState(null); // null | 'testing' | 'success' | 'error'
@@ -163,22 +167,18 @@ export default function SettingsPage() {
                 onChange={(e) => {
                   const newProvider = e.target.value;
                   const providerConfig = getProvider(newProvider);
-                  updateSetting('aiProvider', newProvider);
-                  // Auto-set endpoint based on provider type
-                  if (providerConfig.format === 'bedrock') {
-                    updateSetting(
-                      'aiEndpoint',
-                      buildBedrockEndpoint(settings.aiRegion || 'us-east-1'),
-                    );
-                  } else if (!providerConfig.endpointEditable) {
-                    updateSetting('aiEndpoint', providerConfig.endpoint);
-                  }
-                  // A model of the old provider means nothing to the new one (e.g. a GPT
-                  // model sent to Claude): keep it only when the new provider lists it
-                  updateSetting(
-                    'aiModel',
-                    modelForProvider(providerConfig, settings.aiModel, settings.aiProvider),
-                  );
+                  updateSettings({
+                    aiProvider: newProvider,
+                    aiEndpoint:
+                      providerConfig.format === 'bedrock'
+                        ? buildBedrockEndpoint(settings.aiRegion || 'us-east-1')
+                        : providerConfig.endpoint,
+                    aiModel: modelForProvider(
+                      providerConfig,
+                      settings.aiModel,
+                      settings.aiProvider,
+                    ),
+                  });
                 }}
               >
                 {getProviderIds().map((id) => {
@@ -204,8 +204,7 @@ export default function SettingsPage() {
                   value={settings.aiRegion || 'us-east-1'}
                   onChange={(e) => {
                     const region = e.target.value;
-                    updateSetting('aiRegion', region);
-                    updateSetting('aiEndpoint', buildBedrockEndpoint(region));
+                    updateSettings({ aiRegion: region, aiEndpoint: buildBedrockEndpoint(region) });
                   }}
                 >
                   {getProvider(settings.aiProvider).regions.map((region) => (
@@ -224,8 +223,12 @@ export default function SettingsPage() {
                 <input
                   className="settings-input"
                   type="text"
-                  value={settings.aiEndpoint}
-                  onChange={(e) => updateSetting('aiEndpoint', e.target.value)}
+                  value={endpointDraft}
+                  onChange={(e) => setEndpointDraft(e.target.value)}
+                  onBlur={() => {
+                    if (endpointDraft !== settings.aiEndpoint)
+                      updateSetting('aiEndpoint', endpointDraft);
+                  }}
                 />
                 <p className="settings-hint">{t('settingsAiEndpointHint')}</p>
                 {(() => {
@@ -294,8 +297,13 @@ export default function SettingsPage() {
                 <input
                   className="settings-input settings-input-flex"
                   type={showApiKey ? 'text' : 'password'}
-                  value={settings.aiApiKey}
-                  onChange={(e) => updateSetting('aiApiKey', e.target.value)}
+                  value={isElectron() ? apiKeyDraft : settings.aiApiKey}
+                  placeholder={settings.aiHasApiKey ? t('settingsAiApiKeyStored') : ''}
+                  onChange={(e) =>
+                    isElectron()
+                      ? setApiKeyDraft(e.target.value)
+                      : updateSetting('aiApiKey', e.target.value)
+                  }
                 />
                 <button
                   className="settings-btn settings-btn-secondary"
@@ -303,13 +311,42 @@ export default function SettingsPage() {
                 >
                   {showApiKey ? t('settingsAiApiKeyHide') : t('settingsAiApiKeyShow')}
                 </button>
+                {isElectron() && (
+                  <>
+                    <button
+                      className="settings-btn"
+                      disabled={!apiKeyDraft}
+                      onClick={async () => {
+                        if (await updateSetting('aiApiKey', apiKeyDraft)) setApiKeyDraft('');
+                      }}
+                    >
+                      {t('unsavedSave')}
+                    </button>
+                    {settings.aiHasApiKey && (
+                      <button
+                        className="settings-btn settings-btn-secondary"
+                        onClick={() => updateSetting('aiApiKey', '')}
+                      >
+                        {t('settingsClearPath')}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
               <p className="settings-hint">{t('settingsAiApiKeyHint')}</p>
-              {getProvider(settings.aiProvider).requiresApiKey && !settings.aiApiKey && (
+              {settings.aiKeyStorage === 'session' && (
                 <p className="settings-hint settings-hint-warning">
-                  {t('settingsAiApiKeyRequired')}
+                  {t('settingsAiKeySessionOnly')}
                 </p>
               )}
+              {getProvider(settings.aiProvider).requiresApiKey &&
+                !settings.aiApiKey &&
+                !settings.aiHasApiKey &&
+                !apiKeyDraft && (
+                  <p className="settings-hint settings-hint-warning">
+                    {t('settingsAiApiKeyRequired')}
+                  </p>
+                )}
             </div>
 
             <div className="settings-item">
@@ -361,7 +398,7 @@ export default function SettingsPage() {
                           provider: settings.aiProvider,
                           endpoint: settings.aiEndpoint,
                           model: settings.aiModel,
-                          apiKey: settings.aiApiKey,
+                          apiKey: isElectron() ? apiKeyDraft : settings.aiApiKey,
                           temperature: settings.aiTemperature,
                           maxTokens: 32,
                         },

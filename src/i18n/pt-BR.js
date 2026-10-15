@@ -1489,4 +1489,13 @@ export default {
   projectArchiveVersion:
     'Este projeto foi feito numa versao mais nova do ISS Forge: atualize o app.',
   projectArchiveWrongBase: 'Esta ROM nao e a ROM original do projeto (o CRC32 nao confere).',
+  backupFailed: 'O backup automático falhou. Salve seu trabalho manualmente.',
+  backupOriginalMissing: 'A ROM original deste backup não está disponível.',
+  validationUnsupportedLayout:
+    'Esta versão ou estrutura de ROM não é compatível. Use ISS Europa ou um hack compatível.',
+  settingsAiApiKeyStored: 'Chave armazenada — digite outra para substituí-la',
+  settingsAiKeySessionOnly:
+    'O armazenamento seguro está indisponível. A chave será mantida apenas até fechar o aplicativo.',
+  settingsSaveFailed: 'Não foi possível salvar as configurações.',
+  saveNewerEdits: 'A versão enviada foi salva. As edições mais recentes ainda precisam ser salvas.',
 };

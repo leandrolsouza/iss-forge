@@ -1,14 +1,20 @@
 import { describe, it, expect } from 'vitest';
 import { validateRomFile, quickValidate } from '../romValidator';
+import { seedSupportedLayout } from './compatibilityFixture';
 
 /**
  * Helper: build a fake 1MB SNES ROM with a valid LoROM header
  */
-function buildFakeRom({ title = 'INTERNATIONAL SS     ', mapMode = 0x20, withHeader = false } = {}) {
+function buildFakeRom({
+  title = 'INTERNATIONAL SS     ',
+  mapMode = 0x20,
+  withHeader = false,
+} = {}) {
   const romSize = 1024 * 1024;
   const totalSize = romSize + (withHeader ? 512 : 0);
   const data = new Uint8Array(totalSize);
   const headerOffset = withHeader ? 512 : 0;
+  seedSupportedLayout(data, headerOffset);
 
   // Write internal title at LoROM header (0x7FC0)
   const titleBytes = title.padEnd(21, ' ');
@@ -65,6 +71,18 @@ function buildFakeRom({ title = 'INTERNATIONAL SS     ', mapMode = 0x20, withHea
 
 describe('romValidator', () => {
   describe('validateRomFile', () => {
+    it('rejects a different game even when it spoofs the ISS title and size', () => {
+      const rom = buildFakeRom();
+      rom.fill(0, 0x6d41, 0x6d51);
+      expect(validateRomFile(rom)).toMatchObject({ isValid: false, errors: ['unsupportedLayout'] });
+    });
+
+    it('rejects HiROM mapping and damaged player pointers', () => {
+      expect(validateRomFile(buildFakeRom({ mapMode: 0x21 })).isValid).toBe(false);
+      const rom = buildFakeRom();
+      rom[0xded8] = 0;
+      expect(validateRomFile(rom).isValid).toBe(false);
+    });
     it('should validate a correct ISS ROM without header', () => {
       const rom = buildFakeRom();
       const result = validateRomFile(rom);
@@ -101,7 +119,7 @@ describe('romValidator', () => {
       expect(result.errors).toContain('noTitle');
     });
 
-    it('should warn about unknown title', () => {
+    it('accepts a renamed hack only when the supported engine layout matches', () => {
       const rom = buildFakeRom({ title: 'SOME OTHER GAME      ' });
       const result = validateRomFile(rom);
 
@@ -128,7 +146,8 @@ describe('romValidator', () => {
       data[0x7fc0 + 0x15] = 0x20; // map mode
       const result = validateRomFile(data);
 
-      expect(result.isValid).toBe(true);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain('unsupportedLayout');
       expect(result.warnings).toContain('nonStandardSize');
       expect(result.warnings).toContain('unexpectedSize');
     });

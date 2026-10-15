@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell, safeStorage } from 'electron';
 import electronUpdater from 'electron-updater';
 const { autoUpdater } = electronUpdater;
 import Store from 'electron-store';
@@ -20,6 +20,11 @@ import {
   readBedrockEventStream,
 } from './aiProviders.mjs';
 import * as projects from './projects.mjs';
+import { writeAtomic } from './atomicFile.mjs';
+import * as backups from './backups.mjs';
+import { createCredentialSettings } from './credentials.mjs';
+import { secureIpc, rendererEntryUrl } from './ipcSecurity.mjs';
+import { rendererCsp } from './contentSecurity.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,7 +42,6 @@ const settingsStore = new Store({
     aiProvider: 'openai-compatible',
     aiEndpoint: 'http://localhost:1234/v1/chat/completions',
     aiModel: '',
-    aiApiKey: '',
     aiTemperature: 0.7,
     aiMaxTokens: DEFAULT_MAX_TOKENS,
     aiRegion: 'us-east-1',
@@ -45,10 +49,14 @@ const settingsStore = new Store({
 });
 
 let mainWindow;
+const entryUrl = rendererEntryUrl(app.isPackaged, __dirname);
+const ipc = secureIpc(ipcMain, () => mainWindow, entryUrl);
+const credentialSettings = createCredentialSettings(settingsStore, safeStorage);
 let currentRomPath = null;
 let lastOpenDialogPath = null;
 let isRomModified = false;
 let forceQuit = false;
+let waitingForCloseSave = false;
 // What the editor has open, sent by the renderer ('app:setSession'):
 // { kind: 'project' | 'rom' | null, name?: string, ext?: string }. Menu labels follow it.
 let session = { kind: null };
@@ -193,6 +201,8 @@ const TITLEBAR_COLORS = {
 };
 
 function createWindow() {
+  forceQuit = false;
+  waitingForCloseSave = false;
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -212,7 +222,25 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== entryUrl) event.preventDefault();
+  });
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    // Provider documentation links open in the browser, with no preload privileges.
+    if (url.startsWith('https://')) shell.openExternal(url).catch(() => {});
+    return { action: 'deny' };
+  });
+  mainWindow.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) =>
+    callback(false),
+  );
+  mainWindow.webContents.session.setPermissionCheckHandler(() => false);
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const csp = rendererCsp(!app.isPackaged);
+    callback({ responseHeaders: { ...details.responseHeaders, 'Content-Security-Policy': [csp] } });
   });
 
   // In development, load from Vite dev server
@@ -395,7 +423,7 @@ function loadAndSendRom(filePath) {
   }
 }
 
-async function handleSaveRomAs() {
+async function handleSaveRomAs(_event, options = {}) {
   // A project has no file of its own: suggest "<project name>.sfc" in the export folder
   let defaultPath = currentRomPath || 'ISS_Modified.smc';
   if (session.kind === 'project') {
@@ -414,16 +442,18 @@ async function handleSaveRomAs() {
   });
 
   if (!result.canceled && result.filePath) {
-    mainWindow.webContents.send('rom:save-as-path', result.filePath);
+    mainWindow.webContents.send('rom:save-as-path', result.filePath, {
+      fromClose: options.fromClose === true,
+    });
   }
 }
 
 // IPC Handlers
-ipcMain.handle('dialog:openRom', handleOpenRom);
+ipc.handle('dialog:openRom', handleOpenRom);
 
-ipcMain.handle('dialog:saveRomAs', handleSaveRomAs);
+ipc.handle('dialog:saveRomAs', handleSaveRomAs);
 
-ipcMain.handle('rom:save', async (event, { data, filePath }) => {
+ipc.handle('rom:save', async (event, { data, filePath }) => {
   try {
     const savePath = filePath || currentRomPath;
     if (!savePath) {
@@ -432,9 +462,9 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
     const buffer = Buffer.from(data);
     // Settings > Editor: keep the previous version of the file as <name>.bak
     if (settingsStore.get('autoBackupBeforeSave') && fs.existsSync(savePath)) {
-      fs.copyFileSync(savePath, `${savePath}.bak`);
+      writeAtomic(`${savePath}.bak`, fs.readFileSync(savePath));
     }
-    fs.writeFileSync(savePath, buffer);
+    writeAtomic(savePath, buffer);
     currentRomPath = savePath;
     return { success: true, path: savePath };
   } catch (err) {
@@ -442,10 +472,10 @@ ipcMain.handle('rom:save', async (event, { data, filePath }) => {
   }
 });
 
-ipcMain.handle('rom:getCurrentPath', () => currentRomPath);
+ipc.handle('rom:getCurrentPath', () => currentRomPath);
 
 // Renderer confirms a ROM was accepted and parsed (dialog, recents or drag-and-drop)
-ipcMain.on('rom:setCurrentPath', (event, filePath) => {
+ipc.on('rom:setCurrentPath', (event, filePath) => {
   currentRomPath = filePath || null;
   if (filePath) {
     lastOpenDialogPath = path.dirname(filePath);
@@ -464,7 +494,7 @@ function splitArgs(str) {
   return out;
 }
 
-ipcMain.handle('emulator:test', async (event, { data, extension }) => {
+ipc.handle('emulator:test', async (event, { data, extension }) => {
   try {
     const exe = settingsStore.get('emulatorPath');
     if (!exe || !fs.existsSync(exe)) {
@@ -473,7 +503,7 @@ ipcMain.handle('emulator:test', async (event, { data, extension }) => {
     // Fixed temp name: the emulator reloads the same file on every test
     const ext = extension === '.smc' ? '.smc' : '.sfc';
     const romPath = path.join(app.getPath('temp'), `iss-forge-test${ext}`);
-    fs.writeFileSync(romPath, Buffer.from(data));
+    writeAtomic(romPath, Buffer.from(data));
 
     let args = splitArgs(settingsStore.get('emulatorArgs') || '{rom}');
     if (args.some((a) => a.includes('{rom}'))) args = args.map((a) => a.replace('{rom}', romPath));
@@ -488,7 +518,7 @@ ipcMain.handle('emulator:test', async (event, { data, extension }) => {
   }
 });
 
-ipcMain.handle('emulator:select', async () => {
+ipc.handle('emulator:select', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: tr('chooseEmulator'),
     properties: ['openFile'],
@@ -505,7 +535,7 @@ ipcMain.handle('emulator:select', async () => {
   return { success: true, path: result.filePaths[0] };
 });
 
-ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
+ipc.handle('patch:save', async (event, { data, defaultName, format }) => {
   try {
     const ext = format === 'ips' ? 'ips' : 'bps';
     // Settings > Editor: default export folder, else next to the ROM
@@ -527,7 +557,7 @@ ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
     if (result.canceled || !result.filePath) {
       return { success: false, canceled: true };
     }
-    fs.writeFileSync(result.filePath, Buffer.from(data));
+    writeAtomic(result.filePath, Buffer.from(data));
     return { success: true, path: result.filePath };
   } catch (err) {
     return { success: false, error: err.message };
@@ -535,12 +565,12 @@ ipcMain.handle('patch:save', async (event, { data, defaultName, format }) => {
 });
 
 // Track modified state from renderer (for close guard)
-ipcMain.on('rom:modifiedState', (event, isModified) => {
+ipc.on('rom:modifiedState', (event, isModified) => {
   isRomModified = isModified;
 });
 
 // Track locale from renderer (for native dialog i18n)
-ipcMain.on('app:setLocale', (event, locale) => {
+ipc.on('app:setLocale', (event, locale) => {
   if (!MAIN_I18N[locale] || locale === currentLocale) return;
   currentLocale = locale;
   settingsStore.set('language', locale);
@@ -548,7 +578,7 @@ ipcMain.on('app:setLocale', (event, locale) => {
 });
 
 // What is open in the editor (menu labels / "Save As" suggestion)
-ipcMain.on('app:setSession', (event, next) => {
+ipc.on('app:setSession', (event, next) => {
   const value = {
     kind: next?.kind === 'project' || next?.kind === 'rom' ? next.kind : null,
     name: typeof next?.name === 'string' ? next.name : '',
@@ -560,7 +590,7 @@ ipcMain.on('app:setSession', (event, next) => {
 });
 
 // "Show in folder": a project folder is opened, a file is selected in its folder
-ipcMain.handle('shell:showInFolder', async (event, target) => {
+ipc.handle('shell:showInFolder', async (event, target) => {
   try {
     if (typeof target !== 'string' || !target || !fs.existsSync(target)) {
       return { success: false, error: 'fileNotFound' };
@@ -577,7 +607,7 @@ ipcMain.handle('shell:showInFolder', async (event, target) => {
 });
 
 // Keep the native window controls in the theme colours
-ipcMain.on('app:setTheme', (event, theme) => {
+ipc.on('app:setTheme', (event, theme) => {
   const colors = TITLEBAR_COLORS[theme] || TITLEBAR_COLORS.dark;
   try {
     mainWindow?.setTitleBarOverlay?.({ ...colors, height: 32 });
@@ -589,13 +619,10 @@ ipcMain.on('app:setTheme', (event, theme) => {
 
 // Handle close response from renderer custom modal
 // choice: 'save' | 'discard' | 'cancel'
-ipcMain.on('app:closeResponse', (event, choice) => {
+ipc.on('app:closeResponse', (event, choice) => {
+  waitingForCloseSave = choice === 'save';
   if (choice === 'save') {
     mainWindow.webContents.send('menu:save', { fromClose: true });
-    ipcMain.once('rom:saveComplete', () => {
-      forceQuit = true;
-      mainWindow.close();
-    });
   } else if (choice === 'discard') {
     forceQuit = true;
     mainWindow.close();
@@ -603,22 +630,29 @@ ipcMain.on('app:closeResponse', (event, choice) => {
   // 'cancel': do nothing, window stays open
 });
 
-ipcMain.handle('recent:getAll', () => {
+ipc.on('rom:saveComplete', (_event, { fromClose }) => {
+  if (!fromClose || !waitingForCloseSave) return;
+  waitingForCloseSave = false;
+  forceQuit = true;
+  mainWindow.close();
+});
+
+ipc.handle('recent:getAll', () => {
   return loadRecentRoms();
 });
 
-ipcMain.handle('recent:clear', () => {
+ipc.handle('recent:clear', () => {
   saveRecentRoms([]);
   return { success: true };
 });
 
-ipcMain.handle('recent:remove', (event, filePath) => {
+ipc.handle('recent:remove', (event, filePath) => {
   const recents = loadRecentRoms().filter((r) => r.path !== filePath);
   saveRecentRoms(recents);
   return { success: true };
 });
 
-ipcMain.handle('recent:open', (event, filePath) => {
+ipc.handle('recent:open', (event, filePath) => {
   if (fs.existsSync(filePath)) {
     loadAndSendRom(filePath);
     return { success: true };
@@ -630,29 +664,10 @@ ipcMain.handle('recent:open', (event, filePath) => {
 });
 
 // --- Auto-Save / Backup ---
-const BACKUP_FILENAME = 'autosave-backup.bin';
-const BACKUP_META_FILENAME = 'autosave-meta.json';
-// The unedited ROM of the backed-up session (base for patches and "restore original")
-const BACKUP_ORIGINAL_FILENAME = 'autosave-original.bin';
-
-function getBackupPath() {
-  return path.join(app.getPath('userData'), BACKUP_FILENAME);
-}
-
-function getBackupMetaPath() {
-  return path.join(app.getPath('userData'), BACKUP_META_FILENAME);
-}
-
-function getBackupOriginalPath() {
-  return path.join(app.getPath('userData'), BACKUP_ORIGINAL_FILENAME);
-}
-
 // `original` is only sent with the first backup of a session (it never changes)
-ipcMain.handle('backup:save', (event, { data, meta, original }) => {
+ipc.handle('backup:save', (event, { data, meta, original }) => {
   try {
-    if (original) fs.writeFileSync(getBackupOriginalPath(), Buffer.from(original));
-    fs.writeFileSync(getBackupPath(), Buffer.from(data));
-    fs.writeFileSync(getBackupMetaPath(), JSON.stringify(meta, null, 2), 'utf-8');
+    backups.saveBackup(app.getPath('userData'), { data, meta, original });
     return { success: true, timestamp: Date.now() };
   } catch (err) {
     console.error('Auto-save backup failed:', err.message);
@@ -660,18 +675,11 @@ ipcMain.handle('backup:save', (event, { data, meta, original }) => {
   }
 });
 
-ipcMain.handle('backup:load', () => {
+ipc.handle('backup:load', () => {
   try {
-    const backupPath = getBackupPath();
-    const metaPath = getBackupMetaPath();
-    if (!fs.existsSync(backupPath) || !fs.existsSync(metaPath)) {
-      return { exists: false };
-    }
-    const buffer = fs.readFileSync(backupPath);
-    const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-    const originalPath = getBackupOriginalPath();
-    const original =
-      meta.hasOriginal && fs.existsSync(originalPath) ? fs.readFileSync(originalPath) : null;
+    const backup = backups.loadBackup(app.getPath('userData'));
+    if (!backup) return { exists: false };
+    const { data: buffer, meta, original } = backup;
     return {
       exists: true,
       data: Array.from(buffer),
@@ -684,11 +692,9 @@ ipcMain.handle('backup:load', () => {
   }
 });
 
-ipcMain.handle('backup:clear', () => {
+ipc.handle('backup:clear', () => {
   try {
-    for (const p of [getBackupPath(), getBackupMetaPath(), getBackupOriginalPath()]) {
-      if (fs.existsSync(p)) fs.unlinkSync(p);
-    }
+    backups.clearBackup(app.getPath('userData'));
     return { success: true };
   } catch (err) {
     console.error('Failed to clear backup:', err.message);
@@ -714,64 +720,64 @@ function projectCall(fn) {
   }
 }
 
-ipcMain.handle('projects:list', () =>
+ipc.handle('projects:list', () =>
   projectCall((root) => ({ projects: projects.listProjects(root) })),
 );
 
-ipcMain.handle('projects:create', (event, params) =>
+ipc.handle('projects:create', (event, params) =>
   projectCall((root) => ({ project: projects.createProject(root, params) })),
 );
 
-ipcMain.handle('projects:load', (event, id) =>
+ipc.handle('projects:load', (event, id) =>
   projectCall((root) => {
     const res = projects.loadProject(root, id);
     return { project: res.meta, data: res.data, original: res.original, autosave: res.autosave };
   }),
 );
 
-ipcMain.handle('projects:save', (event, { id, data }) =>
+ipc.handle('projects:save', (event, { id, data }) =>
   projectCall((root) => ({ project: projects.saveProjectRom(root, id, data) })),
 );
 
-ipcMain.handle('projects:markOpened', (event, id) =>
+ipc.handle('projects:markOpened', (event, id) =>
   projectCall((root) => ({ project: projects.markProjectOpened(root, id) })),
 );
 
-ipcMain.handle('projects:update', (event, { id, changes }) =>
+ipc.handle('projects:update', (event, { id, changes }) =>
   projectCall((root) => ({ project: projects.updateProject(root, id, changes) })),
 );
 
-ipcMain.handle('projects:duplicate', (event, { id, changes }) =>
+ipc.handle('projects:duplicate', (event, { id, changes }) =>
   projectCall((root) => ({ project: projects.duplicateProject(root, id, changes) })),
 );
 
-ipcMain.handle('projects:delete', (event, id) =>
+ipc.handle('projects:delete', (event, id) =>
   projectCall((root) => {
     projects.deleteProject(root, id);
     return {};
   }),
 );
 
-ipcMain.handle('projects:autosaveSave', (event, { id, data }) =>
+ipc.handle('projects:autosaveSave', (event, { id, data }) =>
   projectCall((root) => {
     projects.saveProjectAutosave(root, id, data);
     return { timestamp: Date.now() };
   }),
 );
 
-ipcMain.handle('projects:autosaveClear', (event, id) =>
+ipc.handle('projects:autosaveClear', (event, id) =>
   projectCall((root) => {
     projects.clearProjectAutosave(root, id);
     return {};
   }),
 );
 
-ipcMain.handle('projects:findOriginal', (event, crc) =>
+ipc.handle('projects:findOriginal', (event, crc) =>
   projectCall((root) => ({ original: projects.findOriginalByCrc(root, crc) })),
 );
 
 // Write an exported project (.issproj) where the user chooses
-ipcMain.handle('projects:saveArchive', async (event, { data, defaultName }) => {
+ipc.handle('projects:saveArchive', async (event, { data, defaultName }) => {
   try {
     const exportDir = settingsStore.get('defaultExportPath');
     const defaultDir = exportDir && fs.existsSync(exportDir) ? exportDir : app.getPath('documents');
@@ -784,7 +790,7 @@ ipcMain.handle('projects:saveArchive', async (event, { data, defaultName }) => {
       ],
     });
     if (result.canceled || !result.filePath) return { success: false, canceled: true };
-    fs.writeFileSync(result.filePath, Buffer.from(data));
+    writeAtomic(result.filePath, Buffer.from(data));
     return { success: true, path: result.filePath };
   } catch (err) {
     return { success: false, error: err.message };
@@ -792,35 +798,31 @@ ipcMain.handle('projects:saveArchive', async (event, { data, defaultName }) => {
 });
 
 // --- App Settings ---
-ipcMain.handle('settings:getAll', () => {
-  return settingsStore.store;
+ipc.handle('settings:getAll', () => {
+  return credentialSettings.publicSettings();
 });
 
-ipcMain.handle('settings:get', (event, key) => {
-  return settingsStore.get(key);
+ipc.handle('settings:get', (event, key) => {
+  return credentialSettings.publicSettings()[key];
 });
 
-ipcMain.handle('settings:set', (event, { key, value }) => {
+ipc.handle('settings:set', (event, { key, value }) => {
   try {
-    settingsStore.set(key, value);
-    return { success: true };
+    return { success: true, settings: credentialSettings.update({ [key]: value }) };
   } catch (err) {
     return { success: false, error: err.message };
   }
 });
 
-ipcMain.handle('settings:setAll', (event, settings) => {
+ipc.handle('settings:setAll', (event, settings) => {
   try {
-    Object.entries(settings).forEach(([key, value]) => {
-      settingsStore.set(key, value);
-    });
-    return { success: true };
+    return { success: true, settings: credentialSettings.update(settings) };
   } catch (err) {
     return { success: false, error: err.message };
   }
 });
 
-ipcMain.handle('settings:selectExportPath', async () => {
+ipc.handle('settings:selectExportPath', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
     title: tr('chooseFolder'),
     properties: ['openDirectory'],
@@ -832,51 +834,39 @@ ipcMain.handle('settings:selectExportPath', async () => {
 });
 
 // --- AI Team Generator ---
-const AI_SETTINGS_FILENAME = 'ai-settings.json';
-
-function getAiSettingsPath() {
-  return path.join(app.getPath('userData'), AI_SETTINGS_FILENAME);
-}
-
 function loadAiSettings() {
-  // Read from unified settings store
-  return {
-    provider: settingsStore.get('aiProvider'),
-    endpoint: settingsStore.get('aiEndpoint'),
-    model: settingsStore.get('aiModel'),
-    apiKey: settingsStore.get('aiApiKey'),
-    temperature: settingsStore.get('aiTemperature'),
-    maxTokens: settingsStore.get('aiMaxTokens'),
-  };
+  return credentialSettings.publicAiSettings();
 }
 
 function saveAiSettings(settings) {
+  const keys = {
+    provider: 'aiProvider',
+    endpoint: 'aiEndpoint',
+    model: 'aiModel',
+    apiKey: 'aiApiKey',
+    temperature: 'aiTemperature',
+    maxTokens: 'aiMaxTokens',
+  };
   try {
-    // Write to unified settings store
-    if (settings.provider !== undefined) settingsStore.set('aiProvider', settings.provider);
-    if (settings.endpoint !== undefined) settingsStore.set('aiEndpoint', settings.endpoint);
-    if (settings.model !== undefined) settingsStore.set('aiModel', settings.model);
-    if (settings.apiKey !== undefined) settingsStore.set('aiApiKey', settings.apiKey);
-    if (settings.temperature !== undefined)
-      settingsStore.set('aiTemperature', settings.temperature);
-    if (settings.maxTokens !== undefined) settingsStore.set('aiMaxTokens', settings.maxTokens);
-    return { success: true };
+    const updated = credentialSettings.update(
+      Object.fromEntries(Object.entries(settings).map(([key, value]) => [keys[key], value])),
+    );
+    return { success: true, settings: updated };
   } catch (err) {
-    console.error('Failed to save AI settings:', err.message);
     return { success: false, error: err.message };
   }
 }
 
-ipcMain.handle('ai:getSettings', () => {
+ipc.handle('ai:getSettings', () => {
   return loadAiSettings();
 });
 
-ipcMain.handle('ai:saveSettings', (event, settings) => {
+ipc.handle('ai:saveSettings', (event, settings) => {
   return saveAiSettings(settings);
 });
 
-ipcMain.handle('ai:testConnection', async (event, { settings }) => {
-  const config = settings || loadAiSettings();
+ipc.handle('ai:testConnection', async (event, { settings }) => {
+  const config = credentialSettings.resolveAiSettings(settings);
   const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
   const provider = getProvider(providerId);
   const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model);
@@ -901,6 +891,7 @@ ipcMain.handle('ai:testConnection', async (event, { settings }) => {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(30000),
@@ -937,8 +928,8 @@ function generationBody(provider, config, { prompt, systemPrompt, schema }, stre
   });
 }
 
-ipcMain.handle('ai:generate', async (event, payload) => {
-  const config = payload.settings || loadAiSettings();
+ipc.handle('ai:generate', async (event, payload) => {
+  const config = credentialSettings.resolveAiSettings(payload.settings);
   const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
   const provider = getProvider(providerId);
   const endpoint = getEffectiveEndpoint(provider, config.endpoint, config.model);
@@ -949,6 +940,7 @@ ipcMain.handle('ai:generate', async (event, payload) => {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(120000), // 2 minute timeout for LLM
@@ -979,7 +971,7 @@ ipcMain.handle('ai:generate', async (event, payload) => {
 // Running streams by request id, so the renderer can cancel them ('ai:cancel-stream')
 const aiStreams = new Map();
 
-ipcMain.handle('ai:cancel-stream', (event, requestId) => {
+ipc.handle('ai:cancel-stream', (event, requestId) => {
   aiStreams.get(requestId)?.abort();
   aiStreams.delete(requestId);
   return { success: true };
@@ -993,9 +985,9 @@ ipcMain.handle('ai:cancel-stream', (event, requestId) => {
  *   ai:stream-done  ({ requestId, stopReason, truncated })
  *   ai:stream-error (error, requestId)
  */
-ipcMain.handle('ai:generate-stream', async (event, payload) => {
+ipc.handle('ai:generate-stream', async (event, payload) => {
   const requestId = payload.requestId ?? null;
-  const config = payload.settings || loadAiSettings();
+  const config = credentialSettings.resolveAiSettings(payload.settings);
   const sender = event.sender;
   const providerId = config.provider || settingsStore.get('aiProvider') || 'openai-compatible';
   const provider = getProvider(providerId);
@@ -1013,6 +1005,7 @@ ipcMain.handle('ai:generate-stream', async (event, payload) => {
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
+      redirect: 'error',
       headers,
       body: JSON.stringify(body),
       signal: AbortSignal.any([controller.signal, AbortSignal.timeout(180000)]),
@@ -1099,7 +1092,7 @@ function sendUpdaterStatus(status, data = {}) {
 }
 
 // IPC handlers for updater
-ipcMain.handle('updater:check', () => {
+ipc.handle('updater:check', () => {
   if (!app.isPackaged) {
     return { status: 'dev-mode' };
   }
@@ -1109,19 +1102,20 @@ ipcMain.handle('updater:check', () => {
   return { status: 'checking' };
 });
 
-ipcMain.handle('updater:download', () => {
+ipc.handle('updater:download', () => {
   autoUpdater.downloadUpdate().catch((err) => {
     console.error('Download update failed:', err.message);
   });
   return { status: 'downloading' };
 });
 
-ipcMain.handle('updater:install', () => {
+ipc.handle('updater:install', () => {
   autoUpdater.quitAndInstall(false, true);
 });
 
 // App lifecycle
 app.whenReady().then(() => {
+  credentialSettings.migrate();
   createWindow();
   setupAutoUpdater();
 });

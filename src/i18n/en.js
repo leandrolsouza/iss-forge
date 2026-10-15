@@ -1486,4 +1486,13 @@ export default {
   projectArchiveInvalid: 'The file is not a valid ISS Forge project.',
   projectArchiveVersion: 'This project was made with a newer ISS Forge: update the app.',
   projectArchiveWrongBase: "This ROM is not the project's original ROM (the CRC32 does not match).",
+  backupFailed: 'Automatic backup failed. Save your work manually.',
+  backupOriginalMissing: 'The original ROM for this backup is missing.',
+  validationUnsupportedLayout:
+    'This ROM version or layout is not supported. Use ISS Europe or a compatible hack.',
+  settingsAiApiKeyStored: 'Key stored — enter a new key to replace it',
+  settingsAiKeySessionOnly:
+    'Secure storage is unavailable. This key is kept only until the app closes.',
+  settingsSaveFailed: 'Could not save the settings.',
+  saveNewerEdits: 'The submitted version was saved. Newer edits still need to be saved.',
 };

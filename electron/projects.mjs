@@ -18,6 +18,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import { writeAtomic } from './atomicFile.mjs';
 
 export const PROJECT_FORMAT_VERSION = 1;
 
@@ -83,13 +84,6 @@ function cleanDescription(description) {
   return String(description ?? '')
     .trim()
     .slice(0, MAX_DESCRIPTION_LENGTH);
-}
-
-/** Write through a temp file so a crash never leaves a half-written ROM */
-function writeAtomic(file, data) {
-  const tmp = `${file}.tmp`;
-  fs.writeFileSync(tmp, data);
-  fs.renameSync(tmp, file);
 }
 
 function readMeta(dir) {

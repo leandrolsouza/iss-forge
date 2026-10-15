@@ -32,6 +32,33 @@ describe('history stack', () => {
   });
 
   describe('saved point (modified flag)', () => {
+    it('does not mark edits made during a save as persisted', () => {
+      const h = createHistoryStack();
+      h.push({ v: 0 });
+      const point = h.captureSavePoint();
+      h.push({ v: 1 });
+      expect(h.markSaved(point)).toBe(false);
+      expect(h.modified).toBe(true);
+      h.undo({ v: 2 });
+      expect(h.modified).toBe(false);
+    });
+
+    it('ignores a save response from a previously opened session', () => {
+      const h = createHistoryStack();
+      const point = h.captureSavePoint();
+      h.reset({ saved: false });
+      expect(h.markSaved(point)).toBe(false);
+      expect(h.modified).toBe(true);
+    });
+
+    it('tracks unsnapshotted edits made while an already modified revision is saving', () => {
+      const h = createHistoryStack();
+      h.touch();
+      const point = h.captureSavePoint();
+      h.touch();
+      expect(h.markSaved(point)).toBe(false);
+      expect(h.modified).toBe(true);
+    });
     it('undoing back to the saved state clears modified, redo sets it again', () => {
       const h = createHistoryStack();
       h.reset();

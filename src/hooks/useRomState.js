@@ -213,13 +213,20 @@ export default function useRomState({ toast, t } = {}) {
     setStatusMessage(romInfo?.fileName || '');
   }, [romInfo, touchHistory]);
 
+  const { captureSavePoint: captureHistoryPoint } = history;
+  const captureSavePoint = useCallback(
+    () => ({ ...captureHistoryPoint(), parser: romParserRef.current }),
+    [captureHistoryPoint],
+  );
   const markSaved = useCallback(
-    (path) => {
-      markHistorySaved();
-      setModified(false);
+    (path, point) => {
+      if (point && point.parser !== romParserRef.current) return null;
+      const clean = markHistorySaved(point);
+      setModified(isModified());
       setStatusMessage(path || '');
+      return clean;
     },
-    [markHistorySaved],
+    [markHistorySaved, isModified],
   );
 
   // Undo/Redo operations
@@ -367,6 +374,7 @@ export default function useRomState({ toast, t } = {}) {
     cancelPendingLoad,
     markModified,
     markSaved,
+    captureSavePoint,
     selectTeam,
     openTab,
     closeTab,

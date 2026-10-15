@@ -21,6 +21,7 @@ export function createHistoryStack({ max = MAX_HISTORY } = {}) {
   let nextId = 0;
   let id = 0;
   let savedId = 0;
+  let session = 0;
 
   return {
     /** Store `snapshot` (deep-copied) as the state before an edit. Call BEFORE the edit. */
@@ -66,6 +67,7 @@ export function createHistoryStack({ max = MAX_HISTORY } = {}) {
     },
     /** New session: empty history. `saved` = false when it differs from every file (restored backup). */
     reset({ saved = true } = {}) {
+      session++;
       past = [];
       future = [];
       futureBeforePush = null;
@@ -73,12 +75,17 @@ export function createHistoryStack({ max = MAX_HISTORY } = {}) {
       savedId = saved ? id : null;
     },
     /** The current state is now the one on disk */
-    markSaved() {
-      savedId = id;
+    captureSavePoint() {
+      return { session, id };
+    },
+    markSaved(point = { session, id }) {
+      if (point.session !== session) return false;
+      savedId = point.id;
+      return id === savedId;
     },
     /** An edit that did not push a snapshot: still a new state */
     touch() {
-      if (id === savedId) id = ++nextId;
+      id = ++nextId;
     },
     get modified() {
       return id !== savedId;
@@ -113,6 +120,7 @@ export default function useHistory() {
       /** Reset for a new session; `{ saved: false }` for a restored backup */
       clearHistory: wrap(stack.reset),
       markSaved: wrap(stack.markSaved),
+      captureSavePoint: stack.captureSavePoint,
       touch: wrap(stack.touch),
       isModified: () => stack.modified,
     };

@@ -13,15 +13,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ThemeProvider>
       <I18nProvider>
-        <SettingsProvider>
-          <ToastProvider>
+        <ToastProvider>
+          <SettingsProvider>
             <ConfirmProvider>
               <RomProvider>
                 <App />
               </RomProvider>
             </ConfirmProvider>
-          </ToastProvider>
-        </SettingsProvider>
+          </SettingsProvider>
+        </ToastProvider>
       </I18nProvider>
     </ThemeProvider>
   </React.StrictMode>,

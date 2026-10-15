@@ -36,6 +36,7 @@ export default function useProjects({
   requestLoadRom,
   unloadRom,
   markSaved,
+  captureSavePoint,
   setLoading,
   clearBackup,
   clearProjectAutosave,
@@ -158,6 +159,7 @@ export default function useProjects({
         console.warn('[Checksum] Could not fix internal checksum:', err.message);
       }
       const original = romParser.getOriginalData();
+      const point = captureSavePoint();
       const res = await electronBridge.projectCreate({
         name,
         description,
@@ -171,9 +173,10 @@ export default function useProjects({
         return null;
       }
       // "Save" now goes to the project, not to the file the ROM came from
+      if (captureSavePoint().parser !== romParser) return res.project;
       electronBridge.setCurrentRomPath(null);
       setCurrentProject(res.project);
-      markSaved(res.project.name);
+      markSaved(res.project.name, point);
       toast.success(t('toastProjectCreated', { name: res.project.name }));
       refreshProjects();
       return res.project;
@@ -185,6 +188,7 @@ export default function useProjects({
       currentProject,
       setCurrentProject,
       markSaved,
+      captureSavePoint,
       refreshProjects,
       fail,
       toast,

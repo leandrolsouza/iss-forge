@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-10-14
+
+### Fixed
+- App icon on Windows now displays the ISS Forge logo at all resolutions (16×16 to 256×256)
+
+---
+
 ## [1.0.0] - 2026-10-14
 
 Initial stable release of ISS Forge — a visual ROM editor for International Superstar Soccer (SNES, 1995).

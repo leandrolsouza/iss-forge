@@ -123,7 +123,14 @@ describe('release integrity gates', () => {
             .map((name) => ({ name, size: fs.statSync(path.join(directory, name)).size })),
         };
     });
-    publish(directory, 'v1.0.6-rc.1', '1.0.6-rc.1', 'rc', run);
+    publish(
+      directory,
+      'v1.0.6-rc.1',
+      '1.0.6-rc.1',
+      'rc',
+      run,
+      '## [1.0.6-rc.1]\n\n- Prerelease fix.',
+    );
     expect(run.mock.calls.find(([args]) => args[1] === 'create')[0]).toContain('--prerelease');
     expect(run.mock.calls.at(-1)[0]).toEqual(['release', 'edit', 'v1.0.6-rc.1', '--draft=false']);
   });
@@ -144,7 +151,41 @@ describe('release integrity gates', () => {
     });
     expect(() => publish(directory, 'v1.0.6', '1.0.6', 'latest', run)).toThrow('uploaded asset');
     expect(run.mock.calls.some(([args]) => args[1] === 'create')).toBe(false);
-    expect(run.mock.calls.some(([args]) => args[1] === 'edit')).toBe(false);
+    expect(
+      run.mock.calls.some(([args]) => args[1] === 'edit' && args.includes('--draft=false')),
+    ).toBe(false);
+  });
+
+  it('passes changelog notes as a file before publishing and cleans up the temporary file', () => {
+    for (const platform of ['windows', 'linux', 'macos']) fixture(platform);
+    let notesFile;
+    let notes;
+    const run = vi.fn((args) => {
+      if (args[0] === 'api') return [[{ tag_name: 'v1.0.5', draft: false, prerelease: false }]];
+      if (args[1] === 'create') {
+        notesFile = args[args.indexOf('--notes-file') + 1];
+        notes = fs.readFileSync(notesFile, 'utf8');
+        expect(args).not.toContain('--generate-notes');
+      }
+      if (args[1] === 'view')
+        return {
+          assets: fs
+            .readdirSync(directory)
+            .map((name) => ({ name, size: fs.statSync(path.join(directory, name)).size })),
+        };
+    });
+    publish(
+      directory,
+      'v1.0.6',
+      '1.0.6',
+      'latest',
+      run,
+      '## [1.0.6]\n\n### Fixed\n\n- Reliable updates',
+    );
+    expect(notes).toContain("## What's Changed");
+    expect(notes).toContain('- Reliable updates');
+    expect(notes).toContain('/compare/v1.0.5...v1.0.6');
+    expect(fs.existsSync(notesFile)).toBe(false);
   });
 
   it('publishes only after confirming every uploaded file and never overwrites a published release', () => {

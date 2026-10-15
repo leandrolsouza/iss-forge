@@ -226,6 +226,15 @@ Run `node scripts/release.js validate-package` to check both package files
 before tagging; branch and PR CI also runs this check. A failed tag run uses
 the files committed at that tag, so rerunning it does not pick up later fixes.
 
+Each release must have a nonempty `## [version]` entry in `CHANGELOG.md`.
+The publisher uses that entry for **What's Changed**, preserving its Added,
+Changed and Fixed sections, and appends a comparison with the previous
+published stable release. This works for direct commits as well as PRs.
+Release Maintenance also fills historical empty/link-only descriptions and
+refreshes its own marked notes from the changelog. It preserves hand-written
+notes, contributor/PR lists and the separate update-health warnings. No new
+release or tag is created to improve an existing description.
+
 The workflow tests and builds the renderer before packaging Windows x64,
 macOS arm64/x64, and Linux x64. Each build stages installers, blockmaps and
 its update manifest as an Actions artifact. A single publishing job checks

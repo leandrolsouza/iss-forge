@@ -1,9 +1,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
 const { createHash } = require('node:crypto');
 const { spawnSync } = require('node:child_process');
 const yaml = require('js-yaml');
 const semver = require('semver');
+const {
+  changelogSection,
+  previousReleaseTag,
+  buildReleaseNotes,
+  mergeReleaseNotes,
+} = require('./release-notes');
 
 function validateVersion(tag, pkg, lock) {
   const version = tag?.replace(/^v/, '');
@@ -81,7 +88,14 @@ function gh(args, json = false) {
   return json ? JSON.parse(result.stdout) : result.stdout;
 }
 
-function publish(directory, tag, version, channel, run = gh) {
+function publish(
+  directory,
+  tag,
+  version,
+  channel,
+  run = gh,
+  changelog = fs.readFileSync('CHANGELOG.md', 'utf8'),
+) {
   // Validate all platforms before creating or modifying a release.
   const names = ['windows', 'macos', 'linux'].flatMap((platform) =>
     validateAssets(directory, platform, version, channel),
@@ -95,18 +109,29 @@ function publish(directory, tag, version, channel, run = gh) {
   const existing = releases.find((release) => release.tag_name === tag);
   if (existing && !existing.draft)
     throw new Error(`Release ${tag} is already published; use a new version`);
-  if (!existing) {
-    run([
-      'release',
-      'create',
-      tag,
-      '--verify-tag',
-      '--draft',
-      '--title',
-      tag,
-      '--generate-notes',
-      ...(semver.prerelease(version) ? ['--prerelease'] : []),
-    ]);
+  const notes = buildReleaseNotes(changelog, version, repo, previousReleaseTag(releases, version));
+  const body = mergeReleaseNotes(existing?.body, notes);
+  const notesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iss-release-notes-'));
+  const notesFile = path.join(notesDir, 'notes.md');
+  try {
+    fs.writeFileSync(notesFile, body, 'utf8');
+    if (!existing)
+      run([
+        'release',
+        'create',
+        tag,
+        '--verify-tag',
+        '--draft',
+        '--title',
+        tag,
+        '--notes-file',
+        notesFile,
+        ...(semver.prerelease(version) ? ['--prerelease'] : []),
+      ]);
+    else if (body !== (existing.body || ''))
+      run(['release', 'edit', tag, '--notes-file', notesFile]);
+  } finally {
+    fs.rmSync(notesDir, { recursive: true, force: true });
   }
   // Each path is an argument, never shell-expanded. gh streams large binaries.
   run(['release', 'upload', tag, ...names.map((name) => path.join(directory, name)), '--clobber']);
@@ -136,6 +161,8 @@ if (require.main === module) {
         ? `v${pkg.version}`
         : process.env.RELEASE_TAG || process.env.GITHUB_REF_NAME;
     const { version, channel } = validateVersion(tag, pkg, lock);
+    if (command === 'validate-version')
+      changelogSection(fs.readFileSync('CHANGELOG.md', 'utf8'), version);
     if (command === 'stage') {
       const names = validateAssets('release', platform, version, channel);
       fs.mkdirSync('release-assets', { recursive: true });

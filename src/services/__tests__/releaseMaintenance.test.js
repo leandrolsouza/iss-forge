@@ -53,6 +53,23 @@ describe('release maintenance', () => {
     expect(release.body).toBe('Human release notes.');
   });
 
+  it('fills historical link-only descriptions and remains idempotent with health warnings', () => {
+    const { release, read } = fixture();
+    release.body = '**Full Changelog**: https://github.com/owner/repo/compare/v1.0.5...v1.0.7';
+    release.assets = release.assets.filter((asset) => asset.name !== 'latest.yml');
+    const config = {
+      repo: 'owner/repo',
+      changelog: '## [1.0.7]\n\n### Fixed\n\n- Version consistency',
+    };
+    const plan = planMaintenance([release], read, release.id, config);
+    expect(plan.actions[0].body).toContain("## What's Changed");
+    expect(plan.actions[0].body).toContain('Version consistency');
+    expect(plan.actions[0].body).toContain('Automatic update warning');
+    expect(plan.actions[0].expectedBody).toBe(release.body);
+    release.body = plan.actions[0].body;
+    expect(planMaintenance([release], read, release.id, config).actions).toEqual([]);
+  });
+
   it('flags missing Windows metadata and mismatched artifact names', () => {
     const { release, read } = fixture();
     release.assets = release.assets.filter((asset) => asset.name !== 'latest.yml');

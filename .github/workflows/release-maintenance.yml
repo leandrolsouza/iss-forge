@@ -7,6 +7,8 @@ on:
       - '.github/workflows/release-maintenance.yml'
       - 'scripts/release-maintenance.js'
       - 'scripts/release.js'
+      - 'scripts/release-notes.js'
+      - 'CHANGELOG.md'
   workflow_run:
     workflows: ['Build and Release']
     types: [completed]

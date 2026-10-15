@@ -2,6 +2,12 @@ const fs = require('node:fs');
 const semver = require('semver');
 const yaml = require('js-yaml');
 const { gh } = require('./release');
+const {
+  changelogSection,
+  previousReleaseTag,
+  buildReleaseNotes,
+  mergeReleaseNotes,
+} = require('./release-notes');
 
 const START = '<!-- iss-forge:release-health:start -->';
 const END = '<!-- iss-forge:release-health:end -->';
@@ -89,7 +95,7 @@ function warningBody(body, issues) {
   return `${clean.trimEnd()}${clean.trimEnd() ? '\n\n' : ''}${warning}`;
 }
 
-function planMaintenance(releases, readManifest, currentLatestId) {
+function planMaintenance(releases, readManifest, currentLatestId, notesConfig) {
   const health = releases.filter(stableVersion).map((release) => ({
     release,
     issues: inspectRelease(release, readManifest),
@@ -99,7 +105,28 @@ function planMaintenance(releases, readManifest, currentLatestId) {
     .sort((a, b) => semver.rcompare(stableVersion(a.release), stableVersion(b.release)));
   const latest = complete[0]?.release;
   const actions = health.flatMap(({ release, issues }) => {
-    const body = warningBody(release.body, issues);
+    let base = release.body;
+    if (notesConfig) {
+      const version = stableVersion(release);
+      // Missing historical entries are left alone. Existing entries must be
+      // nonempty, just like the publish-time validation requires.
+      const hasEntry = notesConfig.changelog
+        .split(/\r?\n/)
+        .some((line) => line.match(/^## \[([^\]]+)\]/)?.[1] === version);
+      if (hasEntry) {
+        changelogSection(notesConfig.changelog, version);
+        base = mergeReleaseNotes(
+          base,
+          buildReleaseNotes(
+            notesConfig.changelog,
+            version,
+            notesConfig.repo,
+            previousReleaseTag(releases, version),
+          ),
+        );
+      }
+    }
+    const body = warningBody(base, issues);
     return body === (release.body || '')
       ? []
       : [{ id: release.id, tag: release.tag_name, body, expectedBody: release.body || '' }];
@@ -191,6 +218,7 @@ if (require.main === module) {
           'Accept: application/octet-stream',
         ]),
       latest?.id,
+      { repo, changelog: fs.readFileSync('CHANGELOG.md', 'utf8') },
     );
     const report = summary(plan, apply);
     console.log(report);

@@ -69,14 +69,14 @@
       "target": "nsis"
     },
     "mac": {
-      "icon": "public/icon.ico",
+      "icon": "public/logo.png",
       "target": [
         "dmg",
         "zip"
       ]
     },
     "linux": {
-      "icon": "public/icon.ico",
+      "icon": "public/logo.png",
       "target": [
         "AppImage",
         "deb"

@@ -65,15 +65,18 @@
       "output": "release"
     },
     "win": {
+      "icon": "public/icon.ico",
       "target": "nsis"
     },
     "mac": {
+      "icon": "public/icon.ico",
       "target": [
         "dmg",
         "zip"
       ]
     },
     "linux": {
+      "icon": "public/icon.ico",
       "target": [
         "AppImage",
         "deb"

@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.7] - 2026-10-15
+
+### Fixed
+
+- Synchronize package and lockfile versions so the release validation succeeds.
+- Check package version consistency on branch pushes and pull requests before tagging.
+- Report the exact mismatched versions when release validation fails.
+
+---
+
 ## [1.0.6] - 2026-10-15
 
 ### Changed

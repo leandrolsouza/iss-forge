@@ -12,10 +12,15 @@ function validateVersion(tag, pkg, lock) {
   }
   if (
     version !== pkg.version ||
-    version !== lock.version ||
-    version !== lock.packages[''].version
+    version !== lock?.version ||
+    version !== lock?.packages?.['']?.version
   ) {
-    throw new Error('Tag, package.json and package-lock.json versions must match');
+    throw new Error(
+      'Tag, package.json and package-lock.json versions must match: ' +
+        `tag=${tag}, package.json=${pkg.version}, package-lock.json=${lock?.version}, ` +
+        `package-lock.json packages[""]=${lock?.packages?.['']?.version}. ` +
+        'Use npm version to update both package files together.',
+    );
   }
   return { version, channel: String(semver.prerelease(version)?.[0] || 'latest') };
 }
@@ -125,9 +130,12 @@ if (require.main === module) {
   try {
     const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
-    const tag = process.env.RELEASE_TAG || process.env.GITHUB_REF_NAME;
-    const { version, channel } = validateVersion(tag, pkg, lock);
     const [command, platform] = process.argv.slice(2);
+    const tag =
+      command === 'validate-package'
+        ? `v${pkg.version}`
+        : process.env.RELEASE_TAG || process.env.GITHUB_REF_NAME;
+    const { version, channel } = validateVersion(tag, pkg, lock);
     if (command === 'stage') {
       const names = validateAssets('release', platform, version, channel);
       fs.mkdirSync('release-assets', { recursive: true });
@@ -136,7 +144,7 @@ if (require.main === module) {
       console.log(`Validated ${platform}: ${names.join(', ')}`);
     } else if (command === 'publish') {
       publish('release-assets', tag, version, channel);
-    } else if (command !== 'validate-version') {
+    } else if (!['validate-version', 'validate-package'].includes(command)) {
       throw new Error(`Unknown command: ${command}`);
     }
   } catch (error) {

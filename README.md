@@ -222,6 +222,9 @@ Run `npm version patch` (or `minor`/`major`) to update both package files and
 create the version tag, then push the commit and tag together. The release
 workflow requires `v<package.json version>` and the same version in
 `package-lock.json`. For prereleases, use a SemVer tag such as `v1.1.0-rc.1`.
+Run `node scripts/release.js validate-package` to check both package files
+before tagging; branch and PR CI also runs this check. A failed tag run uses
+the files committed at that tag, so rerunning it does not pick up later fixes.
 
 The workflow tests and builds the renderer before packaging Windows x64,
 macOS arm64/x64, and Linux x64. Each build stages installers, blockmaps and

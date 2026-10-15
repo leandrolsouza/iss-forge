@@ -68,6 +68,23 @@ describe('release integrity gates', () => {
     expect(() => validateAssets(directory, 'windows', '1.0.6', 'latest')).toThrow();
   });
 
+  it('reports stale lockfile versions even when tag and package.json match', () => {
+    const pkg = { version: '1.0.6' };
+    for (const lock of [
+      { version: '1.0.5', packages: { '': pkg } },
+      { version: pkg.version, packages: { '': { version: '1.0.5' } } },
+      { version: pkg.version },
+    ]) {
+      expect(() => validateVersion('v1.0.6', pkg, lock)).toThrow('versions must match');
+    }
+    expect(() =>
+      validateVersion('v1.0.6', pkg, {
+        version: '1.0.5',
+        packages: { '': { version: '1.0.5' } },
+      }),
+    ).toThrow('package-lock.json=1.0.5');
+  });
+
   it('rejects missing differential blockmaps and mismatched versions', () => {
     const [file] = fixture('windows');
     expect(() => validateAssets(directory, 'windows', '1.0.7', 'latest')).toThrow(

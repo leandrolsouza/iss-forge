@@ -109,6 +109,11 @@ export function onRomLoaded(callback) {
   window.electronAPI.onRomLoaded(callback);
 }
 
+/** Listen for ROM read failures. Returns a cleanup function. */
+export function onRomLoadFailed(callback) {
+  return window.electronAPI.onRomLoadFailed(callback);
+}
+
 /**
  * Listen for menu save events
  * @param {function} callback

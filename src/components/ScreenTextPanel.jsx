@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { SCREEN_TEXTS } from '../rom/constants';
@@ -28,10 +29,10 @@ function previewLines(field, text) {
 /** Texts drawn by code: joypad controls, scenario screen, cup group line, ... */
 export default function ScreenTextPanel() {
   const { t } = useI18n();
+  const toast = useToast();
   const { romParser, screenTexts, handleScreenTextsChange } = useRom();
   const [selected, setSelected] = useState(SCREEN_TEXTS[0].id);
   const [draft, setDraft] = useState(null);
-  const [message, setMessage] = useState(null);
 
   const originals = useMemo(
     () => (romParser ? new RomParser(romParser.getOriginalData()).readScreenTexts() : null),
@@ -51,13 +52,12 @@ export default function ScreenTextPanel() {
   const screenDirty = (id) => JSON.stringify(draft[id]) !== JSON.stringify(screenTexts[id]);
 
   const update = (fieldId, value) => {
-    setMessage(null);
     setDraft((d) => ({ ...d, [screen.id]: { ...d[screen.id], [fieldId]: value } }));
   };
 
   const apply = () => {
     const res = handleScreenTextsChange(draft);
-    setMessage(res.ok ? { ok: true, text: t('gtApplied') } : { ok: false, text: t('gtInvalid') });
+    toast[res.ok ? 'success' : 'error'](t(res.ok ? 'gtApplied' : 'gtInvalid'));
   };
 
   const usedPacks = [...new Set(screen.fields.map((f) => f.pack).filter(Boolean))];
@@ -72,7 +72,6 @@ export default function ScreenTextPanel() {
             className={`scenario-card tournament-card ${s.id === screen.id ? 'active' : ''}`}
             onClick={() => {
               setSelected(s.id);
-              setMessage(null);
             }}
           >
             <span className="tournament-card-teams">{t(`st_${s.id}`)}</span>
@@ -238,11 +237,6 @@ export default function ScreenTextPanel() {
             </div>
           ))}
         {issues.length > 0 && <div className="scenario-warnings">{t('gtInvalid')}</div>}
-        {message && (
-          <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>
-            {message.text}
-          </div>
-        )}
 
         <div className="scenario-actions">
           <button className="kit-btn active" onClick={apply} disabled={!dirty || issues.length > 0}>

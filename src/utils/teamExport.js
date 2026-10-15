@@ -322,13 +322,14 @@ export function downloadJson(data, filename) {
 
 /**
  * Read a JSON file from disk (web fallback)
- * @returns {Promise<object|null>}
+ * @returns {Promise<object|null>} null when cancelled; rejects when invalid or unreadable
  */
 export function readJsonFile() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
+    input.oncancel = () => resolve(null);
     input.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) {
@@ -338,12 +339,20 @@ export function readJsonFile() {
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {
-          resolve(JSON.parse(ev.target.result));
+          const data = JSON.parse(ev.target.result);
+          if (data === null) throw new Error('importJsonInvalid');
+          resolve(data);
         } catch {
-          resolve(null);
+          reject(new Error('importJsonInvalid'));
         }
       };
-      reader.readAsText(file);
+      reader.onerror = () => reject(new Error('importFileReadFailed'));
+      reader.onabort = () => reject(new Error('importFileReadFailed'));
+      try {
+        reader.readAsText(file);
+      } catch {
+        reject(new Error('importFileReadFailed'));
+      }
     };
     input.click();
   });

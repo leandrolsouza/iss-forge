@@ -608,6 +608,8 @@ export default {
   toastSaveFailed: 'Could not save the ROM.',
   toastExported: 'Exported: {file}',
   toastImportFailed: 'Could not import the file.',
+  importJsonInvalid: 'The file does not contain valid JSON.',
+  importFileReadFailed: 'Could not read the selected file.',
   toastImportSingleTeam: 'Pick a file with a single team.',
   toastTeamImported: '{name} imported into slot {slot}.',
   toastFlagNoSpace: 'The flag design does not fit in the ROM flag area: nothing was changed.',
@@ -1496,5 +1498,6 @@ export default {
   settingsAiKeySessionOnly:
     'Secure storage is unavailable. This key is kept only until the app closes.',
   settingsSaveFailed: 'Could not save the settings.',
+  settingsLoadFailed: 'Could not load the settings. Using defaults.',
   saveNewerEdits: 'The submitted version was saved. Newer edits still need to be saved.',
 };

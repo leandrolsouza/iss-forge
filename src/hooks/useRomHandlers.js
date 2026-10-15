@@ -203,6 +203,7 @@ export default function useRomHandlers({
       if (part === 'uniform:goalkeeper' || part === 'hairSkin') syncSharedKeepers(teamIndex);
       markModified();
       setStatusMessage('toastRestored');
+      toast.success(t('toastRestored'));
       return true;
     },
     [
@@ -818,14 +819,24 @@ export default function useRomHandlers({
     toast.success(t('toastExported', { file: `${base}_texts.json` }));
   }, [romParser, romInfo, setStatusMessage, toast, t]);
 
+  const readImportFile = useCallback(async () => {
+    try {
+      return await readJsonFile();
+    } catch (err) {
+      setStatusMessage({ key: 'statusImportError', params: { error: { key: err.message } } });
+      toast.error(t('toastImportFailed'), { detail: t(err.message) });
+      return null;
+    }
+  }, [setStatusMessage, toast, t]);
+
   /**
    * Import a texts JSON file (all-or-nothing, one undo step).
    * @returns {Promise<null | { ok: boolean, errors: string[], warnings: string[], changed: object }>}
    */
   const handleImportTexts = useCallback(async () => {
     if (!romParser) return null;
-    const data = await readJsonFile();
-    if (!data) return null;
+    const data = await readImportFile();
+    if (data === null) return null;
     const res = applyTexts(romParser, data, { beforeCommit: () => pushSnapshot(teams) });
     if (res.ok && Object.values(res.changed).some(Boolean)) {
       setGameTexts(romParser.readTrainingTexts());
@@ -841,6 +852,7 @@ export default function useRomHandlers({
     return res;
   }, [
     romParser,
+    readImportFile,
     teams,
     pushSnapshot,
     markModified,
@@ -1172,8 +1184,8 @@ export default function useRomHandlers({
     async (teamIndex) => {
       if (!romParser) return;
 
-      const data = await readJsonFile();
-      if (!data) return;
+      const data = await readImportFile();
+      if (data === null) return;
 
       const validation = validateImport(data);
       if (!validation.valid) {
@@ -1223,6 +1235,7 @@ export default function useRomHandlers({
       setStatusMessage,
       pushSnapshot,
       syncSharedKeepers,
+      readImportFile,
       toast,
       t,
     ],

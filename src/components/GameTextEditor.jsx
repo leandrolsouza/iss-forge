@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { useConfirm, useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { GAME_TEXTS } from '../rom/constants';
@@ -106,6 +107,7 @@ function previewLines(item, text) {
 
 export default function GameTextEditor() {
   const { t } = useI18n();
+  const toast = useToast();
   const confirm = useConfirm();
   const guardDrafts = useGuardDrafts();
   const { romParser, gameTexts, handleGameTextsChange, handleExportTexts, handleImportTexts } =
@@ -113,7 +115,6 @@ export default function GameTextEditor() {
   const [importResult, setImportResult] = useState(null);
   const [selected, setSelected] = useState('intros.0');
   const [draft, setDraft] = useState(null);
-  const [message, setMessage] = useState(null);
   const [mode, setMode] = useState('training');
   const [search, setSearch] = useState('');
 
@@ -143,13 +144,12 @@ export default function GameTextEditor() {
   const invalid = item.kind === 'box' ? findInvalidBoxChars(value) : findInvalidIssChars(value);
 
   const update = (text) => {
-    setMessage(null);
     setDraft((d) => setPath(d, item.key, text));
   };
 
   const apply = () => {
     const res = handleGameTextsChange(draft);
-    setMessage(res.ok ? { ok: true, text: t('gtApplied') } : { ok: false, text: t('gtInvalid') });
+    toast[res.ok ? 'success' : 'error'](t(res.ok ? 'gtApplied' : 'gtInvalid'));
   };
 
   const groups = [...new Set(items.map((i) => i.group))];
@@ -371,11 +371,6 @@ export default function GameTextEditor() {
             </div>
 
             {issues.length > 0 && <div className="scenario-warnings">{t('gtInvalid')}</div>}
-            {message && (
-              <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>
-                {message.text}
-              </div>
-            )}
 
             <div className="scenario-actions">
               <button

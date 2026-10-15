@@ -277,7 +277,8 @@ export default function AIGeneratorPanel({ teamIndex }) {
     });
 
     markModified();
-    setStatusMessage(t('aiApplied'));
+    setStatusMessage('aiApplied');
+    toast.success(t('aiApplied'));
     warnings.forEach((key) => toast.warning(t(key)));
     setResult(null);
     setStreamText('');

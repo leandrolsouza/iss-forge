@@ -439,7 +439,10 @@ function loadAndSendRom(filePath) {
       data: Array.from(buffer),
     });
   } catch (err) {
-    dialog.showErrorBox(tr('openRomError'), err.message);
+    mainWindow.webContents.send('rom:loadFailed', {
+      name: path.basename(filePath),
+      error: err.message,
+    });
   }
 }
 

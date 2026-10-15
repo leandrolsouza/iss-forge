@@ -610,6 +610,8 @@ export default {
   toastSaveFailed: 'Nao foi possivel salvar a ROM.',
   toastExported: 'Exportado: {file}',
   toastImportFailed: 'Falha ao importar o arquivo.',
+  importJsonInvalid: 'O arquivo não contém um JSON válido.',
+  importFileReadFailed: 'Não foi possível ler o arquivo selecionado.',
   toastImportSingleTeam: 'Escolha um arquivo com um unico time.',
   toastTeamImported: '{name} importado para o slot {slot}.',
   toastFlagNoSpace:
@@ -1499,5 +1501,6 @@ export default {
   settingsAiKeySessionOnly:
     'O armazenamento seguro está indisponível. A chave será mantida apenas até fechar o aplicativo.',
   settingsSaveFailed: 'Não foi possível salvar as configurações.',
+  settingsLoadFailed: 'Não foi possível carregar as configurações. Usando os valores padrão.',
   saveNewerEdits: 'A versão enviada foi salva. As edições mais recentes ainda precisam ser salvas.',
 };

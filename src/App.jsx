@@ -37,6 +37,7 @@ import ExportPatchModal from './components/ExportPatchModal';
 import ProjectDialogs from './components/ProjectDialogs';
 import { TEAMS } from './rom/constants';
 import { isElectron } from './utils/fileHelpers';
+import { onRomLoadFailed } from './services/electronBridge';
 import {
   IconOpen,
   IconSave,
@@ -219,6 +220,15 @@ export default function App() {
     });
     return () => window.electronAPI.removeAllListeners('menu:testEmulator');
   }, [romParser, handleTestInEmulator]);
+
+  useEffect(() => {
+    if (!isElectron()) return;
+    return onRomLoadFailed(({ name, error }) => {
+      setLoading(false);
+      setStatusMessage({ key: 'statusError', params: { error } });
+      toast.error(t('toastRomLoadFailed', { file: name }), { detail: error });
+    });
+  }, [setLoading, setStatusMessage, toast, t]);
 
   // IPC listeners and keyboard shortcuts
   useEffect(() => {

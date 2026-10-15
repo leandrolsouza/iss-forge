@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { openRomWeb } from '../utils/fileHelpers';
 import { crc32, formatCrc32, stripCopierHeader } from '../rom/patches';
 import { quickValidate } from '../rom/romValidator';
@@ -19,6 +20,7 @@ function formatSize(bytes) {
 
 export default function ExportPatchModal({ visible, onClose }) {
   const { t } = useI18n();
+  const toast = useToast();
   const { romParser, romInfo, handleExportPatch } = useRom();
   const [format, setFormat] = useState('bps');
   const [customBase, setCustomBase] = useState(null); // { name, data, crc, title }
@@ -61,6 +63,7 @@ export default function ExportPatchModal({ visible, onClose }) {
     const validation = quickValidate(file.data);
     if (!validation.isValid) {
       setResult({ success: false, error: t('patchBaseInvalid') });
+      toast.error(t('patchBaseInvalid'));
       return;
     }
     setCustomBase({
@@ -83,6 +86,11 @@ export default function ExportPatchModal({ visible, onClose }) {
     setBusy(false);
     if (res.canceled) return;
     setResult(res);
+    if (res.success) {
+      toast.success(t('patchSuccess'), { detail: res.path });
+    } else {
+      toast.error(errorText(res.error));
+    }
   };
 
   const currentTitle = romInfo?.internalTitle;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { DraftGuard } from '../context/ConfirmContext';
 import {
   TEAM_DESC,
@@ -22,9 +23,9 @@ import { originalTeams } from '../utils/originalTeams';
  */
 export default function TeamDescriptionPanel({ team, teamIndex }) {
   const { t } = useI18n();
+  const toast = useToast();
   const { teams, romParser, handleTeamDescriptionChange } = useRom();
   const [draft, setDraft] = useState(team.description);
-  const [message, setMessage] = useState(null);
   // the description of the ROM as loaded (goes to the draft: Apply writes it)
   const original = useMemo(
     () => originalTeams(romParser)[teamIndex]?.description || null,
@@ -34,10 +35,6 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
   useEffect(() => {
     setDraft(team.description);
   }, [team.description]);
-
-  useEffect(() => {
-    setMessage(null);
-  }, [teamIndex]);
 
   const usage = useMemo(
     () =>
@@ -68,13 +65,12 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
   const formationMismatch = formationName && titleFormation && titleFormation !== formationName;
 
   const update = (patch) => {
-    setMessage(null);
     setDraft((d) => ({ ...d, ...patch }));
   };
 
   const apply = () => {
     const res = handleTeamDescriptionChange(teamIndex, draft);
-    setMessage(res.ok ? { ok: true, text: t('descApplied') } : { ok: false, text: t('descFull') });
+    toast[res.ok ? 'success' : 'error'](t(res.ok ? 'descApplied' : 'descFull'));
   };
 
   return (
@@ -154,9 +150,6 @@ export default function TeamDescriptionPanel({ team, teamIndex }) {
         </div>
       )}
       {over && <div className="scenario-msg-error">{t('descFull')}</div>}
-      {message && (
-        <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>{message.text}</div>
-      )}
 
       <div className="scenario-actions">
         <button

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useI18n } from '../i18n';
+import { useToast } from '../context/ToastContext';
 import { convertImageToFlag } from '../utils/imageToFlag';
 import { IconCamera, IconImage } from './Icons';
 import '../styles/FlagImageImport.css';
@@ -10,18 +11,17 @@ const PREVIEW_PIXEL = 4;
 
 export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalette }) {
   const { t } = useI18n();
+  const toast = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState('palette'); // 'palette' or 'extract'
   const [preview, setPreview] = useState(null); // { grid, palette? }
   const [dragOver, setDragOver] = useState(false);
-  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFile = useCallback(
     async (file) => {
-      setError(null);
       if (!file || !file.type.startsWith('image/')) {
-        setError(t('flagImportNotImage'));
+        toast.error(t('flagImportNotImage'));
         return;
       }
 
@@ -32,10 +32,10 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
         setPreview(result);
       } catch (err) {
         setPreview(null);
-        setError(t('flagImportFailed', { error: err?.message || '' }));
+        toast.error(t('flagImportFailed', { error: err?.message || '' }));
       }
     },
-    [flagColors, mode, t],
+    [flagColors, mode, toast, t],
   );
 
   const handleFileInput = (e) => {
@@ -146,12 +146,6 @@ export default function FlagImageImport({ flagColors, onApplyGrid, onApplyPalett
               </span>
               <span className="drop-text">{t('flagImportDropText')}</span>
               <span className="drop-hint">{t('flagImportDropHint')}</span>
-            </div>
-          )}
-
-          {error && !preview && (
-            <div className="flag-import-error" role="alert">
-              {error}
             </div>
           )}
 

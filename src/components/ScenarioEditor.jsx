@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import RomParser from '../rom/RomParser';
 import { TEAMS, SCENARIO_DATA } from '../rom/constants';
@@ -30,12 +31,12 @@ const clamp = (v, min, max) => Math.max(min, Math.min(max, Number.isFinite(v) ? 
 
 export default function ScenarioEditor() {
   const { t } = useI18n();
+  const toast = useToast();
   const guardDrafts = useGuardDrafts();
   const { romParser, scenarios, teams, handleScenarioChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState(null);
   const [linkClocks, setLinkClocks] = useState(true);
-  const [message, setMessage] = useState(null);
 
   const originals = useMemo(
     () => (romParser ? new RomParser(romParser.getOriginalData()).readScenarios() : []),
@@ -72,7 +73,6 @@ export default function ScenarioEditor() {
   const overCapacity = textUsage > TEXT_CAPACITY;
 
   const update = (patch) => {
-    setMessage(null);
     setDraft((d) => ({ ...d, ...patch }));
   };
 
@@ -85,9 +85,7 @@ export default function ScenarioEditor() {
 
   const apply = () => {
     const res = handleScenarioChange(selected, draft);
-    setMessage(
-      res.ok ? { ok: true, text: t('scenarioApplied') } : { ok: false, text: t(res.error) },
-    );
+    toast[res.ok ? 'success' : 'error'](t(res.ok ? 'scenarioApplied' : res.error));
   };
 
   const restoreOriginal = () => {
@@ -126,7 +124,6 @@ export default function ScenarioEditor() {
                 if (i === selected) return;
                 if (dirty && !(await guardDrafts())) return;
                 setSelected(i);
-                setMessage(null);
               }}
             >
               <span className="scenario-card-num">#{i + 1}</span>
@@ -329,11 +326,6 @@ export default function ScenarioEditor() {
               {warnings.map((w) => (
                 <div key={w}>{t(w)}</div>
               ))}
-            </div>
-          )}
-          {message && (
-            <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>
-              {message.text}
             </div>
           )}
 

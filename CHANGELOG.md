@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+---
+
+## [1.0.4] - 2026-10-15
+
+### Changed
+
+- Standardize editor and operation feedback with toast notifications
+
+### Fixed
+
+- Show errors for failed JSON imports, settings loads, ROM reads and flag image imports
+- Toast notifications now appear above modals
+
+---
+
 ## [1.0.3] - 2026-10-15
 
 ### Fixed
@@ -104,4 +121,8 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.0.4]: ../../releases/tag/v1.0.4
+[1.0.3]: ../../releases/tag/v1.0.3
+[1.0.2]: ../../releases/tag/v1.0.2
+[1.0.1]: ../../releases/tag/v1.0.1
 [1.0.0]: ../../releases/tag/v1.0.0

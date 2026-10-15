@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
+import { useToast } from '../context/ToastContext';
 import { useGuardDrafts, DraftGuard } from '../context/ConfirmContext';
 import {
   menuTextLength,
@@ -35,11 +36,11 @@ function MenuScreenPreview({ rom, screen, draft, label }) {
 /** Menu screens: edit the text runs of the compressed tilemaps */
 export default function MenuTextPanel() {
   const { t } = useI18n();
+  const toast = useToast();
   const guardDrafts = useGuardDrafts();
   const { romParser, menuScreens, handleMenuScreenChange } = useRom();
   const [selected, setSelected] = useState(0);
   const [draft, setDraft] = useState([]);
-  const [message, setMessage] = useState(null);
 
   const screen = menuScreens[selected];
   const originals = useMemo(
@@ -67,14 +68,9 @@ export default function MenuTextPanel() {
       draft.map((v, i) => [i, v]).filter(([i, v]) => v !== screen.runs[i].text),
     );
     const res = handleMenuScreenChange(screen.offset, texts);
-    setMessage(
-      res.ok
-        ? {
-            ok: true,
-            text: `${t('gtApplied')} (${res.size} / ${res.capacity} bytes)${res.moved ? ` - ${t('gtMenuMoved')}` : ''}`,
-          }
-        : { ok: false, text: `${t('gtMenuFull')} (${res.size} / ${res.capacity} bytes)` },
-    );
+    toast[res.ok ? 'success' : 'error'](t(res.ok ? 'gtApplied' : 'gtMenuFull'), {
+      detail: `${res.size} / ${res.capacity} bytes${res.moved ? ` - ${t('gtMenuMoved')}` : ''}`,
+    });
   };
 
   return (
@@ -89,7 +85,6 @@ export default function MenuTextPanel() {
               if (i === selected) return;
               if (dirty && !(await guardDrafts())) return;
               setSelected(i);
-              setMessage(null);
             }}
             title={s.runs.map((r) => r.text).join(' · ')}
           >
@@ -122,7 +117,6 @@ export default function MenuTextPanel() {
                     value={value}
                     spellCheck={false}
                     onChange={(e) => {
-                      setMessage(null);
                       setDraft((d) => d.map((v, k) => (k === i ? e.target.value : v)));
                     }}
                   />
@@ -147,12 +141,6 @@ export default function MenuTextPanel() {
           />
           <p className="scenario-hint">{t('gtMenuPreviewHint')}</p>
         </div>
-
-        {message && (
-          <div className={message.ok ? 'scenario-msg-ok' : 'scenario-msg-error'}>
-            {message.text}
-          </div>
-        )}
 
         <div className="scenario-actions">
           <button className="kit-btn active" onClick={apply} disabled={!dirty || tooLong}>

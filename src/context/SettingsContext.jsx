@@ -31,22 +31,34 @@ export function SettingsProvider({ children }) {
   const { t } = useI18n();
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
 
   // Load settings on mount
   useEffect(() => {
+    let active = true;
     async function load() {
       if (isElectron()) {
         try {
           const stored = await window.electronAPI.settingsGetAll();
-          setSettings((prev) => ({ ...prev, ...stored }));
+          if (active) setSettings((prev) => ({ ...prev, ...stored }));
         } catch (err) {
           console.error('Failed to load settings:', err);
+          if (active) setLoadError(err);
         }
       }
-      setLoaded(true);
+      if (active) setLoaded(true);
     }
     load();
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!loadError) return;
+    toast.error(t('settingsLoadFailed'), { detail: loadError.message });
+    setLoadError(null);
+  }, [loadError, toast, t]);
 
   // Update a single setting and persist
   const updateSettings = useCallback(

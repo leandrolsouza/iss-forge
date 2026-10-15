@@ -6,7 +6,7 @@
   position: fixed;
   right: 16px;
   bottom: calc(var(--statusbar-height) + 12px);
-  z-index: 9000; /* below modal overlays (10000) */
+  z-index: 11000; /* keep operation results visible above modal overlays (10000) */
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -30,6 +30,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onRomLoaded: (callback) => {
     ipcRenderer.on('rom:loaded', (event, data) => callback(data));
   },
+  onRomLoadFailed: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('rom:loadFailed', handler);
+    return () => ipcRenderer.removeListener('rom:loadFailed', handler);
+  },
   // opts.fromClose: the save was chosen in the "unsaved changes" prompt on quit
   onMenuSave: (callback) => {
     ipcRenderer.on('menu:save', (event, opts) => callback(opts || {}));

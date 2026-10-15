@@ -1068,6 +1068,9 @@ export default {
   // Auto-Updater
   updateAvailable: 'New version {version} is available!',
   updateDownload: 'Download',
+  updateDownloadManual: 'Download from GitHub (manual install)',
+  updateDevMode: 'Updates are available in the installed app.',
+  updateUnsupported: 'Automatic updates are unavailable for this installation.',
   updateDismiss: 'Later',
   updateDownloading: 'Downloading update...',
   updateReady: 'Update ready to install.',
@@ -1075,7 +1078,7 @@ export default {
   updateLater: 'Later',
   updateChecking: 'Checking for updates...',
   updateNotAvailable: 'ISS Forge is up to date.',
-  updateError: 'Update check failed.',
+  updateError: 'Update failed.',
   statusCheckUpdates: 'Check for updates',
   statusUpToDate: 'Up to date',
   statusUpdateInstall: 'Restart',

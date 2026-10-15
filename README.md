@@ -216,6 +216,38 @@ Describe the team you want in natural language and the AI generates players, uni
 
 In the desktop app, API keys are protected with the operating system's secure storage and are scoped to each provider and destination. Enter a replacement key and click **Save**; a stored key is never returned to the interface. Existing keys are migrated automatically. If secure storage is unavailable, a key is retained only for the current session and the settings page shows a warning. Use HTTPS endpoints, or HTTP for a server on localhost.
 
+## Releases and updates
+
+Run `npm version patch` (or `minor`/`major`) to update both package files and
+create the version tag, then push the commit and tag together. The release
+workflow requires `v<package.json version>` and the same version in
+`package-lock.json`. For prereleases, use a SemVer tag such as `v1.1.0-rc.1`.
+
+The workflow tests and builds the renderer before packaging Windows x64,
+macOS arm64/x64, and Linux x64. Each build stages installers, blockmaps and
+its update manifest as an Actions artifact. A single publishing job checks
+all manifests against the files (version, name, size and SHA-512), uploads
+them, checks the remote asset names and sizes, and only then publishes the
+draft. Artifact names must stay free of spaces and match the manifests exactly.
+
+Failed packaging never creates a release. A failed upload leaves a draft;
+rerunning the failed job reuses it and replaces assets. Published releases
+are never overwritten by the workflow: ship corrections under a new version.
+Do not move an already published tag or manually publish an incomplete draft.
+
+Windows builds currently use unsigned NSIS installers, configured with
+`win.verifyUpdateCodeSignature: false`; the updater still verifies the
+manifest's SHA-512. When code signing is configured, remove that setting.
+macOS builds are also unsigned, so the update button opens the matching GitHub
+release for manual installation. Native macOS auto-update requires signed
+builds; enable signing in CI and remove `manualInstall` in `electron/main.mjs`
+when signed builds are available.
+
+The updater owns its state in the main process, restores it after renderer
+reloads, serializes checks/downloads, and only allows installation after a
+completed download. Restarting to install follows the editor's existing
+save/discard/cancel dialog when there are unsaved changes.
+
 ## Credits
 
 Based on the work of:

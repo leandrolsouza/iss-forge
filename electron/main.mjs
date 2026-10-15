@@ -25,6 +25,7 @@ import * as backups from './backups.mjs';
 import { createCredentialSettings } from './credentials.mjs';
 import { secureIpc, rendererEntryUrl } from './ipcSecurity.mjs';
 import { rendererCsp } from './contentSecurity.mjs';
+import { createUpdater } from './updater.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,6 +58,21 @@ let lastOpenDialogPath = null;
 let isRomModified = false;
 let forceQuit = false;
 let waitingForCloseSave = false;
+let pendingUpdateInstall = false;
+const updater = createUpdater({
+  autoUpdater,
+  isPackaged: app.isPackaged,
+  // This project's macOS builds are unsigned. Squirrel.Mac requires signing;
+  // offer the release download until signing is configured in CI.
+  manualInstall: process.platform === 'darwin',
+  openExternal: (url) => shell.openExternal(url),
+  send: (state) => {
+    if (state.status === 'error') forceQuit = false;
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('updater:status', state);
+    }
+  },
+});
 // What the editor has open, sent by the renderer ('app:setSession'):
 // { kind: 'project' | 'rom' | null, name?: string, ext?: string }. Menu labels follow it.
 let session = { kind: null };
@@ -205,6 +221,7 @@ const TITLEBAR_COLORS = {
 function createWindow() {
   forceQuit = false;
   waitingForCloseSave = false;
+  pendingUpdateInstall = false;
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -233,7 +250,7 @@ function createWindow() {
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     // Provider documentation links open in the browser, with no preload privileges.
-    if (url.startsWith('https://')) shell.openExternal(url).catch(() => { });
+    if (url.startsWith('https://')) shell.openExternal(url).catch(() => {});
     return { action: 'deny' };
   });
   mainWindow.webContents.session.setPermissionRequestHandler((_contents, _permission, callback) =>
@@ -392,9 +409,7 @@ function createMenu() {
               return;
             }
             mainWindow.webContents.send('menu:checkForUpdates');
-            autoUpdater.checkForUpdates().catch((err) => {
-              console.error('Menu update check failed:', err.message);
-            });
+            void updater.check();
           },
         },
       ],
@@ -533,7 +548,7 @@ ipc.handle('emulator:test', async (event, { data, extension }) => {
     else args.push(romPath);
 
     const child = spawn(exe, args, { detached: true, stdio: 'ignore', cwd: path.dirname(exe) });
-    child.on('error', () => { });
+    child.on('error', () => {});
     child.unref();
     return { success: true, path: romPath };
   } catch (err) {
@@ -548,9 +563,9 @@ ipc.handle('emulator:select', async () => {
     filters:
       process.platform === 'win32'
         ? [
-          { name: tr('programs'), extensions: ['exe'] },
-          { name: tr('allFiles'), extensions: ['*'] },
-        ]
+            { name: tr('programs'), extensions: ['exe'] },
+            { name: tr('allFiles'), extensions: ['*'] },
+          ]
         : [{ name: tr('allFiles'), extensions: ['*'] }],
   });
   if (result.canceled || !result.filePaths.length) return { success: false };
@@ -647,8 +662,9 @@ ipc.on('app:closeResponse', (event, choice) => {
   if (choice === 'save') {
     mainWindow.webContents.send('menu:save', { fromClose: true });
   } else if (choice === 'discard') {
-    forceQuit = true;
-    mainWindow.close();
+    completeClose();
+  } else {
+    pendingUpdateInstall = false;
   }
   // 'cancel': do nothing, window stays open
 });
@@ -656,9 +672,18 @@ ipc.on('app:closeResponse', (event, choice) => {
 ipc.on('rom:saveComplete', (_event, { fromClose }) => {
   if (!fromClose || !waitingForCloseSave) return;
   waitingForCloseSave = false;
-  forceQuit = true;
-  mainWindow.close();
+  completeClose();
 });
+
+function completeClose() {
+  forceQuit = true;
+  if (pendingUpdateInstall) {
+    pendingUpdateInstall = false;
+    if (!updater.install()) forceQuit = false;
+  } else {
+    mainWindow.close();
+  }
+}
 
 ipc.handle('recent:getAll', () => {
   return loadRecentRoms();
@@ -1060,91 +1085,31 @@ ipc.handle('ai:generate-stream', async (event, payload) => {
 });
 
 // --- Auto-Updater ---
-function setupAutoUpdater() {
-  // Don't check for updates in development
-  if (!app.isPackaged) return;
-
-  autoUpdater.autoDownload = false;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  // Skip code-signature verification — the app is not code-signed, so the
-  // default NSIS verifier would reject every downloaded update.
-  autoUpdater.verifyUpdateCodeSignature = async () => null;
-
-  autoUpdater.on('checking-for-update', () => {
-    sendUpdaterStatus('checking');
-  });
-
-  autoUpdater.on('update-available', (info) => {
-    sendUpdaterStatus('available', {
-      version: info.version,
-      releaseDate: info.releaseDate,
-      releaseNotes: info.releaseNotes,
-    });
-  });
-
-  autoUpdater.on('update-not-available', () => {
-    sendUpdaterStatus('not-available');
-  });
-
-  autoUpdater.on('download-progress', (progress) => {
-    sendUpdaterStatus('downloading', {
-      percent: progress.percent,
-      bytesPerSecond: progress.bytesPerSecond,
-      transferred: progress.transferred,
-      total: progress.total,
-    });
-  });
-
-  autoUpdater.on('update-downloaded', (info) => {
-    sendUpdaterStatus('downloaded', { version: info.version });
-  });
-
-  autoUpdater.on('error', (err) => {
-    sendUpdaterStatus('error', { message: err.message });
-  });
-
-  // Check for updates after a short delay to not block startup
-  setTimeout(() => {
-    autoUpdater.checkForUpdates().catch((err) => {
-      console.error('Auto-update check failed:', err.message);
-    });
-  }, 3000);
-}
-
-function sendUpdaterStatus(status, data = {}) {
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('updater:status', { status, ...data });
-  }
-}
-
-// IPC handlers for updater
-ipc.handle('updater:check', () => {
-  if (!app.isPackaged) {
-    return { status: 'dev-mode' };
-  }
-  autoUpdater.checkForUpdates().catch((err) => {
-    console.error('Manual update check failed:', err.message);
-  });
-  return { status: 'checking' };
-});
-
-ipc.handle('updater:download', () => {
-  autoUpdater.downloadUpdate().catch((err) => {
-    console.error('Download update failed:', err.message);
-  });
-  return { status: 'downloading' };
-});
-
+ipc.handle('updater:state', () => updater.getState());
+ipc.handle('updater:check', () => updater.check());
+ipc.handle('updater:download', () => updater.download());
 ipc.handle('updater:install', () => {
-  autoUpdater.quitAndInstall(false, true);
+  // Reopening the same modal is harmless, and lets the user retry if a save
+  // failed or its Save As dialog was cancelled without a save-complete event.
+  if (!updater.canInstall()) return updater.getState();
+  pendingUpdateInstall = true;
+  if (isRomModified) {
+    mainWindow.webContents.send('app:confirmClose');
+  } else {
+    completeClose();
+  }
+  return updater.getState();
 });
 
 // App lifecycle
 app.whenReady().then(() => {
   credentialSettings.migrate();
   createWindow();
-  setupAutoUpdater();
+  if (app.isPackaged) {
+    const timer = setTimeout(() => void updater.check(), 3000);
+    timer.unref();
+    app.once('before-quit', () => clearTimeout(timer));
+  }
 });
 
 app.on('window-all-closed', () => {

@@ -12,16 +12,21 @@ export function useUpdater() {
   // menuTriggered makes low-noise states (checking / not-available) visible in the toast
   const [menuTriggered, setMenuTriggered] = useState(false);
   const autoHideRef = useRef(null);
+  const receiveRef = useRef(null);
+  const eventVersionRef = useRef(0);
 
   useEffect(() => {
     if (!isElectron()) return;
 
-    const cleanupStatus = window.electronAPI.onUpdaterStatus((data) => {
+    let active = true;
+    let receivedStatus = false;
+    const receive = (data) => {
+      if (!active || !data) return;
       clearTimeout(autoHideRef.current);
       setUpdateState(data);
 
       // Always re-show the toast for actionable transitions
-      if (data.status === 'available' || data.status === 'downloaded') {
+      if (['available', 'downloaded', 'error'].includes(data.status)) {
         setDismissed(false);
         setMenuTriggered(false);
       }
@@ -33,7 +38,22 @@ export function useUpdater() {
           setMenuTriggered(false);
         }, 3000);
       }
+    };
+    receiveRef.current = receive;
+    const cleanupStatus = window.electronAPI.onUpdaterStatus((data) => {
+      receivedStatus = true;
+      eventVersionRef.current += 1;
+      receive(data);
     });
+    // Subscribe first, then recover state after reload without overwriting newer events.
+    window.electronAPI
+      .updaterGetState?.()
+      .then((data) => {
+        if (!receivedStatus) receive(data);
+      })
+      .catch((error) => {
+        if (!receivedStatus) receive({ status: 'error', message: error.message });
+      });
 
     const cleanupMenu = window.electronAPI.onMenuCheckForUpdates?.(() => {
       setMenuTriggered(true);
@@ -41,6 +61,8 @@ export function useUpdater() {
     });
 
     return () => {
+      active = false;
+      receiveRef.current = null;
       cleanupStatus?.();
       cleanupMenu?.();
       clearTimeout(autoHideRef.current);
@@ -48,22 +70,34 @@ export function useUpdater() {
   }, []);
 
   /** Trigger an update check (e.g. from the status bar button) */
+  const invoke = useCallback(async (method) => {
+    const eventVersion = eventVersionRef.current;
+    try {
+      const result = await window.electronAPI[method]?.();
+      if (eventVersion === eventVersionRef.current) receiveRef.current?.(result);
+    } catch (error) {
+      if (eventVersion === eventVersionRef.current) {
+        receiveRef.current?.({ status: 'error', message: error.message });
+      }
+    }
+  }, []);
+
   const check = useCallback(() => {
     if (!isElectron()) return;
     setMenuTriggered(true);
     setDismissed(false);
-    window.electronAPI.updaterCheck?.();
-  }, []);
+    void invoke('updaterCheck');
+  }, [invoke]);
 
   const download = useCallback(() => {
     if (!isElectron()) return;
-    window.electronAPI.updaterDownload?.();
-  }, []);
+    void invoke('updaterDownload');
+  }, [invoke]);
 
   const install = useCallback(() => {
     if (!isElectron()) return;
-    window.electronAPI.updaterInstall?.();
-  }, []);
+    void invoke('updaterInstall');
+  }, [invoke]);
 
   /** Hides the toast (user clicked "Later" / "Dismiss") */
   const dismiss = useCallback(() => {

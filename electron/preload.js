@@ -74,6 +74,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openRecentRom: (filePath) => ipcRenderer.invoke('recent:open', filePath),
 
   // Auto-updater
+  updaterGetState: () => ipcRenderer.invoke('updater:state'),
   updaterCheck: () => ipcRenderer.invoke('updater:check'),
   updaterDownload: () => ipcRenderer.invoke('updater:download'),
   updaterInstall: () => ipcRenderer.invoke('updater:install'),

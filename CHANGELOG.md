@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2026-10-15
+
+### Changed
+
+- Rewritten CI release pipeline: a single `validate` job (tests + version check) followed by a
+  matrix `build` (Windows / macOS / Linux) and a single `publish` job that downloads all artifacts
+  and uploads them together — eliminates the per-platform upload race conditions
+- Auto-updater extracted into a dedicated `electron/updater.mjs` module with a proper state machine
+  and concurrency lock; prevents duplicate operations on rapid IPC calls
+
+### Fixed
+
+- macOS update flow: unsigned builds now open the GitHub releases page in the browser instead of
+  attempting a Squirrel install, which requires code-signing
+- Windows builds: `verifyUpdateCodeSignature` set to `false` in electron-builder to match the
+  runtime setting already in place
+- Consistent artifact naming via `artifactName` in electron-builder config
+
+---
+
 ## [1.0.5] - 2026-10-15
 
 ### Added
@@ -129,6 +149,7 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.0.6]: ../../releases/tag/v1.0.6
 [1.0.5]: ../../releases/tag/v1.0.5
 [1.0.4]: ../../releases/tag/v1.0.4
 [1.0.3]: ../../releases/tag/v1.0.3

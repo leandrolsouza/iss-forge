@@ -159,6 +159,7 @@ for (const channel of [
   'settings:getAll',
   'settings:selectExportPath',
   'ai:getSettings',
+  'updater:state',
   'updater:check',
   'updater:download',
   'updater:install',

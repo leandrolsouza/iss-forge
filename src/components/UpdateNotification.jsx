@@ -25,7 +25,16 @@ export default function UpdateNotification({
   }
 
   // Only render known, user-visible states
-  const VISIBLE = ['checking', 'not-available', 'available', 'downloading', 'downloaded', 'error'];
+  const VISIBLE = [
+    'checking',
+    'not-available',
+    'available',
+    'downloading',
+    'downloaded',
+    'error',
+    'dev-mode',
+    'unsupported',
+  ];
   if (!VISIBLE.includes(status)) return null;
 
   return (
@@ -35,6 +44,16 @@ export default function UpdateNotification({
       aria-live="polite"
     >
       <div className="update-notification-content">
+        {['dev-mode', 'unsupported'].includes(status) && menuTriggered && (
+          <>
+            <span className="update-notification-text">
+              {t(status === 'dev-mode' ? 'updateDevMode' : 'updateUnsupported')}
+            </span>
+            <button className="update-notification-btn" onClick={onDismiss}>
+              {t('updateDismiss')}
+            </button>
+          </>
+        )}
         {status === 'checking' && (
           <span className="update-notification-text">{t('updateChecking')}</span>
         )}
@@ -49,7 +68,7 @@ export default function UpdateNotification({
               {t('updateAvailable').replace('{version}', updateState.version)}
             </span>
             <button className="update-notification-btn primary" onClick={onDownload}>
-              {t('updateDownload')}
+              {t(updateState.manualInstall ? 'updateDownloadManual' : 'updateDownload')}
             </button>
             <button className="update-notification-btn" onClick={onDismiss}>
               {t('updateDismiss')}

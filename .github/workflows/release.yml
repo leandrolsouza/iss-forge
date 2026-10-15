@@ -2,199 +2,90 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: ['v*']
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  create-release:
+  validate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    outputs:
-      release_id: ${{ steps.create.outputs.release_id }}
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Create GitHub Release
-        id: create
-        uses: actions/github-script@v7
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          script: |
-            const tag = context.ref.replace('refs/tags/', '');
-            const { data: release } = await github.rest.repos.createRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag_name: tag,
-              name: tag,
-              draft: true,
-              prerelease: tag.includes('beta') || tag.includes('alpha'),
-              generate_release_notes: true,
-            });
-            core.setOutput('release_id', String(release.id));
+          node-version: '22'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Validate tag and package versions
+        run: node scripts/release.js validate-version
+      - run: npm test
+      - run: npm run build
 
-  build-windows:
-    needs: create-release
-    runs-on: windows-latest
-    permissions:
-      contents: write
+  build:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            args: --win --x64
+          - os: macos-latest
+            platform: macos
+            args: --mac --arm64 --x64
+          - os: ubuntu-latest
+            platform: linux
+            args: --linux --x64
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: "22"
+          node-version: '22'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - run: npm run build
+      - name: Package application
+        run: npx electron-builder ${{ matrix.args }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Validate and stage update assets
+        run: node scripts/release.js stage ${{ matrix.platform }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: release-assets/*
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
 
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build Electron app
-        run: |
-          npm run build
-          npx electron-builder --win --publish never
-
-      - name: Upload assets to release
-        run: |
-          $files = Get-ChildItem release | Where-Object { $_.Extension -in '.exe','.blockmap' -or $_.Name -eq 'latest.yml' } | Select-Object -ExpandProperty FullName
-          gh release upload ${{ github.ref_name }} @files --clobber
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+      - name: Validate, upload and publish complete release
+        run: node scripts/release.js publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  build-macos:
-    needs: create-release
-    runs-on: macos-latest
-    permissions:
-      contents: write
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build Electron app
-        run: |
-          npm run build
-          npx electron-builder --mac --publish never
-
-      - name: Upload assets to release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const releaseId = ${{ needs.create-release.outputs.release_id }};
-            const releaseDir = path.join(process.env.GITHUB_WORKSPACE, 'release');
-            const files = fs.readdirSync(releaseDir).filter(f => {
-              return f.endsWith('.dmg') || f.endsWith('.zip') || f.endsWith('.blockmap') || f === 'latest-mac.yml';
-            });
-            for (const file of files) {
-              const filePath = path.join(releaseDir, file);
-              const stat = fs.statSync(filePath);
-              if (!stat.isFile()) continue;
-              console.log(`Uploading ${file} (${stat.size} bytes)`);
-              await github.rest.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: releaseId,
-                name: file,
-                data: fs.readFileSync(filePath),
-                headers: {
-                  'content-type': 'application/octet-stream',
-                  'content-length': stat.size,
-                },
-              });
-            }
-
-  build-linux:
-    needs: create-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install dependencies
-        run: npm ci --legacy-peer-deps
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build Electron app
-        run: |
-          npm run build
-          npx electron-builder --linux --publish never
-
-      - name: Upload assets to release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-            const releaseId = ${{ needs.create-release.outputs.release_id }};
-            const releaseDir = path.join(process.env.GITHUB_WORKSPACE, 'release');
-            const files = fs.readdirSync(releaseDir).filter(f => {
-              return f.endsWith('.AppImage') || f.endsWith('.deb') || f.endsWith('.blockmap') || f === 'latest-linux.yml';
-            });
-            for (const file of files) {
-              const filePath = path.join(releaseDir, file);
-              const stat = fs.statSync(filePath);
-              if (!stat.isFile()) continue;
-              console.log(`Uploading ${file} (${stat.size} bytes)`);
-              await github.rest.repos.uploadReleaseAsset({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: releaseId,
-                name: file,
-                data: fs.readFileSync(filePath),
-                headers: {
-                  'content-type': 'application/octet-stream',
-                  'content-length': stat.size,
-                },
-              });
-            }
-
-  publish-release:
-    needs: [create-release, build-windows, build-macos, build-linux]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Publish Release
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: ${{ needs.create-release.outputs.release_id }},
-              draft: false,
-            });
+          GH_REPO: ${{ github.repository }}

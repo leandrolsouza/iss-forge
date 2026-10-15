@@ -31,7 +31,7 @@ export default function StatusBar({
   const getUpdateChip = () => {
     const status = updateState?.status;
 
-    if (!status) {
+    if (!status || status === 'idle') {
       return {
         label: t('statusCheckUpdates'),
         cls: 'status-update status-update--idle',
@@ -41,6 +41,14 @@ export default function StatusBar({
     }
 
     switch (status) {
+      case 'dev-mode':
+      case 'unsupported':
+        return {
+          label: t('statusCheckUpdates'),
+          cls: 'status-update status-update--idle',
+          onClick: onCheckForUpdates,
+          title: t(status === 'dev-mode' ? 'updateDevMode' : 'updateUnsupported'),
+        };
       case 'checking':
         return {
           label: t('updateChecking'),

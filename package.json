@@ -1,6 +1,6 @@
 {
   "name": "iss-forge",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "ISS Forge - ROM Editor for International Superstar Soccer (SNES 1995)",
   "main": "electron/main.mjs",
   "scripts": {
@@ -42,7 +42,9 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.6",
     "globals": "^17.12.0",
+    "js-yaml": "^4.1.0",
     "prettier": "^3.9.6",
+    "semver": "^7.7.3",
     "vite": "^8.2.2",
     "vitest": "^5.0.0",
     "wait-on": "^9.1.0"
@@ -50,6 +52,7 @@
   "build": {
     "appId": "com.iss-forge.app",
     "productName": "ISS Forge",
+    "artifactName": "${name}-${version}-${arch}.${ext}",
     "publish": [
       {
         "provider": "github",
@@ -66,6 +69,7 @@
     },
     "win": {
       "icon": "public/icon.ico",
+      "verifyUpdateCodeSignature": false,
       "target": "nsis"
     },
     "mac": {

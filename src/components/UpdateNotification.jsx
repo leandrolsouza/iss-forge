@@ -123,7 +123,10 @@ export default function UpdateNotification() {
 
         {status === 'error' && (
           <>
-            <span className="update-notification-text">{t('updateError')}</span>
+            <span className="update-notification-text">
+              {t('updateError')}
+              {updateState.message ? ` — ${updateState.message}` : ''}
+            </span>
             <button className="update-notification-btn" onClick={handleDismiss}>
               {t('updateDismiss')}
             </button>

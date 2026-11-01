@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { getPositionLabel, positionText } from '../rom/formation';
 import { useI18n } from '../i18n';
 import { IconCompare } from './Icons';

@@ -31,7 +31,7 @@ function checkServer(retries = 0) {
     process.exit(1);
   }
 
-  const req = http.get(`http://localhost:${VITE_PORT}`, (res) => {
+  const req = http.get(`http://localhost:${VITE_PORT}`, () => {
     console.log(`[dev] Vite is ready on port ${VITE_PORT}!`);
     startElectron();
   });

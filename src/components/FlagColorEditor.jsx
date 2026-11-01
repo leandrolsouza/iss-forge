@@ -1,4 +1,3 @@
-import React from 'react';
 import { useI18n } from '../i18n';
 import { IconFlag } from './Icons';
 import ColorEditorCard from './ColorEditorCard';

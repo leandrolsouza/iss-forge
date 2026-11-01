@@ -17,7 +17,6 @@ import {
 } from '../services/aiProviders';
 import { isElectron } from '../services/electronBridge';
 import * as electronBridge from '../services/electronBridge';
-import '../styles/settings.css';
 
 export default function SettingsPage() {
   const { t } = useI18n();

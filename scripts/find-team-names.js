@@ -13,7 +13,6 @@ const rom = fs.readFileSync(romPath);
 console.log(`ROM size: ${rom.length} bytes`);
 
 function searchPattern(name, pattern) {
-  const hex = pattern.map((b) => b.toString(16).padStart(2, '0')).join(' ');
   let results = [];
   for (let i = 0; i < rom.length - pattern.length; i++) {
     let match = true;

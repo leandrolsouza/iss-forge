@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { readPlayerNames, readPlayerData } from '../readers/PlayerReader';
 import { writePlayerName, writePlayerData } from '../writers/PlayerWriter';
-import { SHOOTING_VALUES, ISS_CHAR_TABLE, ISS_CHAR_REVERSE, PLAYERS_PER_TEAM } from '../constants';
 import RomParser from '../RomParser';
 
 function createMockRom(size = 1048576) {

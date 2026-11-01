@@ -4,7 +4,8 @@ Supplements the [root guide](../AGENTS.md).
 
 ## Conventions
 
-- `.js` scripts in this directory use CommonJS. Preserve Node.js 22 compatibility
+- `.js` scripts in this directory use CommonJS; scripts written as ES modules use
+  the `.mjs` extension. Preserve Node.js 22 compatibility
   and support for Windows, macOS, and Linux in development and CI flows.
 - Run from the repository root or resolve paths explicitly. Do not introduce
   machine-specific absolute paths in shared tools.

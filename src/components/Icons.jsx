@@ -2,7 +2,6 @@
  * Custom SVG Icons for ISS Editor
  * Style: VS Code Codicon-inspired, 16x16 viewBox, currentColor fill
  */
-import React from 'react';
 
 const Icon = ({ children, size = 16, className = '' }) => (
   <svg

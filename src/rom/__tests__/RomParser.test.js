@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import RomParser from '../RomParser';
 import { seedSupportedLayout } from './compatibilityFixture';
-import { ISS_CHAR_TABLE, ISS_CHAR_REVERSE, PLAYER_NAMES } from '../constants';
+import { ISS_CHAR_TABLE, ISS_CHAR_REVERSE } from '../constants';
 
 describe('RomParser', () => {
   // Create a minimal 1MB ROM with a valid SNES header

@@ -293,6 +293,7 @@ export default {
   // Loading
   loadingTitle: 'Carregando ROM...',
   loadingMessage: 'Lendo e processando dados dos times',
+  editorLoading: 'Carregando editor...',
 
   // Recent ROMs
   recentRoms: 'ROMs Recentes',

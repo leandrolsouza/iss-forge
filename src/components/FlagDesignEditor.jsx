@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n';
 import { useConfirm } from '../context/ConfirmContext';
 import FlagTemplateSelector from './FlagTemplateSelector';
@@ -16,7 +16,6 @@ export default function FlagDesignEditor({
   team,
   teamIndex,
   onFlagDesignBulkChange,
-  onFlagColorChange,
   onFlagColorBulkChange,
 }) {
   const [selectedColor, setSelectedColor] = useState(1);

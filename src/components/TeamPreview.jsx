@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { HAIR_STYLES, SHOOTING_VALUES } from '../rom/constants';
+import { useEffect, useState } from 'react';
+import { HAIR_STYLES } from '../rom/constants';
 import {
   getPositionLabel as slotPositionLabel,
   getLineCategory,

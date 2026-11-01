@@ -4,7 +4,7 @@
  * and renders them. Since the title screen tiles might be uncompressed,
  * this scans the ROM directly.
  *
- * Usage: node scripts/findRawTiles.js <path-to-rom.smc> [startHex] [tileCount]
+ * Usage: node scripts/findRawTiles.mjs <path-to-rom.smc> [startHex] [tileCount]
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -58,7 +58,7 @@ function decodeSnes4bppToPixels(tileData, tilesPerRow = 16) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log('Usage: node scripts/findRawTiles.js <path-to-rom.smc> [startHex] [tileCount]');
+  console.log('Usage: node scripts/findRawTiles.mjs <path-to-rom.smc> [startHex] [tileCount]');
   console.log('');
   console.log('Reads raw 4bpp tiles directly from ROM (no decompression).');
   console.log('Renders multiple pages starting at different offsets for visual scanning.');

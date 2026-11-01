@@ -36,7 +36,12 @@ export const EDITORS = [
     Icon: IconFormation,
     scope: 'team',
     children: [
-      { id: 'formationTactics', labelKey: 'editorFormationTactics', Icon: IconFormation, scope: 'team' },
+      {
+        id: 'formationTactics',
+        labelKey: 'editorFormationTactics',
+        Icon: IconFormation,
+        scope: 'team',
+      },
       { id: 'formationDesc', labelKey: 'editorFormationDesc', Icon: IconGameText, scope: 'team' },
     ],
   },
@@ -78,7 +83,12 @@ export const EDITORS = [
     scope: 'global',
     children: [
       { id: 'titleScreen', labelKey: 'editorTitleScreen', Icon: IconTitleScreen, scope: 'global' },
-      { id: 'screenViewer', labelKey: 'editorScreenViewer', Icon: IconScreenViewer, scope: 'global' },
+      {
+        id: 'screenViewer',
+        labelKey: 'editorScreenViewer',
+        Icon: IconScreenViewer,
+        scope: 'global',
+      },
     ],
   },
   { id: 'ai', labelKey: 'editorAiGenerator', Icon: IconSparkle, scope: 'team', ai: true },
@@ -91,9 +101,7 @@ const EXTRA_TABS = [
   { id: 'about', labelKey: 'aboutTitle', Icon: IconInfo, scope: 'global' },
 ];
 
-const BY_ID = Object.fromEntries(
-  [...flattenEditors(EDITORS), ...EXTRA_TABS].map((e) => [e.id, e]),
-);
+const BY_ID = Object.fromEntries([...flattenEditors(EDITORS), ...EXTRA_TABS].map((e) => [e.id, e]));
 
 export const getEditor = (id) => BY_ID[id];
 

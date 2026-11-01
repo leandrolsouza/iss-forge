@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  readUniformColors,
-  readHairSkinColors,
-  readFlagColors,
-  parseSnesColor,
-} from '../readers/UniformReader';
+import { readUniformColors, readHairSkinColors, readFlagColors } from '../readers/UniformReader';
 import { writeUniformColor, writeHairSkinColor, writeFlagColor } from '../writers/UniformWriter';
 import RomParser from '../RomParser';
 

@@ -1,31 +1,20 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { lazy, Suspense, useEffect, useState, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
-import PlayerEditor from './components/PlayerEditor';
-import FormationEditor from './components/FormationEditor';
-import FormationDescEditor from './components/FormationDescEditor';
-import ScenarioEditor from './components/ScenarioEditor';
-import TournamentEditor from './components/TournamentEditor';
-import ScreenViewer from './components/ScreenViewer';
-import GameTextEditor from './components/GameTextEditor';
-import MatchPaletteEditor from './components/MatchPaletteEditor';
-import PitchPaletteEditor from './components/PitchPaletteEditor';
-import BallPaletteEditor from './components/BallPaletteEditor';
-import RefereePaletteEditor from './components/RefereePaletteEditor';
-import StadiumPaletteEditor from './components/StadiumPaletteEditor';
-import CrowdPaletteEditor from './components/CrowdPaletteEditor';
-import TitleScreenEditor from './components/TitleScreenEditor';
-import UniformEditor from './components/UniformEditor';
-import HairSkinEditor from './components/HairSkinEditor';
-import FlagColorEditor from './components/FlagColorEditor';
-import FlagDesignEditor from './components/FlagDesignEditor';
-import TeamNameEditor from './components/TeamNameEditor';
-import TeamPreview from './components/TeamPreview';
-import TeamCompare from './components/TeamCompare';
-import AboutPanel from './components/AboutPanel';
-import AIGeneratorPanel from './components/AIGeneratorPanel';
-import LeagueGeneratorPanel from './components/LeagueGeneratorPanel';
-import SettingsPage from './components/SettingsPage';
+// Stylesheets of the lazy editors stay in the initial CSS, in their original place: loaded
+// later with each chunk they would come after index.css and win ties they used to lose
+import './styles/formation.css';
+import './styles/player-preview.css';
+import './styles/scenario.css';
+import './styles/tournament.css';
+import './styles/screen-viewer.css';
+import './styles/game-texts.css';
+import './styles/match-palettes.css';
+import './styles/title-screen.css';
+import './styles/FlagTemplateSelector.css';
+import './styles/FlagImageImport.css';
+import './styles/AIGeneratorPanel.css';
+import './styles/LeagueGeneratorPanel.css';
 import StatusBar from './components/StatusBar';
 import UpdateNotification from './components/UpdateNotification';
 import WelcomePanel from './components/WelcomePanel';
@@ -55,6 +44,33 @@ import { isTeamTab } from './components/editors';
 import { OPEN_TEAM_PICKER_EVENT } from './components/TeamSelector';
 import { useI18n } from './i18n';
 import { useUpdater } from './hooks/useUpdater';
+
+// Editors are loaded on first use (one chunk each), so the initial bundle only has the shell
+const PlayerEditor = lazy(() => import('./components/PlayerEditor'));
+const FormationEditor = lazy(() => import('./components/FormationEditor'));
+const FormationDescEditor = lazy(() => import('./components/FormationDescEditor'));
+const ScenarioEditor = lazy(() => import('./components/ScenarioEditor'));
+const TournamentEditor = lazy(() => import('./components/TournamentEditor'));
+const ScreenViewer = lazy(() => import('./components/ScreenViewer'));
+const GameTextEditor = lazy(() => import('./components/GameTextEditor'));
+const MatchPaletteEditor = lazy(() => import('./components/MatchPaletteEditor'));
+const PitchPaletteEditor = lazy(() => import('./components/PitchPaletteEditor'));
+const BallPaletteEditor = lazy(() => import('./components/BallPaletteEditor'));
+const RefereePaletteEditor = lazy(() => import('./components/RefereePaletteEditor'));
+const StadiumPaletteEditor = lazy(() => import('./components/StadiumPaletteEditor'));
+const CrowdPaletteEditor = lazy(() => import('./components/CrowdPaletteEditor'));
+const TitleScreenEditor = lazy(() => import('./components/TitleScreenEditor'));
+const UniformEditor = lazy(() => import('./components/UniformEditor'));
+const HairSkinEditor = lazy(() => import('./components/HairSkinEditor'));
+const FlagColorEditor = lazy(() => import('./components/FlagColorEditor'));
+const FlagDesignEditor = lazy(() => import('./components/FlagDesignEditor'));
+const TeamNameEditor = lazy(() => import('./components/TeamNameEditor'));
+const TeamPreview = lazy(() => import('./components/TeamPreview'));
+const TeamCompare = lazy(() => import('./components/TeamCompare'));
+const AboutPanel = lazy(() => import('./components/AboutPanel'));
+const AIGeneratorPanel = lazy(() => import('./components/AIGeneratorPanel'));
+const LeagueGeneratorPanel = lazy(() => import('./components/LeagueGeneratorPanel'));
+const SettingsPage = lazy(() => import('./components/SettingsPage'));
 
 const TEXT_INPUT_TYPES = new Set(['text', 'number', 'search', 'url', 'email', 'password', '']);
 
@@ -109,7 +125,6 @@ export default function App() {
     handleFlagColorChange,
     handleFlagColorBulkChange,
     handleFlagDesignBulkChange,
-    handleTeamNameGenerate,
     handleTeamNameMenuSave,
     handleTeamNameInGameGenerate,
     handleFormationChange,
@@ -450,7 +465,6 @@ export default function App() {
           <FlagDesignEditor
             {...props}
             onFlagDesignBulkChange={handleFlagDesignBulkChange}
-            onFlagColorChange={handleFlagColorChange}
             onFlagColorBulkChange={handleFlagColorBulkChange}
           />
         );
@@ -584,7 +598,17 @@ export default function App() {
               onSelectTeam={selectTeamGuarded}
             />
           )}
-          <div className="editor-area">{renderEditor()}</div>
+          <div className="editor-area">
+            <Suspense
+              fallback={
+                <div className="editor-panel empty" role="status" aria-live="polite">
+                  {t('editorLoading')}
+                </div>
+              }
+            >
+              {renderEditor()}
+            </Suspense>
+          </div>
         </div>
       </div>
 

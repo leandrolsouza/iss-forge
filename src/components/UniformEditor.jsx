@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useI18n } from '../i18n';
 import { IconUniform } from './Icons';
 import ColorEditorCard from './ColorEditorCard';

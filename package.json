@@ -1,6 +1,6 @@
 {
   "name": "iss-forge",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "ISS Forge - ROM Editor for International Superstar Soccer (SNES 1995)",
   "main": "electron/main.mjs",
   "scripts": {
@@ -12,8 +12,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.{js,jsx}\" \"electron/**/*.{js,mjs}\" \"scripts/**/*.js\" \"vite.config.mjs\"",
-    "format:check": "prettier --check \"src/**/*.{js,jsx}\" \"electron/**/*.{js,mjs}\" \"scripts/**/*.js\" \"vite.config.mjs\"",
+    "format": "prettier --write \"src/**/*.{js,jsx}\" \"electron/**/*.{js,mjs}\" \"scripts/**/*.{js,mjs}\" \"vite.config.mjs\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx}\" \"electron/**/*.{js,mjs}\" \"scripts/**/*.{js,mjs}\" \"vite.config.mjs\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

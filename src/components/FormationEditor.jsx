@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useConfirm } from '../context/ConfirmContext';

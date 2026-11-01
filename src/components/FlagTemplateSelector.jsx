@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { FLAG_TEMPLATES } from '../rom/flagTemplates';
 import '../styles/FlagTemplateSelector.css';

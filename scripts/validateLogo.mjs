@@ -3,7 +3,7 @@
  * Decompresses data at offset 0xB7E9C and renders as SNES 4bpp tiles
  * to validate if it's the ISS title screen logo.
  *
- * Usage: node scripts/validateLogo.js <path-to-rom.smc>
+ * Usage: node scripts/validateLogo.mjs <path-to-rom.smc>
  * Output: scripts/logo-output.html (open in browser to see tiles)
  */
 
@@ -27,7 +27,9 @@ function konamiDecompress(rom, offset, gameType = 1) {
 
   console.log(`Compressed size header: ${compSize} bytes (0x${compSize.toString(16)})`);
   console.log(
-    `First 16 bytes at offset: ${Array.from(rom.slice(offset, offset + 16)).map((b) => b.toString(16).padStart(2, '0')).join(' ')}`,
+    `First 16 bytes at offset: ${Array.from(rom.slice(offset, offset + 16))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join(' ')}`,
   );
 
   const inBuf = rom.slice(offset + 2, offset + 2 + compSize - 2);
@@ -276,9 +278,9 @@ function generateHtml(pixels, width, height, totalTiles, romOffset, compSize, de
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log('Usage: node scripts/validateLogo.js <path-to-rom.smc>');
+  console.log('Usage: node scripts/validateLogo.mjs <path-to-rom.smc>');
   console.log('');
-  console.log('Optional: node scripts/validateLogo.js <rom> <hex-offset>');
+  console.log('Optional: node scripts/validateLogo.mjs <rom> <hex-offset>');
   console.log('  Default offset: 0xB7E9C (title screen logo)');
   process.exit(1);
 }
@@ -321,7 +323,15 @@ console.log(`Decoded ${totalTiles} tiles into ${width}x${height} pixel grid`);
 console.log('');
 
 // Generate HTML
-const html = generateHtml(pixels, width, height, totalTiles, targetOffset, compSize, decompressed.length);
+const html = generateHtml(
+  pixels,
+  width,
+  height,
+  totalTiles,
+  targetOffset,
+  compSize,
+  decompressed.length,
+);
 const outputPath = resolve('scripts/logo-output.html');
 writeFileSync(outputPath, html);
 

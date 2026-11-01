@@ -292,6 +292,7 @@ export default {
   // Loading
   loadingTitle: 'Loading ROM...',
   loadingMessage: 'Reading and parsing team data',
+  editorLoading: 'Loading editor...',
 
   // Recent ROMs
   recentRoms: 'Recent ROMs',

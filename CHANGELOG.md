@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2026-11-01
+
+### Changed
+
+- Editors are loaded on first use: each tab is its own chunk, and the initial script drops from
+  927 kB to 470 kB (plus 155 kB of translations), clearing the Vite chunk size warning. Their
+  stylesheets stay in the initial CSS, in the same order as before
+- ESLint counts components used only in JSX (`react/jsx-uses-vars`), ignores `docs/` and
+  generated folders, and lints `vite.config.mjs`; unused imports and props removed, files
+  formatted. Lint goes from 7 errors and 266 warnings to 0 errors and 4 warnings
+- The ES module ROM inspection scripts were renamed to `.mjs` (`findRawTiles`, `scanRomTiles`,
+  `validateLogo`) and are covered by lint and `format:check`
+
+---
+
 ## [1.1.0] - 2026-10-15
 
 ### Added
@@ -179,6 +194,7 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.1.1]: ../../releases/tag/v1.1.1
 [1.1.0]: ../../releases/tag/v1.1.0
 [1.0.7]: ../../releases/tag/v1.0.7
 [1.0.6]: ../../releases/tag/v1.0.6

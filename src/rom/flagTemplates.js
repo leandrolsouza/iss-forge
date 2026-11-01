@@ -533,7 +533,7 @@ export const FLAG_TEMPLATES = [
       const midY = GRID_HEIGHT / 2;
       for (let y = 0; y < GRID_HEIGHT; y++) {
         const dist = Math.abs(y - midY);
-        const arrowTip = Math.round((GRID_WIDTH * 0.5) * (1 - dist / midY));
+        const arrowTip = Math.round(GRID_WIDTH * 0.5 * (1 - dist / midY));
         for (let x = 0; x < arrowTip; x++) {
           grid[y][x] = 2;
         }
@@ -551,7 +551,7 @@ export const FLAG_TEMPLATES = [
         for (let x = 0; x < GRID_WIDTH; x++) {
           const midY = GRID_HEIGHT / 2;
           const dist = Math.abs(y - midY);
-          const vEdge = Math.round((GRID_WIDTH * 0.4) * (1 - dist / midY));
+          const vEdge = Math.round(GRID_WIDTH * 0.4 * (1 - dist / midY));
           if (x < vEdge) {
             grid[y][x] = 2;
           } else if (x < vEdge + 3) {
@@ -578,7 +578,7 @@ export const FLAG_TEMPLATES = [
       for (let y = 0; y < GRID_HEIGHT; y++) {
         for (let x = 0; x < GRID_WIDTH; x++) {
           const dist = Math.abs(y - midY);
-          const yEdge = Math.round((GRID_WIDTH * 0.35) * (1 - dist / midY));
+          const yEdge = Math.round(GRID_WIDTH * 0.35 * (1 - dist / midY));
           if (x < yEdge) {
             grid[y][x] = 2;
           }
@@ -724,9 +724,12 @@ export const FLAG_TEMPLATES = [
         for (let x = 0; x < GRID_WIDTH; x++) {
           const dx = x - centerX;
           const dy = (y - centerY) * (GRID_WIDTH / GRID_HEIGHT);
-          if (dy < -Math.abs(dx)) grid[y][x] = 1; // top
-          else if (dx > Math.abs(dy)) grid[y][x] = 2; // right
-          else if (dy > Math.abs(dx)) grid[y][x] = 3; // bottom
+          if (dy < -Math.abs(dx))
+            grid[y][x] = 1; // top
+          else if (dx > Math.abs(dy))
+            grid[y][x] = 2; // right
+          else if (dy > Math.abs(dx))
+            grid[y][x] = 3; // bottom
           else grid[y][x] = 4; // left
         }
       }
@@ -864,9 +867,10 @@ export const FLAG_TEMPLATES = [
       const toothHeight = 4;
       for (let y = 0; y < GRID_HEIGHT; y++) {
         const tooth = y % toothHeight;
-        const offset = tooth < toothHeight / 2
-          ? Math.round((tooth / (toothHeight / 2)) * teethWidth)
-          : Math.round(((toothHeight - tooth) / (toothHeight / 2)) * teethWidth);
+        const offset =
+          tooth < toothHeight / 2
+            ? Math.round((tooth / (toothHeight / 2)) * teethWidth)
+            : Math.round(((toothHeight - tooth) / (toothHeight / 2)) * teethWidth);
         for (let x = 0; x < GRID_WIDTH; x++) {
           if (x >= offset) {
             grid[y][x] = 2;
@@ -956,12 +960,13 @@ export const FLAG_TEMPLATES = [
           const dy = y - centerY;
           const angle = Math.atan2(dy, dx) + Math.PI / 2;
           const normAngle = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-          const sector = normAngle / (Math.PI * 2 / 5);
-          const sectorAngle = (sector % 1) * (Math.PI * 2 / 5);
+          const sector = normAngle / ((Math.PI * 2) / 5);
+          const sectorAngle = (sector % 1) * ((Math.PI * 2) / 5);
           const halfSector = Math.PI / 5;
-          const ratio = sectorAngle < halfSector
-            ? sectorAngle / halfSector
-            : (2 * halfSector - sectorAngle) / halfSector;
+          const ratio =
+            sectorAngle < halfSector
+              ? sectorAngle / halfSector
+              : (2 * halfSector - sectorAngle) / halfSector;
           const edgeR = innerR + (outerR - innerR) * (1 - ratio);
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist <= edgeR) {

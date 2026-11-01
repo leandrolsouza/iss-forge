@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useI18n } from '../i18n';
 import { useToast } from '../context/ToastContext';
 import { convertImageToFlag } from '../utils/imageToFlag';

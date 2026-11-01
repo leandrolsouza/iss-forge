@@ -123,8 +123,8 @@ function SessionCard({ t, lang }) {
             <dd>
               {modified
                 ? t('sessionUnsavedSince', {
-                  date: formatDateTime(projectSavedAt(currentProject), lang),
-                })
+                    date: formatDateTime(projectSavedAt(currentProject), lang),
+                  })
                 : formatDateTime(projectSavedAt(currentProject), lang)}
             </dd>
             {currentProject.romFileName && (
@@ -238,18 +238,20 @@ export default function Sidebar({ onOpenTab, activeTab, collapsed, onToggleColla
               <IconProject size={20} />
             </button>
           )}
-          {editors.flatMap((e) => (e.children ? e.children : [e])).map((e) => (
-            <button
-              key={e.id}
-              className={`sidebar-icon-btn ${activeTab === e.id ? 'selected' : ''}`}
-              onClick={() => open(e)}
-              title={t(e.labelKey)}
-              aria-label={t(e.labelKey)}
-              aria-current={activeTab === e.id ? 'page' : undefined}
-            >
-              <e.Icon size={20} />
-            </button>
-          ))}
+          {editors
+            .flatMap((e) => (e.children ? e.children : [e]))
+            .map((e) => (
+              <button
+                key={e.id}
+                className={`sidebar-icon-btn ${activeTab === e.id ? 'selected' : ''}`}
+                onClick={() => open(e)}
+                title={t(e.labelKey)}
+                aria-label={t(e.labelKey)}
+                aria-current={activeTab === e.id ? 'page' : undefined}
+              >
+                <e.Icon size={20} />
+              </button>
+            ))}
         </div>
       </nav>
     );

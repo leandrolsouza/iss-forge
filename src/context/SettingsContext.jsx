@@ -3,7 +3,7 @@
  * Loads settings from electron-store on mount and provides
  * update functions to persist changes.
  */
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { isElectron } from '../utils/fileHelpers';
 import { useToast } from './ToastContext';
 import { useI18n } from '../i18n';

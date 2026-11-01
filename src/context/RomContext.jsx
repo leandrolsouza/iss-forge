@@ -2,7 +2,7 @@
  * RomContext - Global state provider for ROM data
  * Eliminates prop drilling of teams, handlers, and ROM state through component tree
  */
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import useRomState from '../hooks/useRomState';
 import useRomHandlers from '../hooks/useRomHandlers';
 import useAutoSave from '../hooks/useAutoSave';

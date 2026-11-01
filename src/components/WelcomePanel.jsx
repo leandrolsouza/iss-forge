@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useI18n } from '../i18n';
 import { useConfirm } from '../context/ConfirmContext';
 import { isElectron } from '../utils/fileHelpers';
@@ -142,7 +142,6 @@ export default function WelcomePanel({ onOpenRom, onDrop, onDragOver }) {
           </div>
           <h1 className="welcome-title">
             <span className="welcome-title-main">{t('welcomeTitle')}</span>
-
           </h1>
           <p className="welcome-subtitle">{t('welcomeSubtitle')}</p>
         </div>

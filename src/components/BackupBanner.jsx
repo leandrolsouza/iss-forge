@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '../i18n';
 import { useRom } from '../context/RomContext';
 import { useToast } from '../context/ToastContext';

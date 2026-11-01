@@ -3,7 +3,7 @@
  * Scans the ROM looking for Konami LZ compressed blocks that decompress
  * into valid 4bpp tile data. Shows results sorted by decompressed size.
  *
- * Usage: node scripts/scanRomTiles.js <path-to-rom.smc> [startOffset] [endOffset]
+ * Usage: node scripts/scanRomTiles.mjs <path-to-rom.smc> [startOffset] [endOffset]
  * Output: scripts/scan-results.html
  */
 
@@ -223,7 +223,7 @@ function decodeSnes4bppToPixels(tileData, tilesPerRow = 16) {
 
 const args = process.argv.slice(2);
 if (args.length === 0) {
-  console.log('Usage: node scripts/scanRomTiles.js <path-to-rom.smc> [startHex] [endHex]');
+  console.log('Usage: node scripts/scanRomTiles.mjs <path-to-rom.smc> [startHex] [endHex]');
   console.log('');
   console.log('Scans ROM for Konami LZ compressed tile blocks.');
   console.log('Default: scans 0x80000 to 0xFFFFF (upper half, where graphics typically are)');

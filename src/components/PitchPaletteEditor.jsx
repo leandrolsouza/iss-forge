@@ -80,8 +80,7 @@ export default function PitchPaletteEditor() {
     if (fromCurrent) setAdjust({ hue: 0, saturation: 1, lightness: 1 });
   };
 
-  const isOriginal = (id) =>
-    JSON.stringify(matchPalettes[id]) === JSON.stringify(originals[id]);
+  const isOriginal = (id) => JSON.stringify(matchPalettes[id]) === JSON.stringify(originals[id]);
 
   return (
     <div className="editor-panel match-palette-editor">

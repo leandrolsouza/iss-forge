@@ -281,6 +281,8 @@ export const FONT16_EXTRA_PAIRS = {
  * descriptors in bank $02). Screens with pointers can be moved to free space
  * when an edit no longer fits; the others (references inside code or not
  * found) can only be rewritten in place.
+ * title: not a menu text screen (edited in another tab). room: size of the original
+ * slot when it is more than the block plus its 0xFF padding.
  */
 export const MENU_SCREENS = [
   { offset: 0x3fe82, id: 'prematch', label: 'Pre-match menu (Open Game)', pointers: [0x10503] },
@@ -382,7 +384,85 @@ export const MENU_SCREENS = [
     pointers: [0x1017c],
     title: true,
   },
+  // Menu background (MENU_BACKGROUND): BG2 tiles and map of every menu, edited in
+  // their own tab. The map has the pointers of both copies the lists load ($1000 and
+  // $1400); its slot also covers the second copy, right after it.
+  {
+    offset: 0xadecc,
+    id: 'menuBgTiles',
+    label: 'Menu background: BG2 tiles',
+    pointers: [0x10463, 0x10510, 0x1053a, 0x106e0],
+    title: true,
+  },
+  {
+    offset: 0xd45d8,
+    id: 'menuBgMap',
+    label: 'Menu background: BG2 map',
+    pointers: [0x10468, 0x1051f, 0x10549, 0x106e5, 0x1046d, 0x10524, 0x1054e, 0x106ea],
+    room: 664,
+    title: true,
+  },
 ];
+
+/**
+ * Menu background: BG2 (4bpp) of every menu screen (main menu, pre-match, options,
+ * team selection, substitutions, joypad, password, training, cup...), the blue
+ * "SUPER STAR SOCCER" pattern that scrolls up. The load lists $82:8455, $82:8507,
+ * $82:8531 and $82:86DC put the TILES block at VRAM $3000 (BG2 chars at $2000, so
+ * its first tile is tile 0x100) and the 32x32 MAP at $1000 and again at $1400 (the
+ * 32x64 BG2 wraps every 256 lines; HOFS stays 0). In the original ROM the second
+ * copy is a separate identical block (MAP_COPY, right after MAP); once written, all
+ * the map pointers share one block. Every map word uses BG PALETTE 2, the 15 colours
+ * at COLORS (blob $85:F49B, descriptor $81:8926), loaded only by the menus.
+ * In the 20 menu save states of research/, VRAM $3320-$3FFF is empty and BG1 uses
+ * neither tiles 0x100+ nor palette 2, so imports may use tiles 0x101-0x1FF.
+ * See research/screen-viewer.md ("Fundo dos menus").
+ */
+export const MENU_BACKGROUND = {
+  TILES: 0xadecc,
+  MAP: 0xd45d8,
+  MAP_COPY: 0xd4724,
+  MAP_COPY_POINTERS: [0x1046d, 0x10524, 0x1054e, 0x106ea],
+  /** Tile number of the first tile of the block (VRAM $3000 over chars $2000) */
+  FIRST_TILE: 0x100,
+  /** Tiles an import may add after the blank first one (up to VRAM $3FFF) */
+  MAX_TILES: 255,
+  PALETTE: 2,
+  COLORS: 0x2f49d,
+  /** Sizes (pixels, square) of a repeated texture; all divide 256 */
+  TEXTURE_SIZES: [8, 16, 32, 64, 128],
+  /**
+   * Scroll: $85:A2C3 (called every frame by the menus) moves the BG2 VOFS, kept as
+   * 16.16 at $190E (fraction) / $1910 (pixels, copied to VOFS minus 1):
+   *   LDA $1960 / BIT #$0100 / BNE end / LDA $190E / CLC / ADC #FRAC / STA $190E /
+   *   LDA $1910 / ADC #PIXELS / STA $1910 / end: RTL
+   * Original step: 0.5 pixel per frame (FRAC $8000, PIXELS 0). A fixed background
+   * loads 0 instead of the current value (LDA #$0000 at LOAD_FRAC / LOAD_PIXELS, same
+   * length) with a 0 step, so the scroll stays at 0 (top of the pattern on line 0)
+   * whatever the previous screen left there. ROUTINE: [start, end) of the routine;
+   * PATTERN: its bytes, null where the editor writes.
+   */
+  SCROLL: {
+    ROUTINE: [0x2a2c3, 0x2a2df],
+    LOAD_FRAC: 0x2a2cb,
+    FRAC: 0x2a2d0,
+    LOAD_PIXELS: 0x2a2d5,
+    PIXELS: 0x2a2d9,
+    // prettier-ignore
+    PATTERN: [
+      0xad, 0x60, 0x19, 0x89, 0x00, 0x01, 0xd0, 0x13, null, null, null, 0x18, 0x69, null,
+      null, 0x8d, 0x0e, 0x19, null, null, null, 0x69, null, null, 0x8d, 0x10, 0x19, 0x6b,
+    ],
+    LOAD_CURRENT: { frac: [0xad, 0x0e, 0x19], pixels: [0xad, 0x10, 0x19] },
+    LOAD_ZERO: [0xa9, 0x00, 0x00],
+    /** Speeds offered by the editor: step per frame as [fraction, pixels] */
+    SPEEDS: {
+      slow: [0x4000, 0],
+      normal: [0x8000, 0],
+      fast: [0x0000, 1],
+    },
+  },
+};
 
 // ============================================================
 // MODE TITLE FONT
@@ -1239,6 +1319,8 @@ export const MATCH_PALETTES = [
   // Stadium — shared by every pitch type and weather (blob $85:DC1F, BG rows 1-7)
   { id: 'stadium_wall', group: 'stadium', offset: 0x2dc7b, count: 15 }, // BG row 4: perimeter wall + goal net
   { id: 'stadium_people', group: 'stadium', offset: 0x2dc21, count: 15 }, // BG row 1: photographers by the pitch
+  // Menu background (not a match palette, same storage): BG row 2 of every menu, MENU_BACKGROUND
+  { id: 'menuBackground', group: 'menu', offset: 0x2f49d, count: 15 },
 ];
 
 /**

@@ -19,6 +19,7 @@ import {
 import { loadImageFile, prepareLogoImage, prepareImage } from '../utils/imageToLogo';
 import { IconTitleScreen } from './Icons';
 import { ColorSwatch, SwatchRow } from './ColorSwatch';
+import ImagePicker from './ImagePicker';
 import '../styles/match-palettes.css';
 import '../styles/title-screen.css';
 
@@ -379,38 +380,6 @@ function TitleTexts({ t, texts, original, onApply }) {
 
 const TOP_MODES = ['current', 'original', 'none', 'image'];
 const GRASS_MODES = ['current', 'original', 'none', 'full', 'texture'];
-
-/** Image file picker (button + hidden input) that hands back an HTMLImageElement */
-function ImagePicker({ t, onImage, fileName }) {
-  const ref = useRef(null);
-  const [error, setError] = useState(false);
-  return (
-    <span className="ts-picker">
-      <button className="kit-btn" onClick={() => ref.current?.click()}>
-        {t('tsChooseImage')}
-      </button>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          try {
-            onImage(await loadImageFile(file), file.name);
-            setError(false);
-          } catch {
-            setError(true);
-          }
-          e.target.value = '';
-        }}
-      />
-      {fileName && <span className="mp-hint">{fileName}</span>}
-      {error && <span className="mp-warning">{t('tsErr_logoLoad')}</span>}
-    </span>
-  );
-}
 
 /** Brush stroke area and grass: keep, original, remove or image */
 function BackgroundImport({ t, romParser, state, setDraft, onApply }) {

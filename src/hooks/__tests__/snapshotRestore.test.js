@@ -5,6 +5,7 @@ import RomParser from '../../rom/RomParser';
 import { TEAMS } from '../../rom/constants';
 import { copyTeam, exportTeam, applyImportedTeam } from '../../utils/teamExport';
 import { restoreSnapshot, snapshotGlobals, keepUnchangedTeams } from '../snapshotRestore';
+import { buildMenuBackground } from '../../rom/menuBackground';
 
 const REAL_ROM = fileURLToPath(
   new URL('../../../rom/original/International Superstar Soccer (Europe).sfc', import.meta.url),
@@ -104,5 +105,42 @@ describe.skipIf(!existsSync(REAL_ROM))('restoreSnapshot (undo/redo, real ROM)', 
     expect([...changed]).toEqual(['scenarios']);
     expect(rom.readScenarios()).toEqual(before);
     next.forEach((t, i) => expect(t).toBe(teams[i]));
+  });
+
+  it('undoes a menu background import byte for byte (blocks, pointers, colours)', () => {
+    const rom = load();
+    const original = new Uint8Array(rom.getRomData());
+    const teams = rom.readAllTeams();
+    const snap = snapshot(rom, teams);
+
+    // a 64 x 64 checker texture: new tiles, map (on every map pointer) and colours
+    const data = new Uint8ClampedArray(64 * 64 * 4);
+    for (let i = 0; i < 64 * 64; i++) {
+      const on = (((i % 64) >> 3) + ((i >> 6) >> 3)) % 2;
+      data.set(on ? [248, 0, 0, 255] : [0, 0, 248, 255], i * 4);
+    }
+    const built = buildMenuBackground(rom, {
+      mode: 'texture',
+      image: { width: 64, height: 64, data },
+    });
+    expect(rom.importMenuBackground(built).ok).toBe(true);
+    const { changed } = restoreSnapshot(rom, snap, teams);
+
+    expect(diff(rom.getRomData(), original)).toEqual([]);
+    expect([...changed].sort()).toEqual(['matchPalettes', 'menuScreens']);
+  });
+
+  it('undoes fixing the menu background (scroll code patch)', () => {
+    const rom = load();
+    const original = new Uint8Array(rom.getRomData());
+    const teams = rom.readAllTeams();
+    const snap = snapshot(rom, teams);
+
+    expect(rom.writeMenuScroll('fixed').ok).toBe(true);
+    const { changed } = restoreSnapshot(rom, snap, teams);
+
+    expect(diff(rom.getRomData(), original)).toEqual([]);
+    expect([...changed]).toEqual(['menuScroll']);
+    expect(rom.readMenuScroll()).toBe('normal');
   });
 });

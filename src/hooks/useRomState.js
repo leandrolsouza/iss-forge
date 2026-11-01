@@ -36,6 +36,8 @@ export default function useRomState({ toast, t } = {}) {
   const [screenTexts, setScreenTexts] = useState(null);
   // Global (non-team) data: title screen colours / teams
   const [titleScreen, setTitleScreen] = useState(null);
+  // Global (non-team) data: how the menu background scrolls (code patch)
+  const [menuScroll, setMenuScroll] = useState(null);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -124,6 +126,7 @@ export default function useRomState({ toast, t } = {}) {
           setMenuScreens(parser.readMenuScreens());
           setScreenTexts(parser.readScreenTexts());
           setTitleScreen(parser.readTitleScreen());
+          setMenuScroll(parser.readMenuScroll());
 
           if (allTeams.length > 0) {
             setSelectedTeamIndex(0);
@@ -197,6 +200,7 @@ export default function useRomState({ toast, t } = {}) {
     setMenuScreens([]);
     setScreenTexts(null);
     setTitleScreen(null);
+    setMenuScroll(null);
     setSelectedTeamIndex(null);
     setOpenTabs([]);
     setActiveTab('players');
@@ -260,6 +264,7 @@ export default function useRomState({ toast, t } = {}) {
       if (changed.has('menuScreens')) setMenuScreens(romParser.readMenuScreens());
       if (changed.has('screenTexts')) setScreenTexts(romParser.readScreenTexts());
       if (changed.has('titleScreen')) setTitleScreen(romParser.readTitleScreen());
+      if (changed.has('menuScroll')) setMenuScroll(romParser.readMenuScroll());
     },
     [romParser, teams, setScenarios, setMatchPalettes],
   );
@@ -352,6 +357,8 @@ export default function useRomState({ toast, t } = {}) {
     setScreenTexts,
     titleScreen,
     setTitleScreen,
+    menuScroll,
+    setMenuScroll,
     selectedTeamIndex,
     activeTab,
     openTabs,

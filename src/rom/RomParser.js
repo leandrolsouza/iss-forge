@@ -85,6 +85,14 @@ import {
 } from './titleScreen';
 import { isOriginalLogo } from './titleLogo';
 import { writeTitleTexts } from './titleScreenText';
+import {
+  readMenuBackground,
+  importMenuBackground,
+  readMenuScroll,
+  writeMenuScroll,
+  readMenuScrollBytes,
+  restoreMenuScrollBytes,
+} from './menuBackground';
 
 export default class RomParser {
   /**
@@ -280,6 +288,30 @@ export default class RomParser {
   }
   restoreTitleScreenBytes(snapshot) {
     restoreTitleScreenBytes(this, snapshot);
+  }
+
+  // === Menu background (BG2 of every menu, see menuBackground.js) ===
+
+  /** @returns {{ state: 'original'|'custom', tileCount: number, size: number, moved: boolean }} */
+  readMenuBackground() {
+    return readMenuBackground(this);
+  }
+  /** Background built by buildMenuBackground: blocks + colours, all or nothing */
+  importMenuBackground(built) {
+    return importMenuBackground(this, built);
+  }
+  /** @returns {'fixed'|'slow'|'normal'|'fast'|'custom'|null} null: scroll code not recognised */
+  readMenuScroll() {
+    return readMenuScroll(this);
+  }
+  writeMenuScroll(speed) {
+    return writeMenuScroll(this, speed);
+  }
+  readMenuScrollBytes() {
+    return readMenuScrollBytes(this);
+  }
+  restoreMenuScrollBytes(snapshot) {
+    restoreMenuScrollBytes(this, snapshot);
   }
 
   /** The 9 Scenario mode situations */

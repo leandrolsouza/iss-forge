@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-11-01
+
+### Added
+
+- Menu Background tab (Screens group): the blue "SUPER STAR SOCCER" pattern behind every menu
+  (main menu, pre-match, options, team selection, substitutions, joypad, password, training...)
+  - Edit its 15 colours, with themes (red, green, purple, gold, grey, dark) and hue / saturation /
+    lightness adjustment
+  - Replace the pattern with a repeated texture (8 to 128 px) or a simple 256 x 256 image; colours
+    are lowered automatically until the tiles (up to 255) and the blocks fit in the ROM
+  - Live preview of any menu screen drawn from the ROM, with a scroll slider and a "background
+    only" view; one undo step per change, and "restore" puts back the exact original bytes
+  - Movement: keep the background fixed or make it scroll slow, normal (original) or fast, a
+    small patch of the menu scroll routine ($85:A2C3); hacks with other code are left alone
+  - Checked in the emulator (snes9x) on the main menu, options, team selection and pre-match menu,
+    including with the PT-BR translation applied; with the fixed background, the screen does not
+    change over 120 frames
+
+### Changed
+
+- The tile helpers of the title screen background moved to a shared module (`src/rom/bgTiles.js`)
+  and the image picker to its own component
+
+---
+
 ## [1.1.1] - 2026-11-01
 
 ### Changed
@@ -194,6 +219,7 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.2.0]: ../../releases/tag/v1.2.0
 [1.1.1]: ../../releases/tag/v1.1.1
 [1.1.0]: ../../releases/tag/v1.1.0
 [1.0.7]: ../../releases/tag/v1.0.7

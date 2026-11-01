@@ -239,6 +239,7 @@ export function screenLocation(rom, screen) {
 
 /** Room of the original slot (block + trailing 0xFF), measured on the ROM as loaded */
 function originalCapacity(rom, screen) {
+  if (screen.room) return screen.room;
   const orig = rom.getOriginalData ? rom.getOriginalData() : null;
   const at = (a) => (orig ? orig[a + (rom.headerOffset || 0)] : rom.readByte(a));
   let capacity = (at(screen.offset) | (at(screen.offset + 1) << 8)) & 0x7fff;
@@ -263,6 +264,20 @@ function usedIntervals(rom, skip) {
     const at = screenLocation(rom, s);
     return [at, at + (at === s.offset ? originalCapacity(rom, s) : blockSize(rom, at))];
   });
+}
+
+/**
+ * A block left [start, end): put back the bytes of the ROM as loaded where no screen
+ * lives now (free space goes back to its padding, so "restore original" leaves no trace).
+ */
+export function releaseBlockArea(rom, start, end) {
+  const orig = rom.getOriginalData ? rom.getOriginalData() : null;
+  if (!orig || end <= start) return;
+  const used = usedIntervals(rom, null);
+  const h = rom.headerOffset || 0;
+  for (let a = start; a < end; a++) {
+    if (!used.some(([s, e]) => a >= s && a < e)) rom.writeByte(a, orig[a + h]);
+  }
 }
 
 /** Free intervals of the relocation regions (largest first) */
@@ -344,7 +359,8 @@ export function placeScreenBlock(rom, offset, packed) {
   const here = screenLocation(rom, screen);
   const write = (at) => {
     rom.writeBytes(at, packed);
-    if (at !== here) screen.pointers.forEach((p) => writePointer(rom, p, at));
+    // every pointer ends up on the block (the menu background map starts with two copies)
+    screen.pointers.forEach((p) => pointerTarget(rom, p) !== at && writePointer(rom, p, at));
     return { ok: true, size: n, capacity: currentCapacity(rom, screen), moved: at !== offset };
   };
 

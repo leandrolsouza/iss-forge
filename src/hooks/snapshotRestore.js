@@ -41,6 +41,7 @@ const BYTE_SECTIONS = [
   ['menuBytes', 'readMenuScreenBytes', 'restoreMenuScreenBytes', 'menuScreens'],
   ['screenTextBytes', 'readScreenTextBytes', 'restoreScreenTextBytes', 'screenTexts'],
   ['titleScreenBytes', 'readTitleScreenBytes', 'restoreTitleScreenBytes', 'titleScreen'],
+  ['menuScrollBytes', 'readMenuScrollBytes', 'restoreMenuScrollBytes', 'menuScroll'],
 ];
 
 /**
@@ -64,7 +65,7 @@ export function snapshotGlobals(rom, { scenarios = null, matchPalettes = null } 
  * @returns {{ teams: object[], changed: Set<string> }} teams to put in state (unchanged
  *   ones keep their identity) and the global states that must be re-read:
  *   'scenarios', 'matchPalettes', 'tournamentDraws', 'gameTexts', 'menuScreens',
- *   'screenTexts', 'titleScreen'
+ *   'screenTexts', 'titleScreen', 'menuScroll'
  */
 export function restoreSnapshot(rom, restored, currentTeams) {
   const snapshot = Array.isArray(restored) ? { teams: restored } : restored;

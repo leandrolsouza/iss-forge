@@ -60,6 +60,7 @@ const RefereePaletteEditor = lazy(() => import('./components/RefereePaletteEdito
 const StadiumPaletteEditor = lazy(() => import('./components/StadiumPaletteEditor'));
 const CrowdPaletteEditor = lazy(() => import('./components/CrowdPaletteEditor'));
 const TitleScreenEditor = lazy(() => import('./components/TitleScreenEditor'));
+const MenuBackgroundEditor = lazy(() => import('./components/MenuBackgroundEditor'));
 const UniformEditor = lazy(() => import('./components/UniformEditor'));
 const HairSkinEditor = lazy(() => import('./components/HairSkinEditor'));
 const FlagColorEditor = lazy(() => import('./components/FlagColorEditor'));
@@ -408,6 +409,7 @@ export default function App() {
     if (activeTab === 'matchStadium' && romParser) return <StadiumPaletteEditor />;
     if (activeTab === 'matchCrowd' && romParser) return <CrowdPaletteEditor />;
     if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
+    if (activeTab === 'menuBackground' && romParser) return <MenuBackgroundEditor />;
     if (activeTab === 'screenViewer' && romParser) return <ScreenViewer />;
     if (activeTab === 'aiLeague' && romParser) return <LeagueGeneratorPanel />;
 

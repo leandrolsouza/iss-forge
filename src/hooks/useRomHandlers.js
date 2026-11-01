@@ -50,6 +50,7 @@ export default function useRomHandlers({
   setMenuScreens,
   setScreenTexts,
   setTitleScreen,
+  setMenuScroll,
 }) {
   /**
    * After a goalkeeper colour write: re-read the teams that store their goalkeeper at
@@ -624,6 +625,59 @@ export default function useRomHandlers({
       return result;
     },
     [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setTitleScreen, setMenuScreens],
+  );
+
+  /**
+   * Replace the menu background (BG2 of every menu) with one built by
+   * buildMenuBackground (menuBackground.js), one undo step.
+   * @returns {{ ok: boolean, error?: string, size?: number }}
+   */
+  const handleMenuBackgroundChange = useCallback(
+    (built) => {
+      if (!romParser || !built?.ok) return { ok: false };
+      pushSnapshot(teams);
+      const result = romParser.importMenuBackground(built);
+      if (!result.ok) {
+        cancelSnapshot(); // puts back anything the failed write touched
+        return result;
+      }
+      // the blocks are placed like menu screens (and may move them); the colours are a palette
+      setMenuScreens(romParser.readMenuScreens());
+      setMatchPalettes(romParser.readMatchPalettes());
+      markModified();
+      return result;
+    },
+    [
+      romParser,
+      teams,
+      markModified,
+      pushSnapshot,
+      cancelSnapshot,
+      setMenuScreens,
+      setMatchPalettes,
+    ],
+  );
+
+  /**
+   * Fix the menu background or change its scroll speed (code patch), one undo step.
+   * @param {'fixed'|'slow'|'normal'|'fast'} speed
+   * @returns {{ ok: boolean, error?: string }}
+   */
+  const handleMenuScrollChange = useCallback(
+    (speed) => {
+      if (!romParser) return { ok: false };
+      if (romParser.readMenuScroll() === speed) return { ok: true }; // no empty undo step
+      pushSnapshot(teams);
+      const result = romParser.writeMenuScroll(speed);
+      if (!result.ok) {
+        cancelSnapshot();
+        return result;
+      }
+      setMenuScroll(romParser.readMenuScroll());
+      markModified();
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setMenuScroll],
   );
 
   /**
@@ -1271,6 +1325,8 @@ export default function useRomHandlers({
     handleTitleTextsChange,
     handleTitleLogoChange,
     handleTitleBackgroundChange,
+    handleMenuBackgroundChange,
+    handleMenuScrollChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

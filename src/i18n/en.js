@@ -224,6 +224,7 @@ export default {
   editorMatchStadium: 'Stadium',
   editorMatchCrowd: 'Crowd',
   editorTitleScreen: 'Title Screen',
+  editorMenuBackground: 'Menu Background',
   editorScreenViewer: 'Screen Viewer',
   svSubtitle: 'Game screens drawn from the ROM',
   svScreen_title: 'Title screen',
@@ -990,6 +991,64 @@ export default {
   tsErr_bgTooManyTiles: 'The image needs too many different tiles.',
   tsErr_bgNoSpace:
     'It does not fit in the ROM, even with 2 colours. Use a smaller image or a texture.',
+
+  // Menu background
+  mbgSubtitle: 'The pattern behind every menu (main menu, pre-match, team selection...)',
+  mbgConfirmRestoreAll:
+    'Put back the original pattern, colours and movement of the menu background?',
+  mbgPreviewing: 'Preview of the imported background: not applied yet.',
+  mbgScreen: 'Screen',
+  mbgScroll: 'Scroll',
+  mbgOnlyBackground: 'Background only (hide frames, texts and the dark boxes)',
+  mbgPreviewHelp:
+    'All the menus share this background: it scrolls up slowly in the game and repeats every 256 lines. The main menu shows it darkened by the blue streaks.',
+  mbgColorsTitle: 'Colours',
+  mbgPalette: 'Palette (15 colours)',
+  mbgPresets: 'Themes:',
+  mbgPreset_original: 'Original',
+  mbgPreset_red: 'Red',
+  mbgPreset_green: 'Green',
+  mbgPreset_purple: 'Purple',
+  mbgPreset_gold: 'Gold',
+  mbgPreset_gray: 'Grey',
+  mbgPreset_dark: 'Dark',
+  mbgColorsHelp:
+    'The themes recolour the original colours; the sliders adjust the current ones. Shared by every menu screen.',
+  mbgMovement: 'Movement',
+  mbgSpeed_fixed: 'Fixed',
+  mbgSpeed_slow: 'Slow',
+  mbgSpeed_normal: 'Normal (original)',
+  mbgSpeed_fast: 'Fast',
+  mbgSpeedCustom: 'The ROM has a speed other than these; pick one to change it.',
+  mbgMovementHelp:
+    'Normal: the background goes up half a pixel per frame, as in the original game. Slow: a quarter of a pixel. Fast: one pixel. Fixed: the background stays still with the top of the pattern at the top of the screen, on every menu. Changes the game code (routine $85:A2C3); the preview shows the position set by the Scroll slider.',
+  mbgErrScrollCode:
+    'The code that scrolls the background is not the expected one in this ROM (a hack?): the movement cannot be changed.',
+  mbgErrScrollSpeed: 'Unknown speed.',
+  mbgPattern: 'Pattern',
+  mbgState_original: 'Now: original pattern ({tiles} tiles, {size} bytes).',
+  mbgState_custom: 'Now: imported pattern ({tiles} tiles, {size} bytes).',
+  mbgMoved: 'Stored in free space of the ROM.',
+  mbgRestorePattern: 'Restore original pattern',
+  mbgImport: 'Import',
+  mbgMode: 'Kind',
+  mbgMode_texture: 'Repeated texture',
+  mbgMode_image: 'Whole image (256 x 256)',
+  mbgColors: 'Colours (at most)',
+  mbgHelp_texture:
+    'The image is cut to a square and repeated over the whole screen, edge to edge: use a texture that tiles.',
+  mbgHelp_image:
+    'The image fills 256 x 256 and repeats every 256 lines while it scrolls. Only simple images fit (flat colours, few different 8 x 8 cells): the ROM has little free space and the menus take at most 255 tiles.',
+  mbgInfo: '{tiles} of {max} tiles, {size} bytes, {colors} colours.',
+  mbgApply: 'Apply background',
+  mbgErrSize: 'The image has the wrong size.',
+  mbgErrEmpty: 'The image is empty (everything became transparent).',
+  mbgErrMode: 'Unknown kind of background.',
+  mbgErrNoOriginal: 'The original ROM is not available.',
+  mbgErrTooManyTiles:
+    'The image needs more than 255 different tiles, even with 2 colours. Use a texture or a simpler image.',
+  mbgErrNoSpace:
+    'It does not fit in the free space of the ROM, even with 2 colours. Use a smaller texture or a simpler image.',
   tsChoosePose_left: 'Pose of the left player...',
   tsChoosePose_right: 'Pose of the right player...',
   tsPoseOf_left: 'Left player: {n} poses (match animation frames). Click one.',

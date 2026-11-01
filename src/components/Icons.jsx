@@ -129,6 +129,14 @@ export const IconTitleScreen = ({ size }) => (
   </Icon>
 );
 
+/** Menu background: a screen filled with a tiled pattern */
+export const IconMenuBackground = ({ size }) => (
+  <Icon size={size}>
+    <path d="M1.5 2h13l.5.5v9l-.5.5h-13l-.5-.5v-9l.5-.5zM2 3v8h12V3H2zm3 10h6v1H5v-1z" />
+    <path d="M3 4h2v2H3V4zm4 0h2v2H7V4zm4 0h2v2h-2V4zM5 6h2v2H5V6zm4 0h2v2H9V6zM3 8h2v2H3V8zm4 0h2v2H7V8zm4 0h2v2h-2V8z" />
+  </Icon>
+);
+
 /** Screen viewer: a screen with a magnifier */
 export const IconScreenViewer = ({ size }) => (
   <Icon size={size}>

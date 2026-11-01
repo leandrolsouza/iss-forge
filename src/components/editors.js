@@ -18,6 +18,7 @@ import {
   IconGameText,
   IconPitch,
   IconTitleScreen,
+  IconMenuBackground,
   IconScreenViewer,
   IconSparkle,
   IconSettings,
@@ -83,6 +84,12 @@ export const EDITORS = [
     scope: 'global',
     children: [
       { id: 'titleScreen', labelKey: 'editorTitleScreen', Icon: IconTitleScreen, scope: 'global' },
+      {
+        id: 'menuBackground',
+        labelKey: 'editorMenuBackground',
+        Icon: IconMenuBackground,
+        scope: 'global',
+      },
       {
         id: 'screenViewer',
         labelKey: 'editorScreenViewer',

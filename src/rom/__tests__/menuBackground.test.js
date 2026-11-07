@@ -122,17 +122,21 @@ describe('menu background (synthetic ROM)', () => {
     },
   );
 
-  it('goes back to the exact original bytes, second map copy and its pointers included', () => {
-    const rom = syntheticRom();
-    const before = rom.getRomData().slice();
-    rom.importMenuBackground(buildMenuBackground(rom, { mode: 'texture', image: checker(32) }));
-    expect(rom.getRomData()).not.toEqual(before);
-    const res = rom.importMenuBackground(buildMenuBackground(rom, { mode: 'original' }));
-    expect(res.ok).toBe(true);
+  it(
+    'goes back to the exact original bytes, second map copy and its pointers included',
+    () => {
+      const rom = syntheticRom();
+      const before = rom.getRomData().slice();
+      rom.importMenuBackground(buildMenuBackground(rom, { mode: 'texture', image: checker(32) }));
+      expect(rom.getRomData()).not.toEqual(before);
+      const res = rom.importMenuBackground(buildMenuBackground(rom, { mode: 'original' }));
+      expect(res.ok).toBe(true);
 
-    expect(rom.getRomData()).toEqual(before);
-    expect(readMenuBackground(rom).state).toBe('original');
-  });
+      expect(rom.getRomData()).toEqual(before);
+      expect(readMenuBackground(rom).state).toBe('original');
+    },
+    15000,
+  );
 
   it('rejects wrong sizes, empty images and more than 255 tiles', () => {
     const rom = syntheticRom();

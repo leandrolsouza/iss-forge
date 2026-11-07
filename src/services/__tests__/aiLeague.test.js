@@ -6,6 +6,7 @@ import { TEAMS } from '../../rom/constants';
 import {
   LEAGUE_SLOTS,
   applyLeague,
+  buildLeagueOptimizerPrompt,
   buildLeagueTeamContext,
   buildLeagueTeamRequest,
   buildPlanPrompt,
@@ -323,5 +324,14 @@ describe.skipIf(!hasRealRom)('league keepers on the real ROM', () => {
     ]);
     expect(rom.readPlayers(3)[0].hairStyle).toBe(0);
     expect(rom.readPlayers(3)[5].hairStyle).toBe(5);
+  });
+});
+
+describe('championship prompt improvement', () => {
+  it('uses championship rules and avoids inventing missing facts', () => {
+    const prompt = buildLeagueOptimizerPrompt(28);
+    expect(prompt).toContain('28 slots');
+    expect(prompt).toContain('division immediately below');
+    expect(prompt).toContain('Do not invent a competition, season');
   });
 });

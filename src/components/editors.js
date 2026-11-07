@@ -19,6 +19,7 @@ import {
   IconPitch,
   IconTitleScreen,
   IconMenuBackground,
+  IconCoin,
   IconScreenViewer,
   IconSparkle,
   IconSettings,
@@ -75,6 +76,7 @@ export const EDITORS = [
       { id: 'matchReferee', labelKey: 'editorMatchReferee', Icon: IconUniform, scope: 'global' },
       { id: 'matchStadium', labelKey: 'editorMatchStadium', Icon: IconPitch, scope: 'global' },
       { id: 'matchCrowd', labelKey: 'editorMatchCrowd', Icon: IconPlayers, scope: 'global' },
+      { id: 'matchCoin', labelKey: 'editorMatchCoin', Icon: IconCoin, scope: 'global' },
     ],
   },
   {

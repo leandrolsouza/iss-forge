@@ -909,6 +909,9 @@ describe('prompt optimizer', () => {
     expect(call.systemPrompt).toContain('no stripes');
     expect(buildOptimizerPrompt()).toContain('4-3-3');
 
+    await optimizePrompt({ userPrompt: 'league', settings, systemPrompt: 'League rules', stream });
+    expect(stream.mock.calls[1][0].systemPrompt).toBe('League rules');
+
     const cut = vi.fn(async () => ({ text: 'Team', truncated: true }));
     await expect(optimizePrompt({ userPrompt: 'x', settings, stream: cut })).rejects.toMatchObject({
       code: 'truncated',

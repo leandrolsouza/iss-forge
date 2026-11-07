@@ -9,6 +9,7 @@ import {
   hexToRaw,
   adjustPalette,
   shadeRamp,
+  tintPalette,
   GRASS_PRESETS,
   changedPaletteUpdates,
 } from '../palettes';
@@ -55,6 +56,24 @@ describe('palette helpers', () => {
     expect(b).toBeGreaterThan(g); // green rotated towards blue
     expect(b).toBeGreaterThan(r);
     expect(adjustPalette([green], {})).toEqual([green]);
+  });
+
+  it('tintPalette takes the hue of the base colour and keeps each lightness', () => {
+    const greys = [c(4, 4, 4), c(16, 16, 16), c(28, 28, 28)];
+    const gold = tintPalette(greys, c(31, 24, 0));
+    const lum = (raw) => {
+      const { r, g, b } = rawToRgb(raw);
+      return Math.max(r, g, b) + Math.min(r, g, b);
+    };
+    gold.forEach((raw, i) => {
+      const { r, g, b } = rawToRgb(raw);
+      expect(r).toBeGreaterThanOrEqual(g);
+      expect(g).toBeGreaterThanOrEqual(b);
+      expect(r).toBeGreaterThan(b);
+      expect(Math.abs(lum(raw) - lum(greys[i]))).toBeLessThanOrEqual(16);
+    });
+    expect(lum(gold[0])).toBeLessThan(lum(gold[1]));
+    expect(lum(gold[1])).toBeLessThan(lum(gold[2]));
   });
 
   it('shadeRamp goes from dark to the base colour', () => {

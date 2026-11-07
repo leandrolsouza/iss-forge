@@ -38,6 +38,8 @@ export default function useRomState({ toast, t } = {}) {
   const [titleScreen, setTitleScreen] = useState(null);
   // Global (non-team) data: how the menu background scrolls (code patch)
   const [menuScroll, setMenuScroll] = useState(null);
+  // Global (non-team) data: the two faces of the coin toss (null: layout not supported)
+  const [coinToss, setCoinToss] = useState(null);
   const [selectedTeamIndex, setSelectedTeamIndex] = useState(null);
   const history = useHistory();
   const [activeTab, setActiveTab] = useState('players');
@@ -127,6 +129,7 @@ export default function useRomState({ toast, t } = {}) {
           setScreenTexts(parser.readScreenTexts());
           setTitleScreen(parser.readTitleScreen());
           setMenuScroll(parser.readMenuScroll());
+          setCoinToss(parser.readCoinToss());
 
           if (allTeams.length > 0) {
             setSelectedTeamIndex(0);
@@ -201,6 +204,7 @@ export default function useRomState({ toast, t } = {}) {
     setScreenTexts(null);
     setTitleScreen(null);
     setMenuScroll(null);
+    setCoinToss(null);
     setSelectedTeamIndex(null);
     setOpenTabs([]);
     setActiveTab('players');
@@ -265,6 +269,7 @@ export default function useRomState({ toast, t } = {}) {
       if (changed.has('screenTexts')) setScreenTexts(romParser.readScreenTexts());
       if (changed.has('titleScreen')) setTitleScreen(romParser.readTitleScreen());
       if (changed.has('menuScroll')) setMenuScroll(romParser.readMenuScroll());
+      if (changed.has('coinToss')) setCoinToss(romParser.readCoinToss());
     },
     [romParser, teams, setScenarios, setMatchPalettes],
   );
@@ -359,6 +364,8 @@ export default function useRomState({ toast, t } = {}) {
     setTitleScreen,
     menuScroll,
     setMenuScroll,
+    coinToss,
+    setCoinToss,
     selectedTeamIndex,
     activeTab,
     openTabs,

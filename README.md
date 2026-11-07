@@ -77,6 +77,7 @@ Captured from the desktop app. Click any image to view it at full resolution.
 - **Menu Background** — Recolour the scrolling "SUPER STAR SOCCER" pattern shared by every menu (themes and hue/saturation/brightness tools) or replace it with a repeated texture or a simple 256×256 image, previewed on any menu screen
 - **Screen Viewer** — See 10 menu screens and the title screen drawn from the ROM as it is now (frames, background, texts, colour effects), toggle layers, click a pixel to see its tile, palette and the ROM block it comes from, and browse that block's tiles
 - **Stadium & Crowd** — Recolour the perimeter wall/goal net and photographers, edit the 20 crowd palettes and choose which one each team's fans use
+- **Coin Toss** — Draw the two faces of the coin tossed before kick-off pixel by pixel or import them from an image, and recolour the coin (gold, bronze and silver themes)
 - **Team Descriptions** — Edit the selection-screen text ("Offensive 4-4-2" + description) with a 15×8 preview, kept in sync with the formation
 - **Copy / Swap Teams** — Move a whole team (players, hidden attributes, kits, flag, names, formation, description, crowd) to another slot
 - **Test in Emulator** — One click (F5) runs the current ROM in your emulator (RetroArch, bsnes, snes9x, Mesen…) from a temporary file

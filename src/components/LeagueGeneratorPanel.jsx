@@ -5,10 +5,12 @@ import { useToast } from '../context/ToastContext';
 import { useConfirm } from '../context/ConfirmContext';
 import useAiSettings from '../hooks/useAiSettings';
 import { aiErrorKey, aiErrorDetail } from '../services/aiProviders';
+import { cleanOptimizedPrompt, optimizePrompt } from '../services/aiService';
 import {
   LEAGUE_LIMITS,
   LEAGUE_SLOTS,
   applyLeague,
+  buildLeagueOptimizerPrompt,
   checkLeaguePlan,
   defaultConcurrency,
   generateLeaguePlan,
@@ -65,6 +67,10 @@ export default function LeagueGeneratorPanel() {
   // { key, request, plan, slots, results: { [index]: { status, team, errors, warnings, error } } }
   const [draft, setDraft] = useState(null);
   const [planning, setPlanning] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [suggestion, setSuggestion] = useState(null);
+  const [originalRequest, setOriginalRequest] = useState(null);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [planStream, setPlanStream] = useState('');
   const [planAttempt, setPlanAttempt] = useState(null);
   const [running, setRunning] = useState(false);
@@ -73,7 +79,7 @@ export default function LeagueGeneratorPanel() {
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [concurrency, setConcurrency] = useState(() => defaultConcurrency(settings.provider));
-  const busy = planning || running;
+  const busy = planning || running || optimizing;
 
   const abortRef = useRef(null);
   const stopRef = useRef(false);
@@ -88,6 +94,9 @@ export default function LeagueGeneratorPanel() {
     );
     setRequest(saved?.request || '');
     setExpanded(null);
+    setSuggestion(null);
+    setOriginalRequest(null);
+    abortRef.current?.abort();
   }, [draftKey]);
 
   useEffect(() => {
@@ -119,51 +128,91 @@ export default function LeagueGeneratorPanel() {
     [plan, draft?.slots, romParser],
   );
 
-  const handlePlan = useCallback(async () => {
-    if (!request.trim() || busy || !romParser) return;
-    if (
-      doneCount &&
-      !(await confirm({ message: t('aiLeagueReplanConfirm'), confirmLabel: t('aiLeaguePlan') }))
-    ) {
-      return;
-    }
+  const handlePlan = useCallback(
+    async (requestedPrompt = request) => {
+      if (!requestedPrompt.trim() || busy || !romParser) return;
+      if (
+        doneCount &&
+        !(await confirm({ message: t('aiLeagueReplanConfirm'), confirmLabel: t('aiLeaguePlan') }))
+      ) {
+        return;
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+      setPlanning(true);
+      setError(null);
+      setPlanStream('');
+      setPlanAttempt(null);
+      try {
+        const result = await generateLeaguePlan({
+          userPrompt: requestedPrompt.trim(),
+          settings,
+          romParser,
+          slots: LEAGUE_SLOTS,
+          signal: controller.signal,
+          onAttempt: (info) => {
+            setPlanAttempt(info);
+            setPlanStream('');
+          },
+          onChunk: (chunk) => setPlanStream((prev) => prev + chunk),
+        });
+        if (!controller.signal.aborted) {
+          setDraft({
+            key: draftKey,
+            request: requestedPrompt.trim(),
+            plan: result.plan,
+            slots: [...LEAGUE_SLOTS],
+            results: {},
+          });
+          setExpanded(null);
+        }
+      } catch (err) {
+        if (!controller.signal.aborted && err?.code !== 'cancelled') setError(err);
+      } finally {
+        if (abortRef.current === controller) abortRef.current = null;
+        setPlanning(false);
+        setPlanAttempt(null);
+      }
+    },
+    [request, busy, romParser, doneCount, confirm, t, settings, draftKey],
+  );
+
+  const handleOptimize = async () => {
+    if (!request.trim() || busy) return;
     const controller = new AbortController();
     abortRef.current = controller;
-    setPlanning(true);
+    setOptimizing(true);
     setError(null);
-    setPlanStream('');
-    setPlanAttempt(null);
+    setSuggestion('');
+    let raw = '';
     try {
-      const result = await generateLeaguePlan({
+      const text = await optimizePrompt({
         userPrompt: request.trim(),
         settings,
-        romParser,
-        slots: LEAGUE_SLOTS,
+        systemPrompt: buildLeagueOptimizerPrompt(),
         signal: controller.signal,
-        onAttempt: (info) => {
-          setPlanAttempt(info);
-          setPlanStream('');
+        onChunk: (chunk) => {
+          raw += chunk;
+          if (!controller.signal.aborted) setSuggestion(cleanOptimizedPrompt(raw));
         },
-        onChunk: (chunk) => setPlanStream((prev) => prev + chunk),
       });
-      if (!controller.signal.aborted) {
-        setDraft({
-          key: draftKey,
-          request: request.trim(),
-          plan: result.plan,
-          slots: [...LEAGUE_SLOTS],
-          results: {},
-        });
-        setExpanded(null);
-      }
+      if (!controller.signal.aborted) setSuggestion(text);
     } catch (err) {
       if (!controller.signal.aborted && err?.code !== 'cancelled') setError(err);
+      setSuggestion(null);
     } finally {
       if (abortRef.current === controller) abortRef.current = null;
-      setPlanning(false);
-      setPlanAttempt(null);
+      setOptimizing(false);
     }
-  }, [request, busy, romParser, doneCount, confirm, t, settings, draftKey]);
+  };
+
+  const applySuggestion = (thenPlan = false) => {
+    if (!suggestion) return;
+    setOriginalRequest(request);
+    setRequest(suggestion);
+    setSuggestion(null);
+    if (thenPlan) handlePlan(suggestion);
+  };
 
   const updateTeam = (index, patch) =>
     setDraft((prev) => ({
@@ -284,6 +333,7 @@ export default function LeagueGeneratorPanel() {
   const handleCancel = () => {
     stopRef.current = true;
     abortRef.current?.abort();
+    if (optimizing) setSuggestion(null);
   };
 
   const handleApply = useCallback(async () => {
@@ -363,16 +413,74 @@ export default function LeagueGeneratorPanel() {
         </div>
       </div>
 
+      {showTemplates && (
+        <div
+          className="ai-modal-overlay"
+          onClick={() => setShowTemplates(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('aiTemplatesTitle')}
+        >
+          <div className="ai-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ai-modal-header">
+              <h3>{t('aiTemplatesTitle')}</h3>
+              <button
+                className="ai-modal-close"
+                onClick={() => setShowTemplates(false)}
+                aria-label={t('close')}
+              >
+                &times;
+              </button>
+            </div>
+            <div className="ai-modal-body">
+              <div className="ai-modal-templates">
+                {[
+                  'aiLeagueTemplateBrazil',
+                  'aiLeagueTemplateEngland',
+                  'aiLeagueTemplateSpain',
+                  'aiLeagueTemplateCustom',
+                ].map((key) => (
+                  <button
+                    key={key}
+                    className="ai-modal-template-item"
+                    onClick={() => {
+                      setRequest(t(key));
+                      setOriginalRequest(null);
+                      setSuggestion(null);
+                      setShowTemplates(false);
+                    }}
+                  >
+                    {t(key)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="league-body">
         <p className="ai-description">{t('aiLeagueDescription')}</p>
 
+        <div className="ai-templates-section">
+          <button
+            className="ai-templates-btn"
+            onClick={() => setShowTemplates(true)}
+            disabled={busy}
+          >
+            {t('aiTemplatesTitle')}
+          </button>
+        </div>
         {/* Request */}
         <div className="league-request">
           <textarea
             className="ai-prompt-input"
             value={request}
             placeholder={t('aiLeaguePlaceholder')}
-            onChange={(e) => setRequest(e.target.value)}
+            onChange={(e) => {
+              setRequest(e.target.value);
+              setOriginalRequest(null);
+              setSuggestion(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handlePlan();
             }}
@@ -382,12 +490,20 @@ export default function LeagueGeneratorPanel() {
           <div className="ai-prompt-actions">
             <button
               className="ai-btn ai-btn-primary"
-              onClick={handlePlan}
+              onClick={() => handlePlan()}
               disabled={busy || !request.trim()}
             >
               {planning ? t('aiLeaguePlanning') : plan ? t('aiLeagueReplan') : t('aiLeaguePlan')}
             </button>
-            {planning && (
+            <button
+              className="ai-btn ai-btn-secondary"
+              onClick={handleOptimize}
+              disabled={busy || !request.trim()}
+              title={t('aiLeagueOptimizeHint')}
+            >
+              {optimizing ? t('aiOptimizing') : t('aiOptimize')}
+            </button>
+            {(planning || optimizing) && (
               <button className="ai-btn ai-btn-secondary" onClick={handleCancel}>
                 {t('aiCancel')}
               </button>
@@ -395,6 +511,41 @@ export default function LeagueGeneratorPanel() {
           </div>
         </div>
 
+        {originalRequest != null && !busy && (
+          <button
+            className="ai-link-btn"
+            onClick={() => {
+              setRequest(originalRequest);
+              setOriginalRequest(null);
+            }}
+          >
+            {t('aiRestorePrompt')}
+          </button>
+        )}
+        {suggestion != null && (
+          <div className="ai-suggestion">
+            <div className="ai-suggestion-header">
+              <span className="ai-label">{t('aiOptimizedTitle')}</span>
+              {optimizing && <span className="ai-stream-cursor" />}
+            </div>
+            <div className="ai-suggestion-text">
+              {suggestion || (optimizing ? t('aiOptimizingWait') : '')}
+            </div>
+            {!optimizing && suggestion && (
+              <div className="ai-suggestion-actions">
+                <button className="ai-btn ai-btn-primary" onClick={() => applySuggestion(true)}>
+                  {t('aiLeagueUseOptimizedPlan')}
+                </button>
+                <button className="ai-btn ai-btn-secondary" onClick={() => applySuggestion()}>
+                  {t('aiUseOptimized')}
+                </button>
+                <button className="ai-btn ai-btn-secondary" onClick={() => setSuggestion(null)}>
+                  {t('aiDiscardOptimized')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {error && (
           <div className="ai-error">
             <div className="ai-error-friendly">{t(aiErrorKey(error))}</div>

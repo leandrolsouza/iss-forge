@@ -11,6 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.0] - 2026-11-01
+
+### Added
+
+- Championship generator prompt templates and AI-assisted prompt improvement with review.
+- Coin Toss tab (Match group): the two faces of the coin tossed before kick-off (heads and tails),
+  shown in the choice boxes and on the referee's hand
+  - Pixel editor for each 32 x 24 face (only the cells the game draws; the right rim is shared by
+    both faces), with brush colours, right-click colour picker, clear and restore face
+  - Edit the 15 coin colours, with gold, bronze and silver themes
+  - Import an image (cropped to 25 x 24) with the current colours or with new colours for both
+    faces; the tiles are recompressed in their original block (1393 bytes) and a drawing that does
+    not fit is refused without touching the ROM; one undo step per change, and going back to the
+    original writes the exact original bytes
+  - Checked in the emulator (snes9x): both faces and the coin on the referee's hand match the
+    editor pixel for pixel, only the coin tiles and its palette change, and the match palettes
+    stay the same
+
+---
+
 ## [1.2.0] - 2026-11-01
 
 ### Added
@@ -219,6 +239,7 @@ Initial stable release of ISS Forge — a visual ROM editor for International Su
 
 ---
 
+[1.3.0]: ../../releases/tag/v1.3.0
 [1.2.0]: ../../releases/tag/v1.2.0
 [1.1.1]: ../../releases/tag/v1.1.1
 [1.1.0]: ../../releases/tag/v1.1.0

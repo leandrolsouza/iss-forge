@@ -223,6 +223,7 @@ export default {
   editorMatchReferee: 'Referee',
   editorMatchStadium: 'Stadium',
   editorMatchCrowd: 'Crowd',
+  editorMatchCoin: 'Coin Toss',
   editorTitleScreen: 'Title Screen',
   editorMenuBackground: 'Menu Background',
   editorScreenViewer: 'Screen Viewer',
@@ -1049,6 +1050,53 @@ export default {
     'The image needs more than 255 different tiles, even with 2 colours. Use a texture or a simpler image.',
   mbgErrNoSpace:
     'It does not fit in the free space of the ROM, even with 2 colours. Use a smaller texture or a simpler image.',
+
+  // Coin toss
+  coinSubtitle: 'The two faces of the coin tossed before kick-off',
+  coinConfirmRestoreAll: 'Bring back the original drawing and colours of the coin?',
+  coinFace_heads: 'Heads',
+  coinFace_tails: 'Tails',
+  coinPreview: 'As in the game',
+  coinPreviewHelp:
+    "The faces show in the choice boxes at the top of the screen, then on the referee's hand with the result. The tiny coin spinning in the air uses the ball colours and does not change here.",
+  coinDrawing: 'Drawing',
+  coinFace: 'Face',
+  coinBrush: 'Brush colour',
+  coinGridHelp:
+    'Click and drag to paint; right-click picks the colour of a pixel. The striped areas are not drawn by the game. The right edge (marked) is the same on both faces.',
+  coinClearFace: 'Clear face',
+  coinRestoreFace: 'Restore original face',
+  coinConfirmClear: 'Erase the whole drawing of {face}?',
+  coinState_original: 'Now: original drawing (block of {size} of {capacity} bytes).',
+  coinState_custom: 'Now: edited drawing (block of {size} of {capacity} bytes).',
+  coinColorsTitle: 'Colours',
+  coinPalette: 'Palette (15 colours)',
+  coinPresets: 'Themes:',
+  coinPreset_original: 'Original',
+  coinPreset_gold: 'Gold',
+  coinPreset_bronze: 'Bronze',
+  coinPreset_silver: 'Silver',
+  coinColorsHelp:
+    'The colours are used by both faces. The themes recolour the original colours, keeping the brightness of each one.',
+  coinImport: 'Import image',
+  coinImportFace: 'Face',
+  coinImportColors: 'Colours',
+  coinImportColors_current: 'Use the current colours',
+  coinImportColors_new: 'New colours (both faces)',
+  coinImportCount: 'Colours (at most)',
+  coinRemoveBackground: 'Transparent background (colour of the top-left corner)',
+  coinImportHelp:
+    'The image is cropped and reduced to 25 x 24 pixels, the size of the coin. With new colours, the other face is converted to the new palette.',
+  coinImportPreview: 'Result (not applied yet)',
+  coinApply: 'Apply image',
+  coinErrLayout:
+    'This ROM does not have the coin in the layout the editor knows (different pointer, sprite lists or block): it cannot be edited.',
+  coinErrFaces: 'Invalid drawing.',
+  coinErrShared: 'The right edge differs between the two faces.',
+  coinErrNoSpace:
+    'The drawing does not fit in its ROM block ({size} of {capacity} bytes). Use fewer colours or less detail.',
+  coinErrImageSize: 'The image has the wrong size.',
+  coinErrEmpty: 'The image came out empty (everything became transparent).',
   tsChoosePose_left: 'Pose of the left player...',
   tsChoosePose_right: 'Pose of the right player...',
   tsPoseOf_left: 'Left player: {n} poses (match animation frames). Click one.',
@@ -1311,6 +1359,15 @@ export default {
     'European Dream Team 90s: Schmeichel GK, Maldini, Baresi defenders. Zidane, Bergkamp midfield. Baggio, Raul strikers. All technique 13+. White home, dark blue away. Flag: EU-style blue with gold stars.',
   aiExample6:
     'Japan 2002: fast midfielders (speed 14+), technical passing style. Nakata #7 as star with max technique. Blue shirt white shorts home, white shirt blue shorts away. Flag: white background with red circle.',
+  aiLeagueOptimizeHint: 'AI improves the championship request for review before planning.',
+  aiLeagueUseOptimizedPlan: 'Use and plan',
+  aiLeagueTemplateBrazil:
+    'Brazilian Serie A in 2002: recreate the squads, kits and playing styles of that season.',
+  aiLeagueTemplateEngland:
+    'Premier League in 1998-99: use the squads and kits of the season and highlight key players.',
+  aiLeagueTemplateSpain: 'La Liga in 2003-04: represent the clubs, squads and kits of that season.',
+  aiLeagueTemplateCustom:
+    'Championship [name], season [year]: recreate the squads and kits of the period, with strength proportional to club performance.',
   aiTemplatesTitle: 'Prompt Templates',
   aiTemplatesToggle: 'Show prompt templates',
   aiTemplateCatNational: 'National Teams',

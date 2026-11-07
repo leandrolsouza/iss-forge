@@ -224,6 +224,7 @@ export default {
   editorMatchReferee: 'Arbitro',
   editorMatchStadium: 'Estadio',
   editorMatchCrowd: 'Torcida',
+  editorMatchCoin: 'Moeda do Sorteio',
   editorTitleScreen: 'Tela Inicial',
   editorMenuBackground: 'Fundo dos Menus',
   editorScreenViewer: 'Visualizador de Telas',
@@ -1050,6 +1051,53 @@ export default {
     'A imagem precisa de mais de 255 tiles diferentes, mesmo com 2 cores. Use uma textura ou uma imagem mais simples.',
   mbgErrNoSpace:
     'Nao cabe no espaco livre da ROM, nem com 2 cores. Use uma textura menor ou uma imagem mais simples.',
+
+  // Moeda do sorteio
+  coinSubtitle: 'As duas faces da moeda do sorteio antes do pontape inicial',
+  coinConfirmRestoreAll: 'Voltar o desenho e as cores originais da moeda?',
+  coinFace_heads: 'Cara',
+  coinFace_tails: 'Coroa',
+  coinPreview: 'Como no jogo',
+  coinPreviewHelp:
+    'As faces aparecem nos quadros da escolha, no alto da tela, e depois na mao do arbitro com o resultado. A moedinha que gira no ar usa as cores da bola e nao muda aqui.',
+  coinDrawing: 'Desenho',
+  coinFace: 'Face',
+  coinBrush: 'Cor do pincel',
+  coinGridHelp:
+    'Clique e arraste para pintar; o botao direito pega a cor de um pixel. As areas listradas o jogo nao desenha. A borda da direita (marcada) e a mesma nas duas faces.',
+  coinClearFace: 'Limpar face',
+  coinRestoreFace: 'Restaurar face original',
+  coinConfirmClear: 'Apagar todo o desenho da face {face}?',
+  coinState_original: 'Agora: desenho original (bloco de {size} de {capacity} bytes).',
+  coinState_custom: 'Agora: desenho editado (bloco de {size} de {capacity} bytes).',
+  coinColorsTitle: 'Cores',
+  coinPalette: 'Paleta (15 cores)',
+  coinPresets: 'Temas:',
+  coinPreset_original: 'Original',
+  coinPreset_gold: 'Ouro',
+  coinPreset_bronze: 'Bronze',
+  coinPreset_silver: 'Prata',
+  coinColorsHelp:
+    'As cores valem para as duas faces. Os temas recolorem as cores originais mantendo o brilho de cada uma.',
+  coinImport: 'Importar imagem',
+  coinImportFace: 'Face',
+  coinImportColors: 'Cores',
+  coinImportColors_current: 'Usar as cores atuais',
+  coinImportColors_new: 'Cores novas (as duas faces)',
+  coinImportCount: 'Cores (no maximo)',
+  coinRemoveBackground: 'Fundo transparente (cor do canto superior esquerdo)',
+  coinImportHelp:
+    'A imagem e cortada e reduzida para 25 x 24 pixels, o tamanho da moeda. Com cores novas, a outra face e convertida para a nova paleta.',
+  coinImportPreview: 'Resultado (ainda nao aplicado)',
+  coinApply: 'Aplicar imagem',
+  coinErrLayout:
+    'Esta ROM nao tem a moeda no formato que o editor conhece (ponteiro, listas de sprites ou bloco diferentes): nao da para editar.',
+  coinErrFaces: 'Desenho invalido.',
+  coinErrShared: 'A borda da direita esta diferente nas duas faces.',
+  coinErrNoSpace:
+    'O desenho nao cabe no bloco da ROM ({size} de {capacity} bytes). Use menos cores ou menos detalhes.',
+  coinErrImageSize: 'A imagem esta com o tamanho errado.',
+  coinErrEmpty: 'A imagem ficou vazia (tudo virou transparente).',
   tsChoosePose_left: 'Pose do jogador da esquerda...',
   tsChoosePose_right: 'Pose do jogador da direita...',
   tsPoseOf_left:
@@ -1314,6 +1362,16 @@ export default {
     'Dream Team Europeu anos 90: Schmeichel GK, Maldini, Baresi zagueiros. Zidane, Bergkamp meio. Baggio, Raul atacantes. Todos technique 13+. Camisa branca, shorts azul marinho. Bandeira: azul escuro com estrelas douradas.',
   aiExample6:
     'Japao 2002: meias rapidos (speed 14+), estilo tecnico. Nakata #7 como craque com technique maxima. Camisa azul shorts branco titular, camisa branca shorts azul reserva. Bandeira: fundo branco com circulo vermelho.',
+  aiLeagueOptimizeHint: 'A IA melhora o pedido de campeonato para revisao antes de planejar.',
+  aiLeagueUseOptimizedPlan: 'Usar e planejar',
+  aiLeagueTemplateBrazil:
+    'Campeonato Brasileiro Serie A de 2002: reproduza os elencos, uniformes e estilos daquela temporada.',
+  aiLeagueTemplateEngland:
+    'Premier League de 1998-99: use os elencos e uniformes da temporada e valorize os principais jogadores.',
+  aiLeagueTemplateSpain:
+    'La Liga de 2003-04: represente os clubes, elencos e uniformes daquela temporada.',
+  aiLeagueTemplateCustom:
+    'Campeonato [nome] da temporada [ano]: recrie os elencos e uniformes da epoca, com forca proporcional ao desempenho dos clubes.',
   aiTemplatesTitle: 'Templates de Prompt',
   aiTemplatesToggle: 'Mostrar templates de prompt',
   aiTemplateCatNational: 'Selecoes Reais',

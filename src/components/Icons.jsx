@@ -129,6 +129,14 @@ export const IconTitleScreen = ({ size }) => (
   </Icon>
 );
 
+/** Coin toss: a coin with a rim and a star */
+export const IconCoin = ({ size }) => (
+  <Icon size={size}>
+    <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 1a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" />
+    <path d="M8 5.6l.7 1.4 1.5.2-1.1 1 .3 1.5L8 9l-1.4.7.3-1.5-1.1-1 1.5-.2L8 5.6z" />
+  </Icon>
+);
+
 /** Menu background: a screen filled with a tiled pattern */
 export const IconMenuBackground = ({ size }) => (
   <Icon size={size}>

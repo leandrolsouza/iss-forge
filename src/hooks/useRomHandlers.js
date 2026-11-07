@@ -22,6 +22,7 @@ import { withDerivedStats } from '../rom/playerStats';
 import { exportTexts, applyTexts } from '../utils/textsExport';
 import { changedPaletteUpdates } from '../rom/palettes';
 import { changedDraws } from '../rom/tournament';
+import { sameCoinFaces } from '../rom/coinToss';
 
 export default function useRomHandlers({
   toast,
@@ -51,6 +52,7 @@ export default function useRomHandlers({
   setScreenTexts,
   setTitleScreen,
   setMenuScroll,
+  setCoinToss,
 }) {
   /**
    * After a goalkeeper colour write: re-read the teams that store their goalkeeper at
@@ -678,6 +680,38 @@ export default function useRomHandlers({
       return result;
     },
     [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setMenuScroll],
+  );
+
+  /**
+   * Replace the two faces of the coin toss (coinToss.js) and, with `colors`, the
+   * 15 coin colours too (an image imported with new colours), one undo step.
+   * @param {{ heads: number[][], tails: number[][] }} faces
+   * @param {number[]|null} [colors]
+   * @returns {{ ok: boolean, error?: string, size?: number, capacity?: number }}
+   */
+  const handleCoinTossChange = useCallback(
+    (faces, colors = null) => {
+      if (!romParser) return { ok: false };
+      const current = romParser.readCoinToss();
+      if (!current) return { ok: false, error: 'coinErrLayout' };
+      const paletteUpdates = colors ? changedPaletteUpdates(romParser, { coinToss: colors }) : {};
+      const recolour = Object.keys(paletteUpdates).length > 0;
+      if (sameCoinFaces(faces, current.faces) && !recolour) return { ok: true }; // no empty step
+      pushSnapshot(teams);
+      const result = romParser.writeCoinToss(faces);
+      if (!result.ok) {
+        cancelSnapshot();
+        return result;
+      }
+      if (recolour) {
+        romParser.applyPaletteUpdates(paletteUpdates);
+        setMatchPalettes(romParser.readMatchPalettes());
+      }
+      setCoinToss(romParser.readCoinToss());
+      markModified();
+      return result;
+    },
+    [romParser, teams, markModified, pushSnapshot, cancelSnapshot, setCoinToss, setMatchPalettes],
   );
 
   /**
@@ -1327,6 +1361,7 @@ export default function useRomHandlers({
     handleTitleBackgroundChange,
     handleMenuBackgroundChange,
     handleMenuScrollChange,
+    handleCoinTossChange,
     handleSave,
     handleSaveToPath,
     handleExportPatch,

@@ -156,6 +156,13 @@ Return ONLY a valid JSON object, no markdown fences:
 Include all ${slotCount} clubs.`;
 }
 
+/** Instructions for improving a championship request. */
+export function buildLeagueOptimizerPrompt(slotCount = LEAGUE_SLOTS.length) {
+  return `Improve the user's request for an AI championship generator for International Superstar Soccer (SNES, 1995). Rewrite it as a concise brief in the user's language. Preserve all user preferences and facts. Do not invent a competition, season, clubs or historical facts when unspecified. Mention squads, kits, playing styles and historical fidelity only when compatible with the request.
+The game has ${slotCount} slots: the generator orders clubs by final position, fills remaining slots with the best clubs of the division immediately below in the same season, and keeps the best ${slotCount} if there are too many. Do not promise a different selection rule.
+Return only the improved request, without a preamble or markdown.`;
+}
+
 // ─── Plan validation ─────────────────────────────────────────────────────────
 
 const toHex = (c) =>

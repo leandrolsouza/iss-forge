@@ -223,6 +223,18 @@ export function adjustPalette(colors, { hue = 0, saturation = 1, lightness = 1 }
 }
 
 /**
+ * Recolour a palette with the hue and saturation of a base colour, keeping the
+ * lightness of every colour (shading and highlights stay where they were).
+ */
+export function tintPalette(colors, baseRaw) {
+  const base = rgbToHsl(rawToRgb(baseRaw));
+  return colors.map((raw) => {
+    const { l } = rgbToHsl(rawToRgb(raw));
+    return rgbToRaw(hslToRgb({ h: base.h, s: base.s, l }));
+  });
+}
+
+/**
  * Build a dark→light ramp of `count` shades from a base colour
  * (used for kit parts: the original referee shirt is 3 shades of grey).
  */

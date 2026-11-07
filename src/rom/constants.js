@@ -1321,7 +1321,63 @@ export const MATCH_PALETTES = [
   { id: 'stadium_people', group: 'stadium', offset: 0x2dc21, count: 15 }, // BG row 1: photographers by the pitch
   // Menu background (not a match palette, same storage): BG row 2 of every menu, MENU_BACKGROUND
   { id: 'menuBackground', group: 'menu', offset: 0x2f49d, count: 15 },
+  // Coin toss: OBJ row 10 (palette 2) of the two coin faces, COIN_TOSS
+  { id: 'coinToss', group: 'coin', offset: 0x2f6b1, count: 15 },
 ];
+
+/**
+ * Coin toss before kick-off: the two faces of the coin (heads = profile, tails =
+ * eagle), shown in the choice boxes at the top of the screen and again on the
+ * referee's hand after the toss. Found with snes9x save states (Italy x Brazil,
+ * 1P x CPU) and checked in the game with test ROMs: research/coin-toss.md.
+ * - TILES: compressed OBJ tiles ($95:E950), loaded to VRAM $6000 (OBJ tiles
+ *   0x00-0x45) by the load list $82:8154, entry 0 (POINTER, the only pointer to
+ *   it). Besides the coin it holds the tiny spinning coin (tiles 0x0F, 0x16,
+ *   0x1D-0x1F, ball palette), the ball and pitch-side icons and the 1P/2P marks.
+ *   CAPACITY: its size in the original ROM; the next block starts right after.
+ * - FACE_LISTS: sprite lists [count][dy, dx, tile, attr] of each face ($88:E493,
+ *   $88:E4AC; attr bit 4 = 16x16). FACES: the 8x8 cells they draw, [column, row,
+ *   tile] on a 32x24 canvas. The coin is 25 x 24 pixels; tile 6 (rim, cell 3,1) is
+ *   drawn by both faces.
+ * - Colours: MATCH_PALETTES 'coinToss' (blob $85:F6AF, descriptor $81:87E2).
+ */
+export const COIN_TOSS = {
+  TILES: 0xae950,
+  POINTER: 0x10158,
+  CAPACITY: 1393,
+  TILE_COUNT: 70,
+  WIDTH: 32,
+  HEIGHT: 24,
+  FACE_LISTS: { heads: 0x46493, tails: 0x464ac },
+  FACES: {
+    heads: [
+      [0, 0, 0x00],
+      [1, 0, 0x01],
+      [2, 0, 0x02],
+      [0, 1, 0x10],
+      [1, 1, 0x11],
+      [2, 1, 0x12],
+      [3, 1, 0x06],
+      [0, 2, 0x03],
+      [1, 2, 0x04],
+      [2, 2, 0x05],
+    ],
+    tails: [
+      [0, 0, 0x07],
+      [1, 0, 0x08],
+      [2, 0, 0x09],
+      [0, 1, 0x17],
+      [1, 1, 0x18],
+      [2, 1, 0x19],
+      [3, 1, 0x06],
+      [0, 2, 0x13],
+      [1, 2, 0x14],
+      [2, 2, 0x15],
+    ],
+  },
+  /** Cell [column, row] drawn by both faces (same tile) */
+  SHARED_CELL: [3, 1],
+};
 
 /**
  * Crowd (BG rows 5-6). Each team points to one of 20 crowd palettes through a

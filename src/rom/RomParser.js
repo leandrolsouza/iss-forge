@@ -93,6 +93,7 @@ import {
   readMenuScrollBytes,
   restoreMenuScrollBytes,
 } from './menuBackground';
+import { readCoinToss, writeCoinToss, readCoinTossBytes, restoreCoinTossBytes } from './coinToss';
 
 export default class RomParser {
   /**
@@ -312,6 +313,23 @@ export default class RomParser {
   }
   restoreMenuScrollBytes(snapshot) {
     restoreMenuScrollBytes(this, snapshot);
+  }
+
+  // === Coin toss (the two faces of the coin, see coinToss.js) ===
+
+  /** @returns {{ faces, state: 'original'|'custom', size, capacity }|null} null: unknown layout */
+  readCoinToss() {
+    return readCoinToss(this);
+  }
+  /** Both faces, recompressed in place: @returns {{ ok, error?, size?, capacity }} */
+  writeCoinToss(faces) {
+    return writeCoinToss(this, faces);
+  }
+  readCoinTossBytes() {
+    return readCoinTossBytes(this);
+  }
+  restoreCoinTossBytes(snapshot) {
+    restoreCoinTossBytes(this, snapshot);
   }
 
   /** The 9 Scenario mode situations */

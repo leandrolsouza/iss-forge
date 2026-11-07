@@ -6,6 +6,7 @@ import { TEAMS } from '../../rom/constants';
 import { copyTeam, exportTeam, applyImportedTeam } from '../../utils/teamExport';
 import { restoreSnapshot, snapshotGlobals, keepUnchangedTeams } from '../snapshotRestore';
 import { buildMenuBackground } from '../../rom/menuBackground';
+import { syncCoinShared } from '../../rom/coinToss';
 
 const REAL_ROM = fileURLToPath(
   new URL('../../../rom/original/International Superstar Soccer (Europe).sfc', import.meta.url),
@@ -142,5 +143,22 @@ describe.skipIf(!existsSync(REAL_ROM))('restoreSnapshot (undo/redo, real ROM)', 
     expect(diff(rom.getRomData(), original)).toEqual([]);
     expect([...changed]).toEqual(['menuScroll']);
     expect(rom.readMenuScroll()).toBe('normal');
+  });
+
+  it('undoes a coin toss edit (tiles and colours) byte for byte', () => {
+    const rom = load();
+    const original = new Uint8Array(rom.getRomData());
+    const teams = rom.readAllTeams();
+    const snap = snapshot(rom, teams);
+
+    const { faces } = rom.readCoinToss();
+    const painted = faces.heads.map((row) => row.map((c) => (c ? 1 : 0)));
+    expect(rom.writeCoinToss(syncCoinShared({ ...faces, heads: painted }, 'heads')).ok).toBe(true);
+    rom.applyPaletteUpdates({ coinToss: new Array(15).fill(31) });
+    const { changed } = restoreSnapshot(rom, snap, teams);
+
+    expect(diff(rom.getRomData(), original)).toEqual([]);
+    expect([...changed].sort()).toEqual(['coinToss', 'matchPalettes']);
+    expect(rom.readCoinToss().state).toBe('original');
   });
 });

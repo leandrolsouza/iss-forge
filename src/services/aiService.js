@@ -1031,12 +1031,13 @@ export async function optimizePrompt({
   userPrompt,
   settings,
   context = DEFAULT_AI_CONTEXT,
+  systemPrompt = buildOptimizerPrompt(context),
   onChunk,
   signal,
   stream = streamCompletion,
 }) {
   const result = await stream({
-    systemPrompt: buildOptimizerPrompt(context),
+    systemPrompt,
     userPrompt,
     settings,
     schema: null,

@@ -59,6 +59,7 @@ const BallPaletteEditor = lazy(() => import('./components/BallPaletteEditor'));
 const RefereePaletteEditor = lazy(() => import('./components/RefereePaletteEditor'));
 const StadiumPaletteEditor = lazy(() => import('./components/StadiumPaletteEditor'));
 const CrowdPaletteEditor = lazy(() => import('./components/CrowdPaletteEditor'));
+const CoinTossEditor = lazy(() => import('./components/CoinTossEditor'));
 const TitleScreenEditor = lazy(() => import('./components/TitleScreenEditor'));
 const MenuBackgroundEditor = lazy(() => import('./components/MenuBackgroundEditor'));
 const UniformEditor = lazy(() => import('./components/UniformEditor'));
@@ -408,6 +409,7 @@ export default function App() {
     if (activeTab === 'matchReferee' && romParser) return <RefereePaletteEditor />;
     if (activeTab === 'matchStadium' && romParser) return <StadiumPaletteEditor />;
     if (activeTab === 'matchCrowd' && romParser) return <CrowdPaletteEditor />;
+    if (activeTab === 'matchCoin' && romParser) return <CoinTossEditor />;
     if (activeTab === 'titleScreen' && romParser) return <TitleScreenEditor />;
     if (activeTab === 'menuBackground' && romParser) return <MenuBackgroundEditor />;
     if (activeTab === 'screenViewer' && romParser) return <ScreenViewer />;

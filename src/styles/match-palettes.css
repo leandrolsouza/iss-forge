@@ -277,3 +277,63 @@
   border-radius: 2px;
   border: 1px solid var(--border-secondary);
 }
+
+/* Coin toss: face previews, brush colours and the pixel grid */
+.coin-previews {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.coin-preview {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.coin-preview .pixel-canvas {
+  border: 1px solid var(--border-primary);
+  border-radius: 4px;
+}
+
+.coin-preview figcaption {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+.coin-brushes {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.flag-palette-btn.coin-brush {
+  width: 26px;
+  height: 26px;
+  border-width: 2px;
+  font-size: 11px;
+}
+
+.coin-grid {
+  gap: 0;
+}
+
+.coin-pixel {
+  cursor: crosshair;
+}
+
+.coin-pixel:not(.off):hover {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: -2px;
+}
+
+.coin-pixel.shared {
+  box-shadow: inset 0 0 0 1px rgba(255, 210, 0, 0.55);
+}
+
+.coin-pixel.off {
+  cursor: not-allowed;
+  background: repeating-linear-gradient(45deg, var(--bg-tertiary) 0 3px, var(--canvas-gap) 3px 5px);
+}
